@@ -1,6 +1,6 @@
 {
   "name": "uitkforksp2.controls",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "displayName": "UITK for KSP 2",
   "description": "This package contains assets and controls for creating UIs with UITK for KSP 2.",
   "unity": "2020.3",
