@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: cd6c6b61a4a11a04da10f2d70063a157
+guid: 2b90cd11afdc95e4bb136c8eb66e54c6
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -10,12 +10,15 @@ TrueTypeFontImporter:
   includeFontData: 1
   fontNames:
   - LED Counter 7
-  fallbackFontReferences: []
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: cd6c6b61a4a11a04da10f2d70063a157, type: 3}
+  - {fileID: 12800000, guid: 65371478b621e9140b5a744254215d1d, type: 3}
+  - {fileID: 12800000, guid: 5f2fa78a6dd0b014a8e877653fb1cc5a, type: 3}
   customCharacters: 
   fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
   userData: 
-  assetBundleName: kerbalui
+  assetBundleName: 
   assetBundleVariant: 
