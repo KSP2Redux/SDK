@@ -477,3 +477,11 @@
 }
 
 /* endregion */
+
+/* region ============ Dropdown ============ */
+
+.unity-base-popup-field__arrow {
+    margin-right: 5px;
+}
+
+/* endregion */

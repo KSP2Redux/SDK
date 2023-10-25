@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: b82e9b6fe6ac43d4c81e753889a27aae
+guid: 63e34cdf99dfb5e43a9c74f06d1a461d
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -19,5 +19,5 @@ TrueTypeFontImporter:
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1
   userData: 
-  assetBundleName: kerbalui
+  assetBundleName: 
   assetBundleVariant: 
