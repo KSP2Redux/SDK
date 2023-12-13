@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine.UIElements;
 
+// ReSharper disable once CheckNamespace
 namespace UitkForKsp2.Controls
 {
     public class Selector : BaseControl, INotifyValueChanged<int>

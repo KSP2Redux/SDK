@@ -1,5 +1,6 @@
 ﻿using UnityEngine.UIElements;
 
+// ReSharper disable once CheckNamespace
 namespace UitkForKsp2.Controls
 {
     internal class Dropdown : DropdownField
