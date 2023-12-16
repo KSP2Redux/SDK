@@ -140,7 +140,7 @@ KeyframeEditor .unity-popup-field .unity-base-popup-field__input {
 }
 
 .unity-popup-field .unity-text-element {
-    -unity-text-align: upper-center;
+    -unity-text-align: middle-left;
     margin-right: 0;
 }
 
