@@ -115,6 +115,7 @@
 .unity-scroller--vertical .unity-base-slider__tracker {
     width: 5px;
     margin-left: 3px;
+    height: 2px;
 }
 
 .unity-scroller--horizontal .unity-base-slider__tracker {
@@ -276,19 +277,23 @@
 
 .unity-text-field > .unity-base-text-field__input {
     background-color: rgba(0, 0, 0, 0.3);
-    border-color: rgba(0, 0, 0, 0);
+    border-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    border-width: 1px;
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
 .unity-text-field:hover > .unity-base-text-field__input {
-    background-color: #001632;
+    background-color: #1C1C26;
+    border-color: rgba(255, 255, 255, 0.4);
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
 .unity-text-field:focus > .unity-base-text-field__input {
-    background-color: #00260d;
+    background-color: #001632;
+    border-color: rgba(255, 255, 255, 0.6);
     padding: 5px;
     margin: 2px 0 0 0;
 }
@@ -305,68 +310,79 @@
 
 /* region ============ Toggle ============ */
 
-.unity-toggle.toggle {
-    justify-content: space-between;
+.unity-toggle {
+    /*justify-content: space-between;*/
     margin: 0;
+    height: 28px;
 }
 
-.unity-toggle.toggle > .unity-label {
+.unity-toggle > .unity-label {
     color: #c0c7d5;
 }
 
 /* Unchecked */
-.unity-toggle.toggle > .unity-base-field__input {
+.unity-toggle > .unity-base-field__input {
     border-radius: 6px;
     border-width: 1px;
     border-color: #000000;
     padding: 1px;
     background-color: #666666;
-    flex-basis: 40px;
+    flex-basis: 44px;
     flex-grow: 0;
-    height: 24px;
+    height: 30px;
 }
 
-.unity-toggle.toggle > .unity-base-field__input > .unity-toggle__checkmark {
+.unity-toggle > .unity-base-field__input > .unity-toggle__checkmark {
     border-radius: 6px;
     border-width: 1px;
     border-color: #000000;
     background-image: none;
     background-color: #63686e;
-    flex-basis: 36px;
-    height: 20px;
+    flex-basis: 39px;
+    height: 25px;
+    background-image: none;
 }
 
 /* Unchecked hover */
-.unity-toggle.toggle > .unity-base-field__input:hover {
+.unity-toggle > .unity-base-field__input:hover {
     background-color: #cccccc;
 }
 
-.unity-toggle.toggle > .unity-base-field__input:hover > .unity-toggle__checkmark {
+.unity-toggle > .unity-base-field__input:hover > .unity-toggle__checkmark {
     background-image: none;
     border-color: #000000;
     background-color: #63686e;
 }
 
 /* Checked */
-.unity-toggle.toggle:checked > .unity-base-field__input {
+.unity-toggle:checked > .unity-base-field__input {
     background-image: none;
     background-color: #226638;
 }
 
-.unity-toggle.toggle:checked > .unity-base-field__input > .unity-toggle__checkmark {
+.unity-toggle:checked > .unity-base-field__input > .unity-toggle__checkmark {
     background-image: none;
     border-color: #000000;
     background-color: #5bffa8;
 }
 
 /* Checked hover */
-.unity-toggle.toggle:checked > .unity-base-field__input:hover {
+.unity-toggle:checked > .unity-base-field__input:hover {
     background-color: #51e581;
 }
 
-.unity-toggle.toggle:checked > .unity-base-field__input:hover > .unity-toggle__checkmark{
+.unity-toggle:checked > .unity-base-field__input:hover > .unity-toggle__checkmark{
     border-color: #000000;
     background-image: none;
+}
+
+.unity-toggle:checked > .unity-base-field__input:checked > .unity-toggle__checkmark{
+    background-image: none;
+}
+
+.unity-toggle:focus > .unity-base-field__input:focus > .unity-toggle__checkmark{
+    background-image: none;
+    border-color: rgba(0, 0, 0, 0.75);
 }
 
 /* endregion */
@@ -480,8 +496,93 @@
 
 /* region ============ Dropdown ============ */
 
-.unity-base-popup-field__arrow {
+
+.unity-enum-field__arrow {
     margin-right: 5px;
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.6);
+}
+
+.unity-enum-field:inactive > .unity-enum-field__input {
+    color: white;
+    background-color: #0f1318;
+}
+
+.unity-enum-field:active > .unity-enum-field__input {
+    color: #f4f5f5;
+    background-color: #1C1C26;
+}
+
+.unity-enum-field:hover > .unity-enum-field__input {
+    color: #f4f5f5;
+    background-color: #1C1C26;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.unity-enum-field__input {
+    height: 30px;
+    color: #f2f2f2;
+    margin: 0;
+    background-color: #0f1318;
+    border-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 3px 10px 3px 10px;
+}
+
+
+.unity-popup-field__arrow {
+    margin-right: 5px;
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.6);
+}
+
+.unity-popup-field:inactive > .unity-popup-field__input {
+    color: white;
+    background-color: #0f1318;
+}
+
+.unity-popup-field:active > .unity-popup-field__input {
+    color: #f4f5f5;
+    background-color: #1C1C26;
+}
+
+.unity-popup-field:hover > .unity-popup-field__input {
+    color: #f4f5f5;
+    background-color: #1C1C26;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.unity-popup-field__input {
+    height: 30px;
+    color: #f2f2f2;
+    margin: 0;
+    background-color: #0f1318;
+    border-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 3px 10px 3px 10px;
+}
+
+.unity-enum-field__text {
+    -unity-text-align: middle-left;
+}
+
+.unity-base-dropdown__container-outer {
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.unity-base-dropdown__container-inner {
+    background-color: #1C1C26;
+}
+
+.unity-base-dropdown__item {
+    border-radius: 4px;
+}
+
+.unity-base-field {
+    margin: 4px;
+    padding: 0px;
 }
 
 /* endregion */
