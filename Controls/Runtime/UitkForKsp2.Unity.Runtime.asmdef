@@ -1,9 +1,7 @@
 {
-    "name": "uitkforksp2.controls.Runtime",
-    "rootNamespace": "UitkForKsp2.Controls",
-    "references": [
-        "GUID:023ac9b81facd43ebbb2a6f1c6252835"
-    ],
+    "name": "UitkForKsp2.Unity.Runtime",
+    "rootNamespace": "UitkForKsp2.Unity",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
