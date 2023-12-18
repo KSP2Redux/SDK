@@ -49,19 +49,19 @@ Selector .selector__input-label {
 }
 
 Selector #to-start-button {
-    background-image: url('Icons/icon-first.png');
+    background-image: var(--selector-to-start-button);
 }
 
 Selector #previous-button {
-    background-image: url('Icons/icon-back.png');
+    background-image: var(--selector-previous-button);
 }
 
 Selector #next-button {
-    background-image: url('Icons/icon-forward.png');
+    background-image: var(--selector-next-button);
 }
 
 Selector #to-end-button {
-    background-image: url('Icons/icon-last.png');
+    background-image: var(--selector-to-end-button);
 }
 
 .keyframe-editor {

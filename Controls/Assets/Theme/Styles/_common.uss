@@ -1,0 +1,18 @@
+﻿:root {
+    /* Font definitions */
+    --font-regular: url('../Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
+    --font-medium: url('../Fonts/JetBrainsMono/JetBrainsMono-Medium SDF.asset');
+    --font-bold: url('../Fonts/JetBrainsMono/JetBrainsMono-Bold SDF.asset');
+    --font-title-big: url('../Fonts/LEDCounter7/led_counter-7 SDF.asset');
+    --font-title-big-italic: url('../Fonts/LEDCounter7/led_counter-7_italic SDF.asset');
+    --font-title-small: url('../Fonts/FutureMillennium/FutureMillennium SDF.asset');
+    --font-title-small-bold: url('../Fonts/FutureMillennium/FutureMillennium Black SDF.asset');
+    --font-title-small-italic: url('../Fonts/FutureMillennium/FutureMillennium Italic SDF.asset');
+
+    /* Selector control icons */
+    --selector-to-start-button: url('../Icons/icon-first.png');
+    --selector-previous-button: url('../Icons/icon-back.png');
+    --selector-next-button: url('../Icons/icon-forward.png');
+    --selector-to-end-button: url('../Icons/icon-last.png');
+}
+

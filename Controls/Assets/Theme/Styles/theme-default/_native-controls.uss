@@ -1,29 +1,13 @@
+/**
+ * The default style sheet for UITK for KSP 2.
+ */
+
 /*region ============ Root element ============ */
 
-/*noinspection CssInvalidPseudoSelector*/
-:root {
-    /*noinspection CssUnknownTarget*/
-    --font-regular: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-medium: url('Fonts/JetBrainsMono/JetBrainsMono-Medium SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-bold: url('Fonts/JetBrainsMono/JetBrainsMono-Bold SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-big: url('Fonts/LEDCounter7/led_counter-7 SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-big-italic: url('Fonts/LEDCounter7/led_counter-7_italic SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-small: url('Fonts/FutureMillennium/FutureMillennium SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-small-bold: url('Fonts/FutureMillennium/FutureMillennium Black SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-small-italic: url('Fonts/FutureMillennium/FutureMillennium Italic SDF.asset');
-    /*noinspection CssInvalidFunction,CssUnresolvedCustomProperty,CssUnknownProperty*/
+.root {
+    /* Root styles */
     -unity-font-definition: var(--font-bold);
     color: #c0c7d5;
-}
-
-.root {
     padding: 8px;
     border-radius: 5px;
     background-color: #22262e;
@@ -32,9 +16,12 @@
     font-size: 14px;
 }
 
-/* endregion */
+/* endregion ============ Root element ============ */
 
-/* region ============ ScrollView ============ */
+
+/*region ============ Containers ============ */
+
+/* region ------------ ScrollView ------------ */
 
 .unity-scroll-view {
     width: 100%;
@@ -44,9 +31,9 @@
     padding: 8px;
 }
 
-/* endregion */
+/* endregion ------------ ScrollView ------------ */
 
-/* region ============ ListView ============ */
+/* region ------------ ListView ------------ */
 
 .unity-list-view > .unity-scroll-view {
     width: 100%;
@@ -56,9 +43,14 @@
     padding: 8px;
 }
 
-/* endregion */
+/* endregion ------------ ListView ------------ */
 
-/* region ============ Scroller ============ */
+/* endregion ============ Containers ============ */
+
+
+/* region ============ Controls ============ */
+
+/* region ------------ Scroller ------------ */
 
 .unity-scroller--vertical {
     margin-left: 2px;
@@ -115,7 +107,6 @@
 .unity-scroller--vertical .unity-base-slider__tracker {
     width: 5px;
     margin-left: 3px;
-    height: 2px;
 }
 
 .unity-scroller--horizontal .unity-base-slider__tracker {
@@ -153,9 +144,9 @@
     background-color: #696dff;
 }
 
-/* endregion */
+/* endregion ------------ Scroller ------------ */
 
-/* region ============ Sliders ============ */
+/* region ------------ Sliders ------------ */
 
 .unity-base-slider--horizontal, .unity-min-max-slider {
     margin: 0;
@@ -214,9 +205,9 @@
     margin-top: -12px;
 }
 
-/* endregion */
+/* endregion ------------ Sliders ------------ */
 
-/* region ============ Button ============ */
+/* region ------------ Button ------------ */
 
 .unity-button {
     height: 30px;
@@ -240,9 +231,7 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* endregion */
-
-/* region ============ Link ============ */
+/* Link button */
 .unity-button.link {
     height: auto;
     padding: 0;
@@ -256,26 +245,26 @@
     border-bottom-color: #415483;
 }
 
-/* endregion */
+/* endregion ------------ Button ------------ */
 
-/* region ============ Label ============ */
+/* region ------------ Label ------------ */
 
 .unity-label {
     margin: 0;
     color: #c0c7d5;
 }
 
-/* endregion */
+/* endregion ------------ Label ------------ */
 
-/* region ============ TextField ============ */
+/* region ------------ TextField ------------ */
 
-.unity-text-field {
+.unity-base-text-field {
     margin: 0;
     padding: 4px 0;
     --unity-cursor-color:#ffffff;
 }
 
-.unity-text-field > .unity-base-text-field__input {
+.unity-base-text-field > .unity-base-text-field__input {
     background-color: rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.2);
     border-radius: 6px;
@@ -284,34 +273,34 @@
     margin: 2px 0 0 0;
 }
 
-.unity-text-field:hover > .unity-base-text-field__input {
+.unity-base-text-field:hover > .unity-base-text-field__input {
     background-color: #1C1C26;
     border-color: rgba(255, 255, 255, 0.4);
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
-.unity-text-field:focus > .unity-base-text-field__input {
+.unity-base-text-field:focus > .unity-base-text-field__input {
     background-color: #001632;
     border-color: rgba(255, 255, 255, 0.6);
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
-.unity-text-field > .unity-base-field__label {
+.unity-base-text-field > .unity-base-field__label {
     -unity-text-align: middle-left;
 }
 
-.unity-text-field:focus > .unity-base-field__label {
+.unity-base-text-field:focus > .unity-base-field__label {
     color: #c0c7d5;
 }
 
-/* endregion */
+/* endregion ------------ TextField ------------ */
 
-/* region ============ Toggle ============ */
+/* region ------------ Toggle ------------ */
 
 .unity-toggle {
-    /*justify-content: space-between;*/
+    justify-content: space-between;
     margin: 0;
     height: 28px;
 }
@@ -340,7 +329,6 @@
     background-color: #63686e;
     flex-basis: 39px;
     height: 25px;
-    background-image: none;
 }
 
 /* Unchecked hover */
@@ -385,9 +373,9 @@
     border-color: rgba(0, 0, 0, 0.75);
 }
 
-/* endregion */
+/* endregion ------------ Toggle ------------ */
 
-/* region ============ Foldout ============ */
+/* region ------------ Foldout ------------ */
 
 .unity-foldout {
     background-color: #2e3540;
@@ -397,105 +385,85 @@
     color: #c0c7d5;
 }
 
+/* Foldout content */
+
 .unity-foldout > .unity-foldout__content {
     padding: 0;
     margin: 4px;
 }
 
+/* Foldout toggle */
+
 .unity-foldout > .unity-foldout__toggle {
     color: #d6e0ff;
     margin: 2px;
     border-radius: 6px;
-    padding: 4px 0;
-}
-
-.unity-foldout > .unity-foldout__toggle:focus .unity-text-element {
-    color: #d6e0ff;
+    padding: 0;
 }
 
 .unity-foldout > .unity-foldout__toggle:hover {
     background-color: #3f4487;
 }
 
-.unity-foldout > .unity-foldout__toggle:checked, .unity-foldout > .unity-foldout__toggle:active {
+.unity-foldout > .unity-foldout__toggle:checked,
+.unity-foldout > .unity-foldout__toggle:active {
     background-color: #4b50b0;
 }
 
-.unity-foldout > .unity-foldout__toggle Label {
+/* Foldout toggle text */
+
+.unity-foldout > .unity-foldout__toggle .unity-text-element {
     padding: 0;
     margin: 2px;
     color: #ffffff;
 }
 
-.unity-foldout > .unity-foldout__toggle:active Label {
+.unity-foldout > .unity-foldout__toggle:focus .unity-text-element {
+    color: #d6e0ff;
+}
+
+.unity-foldout > .unity-foldout__toggle:active .unity-text-element {
     color: #ffffff;
 }
 
+/* Foldout toggle input */
+
 .unity-foldout > .unity-foldout__toggle > .unity-base-field__input {
     -unity-background-image-tint-color: #d5dfff;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    min-width: 100%;
+    max-width: 100%;
 }
 
 .unity-foldout > .unity-foldout__toggle > .unity-base-field__input:hover {
     background-color: initial;
 }
 
-.unity-foldout > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark {
+/* Foldout toggle input checkmark */
+
+.unity-foldout > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark,
+.unity-foldout:hover > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark,
+.unity-foldout:active > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark,
+.unity-foldout:inactive > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark {
     -unity-background-image-tint-color: #d5dfff;
-}
-
-.unity-foldout > .unity-foldout__toggle:active > .unity-base-field__input > .unity-toggle__checkmark {
-    -unity-background-image-tint-color: #d5dfff;
-}
-
-/* endregion */
-
-
-/* region ============ Title bar ============ */
-
-#title-bar {
-    flex-direction: row;
-    margin-bottom: 16px;
-    margin-top: 6px;
-    align-items: center;
-}
-
-#title-bar > .unity-button {
-    height: 32px;
-    width: 32px;
-    margin-right: 10px;
-    font-size: 30px;
+    border-width: 0;
     background-color: rgba(0, 0, 0, 0);
-    border-width: 2px;
-    border-color: rgb(175, 178, 190);
-    color: rgb(175, 178, 190);
-    border-radius: 8px;
+    background-image: resource("arrow-right");
+    min-width: 24px;
+    max-width: 24px;
+    height: 24px;
 }
 
-#title-bar > .unity-button:hover {
-    border-color: #e8ecfe;
-    color: #e8ecfe;
+.unity-foldout:checked > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark {
+    background-image: resource("arrow-down");
+    top: 1px;
+    right: 1px;
 }
 
-#title-bar > .unity-button:active {
-    border-color: #b4bce4;
-    color: #b4bce4;
-}
+/* endregion ------------ Foldout ------------ */
 
-#title-bar > .unity-label {
-    -unity-font-definition: var(--font-title-big);
-    -unity-text-align: lower-left;
-    -unity-font-style: normal;
-    font-size: 28px;
-    margin-bottom: -4px;
-    color: #f4f5f5;
-    letter-spacing: 2px;
-    word-spacing: -16px;
-}
-
-/* endregion */
-
-/* region ============ Dropdown ============ */
-
+/* region ------------ Dropdown and enum fields ------------ */
 
 .unity-enum-field__arrow {
     margin-right: 5px;
@@ -523,12 +491,11 @@
     color: #f2f2f2;
     margin: 0;
     background-color: #0f1318;
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: #52545D;
     border-radius: 6px;
     font-size: 14px;
     padding: 3px 10px 3px 10px;
 }
-
 
 .unity-popup-field__arrow {
     margin-right: 5px;
@@ -582,7 +549,58 @@
 
 .unity-base-field {
     margin: 4px;
-    padding: 0px;
+    padding: 0;
 }
 
-/* endregion */
+/* endregion ------------ Dropdown and enum fields ------------ */
+
+/* endregion ============ Native controls ============ */
+
+
+/* region ============ Composite styles ============ */
+
+/* region ------------ Title bar ------------ */
+
+#title-bar {
+    flex-direction: row;
+    margin-bottom: 16px;
+    margin-top: 6px;
+    align-items: flex-end;
+}
+
+#title-bar > .unity-button, #title-bar .unity-button.icon {
+    height: 32px;
+    width: 32px;
+    margin-right: 10px;
+    font-size: 30px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 2px;
+    border-color: rgb(175, 178, 190);
+    color: rgb(175, 178, 190);
+    border-radius: 8px;
+}
+
+#title-bar > .unity-button:hover, #title-bar .unity-button.icon:hover {
+    border-color: #e8ecfe;
+    color: #e8ecfe;
+}
+
+#title-bar > .unity-button:active, #title-bar .unity-button.icon:active {
+    border-color: #b4bce4;
+    color: #b4bce4;
+}
+
+#title-bar > .unity-label, #title-bar .unity-label.title {
+    -unity-font-definition: var(--font-title-big);
+    -unity-text-align: upper-left;
+    -unity-font-style: normal;
+    font-size: 28px;
+    margin-bottom: -4px;
+    color: #f4f5f5;
+    letter-spacing: 2px;
+    word-spacing: -16px;
+}
+
+/* endregion ------------ Title bar ------------ */
+
+/* endregion ============ Composite styles ============ */
