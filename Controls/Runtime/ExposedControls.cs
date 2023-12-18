@@ -3,17 +3,6 @@
 // ReSharper disable once CheckNamespace
 namespace UitkForKsp2.Unity
 {
-    internal class Dropdown : DropdownField
-    {
-        public new class UxmlFactory : UxmlFactory<Dropdown, UxmlTraits>
-        {
-        }
-
-        public new class UxmlTraits : DropdownField.UxmlTraits
-        {
-        }
-    }
-
     internal class BoxControl : Box
     {
         public new class UxmlFactory : UxmlFactory<BoxControl, UxmlTraits>
@@ -32,32 +21,6 @@ namespace UitkForKsp2.Unity
         }
 
         public new class UxmlTraits : HelpBox.UxmlTraits
-        {
-        }
-    }
-
-    internal class RadioButtonControl : RadioButton
-    {
-        public RadioButtonControl() : base("Label")
-        {
-        }
-
-        public new class UxmlFactory : UxmlFactory<RadioButtonControl, UxmlTraits>
-        {
-        }
-
-        public new class UxmlTraits : RadioButton.UxmlTraits
-        {
-        }
-    }
-
-    internal class RadioButtonGroupControl : RadioButtonGroup
-    {
-        public new class UxmlFactory : UxmlFactory<RadioButtonGroupControl, UxmlTraits>
-        {
-        }
-
-        public new class UxmlTraits : RadioButtonGroup.UxmlTraits
         {
         }
     }
