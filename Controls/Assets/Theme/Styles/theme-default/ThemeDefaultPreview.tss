@@ -1,2 +1,2 @@
 ﻿@import url("../../../UI Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss");
-@import "theme-default.uss";
+@import "theme-default.scss";

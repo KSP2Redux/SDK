@@ -1,12 +1,10 @@
-/**
- * The default style sheet for UITK for KSP 2.
- */
+@import "../common";
 
 /*region ============ Root element ============ */
 
 .root {
     /* Root styles */
-    -unity-font-definition: var(--font-bold);
+    -unity-font-definition: $font-bold;
     color: #c0c7d5;
     padding: 8px;
     border-radius: 5px;
@@ -591,7 +589,7 @@
 }
 
 #title-bar > .unity-label, #title-bar .unity-label.title {
-    -unity-font-definition: var(--font-title-big);
+    -unity-font-definition: $font-title-big;
     -unity-text-align: upper-left;
     -unity-font-style: normal;
     font-size: 28px;

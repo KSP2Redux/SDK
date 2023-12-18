@@ -1,3 +1,5 @@
+@import "../common";
+
 .uitkforksp2-base {
     flex-direction: row;
     -unity-text-align: middle-left;
@@ -49,19 +51,19 @@ Selector .selector__input-label {
 }
 
 Selector #to-start-button {
-    background-image: var(--selector-to-start-button);
+    background-image: $selector-to-start-button;
 }
 
 Selector #previous-button {
-    background-image: var(--selector-previous-button);
+    background-image: $selector-previous-button;
 }
 
 Selector #next-button {
-    background-image: var(--selector-next-button);
+    background-image: $selector-next-button;
 }
 
 Selector #to-end-button {
-    background-image: var(--selector-to-end-button);
+    background-image: $selector-to-end-button;
 }
 
 .keyframe-editor {
