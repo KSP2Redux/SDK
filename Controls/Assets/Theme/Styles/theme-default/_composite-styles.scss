@@ -1,0 +1,45 @@
+@import "../fonts";
+
+/* Title bar */
+
+#title-bar {
+    flex-direction: row;
+    margin-bottom: 16px;
+    margin-top: 6px;
+    align-items: flex-end;
+
+    > .unity-label,
+    .unity-label.title {
+        -unity-font-definition: $font-title-big;
+        -unity-text-align: upper-left;
+        -unity-font-style: normal;
+        font-size: 28px;
+        margin-bottom: -4px;
+        color: #f4f5f5;
+        letter-spacing: 2px;
+        word-spacing: -16px;
+    }
+
+    > .unity-button,
+    .unity-button.icon {
+        height: 32px;
+        width: 32px;
+        margin-right: 10px;
+        font-size: 30px;
+        background-color: rgba(0, 0, 0, 0);
+        border-width: 2px;
+        border-color: rgb(175, 178, 190);
+        color: rgb(175, 178, 190);
+        border-radius: 8px;
+
+        &:hover {
+            border-color: #e8ecfe;
+            color: #e8ecfe;
+        }
+
+        &:active {
+            border-color: #b4bce4;
+            color: #b4bce4;
+        }
+    }
+}

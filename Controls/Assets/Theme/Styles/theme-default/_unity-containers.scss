@@ -1,0 +1,23 @@
+/* region ------------ ScrollView ------------ */
+
+.unity-scroll-view {
+  width: 100%;
+  height: 100%;
+  background-color: #1e2129;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+/* endregion ------------ ScrollView ------------ */
+
+/* region ------------ ListView ------------ */
+
+.unity-list-view > .unity-scroll-view {
+  width: 100%;
+  height: 100%;
+  background-color: initial;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+/* endregion ------------ ListView ------------ */
