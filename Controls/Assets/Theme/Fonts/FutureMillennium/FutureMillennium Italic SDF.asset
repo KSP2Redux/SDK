@@ -161,6 +161,21 @@ MonoBehaviour:
     m_Scale: 1
     m_AtlasIndex: 0
     m_ClassDefinitionType: 0
+  - m_Index: 66
+    m_Metrics:
+      m_Width: 42.359375
+      m_Height: 13.1875
+      m_HorizontalBearingX: 8.796875
+      m_HorizontalBearingY: 13.1875
+      m_HorizontalAdvance: 57.125
+    m_GlyphRect:
+      m_X: 73
+      m_Y: 265
+      m_Width: 44
+      m_Height: 14
+    m_Scale: 1
+    m_AtlasIndex: 0
+    m_ClassDefinitionType: 0
   - m_Index: 68
     m_Metrics:
       m_Width: 53.5625
@@ -236,25 +251,14 @@ MonoBehaviour:
     m_Scale: 1
     m_AtlasIndex: 0
     m_ClassDefinitionType: 0
-  - m_Index: 66
-    m_Metrics:
-      m_Width: 42.359375
-      m_Height: 13.1875
-      m_HorizontalBearingX: 8.796875
-      m_HorizontalBearingY: 13.1875
-      m_HorizontalAdvance: 57.125
-    m_GlyphRect:
-      m_X: 73
-      m_Y: 265
-      m_Width: 44
-      m_Height: 14
-    m_Scale: 1
-    m_AtlasIndex: 0
-    m_ClassDefinitionType: 0
   m_CharacterTable:
   - m_ElementType: 1
     m_Unicode: 76
     m_GlyphIndex: 47
+    m_Scale: 1
+  - m_ElementType: 1
+    m_Unicode: 95
+    m_GlyphIndex: 66
     m_Scale: 1
   - m_ElementType: 1
     m_Unicode: 97
@@ -275,10 +279,6 @@ MonoBehaviour:
   - m_ElementType: 1
     m_Unicode: 8230
     m_GlyphIndex: 487
-    m_Scale: 1
-  - m_ElementType: 1
-    m_Unicode: 95
-    m_GlyphIndex: 66
     m_Scale: 1
   m_AtlasTextures:
   - {fileID: -3583776834295504319}
@@ -349,7 +349,12 @@ MonoBehaviour:
     m_GlyphPairAdjustmentRecords: []
     m_MarkToBaseAdjustmentRecords: []
     m_MarkToMarkAdjustmentRecords: []
-  m_FallbackFontAssetTable: []
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: 5d23620e1b8bb5e49ab80186ee3fed9b, type: 2}
+  - {fileID: 11400000, guid: d33ea30b993a81b488080baaf5774437, type: 2}
+  - {fileID: 11400000, guid: d3b1a1905b29fcf4486068baa3e2ff48, type: 2}
+  - {fileID: 11400000, guid: cbfd30a0bf5f0de44ab9795b2f6a09a8, type: 2}
+  - {fileID: 11400000, guid: 7e59a668a0d7f70429ea9a2737af9ff9, type: 2}
   m_fontAssetCreationEditorSettings:
     sourceFontFileGUID: d71b82c5cf6e9b049b3fa0e8f1a716bd
     faceIndex: 0

@@ -13,11 +13,11 @@
     /*noinspection CssUnknownTarget*/
     --font-title-big-italic: url('Fonts/LEDCounter7/led_counter-7_italic SDF.asset');
     /*noinspection CssUnknownTarget*/
-    --font-title-small: url('Fonts/FutureMillennium/FutureMillennium SDF.asset');
+    --font-title-small: url('Fonts/SFPixelate/pixelate SDF.asset');
     /*noinspection CssUnknownTarget*/
-    --font-title-small-bold: url('Fonts/FutureMillennium/FutureMillennium Black SDF.asset');
+    --font-title-small-bold: url('Fonts/SFPixelate/pixelate SDF.asset');
     /*noinspection CssUnknownTarget*/
-    --font-title-small-italic: url('Fonts/FutureMillennium/FutureMillennium Italic SDF.asset');
+    --font-title-small-italic: url('Fonts/SFPixelate/pixelate SDF.asset');
     /*noinspection CssInvalidFunction,CssUnresolvedCustomProperty,CssUnknownProperty*/
     -unity-font-definition: var(--font-bold);
     color: #c0c7d5;
