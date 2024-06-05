@@ -30,6 +30,6 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
                 loadKspCatalogTask.WaitForCompletion();
             }
         }
-    }
 #endif
+    }
 }
