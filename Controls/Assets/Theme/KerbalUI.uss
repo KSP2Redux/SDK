@@ -156,23 +156,23 @@
 
 /* region ============ Sliders ============ */
 
-.unity-base-slider--horizontal, .unity-min-max-slider {
+.unity-base-slider, .unity-min-max-slider {
     margin: 0;
     padding: 4px 0;
 }
 
-.unity-base-slider--horizontal:focus > .unity-base-field__label, .unity-min-max-slider:focus > .unity-base-field__label {
+.unity-base-slider:focus > .unity-base-field__label, .unity-min-max-slider:focus > .unity-base-field__label {
     color: #c0c7d5;
 }
 
-.unity-base-slider--horizontal > .unity-base-field__input, .unity-min-max-slider > .unity-base-field__input {
+.unity-base-slider > .unity-base-field__input, .unity-min-max-slider > .unity-base-field__input {
     background-color: #292f39;
     border-color: #444b57;
     border-width: 1px;
     border-radius: 6px;
 }
 
-.unity-base-slider--horizontal > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__dragger,
+.unity-base-slider > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__dragger,
 .unity-min-max-slider > .unity-base-field__input > .unity-min-max-slider__dragger > .unity-min-max-slider__min-thumb,
 .unity-min-max-slider > .unity-base-field__input > .unity-min-max-slider__dragger > .unity-min-max-slider__max-thumb {
     background-color: #c5e5f5;
@@ -180,7 +180,7 @@
     border-radius: 4px;
 }
 
-.unity-base-slider--horizontal > .unity-base-field__input > .unity-base-slider__drag-container:active > .unity-base-slider__dragger,
+.unity-base-slider > .unity-base-field__input > .unity-base-slider__drag-container:active > .unity-base-slider__dragger,
 .unity-min-max-slider > .unity-base-field__input:active > .unity-min-max-slider__dragger > .unity-min-max-slider__min-thumb,
 .unity-min-max-slider > .unity-base-field__input:active > .unity-min-max-slider__dragger > .unity-min-max-slider__max-thumb {
     background-color: #51698e;
@@ -189,11 +189,26 @@
 }
 
 .unity-base-slider--horizontal > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
-    background-color: #82a7e1;
-    margin: 0 8px;
     height: 1px;
+}
+
+.unity-base-slider--vertical > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    width: 1px;
+}
+
+.unity-base-slider > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    background-color: #82a7e1;
     border-width: 0;
 }
+
+.unity-base-slider--horizontal > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    margin: 0 8px;
+}
+
+.unity-base-slider--vertical > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    margin: 8px 0;
+}
+
 .unity-min-max-slider > .unity-base-field__input > .unity-min-max-slider__tracker {
     margin: 0 8px;
     height: 1px;
@@ -367,6 +382,59 @@
 .unity-toggle.toggle:checked > .unity-base-field__input:hover > .unity-toggle__checkmark{
     border-color: #000000;
     background-image: none;
+}
+
+/* endregion */
+
+/* region ============ RadioButton ============ */
+
+.unity-radio-button {
+    margin: 0;
+    padding: 0;
+    align-items: flex-end;
+}
+
+.unity-radio-button > .unity-radio-button__label {
+    font-size: 13px;
+    color: #ffffff;
+    margin-left: 6px;
+}
+
+.unity-radio-button:checked > .unity-radio-button__label,
+.unity-radio-button:focus > .unity-radio-button__label {
+    color: #ffffff;
+}
+
+.unity-radio-button > .unity-radio-button__input {
+    width: 20px;
+    height: 20px;
+    border-radius: 8px;
+    border-width: 2px;
+    border-color: #b5bcc9;
+    padding: 0;
+}
+
+.unity-radio-button:hover > .unity-radio-button__input {
+    border-color: #7a7f88;
+}
+
+
+.unity-radio-button:checked > .unity-radio-button__input,
+.unity-radio-button:focus > .unity-radio-button__input {
+    border-color: #00cc53;
+}
+
+.unity-radio-button > .unity-radio-button__input > .unity-radio-button__checkmark-background {
+    background-color: #0e1014;
+    padding-top: 6px;
+    margin-left: -4px;
+}
+
+.unity-radio-button > .unity-radio-button__input .unity-radio-button__checkmark {
+    border-radius: 3px;
+    width: 10px;
+    height: 10px;
+    background-color: #00cc53;
 }
 
 /* endregion */
