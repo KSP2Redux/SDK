@@ -283,36 +283,36 @@
 
 /* region ============ TextField ============ */
 
-.unity-text-field {
+.unity-base-text-field {
     margin: 0;
     padding: 4px 0;
     --unity-cursor-color:#ffffff;
 }
 
-.unity-text-field > .unity-base-text-field__input {
+.unity-base-text-field > .unity-base-text-field__input {
     background-color: rgba(0, 0, 0, 0.3);
     border-color: rgba(0, 0, 0, 0);
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
-.unity-text-field:hover > .unity-base-text-field__input {
+.unity-base-text-field:hover > .unity-base-text-field__input {
     background-color: #001632;
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
-.unity-text-field:focus > .unity-base-text-field__input {
+.unity-base-text-field:focus > .unity-base-text-field__input {
     background-color: #00260d;
     padding: 5px;
     margin: 2px 0 0 0;
 }
 
-.unity-text-field > .unity-base-field__label {
+.unity-base-text-field > .unity-base-field__label {
     -unity-text-align: middle-left;
 }
 
-.unity-text-field:focus > .unity-base-field__label {
+.unity-base-text-field:focus > .unity-base-field__label {
     color: #c0c7d5;
 }
 
@@ -550,6 +550,72 @@
 
 .unity-base-popup-field__arrow {
     margin-right: 5px;
+}
+
+/* endregion */
+
+/******************************************************
+ ******************** OAB-style UI ********************
+ ******************************************************/
+
+/* region ============ OAB-style Button ============ */
+
+.oab-button {
+    color: rgb(0, 0, 0);
+    border-width: 1px;
+    padding: 1px;
+    border-radius: 8px;
+}
+
+.oab-button,
+.oab-button:hover,
+.oab-button:active,
+.oab-button:focus {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgb(87, 95, 111);
+}
+
+.oab-button > .oab-button__inner {
+    flex-grow: 1;
+    background-color: rgb(189, 196, 209);
+    border-radius: 7px;
+    justify-content: center;
+}
+
+.oab-button:hover > .oab-button__inner {
+    background-color: rgb(214, 224, 255);
+}
+
+.oab-button:active > .oab-button__inner {
+    background-color: rgb(191, 202, 235);
+}
+
+.oab-button > .oab-button__inner > .oab-button__label {
+    color: rgb(34, 38, 46);
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-style: bold;
+    height: 100%;
+    padding-top: 6px;
+    font-size: 16px;
+    position: absolute;
+    width: 100%;
+}
+
+/* endregion */
+
+/* region ============ OAB-style TextField ============ */
+
+.oab-text-field > .unity-base-text-field__input,
+.oab-text-field:hover > .unity-base-text-field__input,
+.oab-text-field:active > .unity-base-text-field__input,
+.oab-text-field:focus > .unity-base-text-field__input {
+    border-radius: 8px;
+    border-width: 1px;
+    background-color: rgba(0, 0, 0, 0.113);
+    border-color: rgb(81, 89, 103);
+    height: 28px;
+    color: rgb(165, 171, 184);
+    margin: 0;
 }
 
 /* endregion */
