@@ -5,7 +5,7 @@ Shader "KSP2/Parts/Paintable"
         [Header(Color)] _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Albedo Map", 2D) = "white" { }
         [Space()] [Header(Metallic Smoothness)] _MetallicGlossMap ("Metallic", 2D) = "white" { }
-        _Metallic ("Metallic/Smoothness Map", Range(0, 1)) = 0
+        _Metallic ("Metallic/Smoothness Map", Range(0, 1)) = 1
         _GlossMapScale ("Smoothness Scale", Range(0, 1)) = 1
         _MipBias ("Mip Bias", Range(0, 1)) = 0.8
         [Space()] [Header(Normals)] _BumpMap ("Normal Map", 2D) = "bump" { }
@@ -24,7 +24,7 @@ Shader "KSP2/Parts/Paintable"
         _PaintB ("Paint Color B", Color) = (1,1,1,0)
         _PaintMaskGlossMap ("Paint Mask (RG Masks B Dirt A Smooth)", 2D) = "white" { }
         _PaintGlossMapScale ("Paint Smoothness Scale", Range(0, 1)) = 1
-        [Toggle] _SmoothnessOverride ("Use PaintMask for Paint Smoothness (And not the Metallic Map)?", Float) = 0
+        [Toggle] _SmoothnessOverride ("Use PaintMask for Paint Smoothness (And not the Metallic Map)?", Float) = 1
         _RimFalloff ("_RimFalloff", Range(0.01, 5)) = 0.1
         _RimColor ("_RimColor", Color) = (0,0,0,0)
         [Header(Rendering)] [Enum(UnityEngine.Rendering.CullMode)] _Culling ("Cull Mode", Float) = 2
@@ -100,21 +100,21 @@ Shader "KSP2/Parts/Paintable"
             c.rgba = lerp(c.rgba, paintBColor, PaintMaskColor.r);
 
             fixed4 paintColor = lerp(paintAColor, paintBColor, PaintMaskColor.r);
-            
+
             _Metallic = MetallicValue.a;
 
             if(_SmoothnessOverride){
                 _Metallic = lerp(_Metallic, PaintMaskColor.a, _PaintA.a * PaintMaskColor.g);
                 _Metallic = lerp(_Metallic, PaintMaskColor.a, _PaintB.a * PaintMaskColor.r);
                 }
-            
+
             o.Albedo = c;
             o.Metallic = MetallicValue.rgb;
             o.Smoothness = _Metallic * _GlossMapScale;
             o.Normal = UnpackNormal (tex2D(_BumpMap, IN.uv_BumpMap));
             o.Occlusion = tex2D(_OcclusionMap, IN.uv_OcclusionMap);
             o.Occlusion = o.Occlusion * _OcclusionStrength;
-            
+
           half rim = 1.0 - saturate(dot (normalize(IN.viewDir), o.Normal));
           o.Emission = tex2D(_EmissionMap, IN.uv_EmissionMap) * _EmissionColor + (_RimColor.rgb * pow (rim, _RimFalloff));
 
