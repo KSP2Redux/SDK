@@ -12,8 +12,6 @@ namespace ksp2community.ksp2unitytools.editor
         public string savedBuildMode = "Everything";
         public string savedModAddressablesPath = "";
         public string savedKsp2Path = "";
-        public bool loadTkImportedCatalog = false;
-        public string loadTkImportedCatalogPath = "StreamingAssets/aa/catalog.json";
 
         public void AddIgnoredFile(string file)
         {

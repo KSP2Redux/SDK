@@ -8,6 +8,11 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
 {
     public class LoadTkImportedCatalog : AssetPostprocessor
     {
+        // This must be the same as the output of the ImportKsp2ToEditor pipeline.
+        private const string loadTkImportedCatalogPath = "DoNotDistribute/aa/catalog.json";
+        // Path must be relative to Assets directory.
+        private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
+
 #if TK_ADDRESSABLE
         /// <summary>
         /// Loads an addressable catalog into a resource locator after domain reload.
@@ -16,17 +21,25 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
         /// </summary>
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
         {
-            if (!didDomainReload || !KSP2UnityToolsManager.Settings.loadTkImportedCatalog)
+            if (!didDomainReload)
             {
                 return;
             }
 
-            var tkAssetCatalogPath = KSP2UnityToolsManager.Settings.loadTkImportedCatalogPath;
-            var fullPath = Path.Join(Application.dataPath, tkAssetCatalogPath);
+            var tkAssetCatalogPath = loadTkImportedCatalogPath;
+            var ksp2CatalogFullPath = Path.Join(Application.dataPath, tkAssetCatalogPath);
 
-            if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Contains(fullPath))
+            if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Contains(ksp2CatalogFullPath))
             {
-                var loadKspCatalogTask = Addressables.LoadContentCatalogAsync(fullPath, true);
+                var loadKspCatalogTask = Addressables.LoadContentCatalogAsync(ksp2CatalogFullPath, true);
+                loadKspCatalogTask.WaitForCompletion();
+            }
+
+            // Load the Redux asset catalog too
+            if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Where(id => id.Contains(reduxCatalogPath)).Any())
+            {
+                var reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
+                var loadKspCatalogTask = Addressables.LoadContentCatalogAsync(reduxCatalogFullPath, true);
                 loadKspCatalogTask.WaitForCompletion();
             }
         }
