@@ -22,7 +22,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         private static bool _centerOfMassGizmos = true;
         private static bool _centerOfLiftGizmos = true;
         private static bool _attachNodeGizmos = true;
-        
+
 
         public static bool DragCubeGizmos = true;
 
@@ -46,7 +46,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
 
         private static PersistentDictionary _iconAddressOverrides;
         private static PersistentDictionary IconAddressOverrides => _iconAddressOverrides ??= KSP2UnityToolsManager.GetDictionary("IconAddressOverrides");
-        
+
 
         private GameObject TargetObject => TargetData.gameObject;
         private CorePartData TargetData => target as CorePartData;
@@ -111,7 +111,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
             //     prefabAddress = EditorGUILayout.TextField("Prefab Address", prefabAddress);
             // IconAddressOverrides[TargetObject.name] =
             //     iconAddress = EditorGUILayout.TextField("Icon Address", iconAddress);
-            
+
             GUILayout.Label("Part Saving", EditorStyles.boldLabel);
             var patchPath = "plugin_template/patches/%NAME%.patch";
             var jsonPath = "%NAME%.json";
@@ -152,7 +152,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 AssetDatabase.ImportAsset(path);
                 AssetDatabase.Refresh();
                 AssetDatabase.SaveAssets();
-                EditorUtility.DisplayDialog("Patch Exported", $"Patch is at: {path}", "ok"); 
+                EditorUtility.DisplayDialog("Patch Exported", $"Patch is at: {path}", "ok");
             }
             JsonPaths[TargetObject.name] = jsonPath = EditorGUILayout.TextField("JSON Path", jsonPath);
             if (GUILayout.Button("Save Part JSON"))
@@ -204,13 +204,13 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
             {
                 var centerOfMassPosition = data.Data.coMassOffset;
                 centerOfMassPosition = localToWorldMatrix.MultiplyPoint(centerOfMassPosition);
-                Gizmos.DrawIcon(centerOfMassPosition, "Packages/ksp2community.ksp2unitytools/Assets/Gizmos/com_icon.png", false);
+                Gizmos.DrawIcon(centerOfMassPosition, "Packages/ksp2community.ksp2unitytools/Editor/KSP2UnityTools/Assets/Gizmos/com_icon.png", false);
             }
             if (_centerOfLiftGizmos)
             {
                 var centerOfLiftPosition = data.Data.coLiftOffset;
                 centerOfLiftPosition = localToWorldMatrix.MultiplyPoint(centerOfLiftPosition);
-                Gizmos.DrawIcon(centerOfLiftPosition, "Packages/ksp2community.ksp2unitytools/Assets/Gizmos/col_icon.png", false);
+                Gizmos.DrawIcon(centerOfLiftPosition, "Packages/ksp2community.ksp2unitytools/Editor/KSP2UnityTools/Assets/Gizmos/col_icon.png", false);
             }
             if (!_attachNodeGizmos) return;
             Gizmos.color = new Color(Color.green.r, Color.green.g, Color.green.b, 0.5f);

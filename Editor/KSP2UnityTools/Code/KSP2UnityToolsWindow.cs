@@ -57,22 +57,22 @@ namespace ksp2community.ksp2unitytools.editor
         private Button _generateSwinfo;
         private Button _importSwinfo;
         private Button _buildMod;
-        
+
         private TextField _modAddressablesPath;
         private Button _browseModAddressablesPath;
         private TextField _gamePath;
         private Button _browseGamePath;
         private Button _buildAndTest;
-        
+
         private void CreateGUI()
         {
             InitializeModInfo();
             var doc = AssetDatabase
                 .LoadAssetAtPath<VisualTreeAsset>(
-                    "Packages/ksp2community.ksp2unitytools/Assets/KSP2UnityTools/KSP2UnityToolsSDK.uxml").Instantiate();
+                    "Packages/ksp2community.ksp2unitytools/Editor/KSP2UnityTools/Assets/KSP2UnityToolsSDK.uxml").Instantiate();
             _dependencyTemplate =
                 AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                    "Packages/ksp2community.ksp2unitytools/Assets/KSP2UnityTools/SwinfoDependency.uxml");
+                    "Packages/ksp2community.ksp2unitytools/Editor/KSP2UnityTools/Assets/SwinfoDependency.uxml");
             rootVisualElement.Add(doc);
             _buildMode = doc.Q<DropdownField>("BuildMode");
             _buildMode.SetValueWithoutNotify(KSP2UnityToolsManager.Settings.savedBuildMode);
@@ -98,29 +98,29 @@ namespace ksp2community.ksp2unitytools.editor
                 EditorUtility.SetDirty(_projectModInfo);
             });
             _modName = doc.Q<TextField>("ModName");
-            _modName.RegisterValueChangedCallback(evt => { _projectModInfo.name = evt.newValue; 
+            _modName.RegisterValueChangedCallback(evt => { _projectModInfo.name = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _modAuthor = doc.Q<TextField>("ModAuthor");
-            _modAuthor.RegisterValueChangedCallback(evt => { _projectModInfo.author = evt.newValue; 
+            _modAuthor.RegisterValueChangedCallback(evt => { _projectModInfo.author = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _modDescription = doc.Q<TextField>("ModDescription");
-            _modDescription.RegisterValueChangedCallback(evt => { _projectModInfo.description = evt.newValue; 
+            _modDescription.RegisterValueChangedCallback(evt => { _projectModInfo.description = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _modSource = doc.Q<TextField>("ModSource");
-            _modSource.RegisterValueChangedCallback(evt => { _projectModInfo.source = evt.newValue; 
+            _modSource.RegisterValueChangedCallback(evt => { _projectModInfo.source = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _modVersion = doc.Q<TextField>("Version");
-            _modVersion.RegisterValueChangedCallback(evt => { _projectModInfo.version = evt.newValue; 
+            _modVersion.RegisterValueChangedCallback(evt => { _projectModInfo.version = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _versionCheck = doc.Q<TextField>("VersionCheck");
-            _versionCheck.RegisterValueChangedCallback(evt => { _projectModInfo.versionCheck = evt.newValue; 
+            _versionCheck.RegisterValueChangedCallback(evt => { _projectModInfo.versionCheck = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _ksp2Version = doc.Q<Foldout>("KSP2Version");
             _ksp2Min = doc.Q<TextField>("MinimumKSP2Version");
-            _ksp2Min.RegisterValueChangedCallback(evt => { _projectModInfo.minKsp2Version = evt.newValue; 
+            _ksp2Min.RegisterValueChangedCallback(evt => { _projectModInfo.minKsp2Version = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _ksp2Max = doc.Q<TextField>("MaximumKSP2Version");
-            _ksp2Max.RegisterValueChangedCallback(evt => { _projectModInfo.maxKsp2Version = evt.newValue; 
+            _ksp2Max.RegisterValueChangedCallback(evt => { _projectModInfo.maxKsp2Version = evt.newValue;
                 EditorUtility.SetDirty(_projectModInfo);});
             _dependencies = doc.Q<Foldout>("Dependencies");
             _dependencyContainer = doc.Q("DependencyContainer");
@@ -275,8 +275,8 @@ namespace ksp2community.ksp2unitytools.editor
             UpdateModInfoDisplay();
             EditorUtility.SetDirty(_projectModInfo);
         }
-        
-        
+
+
         private void SetupAddressables()
         {
             if (AddressableAssetSettingsDefaultObject.Settings == null)
@@ -322,7 +322,7 @@ namespace ksp2community.ksp2unitytools.editor
             if (data.ContainsKey("mod_id")) _projectModInfo.id = data["mod_id"]!.Value<string>();
             if (data.ContainsKey("name")) _projectModInfo.name = data["name"]!.Value<string>();
             if (data.ContainsKey("version")) _projectModInfo.version = data["version"]!.Value<string>();
-            
+
             if (data.ContainsKey("author")) _projectModInfo.author = data["author"]!.Value<string>();
             if (data.ContainsKey("description")) _projectModInfo.description = data["description"]!.Value<string>();
             if (data.ContainsKey("source")) _projectModInfo.source = data["source"]!.Value<string>();
@@ -355,7 +355,7 @@ namespace ksp2community.ksp2unitytools.editor
                     _projectModInfo.dependencies.Add(dependency);
                 }
             }
-            
+
             if (data.TryGetValue("conflicts", out var conflicts))
             {
                 var depJArray = conflicts as JArray;
@@ -374,7 +374,7 @@ namespace ksp2community.ksp2unitytools.editor
                     _projectModInfo.incompatibilities.Add(dependency);
                 }
             }
-            
+
             EditorUtility.SetDirty(_projectModInfo);
             UpdateModInfoDisplay();
         }
@@ -427,7 +427,7 @@ namespace ksp2community.ksp2unitytools.editor
             BuildPipeline.BuildAssetBundles(assetBundleDirectory, BuildAssetBundleOptions.None,
                 BuildTarget.StandaloneWindows);
         }
-        
+
         private void BuildAddressables()
         {
             BuildAssetBundles();
@@ -460,7 +460,7 @@ namespace ksp2community.ksp2unitytools.editor
                 }
                 CopyDirectory("Library/com.unity.addressables/aa/Windows",
                     $"KSP2UnityToolsTempBuild/BepInEx/Plugins/{_projectModInfo.id}/addressables", true);
-                
+
                 if (File.Exists(_buildPath.text)) File.Delete(_buildPath.text);
                 ZipFile.CreateFromDirectory("KSP2UnityToolsTempBuild", _buildPath.text);
             }
@@ -507,5 +507,5 @@ namespace ksp2community.ksp2unitytools.editor
             Process.Start(_gamePath.text);
         }
     }
-    
+
 }
