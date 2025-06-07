@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: lfo-volumetric (additive)
+  m_Shader: {fileID: 4800000, guid: f772fb23f7cbd5b429c3569d0cf9aa53, type: 3}
+  m_ShaderKeywords: ABSOLUTE CUSTOM_ZTEST USE_BOUNDS _SATURATECOLOR_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _NoiseTex:
+        m_Texture: {fileID: 11700000, guid: b016919ffe90be04d9bedcf5abf6713c, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _Absolute: 1
+    - _Brightness: 1
+    - _ColorHighPosition: 1
+    - _ColorLowPosition: 0
+    - _ColorMediumPosition: 0.5
+    - _ColorOffset: 1
+    - _CustomZTest: 1
+    - _DI: 0
+    - _DebugMode: 0
+    - _DensityLowerClip: 0
+    - _DensityLowerThreshold: 0
+    - _DensityMultiplier: 1
+    - _DensityUpperClip: 1
+    - _DensityUpperThreshold: 1
+    - _EndPosition: 0.5
+    - _ExpansionDensityInvMultiplier: 1
+    - _Falloff: 1
+    - _Hollow: 0
+    - _InnerRadius: 0
+    - _LinearExpansion: 0
+    - _MinimumResolution: 8
+    - _Noise: 1
+    - _NoiseFresnel: 0
+    - _NoiseScale: 1
+    - _Opacity: 1
+    - _QuadraticExpansion: 0
+    - _RadialFalloff: 1
+    - _RadialFalloffPosition: 0.9
+    - _Radius: 1
+    - _Resolution: 2
+    - _ResolutionMultiplier: 1
+    - _StartFalloff: 0
+    - _StartPosition: 0.2
+    - _UseBounds: 1
+    - _UseLog: 0
+    - _YAnchorOffset: 0
+    - _apply_late: 0
+    m_Colors:
+    - _ColorHigh: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorLow: {r: 1, g: 0, b: 0, a: 1}
+    - _ColorMedium: {r: 1, g: 0, b: 0, a: 1}
+    - _NoiseTexTilling: {r: 1, g: 1, b: 1, a: 0}
+    - _ShapeNoiseWeights: {r: 1, g: 1, b: 1, a: 1}
+    - _Velocity: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
