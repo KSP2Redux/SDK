@@ -408,10 +408,11 @@
 .unity-radio-button > .unity-radio-button__input {
     width: 20px;
     height: 20px;
-    border-radius: 8px;
-    border-width: 2px;
+    border-radius: 7px;
+    border-width: 1px;
     border-color: #b5bcc9;
     padding: 0;
+    background-color: #0e1014;
 }
 
 .unity-radio-button:hover > .unity-radio-button__input {
@@ -425,9 +426,10 @@
 }
 
 .unity-radio-button > .unity-radio-button__input > .unity-radio-button__checkmark-background {
-    background-color: #0e1014;
+    /*background-color: #0e1014;*/
+    background-color: transparent;
     padding-top: 6px;
-    margin-left: -4px;
+    margin-left: -3px;
 }
 
 .unity-radio-button > .unity-radio-button__input .unity-radio-button__checkmark {
