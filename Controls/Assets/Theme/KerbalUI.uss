@@ -603,6 +603,40 @@
     width: 100%;
 }
 
+.oab-button.destructive > .oab-button__inner {
+    background-color: #d1adad;
+}
+
+.oab-button.destructive:hover > .oab-button__inner {
+    background-color: #d19292;
+}
+
+.oab-button.destructive:active > .oab-button__inner {
+    background-color: #d17777;
+}
+
+.unity-button.oab-close-button {
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin-right: -4px;
+    margin-top: -4px;
+    font-size: 20px;
+    border-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(127, 133, 152);
+}
+
+.unity-button.oab-close-button:hover {
+    color: rgb(120, 21, 18);
+}
+
+.unity-button.oab-close-button:active {
+    color: rgb(189, 26, 24);
+}
+
+
 /* endregion */
 
 /* region ============ OAB-style TextField ============ */
@@ -618,6 +652,62 @@
     height: 28px;
     color: rgb(165, 171, 184);
     margin: 0;
+}
+
+/* endregion */
+
+/* region ============ OAB-style button-like Toggle ============ */
+
+.oab-button-toggle {
+    color: rgb(0, 0, 0);
+    border-width: 1px;
+    padding: 1px;
+    border-radius: 8px;
+    margin: 0;
+}
+
+.oab-button-toggle,
+.oab-button-toggle:hover,
+.oab-button-toggle:active,
+.oab-button-toggle:focus {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgb(87, 95, 111);
+}
+
+.oab-button-toggle > .oab-button-toggle__label {
+    color: rgb(34, 38, 46);
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-style: bold;
+    height: 100%;
+    padding-top: 6px;
+    font-size: 16px;
+    position: absolute;
+    width: 100%;
+    -unity-text-align: middle-center;
+}
+
+.oab-button-toggle > .unity-toggle__input {
+    flex-grow: 1;
+    background-color: rgb(189, 196, 209);
+    border-radius: 7px;
+    justify-content: center;
+    width: 100%;
+}
+
+.oab-button-toggle > .unity-toggle__input > .unity-toggle__checkmark {
+    visibility: hidden;
+}
+
+.oab-button-toggle:hover > .unity-toggle__input {
+    background-color: rgb(214, 224, 255);
+}
+
+.oab-button-toggle:active > .unity-toggle__input {
+    background-color: rgb(191, 202, 235);
+}
+
+.oab-button-toggle:checked > .unity-toggle__input {
+    background-color: rgb(188, 161, 255);
 }
 
 /* endregion */
