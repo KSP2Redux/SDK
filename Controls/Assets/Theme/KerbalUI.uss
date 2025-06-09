@@ -730,4 +730,98 @@
     background-color: rgb(188, 161, 255);
 }
 
+.oab-button-toggle > .oab-button-toggle-label {
+    color: rgb(34, 38, 46);
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-style: bold;
+    height: 100%;
+    padding-top: 6px;
+    font-size: 16px;
+    position: absolute;
+    width: 100%;
+    -unity-text-align: middle-center;
+}
+
+/* endregion */
+
+/* region ============ Staging stack-like Toggle ============ */
+
+.bar-toggle {
+    height: 16px;
+    width: initial;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    justify-content: center;
+}
+
+.bar-toggle:hover {
+    background-color: rgb(0, 204, 81);
+}
+
+.bar-toggle.bar-toggle-vertical {
+    flex-direction: column;
+    width: 16px;
+    height: initial;
+}
+
+.bar-toggle > .unity-toggle__input {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    bottom: 2px;
+    left: 2px;
+    background-image: url('project://database/Assets/ReduxAssets/UI/Component/bracket.png?fileID=2800000&guid=57aeb0876b8ec694e81f46be8cf94188&type=3#bracket');
+    -unity-slice-top: 14;
+    -unity-slice-bottom: 14;
+    -unity-slice-left: 14;
+    -unity-slice-right: 14;
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(170, 178, 204);
+}
+
+.bar-toggle:hover > .unity-toggle__input {
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+}
+
+.bar-toggle > .bar-toggle-arrow {
+    width: 8px;
+    height: 8px;
+    margin: 4px;
+    background-image: url('project://database/Assets/ReduxAssets/UI/Component/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand');
+    -unity-background-image-tint-color: rgb(170, 178, 204);
+}
+
+.bar-toggle:checked > .bar-toggle-arrow {
+    background-image: url('project://database/Assets/ReduxAssets/UI/Component/icon-expand-left.png?fileID=21300000&guid=04691fd6fa6913048b69a2e2144fa29f&type=3#icon-expand-left');
+}
+
+.bar-toggle:hover > .bar-toggle-arrow {
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+}
+
+.bar-toggle > .bar-toggle-dot {
+    width: 6px;
+    height: 6px;
+    margin: 5px;
+    border-radius: 4px;
+    background-color: rgb(114, 138, 231);
+}
+
+.bar-toggle:hover > .bar-toggle-dot {
+    background-color: rgb(255, 255, 255);
+}
+
+.bar-toggle > .bar-toggle-dot.bar-toggle-dot-open {
+    display: none;
+}
+
+.bar-toggle:checked > .bar-toggle-dot.bar-toggle-dot-open {
+    display: flex;
+}
+
+.bar-toggle > .unity-toggle__input > .unity-toggle__checkmark {
+    display: none;
+}
+
 /* endregion */
