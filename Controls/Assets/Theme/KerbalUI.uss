@@ -603,16 +603,36 @@
     width: 100%;
 }
 
+.oab-button.destructive {
+    border-color: rgb(209, 173, 173);
+}
+
 .oab-button.destructive > .oab-button__inner {
-    background-color: #d1adad;
+    background-color: rgb(209, 173, 173);
+}
+
+.oab-button.destructive:hover {
+    border-color: rgb(209, 146, 146);
 }
 
 .oab-button.destructive:hover > .oab-button__inner {
-    background-color: #d19292;
+    background-color: rgb(209, 146, 146);
+}
+
+.oab-button.destructive:active {
+    border-color: rgb(209, 119, 119);
 }
 
 .oab-button.destructive:active > .oab-button__inner {
-    background-color: #d17777;
+    background-color: rgb(209, 119, 119);
+}
+
+.oab-button.active {
+    border-color: rgb(188, 161, 255);
+}
+
+.oab-button.active > .oab-button__inner {
+    background-color: rgb(188, 161, 255);
 }
 
 .unity-button.oab-close-button {
