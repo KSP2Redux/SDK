@@ -730,6 +730,10 @@
     background-color: rgb(188, 161, 255);
 }
 
+.oab-button-toggle:checked:hover > .unity-toggle__input {
+    background-color: rgb(206, 190, 255);
+}
+
 .oab-button-toggle > .oab-button-toggle-label {
     color: rgb(34, 38, 46);
     -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
