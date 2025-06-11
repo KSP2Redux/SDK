@@ -60,9 +60,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NotoSans-Thin TMP
   m_EditorClassIdentifier: 
-  hashCode: 1128664786
+  hashCode: 1128676586
   material: {fileID: 3203851140846735039}
-  materialHashCode: -1928801614
+  materialHashCode: -1659351798
   m_Version: 1.1.0
   m_SourceFontFileGUID: 6b3b3d6f5644ab947849d9761f188aeb
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 6b3b3d6f5644ab947849d9761f188aeb, type: 3}
@@ -402,7 +402,11 @@ MonoBehaviour:
   m_FontFeatureTable:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
-  m_FallbackFontAssetTable: []
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: af101e68ffceae6439208708d50181bb, type: 2}
+  - {fileID: 11400000, guid: f188a858f02f86147892ce81a6f59bfa, type: 2}
+  - {fileID: 11400000, guid: 29f0d1e98163b51448f28a48b8e289b0, type: 2}
+  - {fileID: 11400000, guid: 8955e8ed8f80de241ad3b570c16cabc3, type: 2}
   m_CreationSettings:
     sourceFontFileName: 
     sourceFontFileGUID: 6b3b3d6f5644ab947849d9761f188aeb

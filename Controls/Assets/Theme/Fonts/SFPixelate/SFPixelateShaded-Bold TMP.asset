@@ -168,9 +168,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: SFPixelateShaded-Bold TMP
   m_EditorClassIdentifier: 
-  hashCode: 0
+  hashCode: -146160237
   material: {fileID: -8880737954646295803}
-  materialHashCode: 0
+  materialHashCode: 438396755
   m_Version: 1.1.0
   m_SourceFontFileGUID: bfde221619d23f94fa4960c35251c820
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: bfde221619d23f94fa4960c35251c820, type: 3}
@@ -244,7 +244,12 @@ MonoBehaviour:
   m_FontFeatureTable:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
-  m_FallbackFontAssetTable: []
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: 681337f2f7799d74e9e1bb98816850cf, type: 2}
+  - {fileID: 11400000, guid: af101e68ffceae6439208708d50181bb, type: 2}
+  - {fileID: 11400000, guid: f188a858f02f86147892ce81a6f59bfa, type: 2}
+  - {fileID: 11400000, guid: 29f0d1e98163b51448f28a48b8e289b0, type: 2}
+  - {fileID: 11400000, guid: 8955e8ed8f80de241ad3b570c16cabc3, type: 2}
   m_CreationSettings:
     sourceFontFileName: 
     sourceFontFileGUID: bfde221619d23f94fa4960c35251c820

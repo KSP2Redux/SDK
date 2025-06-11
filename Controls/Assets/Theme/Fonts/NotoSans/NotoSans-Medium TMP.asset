@@ -120,9 +120,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NotoSans-Medium TMP
   m_EditorClassIdentifier: 
-  hashCode: -270649676
+  hashCode: -270654516
   material: {fileID: -8469533131741248408}
-  materialHashCode: -2515180
+  materialHashCode: -1672226964
   m_Version: 1.1.0
   m_SourceFontFileGUID: fe541ff039fd3f04cb3aa87c3a2cd1b1
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: fe541ff039fd3f04cb3aa87c3a2cd1b1, type: 3}
@@ -1355,7 +1355,11 @@ MonoBehaviour:
   m_FontFeatureTable:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
-  m_FallbackFontAssetTable: []
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: af101e68ffceae6439208708d50181bb, type: 2}
+  - {fileID: 11400000, guid: f188a858f02f86147892ce81a6f59bfa, type: 2}
+  - {fileID: 11400000, guid: 29f0d1e98163b51448f28a48b8e289b0, type: 2}
+  - {fileID: 11400000, guid: 8955e8ed8f80de241ad3b570c16cabc3, type: 2}
   m_CreationSettings:
     sourceFontFileName: 
     sourceFontFileGUID: fe541ff039fd3f04cb3aa87c3a2cd1b1

@@ -60,9 +60,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: JetBrainsMono-SemiBold TMP
   m_EditorClassIdentifier: 
-  hashCode: -1724084202
+  hashCode: -1724089042
   material: {fileID: 8365944547489947738}
-  materialHashCode: -413151754
+  materialHashCode: 152095054
   m_Version: 1.1.0
   m_SourceFontFileGUID: 88a0e5e17f13e42449e218d4dfc5ecb5
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 88a0e5e17f13e42449e218d4dfc5ecb5, type: 3}
@@ -325,7 +325,11 @@ MonoBehaviour:
   m_FontFeatureTable:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
-  m_FallbackFontAssetTable: []
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: af101e68ffceae6439208708d50181bb, type: 2}
+  - {fileID: 11400000, guid: f188a858f02f86147892ce81a6f59bfa, type: 2}
+  - {fileID: 11400000, guid: 29f0d1e98163b51448f28a48b8e289b0, type: 2}
+  - {fileID: 11400000, guid: 8955e8ed8f80de241ad3b570c16cabc3, type: 2}
   m_CreationSettings:
     sourceFontFileName: 
     sourceFontFileGUID: 88a0e5e17f13e42449e218d4dfc5ecb5

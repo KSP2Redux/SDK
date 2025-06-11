@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NotoSans-ExtraLight TMP
   m_EditorClassIdentifier: 
-  hashCode: 988161901
+  hashCode: 988154325
   material: {fileID: 7690880691901465599}
-  materialHashCode: -2031819859
+  materialHashCode: -94524971
   m_Version: 1.1.0
   m_SourceFontFileGUID: 5d61e4538995a6643b1770553a6a320a
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 5d61e4538995a6643b1770553a6a320a, type: 3}
@@ -412,7 +412,11 @@ MonoBehaviour:
   m_FontFeatureTable:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
-  m_FallbackFontAssetTable: []
+  m_FallbackFontAssetTable:
+  - {fileID: 11400000, guid: af101e68ffceae6439208708d50181bb, type: 2}
+  - {fileID: 11400000, guid: f188a858f02f86147892ce81a6f59bfa, type: 2}
+  - {fileID: 11400000, guid: 29f0d1e98163b51448f28a48b8e289b0, type: 2}
+  - {fileID: 11400000, guid: 8955e8ed8f80de241ad3b570c16cabc3, type: 2}
   m_CreationSettings:
     sourceFontFileName: 
     sourceFontFileGUID: 5d61e4538995a6643b1770553a6a320a
