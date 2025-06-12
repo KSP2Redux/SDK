@@ -766,6 +766,10 @@
     justify-content: center;
 }
 
+.bar-toggle.dark {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
 .bar-toggle:hover {
     background-color: rgb(0, 204, 81);
 }
@@ -800,7 +804,7 @@
     width: 8px;
     height: 8px;
     margin: 4px;
-    background-image: url('project://database/Assets/ReduxAssets/UI/Component/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand');
+    background-image: url('project://database/Assets/ReduxAssets/UI/Component/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand-right');
     -unity-background-image-tint-color: rgb(170, 178, 204);
 }
 
@@ -834,6 +838,74 @@
 
 .bar-toggle > .unity-toggle__input > .unity-toggle__checkmark {
     display: none;
+}
+
+/* endregion */
+
+/* region ============ Flight view appbar panel ============ */
+
+.flight-panel {
+    background-color: rgb(0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    padding: 2px;
+    border-radius: 6px;
+}
+
+.flight-panel > .flight-panel-outer-container {
+}
+
+.flight-panel > .flight-panel-outer-container > .flight-panel-inner-container {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 6px;
+    border-color: rgb(42, 42, 102);
+    border-width: 1px;
+    justify-content: center;
+}
+
+.flight-panel > .flight-panel-outer-container >.flight-panel-label-outer-container {
+    background-color: rgba(0, 0, 0, 0);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 15px;
+}
+
+.flight-panel > .flight-panel-outer-container >.flight-panel-label-outer-container > .flight-panel-border-container {
+    position: absolute;
+    height: 5px;
+    bottom: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.flight-panel > .flight-panel-outer-container >.flight-panel-label-outer-container > .flight-panel-border-container > .flight-panel-border {
+    background-color: rgba(0, 0, 0, 0);
+    height: 15px;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    border-radius: 5px;
+    border-color: rgb(83, 86, 204);
+    border-width: 1px;
+}
+
+.flight-panel > .flight-panel-outer-container >.flight-panel-label-outer-container > .flight-panel-label-inner-container {
+    background-color: rgba(0, 0, 0, 0);
+    position: absolute;
+    width: 100%;
+    bottom: -1px;
+}
+
+.flight-panel > .flight-panel-outer-container >.flight-panel-label-outer-container > .flight-panel-label-inner-container > .flight-panel-label {
+    color: rgb(98, 102, 240);
+    font-size: 8px;
+    padding: 0 4px 0 5px;
+    align-self: center;
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
+    background-color: rgb(0, 0, 0);
+    -unity-font-style: bold;
+    -unity-text-align: upper-right;
 }
 
 /* endregion */
