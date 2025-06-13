@@ -845,7 +845,7 @@
 /* region ============ Flight view appbar panel ============ */
 
 .flight-panel {
-    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.98);
     border-color: rgba(0, 0, 0, 0);
     border-width: 0;
     padding: 2px;
@@ -901,9 +901,12 @@
     color: rgb(98, 102, 240);
     font-size: 8px;
     padding: 0 4px 0 5px;
+    height: 8px;
+    margin-bottom: 1px;
     align-self: center;
     -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
-    background-color: rgb(0, 0, 0);
+    border-color: rgb(0, 0, 0);
+    border-bottom-width: 1px;
     -unity-font-style: bold;
     -unity-text-align: upper-right;
 }
