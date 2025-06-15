@@ -899,16 +899,16 @@
 
 .flight-panel > .flight-panel-outer-container >.flight-panel-label-outer-container > .flight-panel-label-inner-container > .flight-panel-label {
     color: rgb(98, 102, 240);
-    font-size: 8px;
+    font-size: 8.8px;
     padding: 0 4px 0 5px;
-    height: 8px;
+    height: 10px;
     margin-bottom: 1px;
     align-self: center;
     -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
     border-color: rgb(0, 0, 0);
     border-bottom-width: 1px;
-    -unity-font-style: bold;
     -unity-text-align: upper-right;
+    letter-spacing: 16;
 }
 
 /* endregion */
