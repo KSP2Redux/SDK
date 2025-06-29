@@ -5,7 +5,7 @@ namespace Redux.VFX.Plumes.Editor.Services
 {
     public class UnityLogger : IPlumeLogger
     {
-        private const string Prefix = "[LFO]";
+        private const string Prefix = "[Plume]";
 
         public void LogInfo(object message)
         {
