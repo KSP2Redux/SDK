@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -35,8 +36,8 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
                 loadKspCatalogTask.WaitForCompletion();
             }
 
-            // Load the Redux asset catalog too
-            if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Where(id => id.Contains(reduxCatalogPath)).Any())
+            // Load the Redux asset catalog too, if and only if this is the package version of KSP2 Unity Tools and there is no locator already registerd
+            if (Assembly.GetExecutingAssembly().FullName == "ksp2community.ksp2unitytools.editor" && !Addressables.ResourceLocators.Select(rl => rl.LocatorId).Where(id => id.Contains(reduxCatalogPath)).Any())
             {
                 var reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
                 var loadKspCatalogTask = Addressables.LoadContentCatalogAsync(reduxCatalogFullPath, true);
