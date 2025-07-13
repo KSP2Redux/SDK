@@ -23,7 +23,7 @@ Texture2D:
   m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName: 
+  m_MipmapLimitGroupName:
   m_StreamingMipmaps: 0
   m_StreamingMipmapsPriority: 0
   m_VTOnly: 0
@@ -40,14 +40,14 @@ Texture2D:
     m_WrapW: 0
   m_LightmapFormat: 0
   m_ColorSpace: 1
-  m_PlatformBlob: 
+  m_PlatformBlob:
   image data: 0
-  _typelessdata: 
+  _typelessdata:
   m_StreamData:
     serializedVersion: 2
     offset: 0
     size: 0
-    path: 
+    path:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59,7 +59,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NeuePixelSans TMP
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   hashCode: -1607091019
   material: {fileID: 952927666876410311}
   materialHashCode: 2027539061
@@ -104,7 +104,7 @@ MonoBehaviour:
     m_Width: 1023
     m_Height: 1023
   m_fontInfo:
-    Name: 
+    Name:
     PointSize: 0
     Scale: 0
     CharacterCount: 0
@@ -143,7 +143,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 09b10ed121d5ec74d90146179360802d, type: 2}
   - {fileID: 11400000, guid: 66f4195e97e909d438f51e9991fe9be1, type: 2}
   m_CreationSettings:
-    sourceFontFileName: 
+    sourceFontFileName:
     sourceFontFileGUID: 3e0137c05a95f3743bd27dc0befe4a34
     pointSizeSamplingMode: 0
     pointSize: 90
@@ -152,9 +152,9 @@ MonoBehaviour:
     atlasWidth: 1024
     atlasHeight: 1024
     characterSetSelectionMode: 7
-    characterSequence: 
-    referencedFontAssetGUID: 
-    referencedTextAssetGUID: 
+    characterSequence:
+    referencedFontAssetGUID:
+    referencedTextAssetGUID:
     fontStyle: 0
     fontStyleModifier: 0
     renderMode: 4165
@@ -206,7 +206,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -241,7 +241,7 @@ Material:
     - _BumpFace: 0
     - _BumpOutline: 0
     - _ColorMask: 15
-    - _CullMode: 0
+    - _CullMode: 2
     - _Diffuse: 0.5
     - _FaceDilate: 0
     - _FaceUVSpeedX: 0

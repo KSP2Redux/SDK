@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -34,7 +34,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _ColorMask: 15
-    - _CullMode: 0
+    - _CullMode: 2
     - _FaceDilate: 0
     - _GradientScale: 10
     - _MaskEdgeSoftness: 0.01
@@ -85,12 +85,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 19001, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: SFPixelateShaded-Bold SDF
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   m_Version: 1.1.0
   m_Material: {fileID: -2501891025166315444}
   m_SourceFontFileGUID: bfde221619d23f94fa4960c35251c820
   m_SourceFontFile: {fileID: 12800000, guid: bfde221619d23f94fa4960c35251c820, type: 3}
-  m_SourceFontFilePath: 
+  m_SourceFontFilePath:
   m_AtlasPopulationMode: 1
   InternalDynamicOS: 0
   m_FaceInfo:
@@ -155,9 +155,9 @@ MonoBehaviour:
     atlasWidth: 1024
     atlasHeight: 1024
     characterSetSelectionMode: 7
-    characterSequence: 
-    referencedFontAssetGUID: 
-    referencedTextAssetGUID: 
+    characterSequence:
+    referencedFontAssetGUID:
+    referencedTextAssetGUID:
     fontStyle: 0
     fontStyleModifier: 0
     renderMode: 4165
@@ -212,7 +212,7 @@ Texture2D:
   m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName: 
+  m_MipmapLimitGroupName:
   m_StreamingMipmaps: 0
   m_StreamingMipmapsPriority: 0
   m_VTOnly: 0
@@ -229,11 +229,11 @@ Texture2D:
     m_WrapW: 0
   m_LightmapFormat: 0
   m_ColorSpace: 1
-  m_PlatformBlob: 
+  m_PlatformBlob:
   image data: 0
-  _typelessdata: 
+  _typelessdata:
   m_StreamData:
     serializedVersion: 2
     offset: 0
     size: 0
-    path: 
+    path:

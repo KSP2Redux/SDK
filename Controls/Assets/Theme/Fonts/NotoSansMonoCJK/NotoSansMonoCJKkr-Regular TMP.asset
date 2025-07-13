@@ -23,7 +23,7 @@ Texture2D:
   m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName: 
+  m_MipmapLimitGroupName:
   m_StreamingMipmaps: 0
   m_StreamingMipmapsPriority: 0
   m_VTOnly: 0
@@ -40,14 +40,14 @@ Texture2D:
     m_WrapW: 0
   m_LightmapFormat: 0
   m_ColorSpace: 1
-  m_PlatformBlob: 
+  m_PlatformBlob:
   image data: 0
-  _typelessdata: 
+  _typelessdata:
   m_StreamData:
     serializedVersion: 2
     offset: 0
     size: 0
-    path: 
+    path:
 --- !u!21 &-1515266455192352046
 Material:
   serializedVersion: 8
@@ -67,7 +67,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -102,7 +102,7 @@ Material:
     - _BumpFace: 0
     - _BumpOutline: 0
     - _ColorMask: 15
-    - _CullMode: 0
+    - _CullMode: 2
     - _Diffuse: 0.5
     - _FaceDilate: 0
     - _FaceUVSpeedX: 0
@@ -167,7 +167,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NotoSansMonoCJKkr-Regular TMP
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier:
   hashCode: -1640224333
   material: {fileID: -1515266455192352046}
   materialHashCode: 767074227
@@ -212,7 +212,7 @@ MonoBehaviour:
     m_Width: 1023
     m_Height: 1023
   m_fontInfo:
-    Name: 
+    Name:
     PointSize: 0
     Scale: 0
     CharacterCount: 0
@@ -246,7 +246,7 @@ MonoBehaviour:
   fallbackFontAssets: []
   m_FallbackFontAssetTable: []
   m_CreationSettings:
-    sourceFontFileName: 
+    sourceFontFileName:
     sourceFontFileGUID: ea6c7b6cdd4f7e94a8d1ca10e2097f28
     pointSizeSamplingMode: 0
     pointSize: 90
@@ -255,9 +255,9 @@ MonoBehaviour:
     atlasWidth: 1024
     atlasHeight: 1024
     characterSetSelectionMode: 7
-    characterSequence: 
-    referencedFontAssetGUID: 
-    referencedTextAssetGUID: 
+    characterSequence:
+    referencedFontAssetGUID:
+    referencedTextAssetGUID:
     fontStyle: 0
     fontStyleModifier: 0
     renderMode: 4165
