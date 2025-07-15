@@ -321,11 +321,7 @@ namespace %MOD%
                 }
             }
             
-            if (!settings.profileSettings.GetAllProfileNames().Contains(id))
-            {
-                settings.profileSettings.AddProfile(id, settings.activeProfileId);
-            }
-            addressablesProfileId = settings.profileSettings.GetProfileId(id);
+            addressablesProfileId = !settings.profileSettings.GetAllProfileNames().Contains(id) ? settings.profileSettings.AddProfile(id, settings.activeProfileId) : settings.profileSettings.GetProfileId(id);
             settings.profileSettings.SetValue(addressablesProfileId,"Local.BuildPath",$"Library/com.unity.addressables/aa/Windows/StandaloneWindows64");
             settings.profileSettings.SetValue(addressablesProfileId,"Local.LoadPath",$"{{SpaceWarpPaths.{id}}}/addressables/StandaloneWindows64");
             
@@ -336,7 +332,8 @@ namespace %MOD%
             celestialBodiesGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_cbs") ?? settings.CreateGroup($"{id}_cbs", false, false, false, settings.DefaultGroup.Schemas);
             scienceExperimentGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_experiments") ?? settings.CreateGroup($"{id}_experiments", false, false, false, settings.DefaultGroup.Schemas);
             techNodeDataGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_tech_nodes") ?? settings.CreateGroup($"{id}_tech_nodes", false, false, false, settings.DefaultGroup.Schemas);
-            AssetDatabase.SaveAssets();
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssetIfDirty(this);
         }
     }
 }

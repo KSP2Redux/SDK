@@ -5,6 +5,7 @@ using ksp2community.ksp2unitytools.editor.API;
 using ThunderKit.Core.Attributes;
 using ThunderKit.Core.Paths;
 using ThunderKit.Core.Pipelines;
+using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
@@ -21,6 +22,8 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
             foreach (var datum in addressablesDatums)
             {
                 AddressableAssetSettingsDefaultObject.Settings.activeProfileId = datum.mod.addressablesProfileId;
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
                 var outputFolder = datum.targetFolder.Resolve(pipeline, this);
                 var allGroups = datum.mod.AllGroups;
                 foreach (var group in settings.groups)
