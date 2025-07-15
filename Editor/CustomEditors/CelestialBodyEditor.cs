@@ -49,7 +49,10 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 Directory.CreateDirectory(directoryName);
                 File.WriteAllText($"{path}", json);
                 AssetDatabase.ImportAsset(path);
-                AddressablesTools.MakeAddressable(path, $"{TargetCore.data.bodyName}.json", "celestial_bodies");
+                if (KSP2UnityTools.FindParentMod(target) is { } mod)
+                {
+                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup, path, $"{TargetCore.data.bodyName}.json", "celestial_bodies");
+                }
                 AssetDatabase.Refresh();
                 AssetDatabase.SaveAssets();
                 EditorUtility.DisplayDialog("Body Exported", $"Json is at: {path}", "ok");

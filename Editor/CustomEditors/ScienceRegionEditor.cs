@@ -64,7 +64,9 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 var jsonData = JObject.Parse(IOProvider.ToJson(Target.information)).ToString(Formatting.Indented);
                 File.WriteAllText($"{path}/{jsonName}.json", jsonData);
                 AssetDatabase.ImportAsset($"{path}/{jsonName}.json");
-                AddressablesTools.MakeAddressable($"{path}/{jsonName}.json", $"{jsonName}.json", "science_region");
+                var mod = KSP2UnityTools.FindParentMod(target);
+                if (mod != null)
+                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup,$"{path}/{jsonName}.json", $"{jsonName}.json", "science_region");
                 jsonData = JObject.Parse(IOProvider.ToJson(new CelestialBodyBakedDiscoverables
                 {
                     BodyName = Target.information.BodyName,
@@ -73,7 +75,8 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 })).ToString(Formatting.Indented);
                 File.WriteAllText($"{path}/{discoverablesName}.json", jsonData);
                 AssetDatabase.ImportAsset($"{path}/{discoverablesName}.json");
-                AddressablesTools.MakeAddressable($"{path}/{discoverablesName}.json", $"{discoverablesName}.json", "science_region_discoverables");
+                if (mod != null)
+                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup,$"{path}/{discoverablesName}.json", $"{discoverablesName}.json", "science_region_discoverables");
                 var regionMap = CreateInstance<CelestialBodyBakedScienceRegionMap>();
                 regionMap.Width = Target.scienceRegionMap.width;
                 regionMap.Height = Target.scienceRegionMap.height;
@@ -81,8 +84,9 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 regionMap.BodyName = Target.information.BodyName;
                 if (File.Exists(path + $"/{bakedRegionsName}.asset")) AssetDatabase.DeleteAsset(path + $"/{bakedRegionsName}.asset");
                 AssetDatabase.CreateAsset(regionMap,path + $"/{bakedRegionsName}.asset");
-                AddressablesTools.MakeAddressable($"{path}/{bakedRegionsName}.asset", $"{bakedRegionsName}",
-                    "science_region_map");
+                if (mod != null)
+                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup,$"{path}/{bakedRegionsName}.asset", $"{bakedRegionsName}",
+                        "science_region_map");
                 AssetDatabase.Refresh();
             }
         }

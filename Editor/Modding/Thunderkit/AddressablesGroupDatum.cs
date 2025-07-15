@@ -2,8 +2,9 @@
 
 namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
 {
-    public class TextAssets : ManifestDatum
+    public class AddressablesGroupDatum : ManifestDatum
     {
-        public string[] possibleFolders;
+        public Mod mod;
+        public string targetFolder;
     }
 }

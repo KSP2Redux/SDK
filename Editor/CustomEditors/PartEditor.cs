@@ -33,14 +33,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 ?.Invoke(null, new object[] { });
             _initialized = true;
         }
-
-
-        private static PersistentDictionary _patchPaths;
-        private static PersistentDictionary PatchPaths => _patchPaths ??= KSP2UnityToolsManager.GetDictionary("PatchPaths");
-
-        private static PersistentDictionary _jsonPaths;
-        private static PersistentDictionary JsonPaths => _jsonPaths ??= KSP2UnityToolsManager.GetDictionary("JsonPaths");
-
+        
         private static PersistentDictionary _prefabAddressOverrides;
         private static PersistentDictionary PrefabAddressOverrides => _prefabAddressOverrides ??= KSP2UnityToolsManager.GetDictionary("PrefabAddressOverrides");
 
@@ -113,48 +106,8 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
             //     iconAddress = EditorGUILayout.TextField("Icon Address", iconAddress);
 
             GUILayout.Label("Part Saving", EditorStyles.boldLabel);
-            var patchPath = "plugin_template/patches/%NAME%.patch";
-            var jsonPath = "%NAME%.json";
-            if (PatchPaths.TryGetValue(TargetObject.name, out var newPatchPath)) patchPath = newPatchPath;
-            if (JsonPaths.TryGetValue(TargetObject.name, out var newJsonPath)) jsonPath = newJsonPath;
-            PatchPaths[TargetObject.name] = patchPath = EditorGUILayout.TextField("Patch Path", patchPath);
-            if (GUILayout.Button("Save Patch Manager Patch"))
-            {
-                if (!_initialized) Initialize();
-                if (TargetCore == null) return;
-                // Clear out the serialized part modules and reserialize them
-                TargetCore.data.serializedPartModules.Clear();
-                foreach (var child in TargetObject.GetComponents<Component>())
-                {
-                    if (!(child is PartBehaviourModule partBehaviourModule)) continue;
-                    var addMethod =
-                        child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                        child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
-                    addMethod?.Invoke(child, new object[] { });
-                    foreach (var data in partBehaviourModule.DataModules.Values)
-                    {
-                        var rebuildMethod =
-                            data.GetType().GetMethod("RebuildDataContext",
-                                BindingFlags.Instance | BindingFlags.NonPublic) ?? data.GetType()
-                                .GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.Public);
-                        rebuildMethod?.Invoke(data, new object[] { });
-                    }
-
-                    TargetCore.data.serializedPartModules.Add(new SerializedPartModule(partBehaviourModule, true));
-                }
-
-                var patchData = PatchManagerTools.CreatePatchData(TargetCore.data,null,null);
-                var path = $"Assets/{patchPath}";
-                path = path.Replace("%NAME%", TargetCore.data.partName);
-                var directoryName = new FileInfo(path).DirectoryName;
-                Directory.CreateDirectory(directoryName);
-                File.WriteAllText($"{path}", patchData);
-                AssetDatabase.ImportAsset(path);
-                AssetDatabase.Refresh();
-                AssetDatabase.SaveAssets();
-                EditorUtility.DisplayDialog("Patch Exported", $"Patch is at: {path}", "ok");
-            }
-            JsonPaths[TargetObject.name] = jsonPath = EditorGUILayout.TextField("JSON Path", jsonPath);
+            // var patchPath = "plugin_template/patches/%NAME%.patch";
+            var jsonPath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(TargetData)) + $"/{TargetData.name}.json";
             if (GUILayout.Button("Save Part JSON"))
             {
                 if (!_initialized) Initialize();
@@ -189,10 +142,19 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 Directory.CreateDirectory(directoryName);
                 File.WriteAllText($"{path}", json);
                 AssetDatabase.ImportAsset(path);
-                AddressablesTools.MakeAddressable(path, $"{TargetCore.data.partName}.json", "parts_data");
+                bool madeAddressable = false;
+                if (KSP2UnityTools.FindParentMod(target) is { } mod)
+                {
+                    madeAddressable = true;
+                    AddressablesTools.MakeAddressable(mod.partsGroup,path, $"{TargetCore.data.partName}.json", "parts_data");
+                }
+
                 AssetDatabase.Refresh();
                 AssetDatabase.SaveAssets();
-                EditorUtility.DisplayDialog("Part Exported", $"Json is at: {path}", "ok");
+                EditorUtility.DisplayDialog("Part Exported",
+                    madeAddressable == false
+                        ? $"Json is at: {path}, you need to manually make it addressable"
+                        : $"Json is at: {path}", "ok");
             }
         }
 

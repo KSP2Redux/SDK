@@ -9,6 +9,7 @@ using Redux.VFX.Plume;
 using Redux.VFX.Plume.Services;
 using Redux.VFX.Plumes.Editor.Utility;
 using UnityEditor;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
 namespace Redux.VFX.Plumes.Editor.CustomEditors
@@ -154,7 +155,7 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
             }
         }
 
-        private static void HandleSaveConfig(
+        private void HandleSaveConfig(
             PlumeThrottleDataMasterGroup group,
             string partName,
             string filename
@@ -236,11 +237,14 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
             AssetDatabase.Refresh();
         }
 
-        private static IEnumerator SaveToAddressables(PlumeConfig config, string filename)
+        // TODO: We need individual folders for each mod
+        private IEnumerator SaveToAddressables(PlumeConfig config, string filename)
         {
             yield return SaveToJson(config, AddressablesConfigFolder, filename);
-
+            var mod = KSP2UnityTools.FindParentMod(target);
+            if (mod == null) yield break;
             AddressablesTools.MakeAddressable(
+                mod.allGroup,
                 Path.Combine(AddressablesConfigFolder, filename),
                 $"{Constants.AddressablesPrefix}{filename}",
                 Constants.ConfigLabel
@@ -251,19 +255,19 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
                 var meshPath = AssetManager.GetAssetPath<Mesh>(plumeConfig.MeshPath)
                                ?? AssetManager.GetAssetPath<GameObject>(plumeConfig.MeshPath);
 
-                MakeAssetAddressable(plumeConfig.MeshPath, meshPath);
+                MakeAssetAddressable(mod.allGroup,plumeConfig.MeshPath, meshPath);
 
                 foreach ((string _, object value) in plumeConfig.ShaderSettings.ShaderParams)
                 {
                     if (value is string texture)
                     {
-                        MakeAssetAddressable(texture, AssetManager.GetAssetPath<Texture>(texture));
+                        MakeAssetAddressable(mod.allGroup, texture, AssetManager.GetAssetPath<Texture>(texture));
                     }
                 }
             }
         }
 
-        private static void MakeAssetAddressable(string name, string path)
+        private static void MakeAssetAddressable(AddressableAssetGroup group, string name, string path)
         {
             if (path.StartsWith("Packages/lfo.editor"))
             {
@@ -271,6 +275,7 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
             }
 
             AddressablesTools.MakeAddressable(
+                group,
                 path,
                 $"{Constants.AddressablesPrefix}{name}",
                 Constants.AssetLabel

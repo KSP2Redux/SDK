@@ -2,13 +2,11 @@
 using System.Linq;
 using System.Threading.Tasks;
 using ThunderKit.Core.Attributes;
-using ThunderKit.Core.Manifests;
-using ThunderKit.Core.Manifests.Datum;
 using ThunderKit.Core.Paths;
 using ThunderKit.Core.Pipelines;
 using UnityEditor;
 
-namespace ksp2community.ksp2unitytools.editor.Modding
+namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
 {
     [PipelineSupport(typeof(Pipeline)), ManifestProcessor, RequiresManifestDatumType(typeof(TextAssets))]
     public class StageGeneratedTextAssets : PipelineJob
@@ -18,8 +16,8 @@ namespace ksp2community.ksp2unitytools.editor.Modding
             var textAssetsDatums = pipeline.Manifest.Data.OfType<TextAssets>().ToArray();
             foreach (var datum in textAssetsDatums)
             {
-                var assets = AssetDatabase.FindAssets("t:TextAssetGenerator", datum.PossibleFolders).Select(x =>
-                    AssetDatabase.LoadAssetAtPath<TextAssetGenerator>(AssetDatabase.GUIDToAssetPath(x))).ToArray();
+                var assets = AssetDatabase.FindAssets("t:TextAssetGenerator", datum.possibleFolders).Select(x =>
+                    AssetDatabase.LoadAssetAtPath<TextAssetGenerator>(AssetDatabase.GUIDToAssetPath(x))).Where(x => x.ShouldGenerate).ToArray();
 
                 foreach (var outputPath in datum.StagingPaths.Select(x => x.Resolve(pipeline, this)))
                 {

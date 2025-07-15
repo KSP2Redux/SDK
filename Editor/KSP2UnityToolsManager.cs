@@ -1,16 +1,23 @@
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
+using KSP.OAB;
 using ksp2community.ksp2unitytools.editor.Editor;
+using ksp2community.ksp2unitytools.editor.Editor.Modding;
+using ThunderKit.Core.Data;
+using ThunderKit.Core.Pipelines;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Windows;
 using Directory = System.IO.Directory;
+using File = UnityEngine.Windows.File;
 
 namespace ksp2community.ksp2unitytools.editor
 {
     public static class KSP2UnityToolsManager
     {
         public static readonly KSP2UnityToolsSettings Settings;
-        public static readonly ModInfo ProjectModInfo;
 
         static KSP2UnityToolsManager()
         {
@@ -23,16 +30,6 @@ namespace ksp2community.ksp2unitytools.editor
             else
             {
                 Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>("Assets/KSP2UTSettings.asset");
-            }
-            if (!File.Exists("Assets/KSP2ModInfo.asset"))
-            {
-                ProjectModInfo = ScriptableObject.CreateInstance<ModInfo>();
-                AssetDatabase.CreateAsset(ProjectModInfo, "Assets/KSP2ModInfo.asset");
-                AssetDatabase.SaveAssets();
-            }
-            else
-            {
-                ProjectModInfo = AssetDatabase.LoadAssetAtPath<ModInfo>("Assets/KSP2ModInfo.asset");
             }
             
         }
@@ -59,6 +56,56 @@ namespace ksp2community.ksp2unitytools.editor
             }
         }
 
+
+        public static async Task TestModsInPlayMode(params Mod[] mods)
+        {
+            if (Directory.Exists("Assets/Mods/__Testing"))
+            {
+                Directory.Delete("Assets/Mods/__Testing", true);
+            }
+
+            foreach (var mod in mods)
+            {
+                var testPipeline = mod.Folder + "/Pipelines/Build for Editor.asset";
+                var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(testPipeline);
+                await pipeline.Execute();
+            }
+
+            // ReSharper disable once AccessToStaticMemberViaDerivedType
+            EditorSceneManager.OpenScene("Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity");
+            EditorApplication.EnterPlaymode();
+        }
+
+        public static async Task TestModsInBuiltGame(params Mod[] mods)
+        {
+            var settings = ThunderKitSetting.GetOrCreateSettings<ThunderKitSettings>();
+            var testingFolder = Path.Combine(settings.GamePath, "mods/__Testing");
+            if (Directory.Exists(testingFolder)) Directory.Delete(testingFolder, true);
+            foreach (var mod in mods)
+            {
+                var buildPipeline = mod.Folder + "/Pipelines/Build for Player.asset";
+                var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(buildPipeline);
+                await pipeline.Execute();
+            }
+            
+            var info = new ProcessStartInfo
+            {
+                WorkingDirectory = settings.GamePath,
+                FileName = Path.Combine(settings.GamePath, settings.GameExecutable)
+            };
+            
+            Process.Start(info);
+        }
+
+        public static async Task DeployMods(params Mod[] mods)
+        {
+            foreach (var mod in mods)
+            {
+                var deployPipeline = mod.Folder + "/Pipelines/Deploy To Zip File.asset";
+                var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(deployPipeline);
+                await pipeline.Execute();
+            }
+        }
     }
 
 }
