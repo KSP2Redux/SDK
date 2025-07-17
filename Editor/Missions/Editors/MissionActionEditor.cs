@@ -11,7 +11,7 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Enumerable = UniLinq.Enumerable;
-using PopupWindow = UnityEngine.UIElements.PopupWindow;
+using StringExtensions = ksp2community.ksp2unitytools.editor.Editor.Extensions.StringExtensions;
 
 namespace ksp2community.ksp2unitytools.editor.Missions.Editors
 {
