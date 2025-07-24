@@ -72,8 +72,8 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
         {
             new()
             {
-                id = "com.github.x606.spacewarp",
-                min = "1.5.1",
+                id = "SpaceWarp2",
+                min = "2.0.0",
                 max = "*"
             },
         };
