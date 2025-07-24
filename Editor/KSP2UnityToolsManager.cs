@@ -101,6 +101,7 @@ namespace ksp2community.ksp2unitytools.editor
         {
             foreach (var mod in mods)
             {
+                mod.CreateVersionCheckSwinfo();
                 var deployPipeline = mod.Folder + "/Pipelines/Deploy To Zip File.asset";
                 var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(deployPipeline);
                 await pipeline.Execute();

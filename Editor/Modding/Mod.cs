@@ -181,6 +181,19 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
                 assembly.definitions = new[]
                     { AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(Folder + $"/Code/{id}.asmdef") };
                 manifest.InsertElement(assembly, manifest.Data.Length);
+                if (Directory.Exists(Folder + "/Code/Lib"))
+                {
+                    var assembly2 = CreateInstance<AssemblyDefinitions>();
+                    assembly2.StagingPaths = new[] { targetLocation + "/lib" };
+                    var definitions = new List<AssemblyDefinitionAsset>();
+                    foreach (var file in Directory.GetFiles(Folder + "/Code/Lib", "*.asmdef", SearchOption.AllDirectories))
+                    {
+                        var relative = Path.GetRelativePath(Folder + "/Code/Lib", file);
+                        definitions.Add(AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(Folder + "/Lib/" + relative));
+                    }
+                    assembly2.definitions = definitions.ToArray();
+                    manifest.InsertElement(assembly2, manifest.Data.Length);
+                }
             }
             
             var pipeline = CreateInstance<Pipeline>();
@@ -234,7 +247,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
         }
 
         private const string Template = @"
-using SpaceWarp.API.Mods;
+using SpaceWarp2.API.Mods;
 namespace %MOD%
 {
     /* Extend KerbalMod instead if you need the MonoBehaviour update loop/references to game stuff like SW 1.x mods */
@@ -334,6 +347,13 @@ namespace %MOD%
             techNodeDataGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_tech_nodes") ?? settings.CreateGroup($"{id}_tech_nodes", false, false, false, settings.DefaultGroup.Schemas);
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
+        }
+
+        public void CreateVersionCheckSwinfo()
+        {
+            var text = this.Generate();
+            var location = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
+            File.WriteAllText(Folder + "/swinfo.json", text);
         }
     }
 }
