@@ -11,10 +11,11 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using Directory = System.IO.Directory;
-using File = UnityEngine.Windows.File;
+using File = System.IO.File;
 
 namespace ksp2community.ksp2unitytools.editor
 {
+    [InitializeOnLoad]
     public static class KSP2UnityToolsManager
     {
         public static readonly KSP2UnityToolsSettings Settings;
@@ -32,6 +33,15 @@ namespace ksp2community.ksp2unitytools.editor
                 Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>("Assets/KSP2UTSettings.asset");
             }
             
+            if (!File.Exists("Assets/boot-ksp.unity"))
+            {
+                File.Copy("Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity", "Assets/boot-ksp.unity");
+            }
+
+            if (!File.Exists("Assets/ImportKsp2ToEditor.asset"))
+            {
+                File.Copy("Packages/ksp2community.ksp2unitytools/ImportKsp2ToEditor.asset", "Assets/ImportKsp2ToEditor.asset");
+            }
         }
 
 
@@ -72,7 +82,7 @@ namespace ksp2community.ksp2unitytools.editor
             }
 
             // ReSharper disable once AccessToStaticMemberViaDerivedType
-            EditorSceneManager.OpenScene("Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity");
+            EditorSceneManager.OpenScene("Assets/boot-ksp.unity");
             EditorApplication.EnterPlaymode();
         }
 
