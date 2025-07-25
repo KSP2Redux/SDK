@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Packages/ksp2community.ksp2unitytools/Assets/Windows/KSP2UnityTools.uss?fileID=7433441132597879392&amp;guid=da9a23f1897292641aba91f1423abc6e&amp;type=3#KSP2UnityTools" />
+    <ui:VisualElement style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+        <ui:Label tabindex="-1" text="Mods" display-tooltip-when-elided="true" style="flex-grow: 1; -unity-text-align: middle-left; -unity-font-style: bold;" />
+        <ui:Button text="Refresh" display-tooltip-when-elided="true" name="RefreshModsButton" />
+    </ui:VisualElement>
+    <ui:ScrollView name="ModsContainer" style="flex-grow: 1; flex-shrink: 0; background-color: rgb(32, 32, 32); border-left-color: rgb(32, 32, 32); border-right-color: rgb(32, 32, 32); border-top-color: rgb(32, 32, 32); border-bottom-color: rgb(32, 32, 32); border-left-width: 3px; border-right-width: 3px; border-top-width: 3px; border-bottom-width: 3px; border-top-left-radius: 3px; border-bottom-left-radius: 3px; border-top-right-radius: 3px; border-bottom-right-radius: 3px;">
+        <ui:Toggle label="Sample Mod" name="Toggle" />
+    </ui:ScrollView>
+    <ui:Button text="Create Mod" display-tooltip-when-elided="true" name="CreateModButton" />
+    <ui:Button text="Test Selected Mods In Editor" display-tooltip-when-elided="true" name="TestInEditorButton" />
+    <ui:Button text="Test Selected Mods In Game" display-tooltip-when-elided="true" name="TestInPlayerButton" />
+    <ui:Button text="Deploy Selected Mods To Zip File" display-tooltip-when-elided="true" name="DeployToZipFileButton" />
+</ui:UXML>

@@ -1,0 +1,9 @@
+Toggle > Label {
+    flex-grow: 1;
+    flex-shrink: 0;
+}
+
+Toggle > VisualElement {
+    flex-shrink: 1;
+    flex-grow: 0;
+}
