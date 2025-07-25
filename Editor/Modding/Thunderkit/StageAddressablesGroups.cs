@@ -26,12 +26,14 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
                 AssetDatabase.Refresh();
                 var outputFolder = datum.targetFolder.Resolve(pipeline, this);
                 var allGroups = datum.mod.AllGroups;
+                var totalAssetCount = 0;
                 foreach (var group in settings.groups)
                 {
                     if (allGroups.Contains(group))
                     {
                         if (group.Schemas.OfType<BundledAssetGroupSchema>().FirstOrDefault() is {} schema)
                         {
+                            totalAssetCount += group.entries.Count;
                             schema.IncludeInBuild = true;
                         }
                     }
@@ -44,19 +46,25 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
                     }
                 }
 
-                AddressableAssetSettings.BuildPlayerContent(out var result);
-                if (!string.IsNullOrEmpty(result.Error))
-                {
-                    pipeline.Log(LogLevel.Error, result.Error);
-                    continue;
-                }
-
                 if (Directory.Exists(outputFolder))
                 {
                     Directory.Delete(outputFolder,true);
                 }
 
-                KSP2UnityTools.CopyDirectory("Library/com.unity.addressables/aa/Windows", outputFolder, true);
+                if (totalAssetCount > 0)
+                {
+                    AddressableAssetSettings.BuildPlayerContent(out var result);
+                    if (!string.IsNullOrEmpty(result.Error))
+                    {
+                        pipeline.Log(LogLevel.Error, result.Error);
+                        continue;
+                    }
+                    KSP2UnityTools.CopyDirectory("Library/com.unity.addressables/aa/Windows", outputFolder, true);
+                }
+                else
+                {
+                    pipeline.Log(LogLevel.Information, "No addressables were built for this mod, the addressables folder will not be copied");
+                }
             }
         }
     }
