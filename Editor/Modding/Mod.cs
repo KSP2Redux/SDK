@@ -27,7 +27,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
 
         static Mod()
         {
-            _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).ToArray();
+            _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).Append("Newtonsoft.Json.dll").ToArray();
         }
         
         // The basic information needed for a mod
