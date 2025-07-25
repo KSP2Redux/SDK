@@ -295,7 +295,6 @@ namespace %MOD%
                 ["name"] = id,
                 ["rootNamespace"] = id,
                 ["references"] = {},
-                ["includePlatforms"] = new JArray("Editor"),
                 ["allowUnsafeCode"] = true,
                 ["overrideReferences"] = true,
                 ["precompiledReferences"] = new JArray(_precompiledReferences),
