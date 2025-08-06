@@ -29,8 +29,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         // Just initialize all the conversion stuff
         private static void Initialize()
         {
-            typeof(IOProvider).GetMethod("Init", BindingFlags.Static | BindingFlags.Public)
-                ?.Invoke(null, new object[] { });
+            IOProvider.Init();
             _initialized = true;
         }
         
