@@ -825,7 +825,7 @@
 }
 
 .bar-toggle:hover > .bar-toggle-dot {
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(222, 213, 123);
 }
 
 .bar-toggle > .bar-toggle-dot.bar-toggle-dot-open {
