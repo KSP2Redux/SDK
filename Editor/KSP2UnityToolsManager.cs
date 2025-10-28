@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using KSP.OAB;
-using ksp2community.ksp2unitytools.editor.Editor;
 using ksp2community.ksp2unitytools.editor.Editor.Modding;
 using ThunderKit.Core.Data;
 using ThunderKit.Core.Pipelines;
@@ -32,9 +30,12 @@ namespace ksp2community.ksp2unitytools.editor
             {
                 Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>("Assets/KSP2UTSettings.asset");
             }
-            
+
+            #if !REDUX
+
             if (!File.Exists("Assets/boot-ksp.unity"))
             {
+
                 File.Copy("Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity", "Assets/boot-ksp.unity");
             }
 
@@ -42,12 +43,13 @@ namespace ksp2community.ksp2unitytools.editor
             {
                 File.Copy("Packages/ksp2community.ksp2unitytools/ImportKsp2ToEditor.asset", "Assets/ImportKsp2ToEditor.asset");
             }
+
+            #endif
         }
 
 
         private static Dictionary<string, PersistentDictionary> StoredDictionaries = new();
-        
-        
+
         public static PersistentDictionary GetDictionary(string dictionaryName)
         {
             if (StoredDictionaries.TryGetValue(dictionaryName, out var result)) return result;
@@ -97,13 +99,13 @@ namespace ksp2community.ksp2unitytools.editor
                 var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(buildPipeline);
                 await pipeline.Execute();
             }
-            
+
             var info = new ProcessStartInfo
             {
                 WorkingDirectory = settings.GamePath,
                 FileName = Path.Combine(settings.GamePath, settings.GameExecutable)
             };
-            
+
             Process.Start(info);
         }
 
