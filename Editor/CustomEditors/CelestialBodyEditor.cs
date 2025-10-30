@@ -17,7 +17,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         private static bool _initialized;
 
         private static PersistentDictionary _jsonPaths;
-        
+
         private static PersistentDictionary JsonPaths => _jsonPaths ??= KSP2UnityToolsManager.GetDictionary("JsonPaths");
         private static void Initialize()
         {
@@ -40,7 +40,10 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
             {
                 if (!_initialized) Initialize();
                 if (TargetCore == null) return;
-                var json = IOProvider.ToJson(TargetCore);
+                var json = IOProvider.ToJson(TargetCore, new JsonSerializerSettings
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                });
                 var jObject = JObject.Parse(json);
                 json = jObject.ToString(Formatting.Indented);
                 var path = $"Assets/{jsonPath}";
