@@ -29,7 +29,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
         {
             _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).Append("Newtonsoft.Json.dll").ToArray();
         }
-        
+
         // The basic information needed for a mod
         public override string PathInMod => "swinfo.json";
         public override bool ShouldGenerate => true;
@@ -65,7 +65,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
         public AddressableAssetGroup[] AllGroups => new[]
             { allGroup, partsGroup, missionsGroup, celestialBodiesGroup, scienceExperimentGroup, techNodeDataGroup };
         [HideInInspector] public string addressablesProfileId;
-        
+
         [SerializeField]
         [Tooltip("The mods that this mod depends on")]
         public List<ModDependency> dependencies = new()
@@ -85,8 +85,8 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
         {
 
         };
-        
-        
+
+
         public override string Generate()
         {
             var deps = new JArray();
@@ -142,7 +142,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
             };
             if (File.Exists(AssemblyPath))
             {
-                jObject["main-assembly"] = $"{id}.dll";
+                jObject["main_assembly"] = $"{id}.dll";
             }
             return jObject.ToString();
         }
@@ -195,7 +195,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
                     manifest.InsertElement(assembly2, manifest.Data.Length);
                 }
             }
-            
+
             var pipeline = CreateInstance<Pipeline>();
             pipeline.Data = new ComposableElement[] { };
             AssetDatabase.CreateAsset(pipeline, pipelinePath);
@@ -323,7 +323,7 @@ namespace %MOD%
                 AddressableAssetSettingsDefaultObject.Settings = AddressableAssetSettings.Create(AddressableAssetSettingsDefaultObject.kDefaultConfigFolder,
                     AddressableAssetSettingsDefaultObject.kDefaultConfigAssetName, true, true);
             }
-            
+
             var settings = AddressableAssetSettingsDefaultObject.Settings;
             foreach (var label in _usedLabels)
             {
@@ -332,13 +332,13 @@ namespace %MOD%
                     settings.AddLabel(label);
                 }
             }
-            
+
             addressablesProfileId = !settings.profileSettings.GetAllProfileNames().Contains(id) ? settings.profileSettings.AddProfile(id, settings.activeProfileId) : settings.profileSettings.GetProfileId(id);
             settings.profileSettings.SetValue(addressablesProfileId,"Local.BuildPath",$"Library/com.unity.addressables/aa/Windows/StandaloneWindows64");
             settings.profileSettings.SetValue(addressablesProfileId,"Local.LoadPath",$"{{SpaceWarpPaths.{id}}}/addressables/StandaloneWindows64");
-            
+
             allGroup = settings.groups.FirstOrDefault(x => x.name == $"addressables_{id}_all") ?? settings.CreateGroup($"addressables_{id}_all", false, false, false, settings.DefaultGroup.Schemas);
-            
+
             partsGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_parts") ?? settings.CreateGroup($"{id}_parts", false, false, false, settings.DefaultGroup.Schemas);
             missionsGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_missions") ?? settings.CreateGroup($"{id}_missions", false, false, false, settings.DefaultGroup.Schemas);
             celestialBodiesGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_cbs") ?? settings.CreateGroup($"{id}_cbs", false, false, false, settings.DefaultGroup.Schemas);
