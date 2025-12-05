@@ -13,7 +13,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         {
             if (!PartEditor.DragCubeGizmos) return;
             var mat = moduleDrag.gameObject.transform.localToWorldMatrix;
-            var dataDrag = moduleDrag.GetType().GetField("dataDrag", BindingFlags.Instance | BindingFlags.NonPublic)
+            var dataDrag = moduleDrag.GetType().GetField("dataDrag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 ?.GetValue(moduleDrag) as Data_Drag;
 
             Gizmos.color = new Color(Color.cyan.r, Color.cyan.g, Color.cyan.b, 0.5f);

@@ -21,7 +21,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         private static PersistentDictionary JsonPaths => _jsonPaths ??= KSP2UnityToolsManager.GetDictionary("JsonPaths");
         private static void Initialize()
         {
-            typeof(IOProvider).GetMethod("Init", BindingFlags.Static | BindingFlags.NonPublic)
+            typeof(IOProvider).GetMethod("Init", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 ?.Invoke(null, new object[] { });
             _initialized = true;
         }

@@ -17,14 +17,14 @@ namespace ksp2community.ksp2unitytools.editor.API
     public static class KSP2UnityTools
     {
         private static bool _initialized = false;
-        
+
         private static void Initialize()
         {
-            typeof(IOProvider).GetMethod("Init", BindingFlags.Static | BindingFlags.NonPublic)
+            typeof(IOProvider).GetMethod("Init", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 ?.Invoke(null, new object[] { });
             _initialized = true;
         }
-        
+
         /// <summary>
         /// Ignore any files that have a certain name when copying files over to the built stuff
         /// </summary>
@@ -67,8 +67,8 @@ namespace ksp2community.ksp2unitytools.editor.API
                 return null;
             }
         }
-        
-        
+
+
         public static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
         {
             // Get information about the source directory
