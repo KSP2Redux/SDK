@@ -133,20 +133,3 @@ KeyframeEditor .unity-popup-field .unity-base-popup-field__input {
     padding-top: 1px;
     padding-bottom: 1px;
 }
-
-.unity-popup-field {
-    -unity-background-image-tint-color: rgb(0, 0, 0);
-    color: rgb(4, 16, 41);
-}
-
-.unity-popup-field .unity-text-element {
-    -unity-text-align: upper-center;
-    margin-right: 0;
-}
-
-.unity-popup-field .unity-base-popup-field__input {
-    flex-grow: 1;
-    -unity-background-image-tint-color: rgb(0, 0, 0);
-    color: rgb(4, 16, 41);
-    background-color: rgba(0, 0, 0, 0.25);
-}

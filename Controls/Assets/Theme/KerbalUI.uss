@@ -125,6 +125,19 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
+.unity-scroller > .unity-base-slider--horizontal > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    height: 0;
+}
+
+.unity-scroller >.unity-base-slider--vertical > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    width: 0;
+}
+
+.unity-scroller >.unity-base-slider > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
+    background-color: #82a7e1;
+    border-width: 0;
+}
+
 .unity-scroller .unity-base-slider__dragger {
     background-color: #d1d9e1;
     border-width: 0;
@@ -132,13 +145,13 @@
 }
 
 .unity-scroller--vertical .unity-base-slider__dragger {
-    margin-left: -1px;
-    width: 4px;
+    margin-left: -3px;
+    width: 6px;
 }
 
 .unity-scroller--horizontal .unity-base-slider__dragger {
-    margin-top: -2px;
-    height: 4px;
+    margin-top: -3px;
+    height: 6px;
 }
 
 .unity-scroller .unity-base-slider__dragger:hover {
@@ -148,6 +161,7 @@
 .unity-scroller > .unity-base-field:focus > .unity-base-slider__input > .unity-base-slider__drag-container .unity-base-slider__dragger {
     background-color: #d1d9e1;
 }
+
 .unity-scroller > .unity-base-field:focus > .unity-base-slider__input > .unity-base-slider__drag-container .unity-base-slider__dragger:hover {
     background-color: #696dff;
 }
@@ -156,16 +170,19 @@
 
 /* region ============ Sliders ============ */
 
-.unity-base-slider, .unity-min-max-slider {
+.unity-base-slider,
+.unity-min-max-slider {
     margin: 0;
     padding: 4px 0;
 }
 
-.unity-base-slider:focus > .unity-base-field__label, .unity-min-max-slider:focus > .unity-base-field__label {
+.unity-base-slider:focus > .unity-base-field__label,
+.unity-min-max-slider:focus > .unity-base-field__label {
     color: #c0c7d5;
 }
 
-.unity-base-slider > .unity-base-field__input, .unity-min-max-slider > .unity-base-field__input {
+.unity-base-slider > .unity-base-field__input,
+.unity-min-max-slider > .unity-base-field__input {
     background-color: #292f39;
     border-color: #444b57;
     border-width: 1px;
@@ -548,10 +565,72 @@
 
 /* endregion */
 
-/* region ============ Dropdown ============ */
+/* region ============ Dropdown, Enum ============ */
 
-.unity-base-popup-field__arrow {
+.unity-popup-field,
+.unity-enum-field {
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+    color: rgb(4, 16, 41);
+    flex-grow: 1;
+    align-self: auto;
+    height: 32px;
+}
+
+.unity-popup-field .unity-text-element,
+.unity-enum-field .unity-text-element {
+    -unity-text-align: upper-center;
+    margin-right: 0;
+}
+
+.unity-popup-field__arrow,
+.unity-enum-field__arrow {
     margin-right: 5px;
+}
+
+.unity-popup-field > .unity-popup-field__input,
+.unity-enum-field > .unity-enum-field__input {
+    flex-grow: 1;
+    padding: 5px 12px;
+    color: rgb(4, 16, 41);
+    background-color: rgba(0, 0, 0, 0.25);
+    -unity-background-image-tint-color: rgb(0, 0, 0);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.unity-popup-field .unity-text-element,
+.unity-enum-field .unity-text-element {
+    -unity-text-align: upper-left;
+    -unity-font-definition: var(--font-regular);
+    -unity-font-style: bold;
+    color: rgb(192, 199, 213);
+}
+
+.unity-popup-field:focus .unity-text-element,
+.unity-enum-field:focus .unity-text-element {
+    color: rgb(192, 199, 213);
+}
+
+.unity-popup-field:hover .unity-popup-field__input,
+.unity-enum-field:hover .unity-enum-field__input {
+    background-color: #001632;
+    border-left-color: rgb(50, 50, 50);
+    border-right-color: rgb(50, 50, 50);
+    border-top-color: rgb(50, 50, 50);
+    border-bottom-color: rgb(50, 50, 50);
+}
+
+.unity-popup-field:active .unity-popup-field__input,
+.unity-enum-field:active .unity-enum-field__input,
+.unity-popup-field:focus .unity-popup-field__input,
+.unity-enum-field:focus .unity-enum-field__input {
+    background-color: #00260d;
 }
 
 /* endregion */
