@@ -762,16 +762,28 @@
     height: 16px;
     width: initial;
     margin: 0;
-    background-color: rgba(0, 0, 0, 0.3);
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0.3);
     justify-content: center;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/ELE-frame-pixel.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#ELE-frame-pixel');
+    transition-duration: 0.3s;
+    transition-property: -unity-background-image-tint-color;
+}
+
+.bar-toggle-vertical {
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/ELE-frame-pixel.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#ELE-frame-pixel');
+    -unity-slice-scale: 0.5px;
+}
+
+.bar-toggle {
+    -unity-slice-scale: 0.5px;
 }
 
 .bar-toggle.dark {
-    background-color: rgba(0, 0, 0, 0.7);
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0.7);
 }
 
 .bar-toggle:hover {
-    background-color: rgb(0, 204, 81);
+    -unity-background-image-tint-color: rgb(0, 204, 81);
 }
 
 .bar-toggle.bar-toggle-vertical {
@@ -786,7 +798,7 @@
     right: 2px;
     bottom: 2px;
     left: 2px;
-    background-image: url('project://database/Assets/ReduxAssets/UI/Component/bracket.png?fileID=2800000&guid=57aeb0876b8ec694e81f46be8cf94188&type=3#bracket');
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/bracket.png?fileID=2800000&guid=57aeb0876b8ec694e81f46be8cf94188&type=3#bracket');
     -unity-slice-top: 14;
     -unity-slice-bottom: 14;
     -unity-slice-left: 14;
@@ -804,12 +816,12 @@
     width: 8px;
     height: 8px;
     margin: 4px;
-    background-image: url('project://database/Assets/ReduxAssets/UI/Component/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand-right');
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand-right');
     -unity-background-image-tint-color: rgb(170, 178, 204);
 }
 
 .bar-toggle:checked > .bar-toggle-arrow {
-    background-image: url('project://database/Assets/ReduxAssets/UI/Component/icon-expand-left.png?fileID=21300000&guid=04691fd6fa6913048b69a2e2144fa29f&type=3#icon-expand-left');
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/icon-expand-left.png?fileID=21300000&guid=04691fd6fa6913048b69a2e2144fa29f&type=3#icon-expand-left');
 }
 
 .bar-toggle:hover > .bar-toggle-arrow {
@@ -826,6 +838,10 @@
 
 .bar-toggle:hover > .bar-toggle-dot {
     background-color: rgb(222, 213, 123);
+}
+
+.bar-toggle:active > .bar-toggle-dot {
+    background-color: rgb(255, 255, 255);
 }
 
 .bar-toggle > .bar-toggle-dot.bar-toggle-dot-open {
