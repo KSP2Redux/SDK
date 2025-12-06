@@ -786,6 +786,10 @@
     -unity-background-image-tint-color: rgb(0, 204, 81);
 }
 
+.bar-toggle:active {
+    -unity-background-image-tint-color: rgb(0, 255, 102);
+}
+
 .bar-toggle.bar-toggle-vertical {
     flex-direction: column;
     width: 16px;
