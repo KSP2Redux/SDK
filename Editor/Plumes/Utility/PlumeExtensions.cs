@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using Redux.VFX.Plume.Services;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.Utility
+namespace Ksp2UnityTools.Editor.Plumes.Utility
 {
     public static class PlumeExtensions
     {
@@ -50,7 +50,7 @@ namespace Redux.VFX.Plumes.Editor.Utility
             }
             else if (jobject.ContainsKey("x"))
             {
-                var vector = Vector4.zero;
+                Vector4 vector = Vector4.zero;
 
                 vector.x = jobject["x"].ToObject<float>();
                 vector.y = jobject["y"].ToObject<float>();

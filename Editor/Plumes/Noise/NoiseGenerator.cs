@@ -4,7 +4,7 @@ using Redux.VFX.Plume.Services;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 
-namespace Redux.VFX.Plumes.Editor.Noise
+namespace Ksp2UnityTools.Editor.Plumes.Noise
 {
     public class NoiseGenerator : MonoBehaviour
     {
@@ -53,8 +53,8 @@ namespace Redux.VFX.Plumes.Editor.Noise
         private bool _updateNoise;
 
         [HideInInspector] public bool ShowSettingsEditor = true;
-        [SerializeField, HideInInspector] public RenderTexture ShapeTexture;
-        [SerializeField, HideInInspector] public RenderTexture DetailTexture;
+        [SerializeField] [HideInInspector] public RenderTexture ShapeTexture;
+        [SerializeField] [HideInInspector] public RenderTexture DetailTexture;
 
         private void UpdateNoise()
         {
@@ -87,7 +87,7 @@ namespace Redux.VFX.Plumes.Editor.Noise
 
             // Set noise gen kernel data:
             NoiseCompute.SetTexture(0, "Result", ActiveTexture);
-            var minMaxBuffer = CreateBuffer(new int[] { int.MaxValue, 0 }, sizeof(int), "minMax", 0);
+            ComputeBuffer minMaxBuffer = CreateBuffer(new int[] { int.MaxValue, 0 }, sizeof(int), "minMax", 0);
             UpdateWorley(ActiveSettings);
             NoiseCompute.SetTexture(0, "Result", ActiveTexture);
             //var noiseValuesBuffer = CreateBuffer (activeNoiseValues, sizeof (float) * 4, "values");
@@ -106,14 +106,14 @@ namespace Redux.VFX.Plumes.Editor.Noise
             {
                 // Get minmax data just to force main thread to wait until compute shaders are finished.
                 // This allows us to measure the execution time.
-                var minMax = new int[2];
+                int[] minMax = new int[2];
                 minMaxBuffer.GetData(minMax);
 
                 Logger.LogInfo($"Noise Generation: {timer.ElapsedMilliseconds}ms");
             }
 
             // Release buffers
-            foreach (var buffer in _buffersToRelease)
+            foreach (ComputeBuffer buffer in _buffersToRelease)
             {
                 buffer.Release();
             }
@@ -185,11 +185,11 @@ namespace Redux.VFX.Plumes.Editor.Noise
                 {
                     for (int z = 0; z < numCellsPerAxis; z++)
                     {
-                        var randomX = (float)prng.NextDouble();
-                        var randomY = (float)prng.NextDouble();
-                        var randomZ = (float)prng.NextDouble();
-                        var randomOffset = new Vector3(randomX, randomY, randomZ) * cellSize;
-                        var cellCorner = new Vector3(x, y, z) * cellSize;
+                        float randomX = (float)prng.NextDouble();
+                        float randomY = (float)prng.NextDouble();
+                        float randomZ = (float)prng.NextDouble();
+                        Vector3 randomOffset = new Vector3(randomX, randomY, randomZ) * cellSize;
+                        Vector3 cellCorner = new Vector3(x, y, z) * cellSize;
 
                         int index = x + numCellsPerAxis * (y + z * numCellsPerAxis);
                         points[index] = cellCorner + randomOffset;

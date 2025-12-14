@@ -1,14 +1,11 @@
 ﻿using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Missions
+namespace Ksp2UnityTools.Editor.Missions
 {
     public enum ConditionOperator
     {
-        [InspectorName("EQUAL")]
-        Equal,
-        [InspectorName("LESSER")]
-        Lesser,
-        [InspectorName("GREATER")]
-        Greater,
+        [InspectorName("EQUAL")] Equal,
+        [InspectorName("LESSER")] Lesser,
+        [InspectorName("GREATER")] Greater
     }
 }

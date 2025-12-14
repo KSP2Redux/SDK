@@ -1,34 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using ksp2community.ksp2unitytools.editor.Editor.Extensions;
+using System.Reflection;
+using Ksp2UnityTools.Editor.Extensions;
 using UniLinq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace ksp2community.ksp2unitytools.editor.API
+namespace Ksp2UnityTools.Editor.API
 {
     public class TypeSelection : EditorWindow
     {
-        private static Dictionary<Type, Type[]> _types = new Dictionary<Type, Type[]>();
+        private static Dictionary<Type, Type[]> _types = new();
 
-        
-        public static VisualElement CreatePropertyForTypesInheritedFromT<T>(string label, Action<Type> onTypeSelected, string initialValue, string bindPath="")
+
+        public static VisualElement CreatePropertyForTypesInheritedFromT<T>(
+            string label,
+            Action<Type> onTypeSelected,
+            string initialValue,
+            string bindPath = ""
+        )
         {
-            if (!_types.TryGetValue(typeof(T), out var types))
+            if (!_types.TryGetValue(typeof(T), out Type[] types))
             {
-                List<Type> typesInheritedFrom = new List<Type>();
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                var typesInheritedFrom = new List<Type>();
+                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    foreach (var type in assembly.GetTypes()
-                                 .Where(x => typeof(T).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract))
-                    {
-                        typesInheritedFrom.Add(type);
-                    }
+                    typesInheritedFrom.AddRange(
+                        assembly.GetTypes()
+                            .Where(x => typeof(T).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+                    );
                 }
+
                 types = typesInheritedFrom.ToArray();
             }
-            
+
             var element = new VisualElement
             {
                 style =
@@ -49,7 +55,11 @@ namespace ksp2community.ksp2unitytools.editor.API
             };
             textField.AddToClassList("unity-base-field__aligned");
             textField.value = initialValue;
-            if (!string.IsNullOrEmpty(bindPath)) textField.bindingPath = bindPath;
+            if (!string.IsNullOrEmpty(bindPath))
+            {
+                textField.bindingPath = bindPath;
+            }
+
             var button = new Button
             {
                 text = "Select",
@@ -60,13 +70,10 @@ namespace ksp2community.ksp2unitytools.editor.API
                     width = new Length(10, LengthUnit.Percent)
                 }
             };
-            
+
             element.Add(textField);
             element.Add(button);
-            button.clicked += () =>
-            {
-                ShowFor(types, textField, onTypeSelected);
-            };
+            button.clicked += () => { ShowFor(types, textField, onTypeSelected); };
             return element;
         }
 
@@ -107,15 +114,19 @@ namespace ksp2community.ksp2unitytools.editor.API
             };
             rootVisualElement.Add(_scrollView);
             _textField.RegisterValueChangedCallback(evt =>
-            {
-                foreach (var child in _scrollView.Children().OfType<Button>())
                 {
-                    child.style.display = child.text.StartsWith(evt.newValue, StringComparison.InvariantCultureIgnoreCase) ? DisplayStyle.Flex : DisplayStyle.None;
+                    foreach (Button child in _scrollView.Children().OfType<Button>())
+                    {
+                        child.style.display =
+                            child.text.StartsWith(evt.newValue, StringComparison.InvariantCultureIgnoreCase)
+                                ? DisplayStyle.Flex
+                                : DisplayStyle.None;
+                    }
                 }
-            });
+            );
             _cancel = new Button
             {
-                text = "Cancel Type Selection",
+                text = "Cancel Type Selection"
             };
             _cancel.clicked += Close;
             rootVisualElement.Add(_cancel);
@@ -124,7 +135,7 @@ namespace ksp2community.ksp2unitytools.editor.API
         private void RefreshWindowFor(Type[] types, TextField textField, Action<Type> onTypeSelected)
         {
             _scrollView.Clear();
-            foreach (var type in types)
+            foreach (Type type in types)
             {
                 var button = new Button
                 {

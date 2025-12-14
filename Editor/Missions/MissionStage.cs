@@ -5,11 +5,11 @@ using System.Text.RegularExpressions;
 using KSP.Game.Missions;
 using KSP.Game.Missions.Definitions;
 using KSP.IO;
-using ksp2community.ksp2unitytools.editor.Missions.ConditionTree;
+using Ksp2UnityTools.Editor.Missions.ConditionTree;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Missions
+namespace Ksp2UnityTools.Editor.Missions
 {
     [Serializable]
     public class MissionStage
@@ -19,7 +19,8 @@ namespace ksp2community.ksp2unitytools.editor.Missions
         public string description;
 
         [Tooltip(
-            "The I2 Localization key for the name of the mission. Add this key to <mod_folder>/Copied/localizations/<localization_file>.csv")]
+            "The I2 Localization key for the name of the mission. Add this key to <mod_folder>/Copied/localizations/<localization_file>.csv"
+        )]
         public string objectiveLocalizationKey;
 
         public bool displayObjective;
@@ -28,7 +29,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions
         public MissionRewardDefinition[] missionRewards;
         public MissionAction[] actions;
 
-        private static Regex _firstBracketRegex = new Regex(Regex.Escape("{"), RegexOptions.Compiled);
+        private static Regex _firstBracketRegex = new(Regex.Escape("{"), RegexOptions.Compiled);
 
         public KSP.Game.Missions.Definitions.MissionStage ToMissionStage()
         {
@@ -51,8 +52,13 @@ namespace ksp2community.ksp2unitytools.editor.Missions
                 branches = new List<MissionBranch>(),
                 scriptableCondition = cond == null
                     ? null
-                    : JObject.Parse(_firstBracketRegex.Replace(IOProvider.ToJson(cond),
-                        $"{{\n    \"$type\": \"{cond.GetType().AssemblyQualifiedName}\",", 1)),
+                    : JObject.Parse(
+                        _firstBracketRegex.Replace(
+                            IOProvider.ToJson(cond),
+                            $"{{\n    \"$type\": \"{cond.GetType().AssemblyQualifiedName}\",",
+                            1
+                        )
+                    )
             };
         }
     }

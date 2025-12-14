@@ -2,12 +2,15 @@
 using KSP.Sim.Definitions;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor
+namespace Ksp2UnityTools.Editor
 {
     public class AttachmentNode : MonoBehaviour
     {
-        [Tooltip("Optional field that can be used to group nodes together, eg. 2 downward facing nodes grouped into a 'bottom' group. The group ID would be the same on both nodes. Empty means no group, which is default behavior.")]
+        [Tooltip(
+            "Optional field that can be used to group nodes together, eg. 2 downward facing nodes grouped into a 'bottom' group. The group ID would be the same on both nodes. Empty means no group, which is default behavior."
+        )]
         public string nodeSymmetryGroupID;
+
         public AttachNodeType nodeType;
         public AttachNodeMethod attachMethod;
         public bool isMultiJoint;

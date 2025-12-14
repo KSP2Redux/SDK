@@ -1,14 +1,15 @@
 ﻿using System.IO;
 using KSP.Game.Science;
 using KSP.IO;
-using ksp2community.ksp2unitytools.editor.API;
-using ksp2community.ksp2unitytools.editor.ScriptableObjects;
+using Ksp2UnityTools.Editor.ScriptableObjects;
+using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.Modding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.CustomEditors
+namespace Ksp2UnityTools.Editor.CustomEditors
 {
     [CustomEditor(typeof(ScienceRegionData))]
     public class ScienceRegionEditor : UnityEditor.Editor
@@ -32,13 +33,13 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         {
             base.OnInspectorGUI();
             GUILayout.Label("Science Region Baking", EditorStyles.boldLabel);
-            var jsonName = JsonNames.TryGetValue(Target.name, out var newJsonName)
+            string jsonName = JsonNames.TryGetValue(Target.name, out string newJsonName)
                 ? newJsonName
                 : "%NAME%_science_regions";
-            var discoverablesName = DiscoverablesJsonNames.TryGetValue(Target.name, out var newDiscoverablesName)
+            string discoverablesName = DiscoverablesJsonNames.TryGetValue(Target.name, out string newDiscoverablesName)
                 ? newDiscoverablesName
                 : "%NAME%_science_regions_discoverables";
-            var bakedRegionsName = BakedScienceRegionNames.TryGetValue(Target.name, out var newBakedRegionName)
+            string bakedRegionsName = BakedScienceRegionNames.TryGetValue(Target.name, out string newBakedRegionName)
                 ? newBakedRegionName
                 : "%NAME%_baked_science_regions";
             JsonNames[Target.name] = jsonName = EditorGUILayout.TextField("Json Name", jsonName);
@@ -51,7 +52,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 jsonName = jsonName.Replace("%NAME%", Target.information.BodyName.ToLower());
                 discoverablesName = discoverablesName.Replace("%NAME%", Target.information.BodyName.ToLower());
                 bakedRegionsName = bakedRegionsName.Replace("%NAME%", Target.information.BodyName.ToLower());
-                var path = AssetDatabase.GetAssetPath(Target);
+                string path = AssetDatabase.GetAssetPath(Target);
                 if (path == "")
                 {
                     path = "Assets";
@@ -61,32 +62,64 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                     path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
                 }
 
-                var jsonData = JObject.Parse(IOProvider.ToJson(Target.information)).ToString(Formatting.Indented);
+                string jsonData = JObject.Parse(IOProvider.ToJson(Target.information)).ToString(Formatting.Indented);
                 File.WriteAllText($"{path}/{jsonName}.json", jsonData);
                 AssetDatabase.ImportAsset($"{path}/{jsonName}.json");
-                var mod = KSP2UnityTools.FindParentMod(target);
+                Mod mod = KSP2UnityTools.FindParentMod(target);
                 if (mod != null)
-                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup,$"{path}/{jsonName}.json", $"{jsonName}.json", "science_region");
-                jsonData = JObject.Parse(IOProvider.ToJson(new CelestialBodyBakedDiscoverables
                 {
-                    BodyName = Target.information.BodyName,
-                    Version = Target.information.Version,
-                    Discoverables = Target.discoverables.ToArray()
-                })).ToString(Formatting.Indented);
+                    AddressablesTools.MakeAddressable(
+                        mod.celestialBodiesGroup,
+                        $"{path}/{jsonName}.json",
+                        $"{jsonName}.json",
+                        "science_region"
+                    );
+                }
+
+                jsonData = JObject.Parse(
+                        IOProvider.ToJson(
+                            new CelestialBodyBakedDiscoverables
+                            {
+                                BodyName = Target.information.BodyName,
+                                Version = Target.information.Version,
+                                Discoverables = Target.discoverables.ToArray()
+                            }
+                        )
+                    )
+                    .ToString(Formatting.Indented);
                 File.WriteAllText($"{path}/{discoverablesName}.json", jsonData);
                 AssetDatabase.ImportAsset($"{path}/{discoverablesName}.json");
                 if (mod != null)
-                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup,$"{path}/{discoverablesName}.json", $"{discoverablesName}.json", "science_region_discoverables");
+                {
+                    AddressablesTools.MakeAddressable(
+                        mod.celestialBodiesGroup,
+                        $"{path}/{discoverablesName}.json",
+                        $"{discoverablesName}.json",
+                        "science_region_discoverables"
+                    );
+                }
+
                 var regionMap = CreateInstance<CelestialBodyBakedScienceRegionMap>();
                 regionMap.Width = Target.scienceRegionMap.width;
                 regionMap.Height = Target.scienceRegionMap.height;
                 regionMap.MapData = Target.GetIndices();
                 regionMap.BodyName = Target.information.BodyName;
-                if (File.Exists(path + $"/{bakedRegionsName}.asset")) AssetDatabase.DeleteAsset(path + $"/{bakedRegionsName}.asset");
-                AssetDatabase.CreateAsset(regionMap,path + $"/{bakedRegionsName}.asset");
+                if (File.Exists(path + $"/{bakedRegionsName}.asset"))
+                {
+                    AssetDatabase.DeleteAsset(path + $"/{bakedRegionsName}.asset");
+                }
+
+                AssetDatabase.CreateAsset(regionMap, path + $"/{bakedRegionsName}.asset");
                 if (mod != null)
-                    AddressablesTools.MakeAddressable(mod.celestialBodiesGroup,$"{path}/{bakedRegionsName}.asset", $"{bakedRegionsName}",
-                        "science_region_map");
+                {
+                    AddressablesTools.MakeAddressable(
+                        mod.celestialBodiesGroup,
+                        $"{path}/{bakedRegionsName}.asset",
+                        $"{bakedRegionsName}",
+                        "science_region_map"
+                    );
+                }
+
                 AssetDatabase.Refresh();
             }
         }

@@ -4,11 +4,10 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Modding
+namespace Ksp2UnityTools.Editor.Modding
 {
     public class CreateNewModWindow : EditorWindow
     {
-        
         [MenuItem("Modding/Create New Mod")]
         public static void ShowWindow()
         {
@@ -18,10 +17,11 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
 
         private void CreateGUI()
         {
-            
-            var doc = AssetDatabase
+            TemplateContainer doc = AssetDatabase
                 .LoadAssetAtPath<VisualTreeAsset>(
-                    "Packages/ksp2community.ksp2unitytools/Assets/Windows/CreateNewModWindow.uxml").Instantiate();
+                    "Packages/ksp2community.ksp2unitytools/Assets/Windows/CreateNewModWindow.uxml"
+                )
+                .Instantiate();
             rootVisualElement.Add(doc);
             var field = rootVisualElement.Q<TextField>();
             var addCode = rootVisualElement.Q<Toggle>();
@@ -43,11 +43,13 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
                 EditorUtility.DisplayDialog("Error", "Mod ID is not a valid C# identifier", "OK");
                 return;
             }
+
             if (Directory.Exists($"Assets/{id}"))
             {
                 EditorUtility.DisplayDialog("Error", "The folder already exists.", "OK");
                 return;
             }
+
             Directory.CreateDirectory($"Assets/{id}");
             Directory.CreateDirectory($"Assets/{id}/Copied");
             var info = CreateInstance<Mod>();
@@ -55,7 +57,11 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
             AssetDatabase.CreateAsset(info, $"Assets/{id}/swinfo.asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            if (addAssembly) info.CreateAssembly();
+            if (addAssembly)
+            {
+                info.CreateAssembly();
+            }
+
             info.CreateAddressablesGroups();
             info.RefreshPipelines();
             Selection.activeObject = info;
@@ -63,8 +69,8 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
 
         private const string Start = @"(\p{Lu}|\p{Ll}|\p{Lt}|\p{Lm}|\p{Lo}|\p{Nl})";
         private const string Extend = @"(\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}|\p{Cf})";
-        private static readonly Regex IdentRegex = new Regex($"^{Start}({Start}|{Extend})*$", RegexOptions.Compiled);
-        
+        private static readonly Regex IdentRegex = new($"^{Start}({Start}|{Extend})*$", RegexOptions.Compiled);
+
         private static bool IsValidIdentifier(string modId)
         {
             return IdentRegex.IsMatch(modId);

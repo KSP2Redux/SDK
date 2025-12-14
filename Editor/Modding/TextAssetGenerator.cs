@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Modding
+namespace Ksp2UnityTools.Editor.Modding
 {
     public abstract class TextAssetGenerator : ScriptableObject
     {

@@ -1,10 +1,10 @@
-﻿namespace ksp2community.ksp2unitytools.editor.Missions
+﻿namespace Ksp2UnityTools.Editor.Missions
 {
     public enum MissionConditionType
     {
         None,
         ConditionSet,
         EventCondition,
-        PropertyCondition,
+        PropertyCondition
     }
 }

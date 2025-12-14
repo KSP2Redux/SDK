@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
-namespace Redux.VFX.Plumes.Editor.Services
+namespace Ksp2UnityTools.Editor.Plumes.Services
 {
     public class UnityAssetManager : BaseAssetManager
     {

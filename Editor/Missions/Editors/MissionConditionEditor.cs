@@ -1,14 +1,14 @@
 ﻿using KSP.Messages;
 using KSP.Messages.PropertyWatchers;
-using ksp2community.ksp2unitytools.editor.API;
-using ksp2community.ksp2unitytools.editor.Editor.Extensions;
-using ksp2community.ksp2unitytools.editor.Missions.ConditionTree;
+using Ksp2UnityTools.Editor.Extensions;
+using Ksp2UnityTools.Editor.Missions.ConditionTree;
+using Ksp2UnityTools.Editor.API;
 using UnityEditor;
 using UnityEditor.Graphs;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace ksp2community.ksp2unitytools.editor.Missions.Editors
+namespace Ksp2UnityTools.Editor.Missions.Editors
 {
     [CustomPropertyDrawer(typeof(BaseMissionCondition), true)]
     public class MissionConditionEditor : PropertyDrawer
@@ -27,15 +27,21 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
                 _foldout = new Foldout
                 {
                     text = ((MissionConditionType)property.FindPropertyRelative("conditionType").enumValueIndex)
-                        .ToString().PascalToInspectorCase(),
+                        .ToString()
+                        .PascalToInspectorCase()
                 };
                 var conditionTypeDropDown = new PropertyField(property.FindPropertyRelative("conditionType"));
                 conditionTypeDropDown.RegisterValueChangeCallback(ConditionTypeChanged);
                 _foldout.Add(conditionTypeDropDown);
                 _propertyConditionTab = new VisualElement();
-                _propertyConditionTab.Add(TypeSelection.CreatePropertyForTypesInheritedFromT<PropertyWatcher>(
-                    "Property Type",
-                    _ => { }, property.FindPropertyRelative("propertyType").stringValue, "propertyType"));
+                _propertyConditionTab.Add(
+                    TypeSelection.CreatePropertyForTypesInheritedFromT<PropertyWatcher>(
+                        "Property Type",
+                        _ => { },
+                        property.FindPropertyRelative("propertyType").stringValue,
+                        "propertyType"
+                    )
+                );
                 _propertyConditionTab.Add(new PropertyField(property.FindPropertyRelative("requireCurrentValue")));
                 _propertyConditionTab.Add(new PropertyField(property.FindPropertyRelative("watchedStringValue")));
                 _propertyConditionTab.Add(new PropertyField(property.FindPropertyRelative("watchedFloatValue")));
@@ -44,9 +50,14 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
                 _propertyConditionTab.Add(new PropertyField(property.FindPropertyRelative("useStringInput")));
                 _propertyConditionTab.Add(new PropertyField(property.FindPropertyRelative("stringInput")));
                 _eventConditionTab = new VisualElement();
-                _eventConditionTab.Add(TypeSelection.CreatePropertyForTypesInheritedFromT<MessageCenterMessage>(
-                    "Event Type",
-                    _ => { }, property.FindPropertyRelative("eventType").stringValue, "eventType"));
+                _eventConditionTab.Add(
+                    TypeSelection.CreatePropertyForTypesInheritedFromT<MessageCenterMessage>(
+                        "Event Type",
+                        _ => { },
+                        property.FindPropertyRelative("eventType").stringValue,
+                        "eventType"
+                    )
+                );
                 _conditionSetTab = new VisualElement();
                 if (property.FindPropertyRelative("conditionMode") != null)
                 {

@@ -5,49 +5,59 @@ using Assets.Scripts.Missions.Definitions;
 using KSP.Game.Missions;
 using KSP.Game.Missions.Definitions;
 using KSP.Game.Missions.State;
-using ksp2community.ksp2unitytools.editor.API;
-using ksp2community.ksp2unitytools.editor.Editor.Modding;
+using Ksp2UnityTools.Editor.Modding;
+using Ksp2UnityTools.Editor.API;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Missions
+namespace Ksp2UnityTools.Editor.Missions
 {
     public class Mission : TextAssetGenerator
     {
-        [MenuItem("Assets/KSP2 Unity Tools/Mission",priority = KSP2UnityTools.MenuPriority)]
+        [MenuItem("Assets/KSP2 Unity Tools/Mission", priority = KSP2UnityTools.MenuPriority)]
         public static void CreateMission()
         {
             KSP2UnityTools.CreateKsp2UnityToolsAssetAtSelectedPath<Mission>("New Mission");
         }
-        
+
         [Tooltip("The ID of the mission, this will be the key used in addressables.")]
         public string missionId;
-        [Tooltip("The I2 Localization key for the name of the mission. Add this key to <mod_folder>/Copied/localizations/<localization_file>.csv")]
+
+        [Tooltip(
+            "The I2 Localization key for the name of the mission. Add this key to <mod_folder>/Copied/localizations/<localization_file>.csv"
+        )]
         public string nameLocalizationKey;
-        [Tooltip("The I2 Localization key for the description of the mission. Add this key to <mod_folder>/Copied/localizations/<localization_file>.csv")]
+
+        [Tooltip(
+            "The I2 Localization key for the description of the mission. Add this key to <mod_folder>/Copied/localizations/<localization_file>.csv"
+        )]
         public string descriptionLocalizationKey;
+
         public MissionType missionType;
         public MissionOwner owner;
         public MissionState state = MissionState.Inactive;
         public bool hidden;
+
         [Tooltip("The granter for this mission")]
         public string granter;
+
         [Tooltip("The addressables key for the triumph loop video")]
         public string triumphLoopVideo;
+
         public bool rewardsVisible;
         public UIDisplayType uiDisplayType;
         public MissionStage[] stages;
         public MissionContentBranch[] branches;
 
 
-        [HideInInspector]
-        public bool usePatches;
+        [HideInInspector] public bool usePatches;
 
         public override bool ShouldGenerate => usePatches;
-        public override string PathInMod => $"patches/missions/{missionId}.patch"; 
+        public override string PathInMod => $"patches/missions/{missionId}.patch";
+
         public override string Generate()
         {
-            var json = KSP2UnityTools.ToJson(GenerateMissionData());
+            string json = KSP2UnityTools.ToJson(GenerateMissionData());
             json = $"@new(\"{missionId}\")\n:missions {{\n@set\n" + json + ";\n}";
             return json;
         }

@@ -2,9 +2,9 @@
 using UnityEngine;
 using Redux.VFX.Plume.Components;
 using Redux.VFX.Plume.ShaderEditor;
-using Redux.VFX.Plumes.Editor.Utility;
+using Ksp2UnityTools.Editor.Plumes.Utility;
 
-namespace Redux.VFX.Plumes.Editor.CustomEditors
+namespace Ksp2UnityTools.Editor.Plumes.CustomEditors
 {
     [CustomPropertyDrawer(typeof(ParamName))]
     public class ParamNameDrawer : PropertyDrawer
@@ -15,12 +15,12 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
 
             position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
 
-            var indent = EditorGUI.indentLevel;
+            int indent = EditorGUI.indentLevel;
             EditorGUI.indentLevel = 0;
 
             var nameRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-            var valueProp = property.FindPropertyRelative("Value");
+            SerializedProperty valueProp = property.FindPropertyRelative("Value");
             if (property.serializedObject.targetObject is not PlumeThrottleData { Renderer: { } renderer })
             {
                 EditorGUI.PropertyField(nameRect, valueProp, GUIContent.none);
@@ -41,12 +41,16 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
                         foreach (string propName in shaderProps)
                         {
                             bool isSelected = valueProp.stringValue == propName;
-                            menu.AddItem(new GUIContent(propName), isSelected, () =>
-                            {
-                                valueProp.stringValue = propName;
-                                valueProp.serializedObject.ApplyModifiedProperties();
-                                property.serializedObject.ApplyModifiedProperties();
-                            });
+                            menu.AddItem(
+                                new GUIContent(propName),
+                                isSelected,
+                                () =>
+                                {
+                                    valueProp.stringValue = propName;
+                                    valueProp.serializedObject.ApplyModifiedProperties();
+                                    property.serializedObject.ApplyModifiedProperties();
+                                }
+                            );
                         }
 
                         menu.ShowAsContext();

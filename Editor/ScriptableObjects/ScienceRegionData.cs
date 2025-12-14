@@ -5,35 +5,43 @@ using Newtonsoft.Json;
 using UniLinq;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.ScriptableObjects
+namespace Ksp2UnityTools.Editor.ScriptableObjects
 {
-    [CreateAssetMenu(fileName = "ScienceRegions",menuName = "KSP2UT/Science Region Data")]
+    [CreateAssetMenu(fileName = "ScienceRegions", menuName = "KSP2UT/Science Region Data")]
     public class ScienceRegionData : ScriptableObject
     {
         public Texture2D scienceRegionMap;
         public ScienceRegionDataInformation information = new();
         public List<CelestialBodyDiscoverablePosition> discoverables = new();
-        
+
         private byte ConvertToIndex(Color col)
         {
-            var bestIndex = 0;
-            var closestDistance = float.MaxValue;
-            foreach (var region in information.ScienceRegionDefinitions)
+            int bestIndex = 0;
+            float closestDistance = float.MaxValue;
+            foreach (ExtendedScienceRegionDefinition region in information.ScienceRegionDefinitions)
             {
-                var indexColor = region.RegionColor;
-                var distanceSquared = (col.r - indexColor.r) * (col.r - indexColor.r) +
-                                      (col.g - indexColor.g) * (col.g - indexColor.g) +
-                                      (col.b - indexColor.b) * (col.b - indexColor.b);
-                if (!(distanceSquared < closestDistance)) continue;
+                Color indexColor = region.RegionColor;
+                float distanceSquared = (col.r - indexColor.r) * (col.r - indexColor.r) +
+                    (col.g - indexColor.g) * (col.g - indexColor.g) +
+                    (col.b - indexColor.b) * (col.b - indexColor.b);
+                if (!(distanceSquared < closestDistance))
+                {
+                    continue;
+                }
+
                 closestDistance = distanceSquared;
                 bestIndex = region.MapId;
             }
+
             return (byte)bestIndex;
         }
 
-        public byte[] GetIndices() => !scienceRegionMap.isReadable
-            ? new byte[scienceRegionMap.width * scienceRegionMap.height]
-            : scienceRegionMap.GetPixels().Select(ConvertToIndex).ToArray();
+        public byte[] GetIndices()
+        {
+            return !scienceRegionMap.isReadable
+                ? new byte[scienceRegionMap.width * scienceRegionMap.height]
+                : scienceRegionMap.GetPixels().Select(ConvertToIndex).ToArray();
+        }
 
 
         [Serializable]
@@ -42,6 +50,7 @@ namespace ksp2community.ksp2unitytools.editor.ScriptableObjects
             public string Version;
             public string BodyName;
             public CBSituationData SituationData;
+
             [JsonProperty(PropertyName = "Regions")]
             public ExtendedScienceRegionDefinition[] ScienceRegionDefinitions;
         }
@@ -49,8 +58,7 @@ namespace ksp2community.ksp2unitytools.editor.ScriptableObjects
         [Serializable]
         public class ExtendedScienceRegionDefinition : ScienceRegionDefinition
         {
-            [JsonIgnore]
-            public Color RegionColor;
+            [JsonIgnore] public Color RegionColor;
         }
     }
 }

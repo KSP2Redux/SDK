@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Redux.VFX.Plumes.Editor.Noise.Save
+namespace Ksp2UnityTools.Editor.Plumes.Noise.Save
 {
     public class Save3D : MonoBehaviour
     {
@@ -35,7 +35,7 @@ namespace Redux.VFX.Plumes.Editor.Noise.Save
                 slices[layer] = ConvertFromRenderTexture(slice);
             }
 
-            var x = Tex3DFromTex2DArray(slices, resolution);
+            Texture3D x = Tex3DFromTex2DArray(slices, resolution);
             UnityEditor.AssetDatabase.CreateAsset(x, "Assets/Resources/" + saveName + ".asset");
         }
 

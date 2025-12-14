@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor
+namespace Ksp2UnityTools.Editor
 {
-
     public class PersistentDictionary : ScriptableObject
     {
         public List<string> Keys = new();
@@ -20,11 +19,14 @@ namespace ksp2community.ksp2unitytools.editor
             }
         }
 
-        public bool Contains(string key) => Keys.Contains(key);
+        public bool Contains(string key)
+        {
+            return Keys.Contains(key);
+        }
 
         public void Remove(string key)
         {
-            var index = IndexOf(key);
+            int index = IndexOf(key);
             if (index != -1)
             {
                 Keys.RemoveAt(index);
@@ -34,11 +36,14 @@ namespace ksp2community.ksp2unitytools.editor
             EditorUtility.SetDirty(this);
         }
 
-        private int IndexOf(string key) => Keys.IndexOf(key);
+        private int IndexOf(string key)
+        {
+            return Keys.IndexOf(key);
+        }
 
         public bool TryGetValue(string key, out string value)
         {
-            var index = IndexOf(key);
+            int index = IndexOf(key);
             if (index == -1)
             {
                 value = null;
@@ -50,12 +55,12 @@ namespace ksp2community.ksp2unitytools.editor
                 return true;
             }
         }
-        
+
         public string this[string key]
         {
             get
             {
-                var index = IndexOf(key);
+                int index = IndexOf(key);
                 if (index == -1)
                 {
                     throw new KeyNotFoundException(key);
@@ -68,7 +73,7 @@ namespace ksp2community.ksp2unitytools.editor
             set
             {
                 EditorUtility.SetDirty(this);
-                var index = IndexOf(key);
+                int index = IndexOf(key);
                 if (index == -1)
                 {
                     Keys.Add(key);

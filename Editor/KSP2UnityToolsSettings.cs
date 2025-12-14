@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace ksp2community.ksp2unitytools.editor
+namespace Ksp2UnityTools.Editor
 {
     public class KSP2UnityToolsSettings : ScriptableObject
     {
@@ -24,7 +24,9 @@ namespace ksp2community.ksp2unitytools.editor
         public void RemoveIgnoredFile(string file)
         {
             if (ignoredFiles.Contains(file))
+            {
                 ignoredFiles.Remove(file);
+            }
         }
     }
 }

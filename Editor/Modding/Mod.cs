@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
-using ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit;
+using Ksp2UnityTools.Editor.Modding.Thunderkit;
 using Newtonsoft.Json.Linq;
 using ThunderKit.Core;
 using ThunderKit.Core.Data;
@@ -19,7 +19,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Modding
+namespace Ksp2UnityTools.Editor.Modding
 {
     public class Mod : TextAssetGenerator
     {
@@ -27,30 +27,44 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
 
         static Mod()
         {
-            _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).Append("Newtonsoft.Json.dll").ToArray();
+            _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly)
+                .Select(Path.GetFileName)
+                .Append("Newtonsoft.Json.dll")
+                .ToArray();
         }
 
         // The basic information needed for a mod
         public override string PathInMod => "swinfo.json";
         public override bool ShouldGenerate => true;
-        [Tooltip("The Mod ID, if this changes, you have to refresh the pipelines and addressables bundles, and delete the old assembly definition, recreating it.")]
+
+        [Tooltip(
+            "The Mod ID, if this changes, you have to refresh the pipelines and addressables bundles, and delete the old assembly definition, recreating it."
+        )]
         public string id = "sampleMod";
+
         [Tooltip("The name of the mod that gets shown in the settings menu")]
         public string name = "Sample Mod";
-        [Tooltip("The author of the mod")]
-        public string author = "nobody";
-        [Multiline, Tooltip("The description of the mod")]
+
+        [Tooltip("The author of the mod")] public string author = "nobody";
+
+        [Multiline] [Tooltip("The description of the mod")]
         public string description = "A sample mod for KSP2";
+
         [Tooltip("The mod version, should follow semantic versioning")]
         public string version = "0.1.0";
+
         [Tooltip("A location of a remote copy of swinfo.json for automatic version checking to work")]
         public string versionCheck = "";
-        [Tooltip("The minimum KSP2 version this supports"), InspectorName("Minimum KSP2 Version")]
+
+        [Tooltip("The minimum KSP2 version this supports")] [InspectorName("Minimum KSP2 Version")]
         public string minKsp2Version = "*";
-        [Tooltip("The maximum KSP2 version this supports"), InspectorName("Maximum KSP2 Version")]
+
+        [Tooltip("The maximum KSP2 version this supports")] [InspectorName("Maximum KSP2 Version")]
         public string maxKsp2Version = "*";
+
         [Tooltip("A repository that contains the source code for this mod")]
         public string source = "";
+
         public string Folder => Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
         public string AssemblyPath => Folder + $"/Code/{id}.asmdef";
         public string MainPluginPath => Folder + $"/Code/{id}Plugin.cs";
@@ -64,33 +78,30 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
 
         public AddressableAssetGroup[] AllGroups => new[]
             { allGroup, partsGroup, missionsGroup, celestialBodiesGroup, scienceExperimentGroup, techNodeDataGroup };
+
         [HideInInspector] public string addressablesProfileId;
 
-        [SerializeField]
-        [Tooltip("The mods that this mod depends on")]
+        [SerializeField] [Tooltip("The mods that this mod depends on")]
         public List<ModDependency> dependencies = new()
         {
-            new()
+            new ModDependency
             {
                 id = "SpaceWarp2",
                 min = "2.0.0",
                 max = "*"
-            },
+            }
         };
 
-        [SerializeField]
-        [Tooltip("The mods that this mod cannot run with")]
-        [InspectorName("Conflicts")]
+        [SerializeField] [Tooltip("The mods that this mod cannot run with")] [InspectorName("Conflicts")]
         public List<ModDependency> incompatibilities = new()
         {
-
         };
 
 
         public override string Generate()
         {
             var deps = new JArray();
-            foreach (var dep in dependencies)
+            foreach (ModDependency dep in dependencies)
             {
                 var versionObj = new JObject
                 {
@@ -106,7 +117,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
             }
 
             var conflicts = new JArray();
-            foreach (var conflict in incompatibilities)
+            foreach (ModDependency conflict in incompatibilities)
             {
                 var versionObj = new JObject
                 {
@@ -144,10 +155,18 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
             {
                 jObject["main_assembly"] = $"{id}.dll";
             }
+
             return jObject.ToString();
         }
 
-        public void GeneratePipeline(string targetLocation, string manifestPath, string pipelinePath, [CanBeNull] string manifestId = null, bool includeBuiltObjects = false, bool buildZip = false)
+        public void GeneratePipeline(
+            string targetLocation,
+            string manifestPath,
+            string pipelinePath,
+            [CanBeNull] string manifestId = null,
+            bool includeBuiltObjects = false,
+            bool buildZip = false
+        )
         {
             var manifest = CreateInstance<Manifest>();
             manifest.Identity = CreateInstance<ManifestIdentity>();
@@ -163,7 +182,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
             files.destinationPath = targetLocation;
             manifest.InsertElement(files, manifest.Data.Length);
             var textAssets = CreateInstance<TextAssets>();
-            textAssets.StagingPaths = new []{targetLocation};
+            textAssets.StagingPaths = new[] { targetLocation };
             textAssets.possibleFolders = new[] { Folder };
             manifest.InsertElement(textAssets, manifest.Data.Length);
             if (includeBuiltObjects)
@@ -174,6 +193,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
                 addressablesGroups.targetFolder = targetLocation + "/addressables";
                 manifest.InsertElement(addressablesGroups, manifest.Data.Length);
             }
+
             if (includeBuiltObjects && File.Exists(Folder + $"/Code/{id}.asmdef"))
             {
                 var assembly = CreateInstance<AssemblyDefinitions>();
@@ -186,11 +206,18 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
                     var assembly2 = CreateInstance<AssemblyDefinitions>();
                     assembly2.StagingPaths = new[] { targetLocation + "/lib" };
                     var definitions = new List<AssemblyDefinitionAsset>();
-                    foreach (var file in Directory.GetFiles(Folder + "/Code/Lib", "*.asmdef", SearchOption.AllDirectories))
+                    foreach (string file in Directory.GetFiles(
+                            Folder + "/Code/Lib",
+                            "*.asmdef",
+                            SearchOption.AllDirectories
+                        ))
                     {
-                        var relative = Path.GetRelativePath(Folder + "/Code/Lib", file);
-                        definitions.Add(AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(Folder + "/Lib/" + relative));
+                        string relative = Path.GetRelativePath(Folder + "/Code/Lib", file);
+                        definitions.Add(
+                            AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(Folder + "/Lib/" + relative)
+                        );
                     }
+
                     assembly2.definitions = definitions.ToArray();
                     manifest.InsertElement(assembly2, manifest.Data.Length);
                 }
@@ -205,6 +232,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
             {
                 pipeline.InsertElement(CreateInstance<StageAddressablesGroups>(), pipeline.Data.Length);
             }
+
             if (includeBuiltObjects && File.Exists(Folder + $"/Code/{id}.asmdef"))
             {
                 pipeline.InsertElement(CreateInstance<StageAssemblies>(), pipeline.Data.Length);
@@ -217,31 +245,63 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding
                 zip.Output = $"{targetLocation}.zip";
                 pipeline.InsertElement(zip, pipeline.Data.Length);
             }
+
             pipeline.manifest = manifest;
         }
 
-        public void RefreshPipelines() {
-            var pipelinesFolder = Folder + "/Pipelines";
-            var buildForEditor = pipelinesFolder + "/Build for Editor.asset";
-            var buildForEditorManifest = pipelinesFolder + "/Build for Editor Manifest.asset";
-            var buildForPlayer = pipelinesFolder + "/Build for Player.asset";
-            var buildForPlayerManifest = pipelinesFolder + "/Build for Player Manifest.asset";
-            var deployToZipFile = pipelinesFolder + "/Deploy to Zip File.asset";
-            var deployToZipFileManifest = pipelinesFolder + "/Deploy to Zip File Manifest.asset";
+        public void RefreshPipelines()
+        {
+            string pipelinesFolder = Folder + "/Pipelines";
+            string buildForEditor = pipelinesFolder + "/Build for Editor.asset";
+            string buildForEditorManifest = pipelinesFolder + "/Build for Editor Manifest.asset";
+            string buildForPlayer = pipelinesFolder + "/Build for Player.asset";
+            string buildForPlayerManifest = pipelinesFolder + "/Build for Player Manifest.asset";
+            string deployToZipFile = pipelinesFolder + "/Deploy to Zip File.asset";
+            string deployToZipFileManifest = pipelinesFolder + "/Deploy to Zip File Manifest.asset";
             if (!Directory.Exists(pipelinesFolder))
             {
                 AssetDatabase.CreateFolder(Folder, "Pipelines");
             }
 
-            if (File.Exists(buildForEditor)) AssetDatabase.DeleteAsset(buildForEditor);
-            if (File.Exists(buildForEditorManifest)) AssetDatabase.DeleteAsset(buildForEditorManifest);
+            if (File.Exists(buildForEditor))
+            {
+                AssetDatabase.DeleteAsset(buildForEditor);
+            }
+
+            if (File.Exists(buildForEditorManifest))
+            {
+                AssetDatabase.DeleteAsset(buildForEditorManifest);
+            }
+
             GeneratePipeline($"Assets/Mods/__Testing/{id}", buildForEditorManifest, buildForEditor, "Editor");
-            if (File.Exists(buildForPlayer)) AssetDatabase.DeleteAsset(buildForPlayer);
-            if (File.Exists(buildForPlayerManifest)) AssetDatabase.DeleteAsset(buildForPlayerManifest);
-            GeneratePipeline($"{ThunderKitSetting.GetOrCreateSettings<ThunderKitSettings>().GamePath}/mods/__Testing/{id}", buildForPlayerManifest, buildForPlayer, "Editor",true);
-            if (File.Exists(deployToZipFile)) AssetDatabase.DeleteAsset(deployToZipFile);
-            if (File.Exists(deployToZipFileManifest)) AssetDatabase.DeleteAsset(deployToZipFileManifest);
-            GeneratePipeline($"Deploy/{id}", deployToZipFileManifest, deployToZipFile, "Deploy",true,true);
+            if (File.Exists(buildForPlayer))
+            {
+                AssetDatabase.DeleteAsset(buildForPlayer);
+            }
+
+            if (File.Exists(buildForPlayerManifest))
+            {
+                AssetDatabase.DeleteAsset(buildForPlayerManifest);
+            }
+
+            GeneratePipeline(
+                $"{ThunderKitSetting.GetOrCreateSettings<ThunderKitSettings>().GamePath}/mods/__Testing/{id}",
+                buildForPlayerManifest,
+                buildForPlayer,
+                "Editor",
+                true
+            );
+            if (File.Exists(deployToZipFile))
+            {
+                AssetDatabase.DeleteAsset(deployToZipFile);
+            }
+
+            if (File.Exists(deployToZipFileManifest))
+            {
+                AssetDatabase.DeleteAsset(deployToZipFileManifest);
+            }
+
+            GeneratePipeline($"Deploy/{id}", deployToZipFileManifest, deployToZipFile, "Deploy", true, true);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
         }
@@ -289,18 +349,19 @@ namespace %MOD%
             {
                 AssetDatabase.CreateFolder(Folder, "Code");
             }
+
             // We need to reference the GUID of at least a few assets
             var assemblyDefinitionJObject = new JObject
             {
                 ["name"] = id,
                 ["rootNamespace"] = id,
-                ["references"] = {},
+                ["references"] = { },
                 ["allowUnsafeCode"] = true,
                 ["overrideReferences"] = true,
                 ["precompiledReferences"] = new JArray(_precompiledReferences),
                 ["autoReferenced"] = true,
-                ["defineConstants"] = {},
-                ["versionDefines"] = {},
+                ["defineConstants"] = { },
+                ["versionDefines"] = { },
                 ["noEngineReferences"] = false
             };
             File.WriteAllText(AssemblyPath, assemblyDefinitionJObject.ToString());
@@ -314,18 +375,23 @@ namespace %MOD%
             "celestial_bodies",
             "scienceExperiment",
             "missions",
-            "techNodeData",
+            "techNodeData"
         };
+
         public void CreateAddressablesGroups()
         {
             if (AddressableAssetSettingsDefaultObject.Settings == null)
             {
-                AddressableAssetSettingsDefaultObject.Settings = AddressableAssetSettings.Create(AddressableAssetSettingsDefaultObject.kDefaultConfigFolder,
-                    AddressableAssetSettingsDefaultObject.kDefaultConfigAssetName, true, true);
+                AddressableAssetSettingsDefaultObject.Settings = AddressableAssetSettings.Create(
+                    AddressableAssetSettingsDefaultObject.kDefaultConfigFolder,
+                    AddressableAssetSettingsDefaultObject.kDefaultConfigAssetName,
+                    true,
+                    true
+                );
             }
 
-            var settings = AddressableAssetSettingsDefaultObject.Settings;
-            foreach (var label in _usedLabels)
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            foreach (string label in _usedLabels)
             {
                 if (!settings.GetLabels().Contains(label))
                 {
@@ -333,25 +399,61 @@ namespace %MOD%
                 }
             }
 
-            addressablesProfileId = !settings.profileSettings.GetAllProfileNames().Contains(id) ? settings.profileSettings.AddProfile(id, settings.activeProfileId) : settings.profileSettings.GetProfileId(id);
-            settings.profileSettings.SetValue(addressablesProfileId,"Local.BuildPath",$"Library/com.unity.addressables/aa/Windows/StandaloneWindows64");
-            settings.profileSettings.SetValue(addressablesProfileId,"Local.LoadPath",$"{{SpaceWarpPaths.{id}}}/addressables/StandaloneWindows64");
+            addressablesProfileId = !settings.profileSettings.GetAllProfileNames().Contains(id)
+                ? settings.profileSettings.AddProfile(id, settings.activeProfileId)
+                : settings.profileSettings.GetProfileId(id);
+            settings.profileSettings.SetValue(
+                addressablesProfileId,
+                "Local.BuildPath",
+                $"Library/com.unity.addressables/aa/Windows/StandaloneWindows64"
+            );
+            settings.profileSettings.SetValue(
+                addressablesProfileId,
+                "Local.LoadPath",
+                $"{{SpaceWarpPaths.{id}}}/addressables/StandaloneWindows64"
+            );
 
-            allGroup = settings.groups.FirstOrDefault(x => x.name == $"addressables_{id}_all") ?? settings.CreateGroup($"addressables_{id}_all", false, false, false, settings.DefaultGroup.Schemas);
+            allGroup = settings.groups.FirstOrDefault(x => x.name == $"addressables_{id}_all") ?? settings.CreateGroup(
+                $"addressables_{id}_all",
+                false,
+                false,
+                false,
+                settings.DefaultGroup.Schemas
+            );
 
-            partsGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_parts") ?? settings.CreateGroup($"{id}_parts", false, false, false, settings.DefaultGroup.Schemas);
-            missionsGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_missions") ?? settings.CreateGroup($"{id}_missions", false, false, false, settings.DefaultGroup.Schemas);
-            celestialBodiesGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_cbs") ?? settings.CreateGroup($"{id}_cbs", false, false, false, settings.DefaultGroup.Schemas);
-            scienceExperimentGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_experiments") ?? settings.CreateGroup($"{id}_experiments", false, false, false, settings.DefaultGroup.Schemas);
-            techNodeDataGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_tech_nodes") ?? settings.CreateGroup($"{id}_tech_nodes", false, false, false, settings.DefaultGroup.Schemas);
+            partsGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_parts") ?? settings.CreateGroup(
+                $"{id}_parts",
+                false,
+                false,
+                false,
+                settings.DefaultGroup.Schemas
+            );
+            missionsGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_missions") ?? settings.CreateGroup(
+                $"{id}_missions",
+                false,
+                false,
+                false,
+                settings.DefaultGroup.Schemas
+            );
+            celestialBodiesGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_cbs") ?? settings.CreateGroup(
+                $"{id}_cbs",
+                false,
+                false,
+                false,
+                settings.DefaultGroup.Schemas
+            );
+            scienceExperimentGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_experiments") ??
+                settings.CreateGroup($"{id}_experiments", false, false, false, settings.DefaultGroup.Schemas);
+            techNodeDataGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_tech_nodes") ??
+                settings.CreateGroup($"{id}_tech_nodes", false, false, false, settings.DefaultGroup.Schemas);
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
         }
 
         public void CreateVersionCheckSwinfo()
         {
-            var text = this.Generate();
-            var location = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
+            string text = Generate();
+            string location = Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
             File.WriteAllText(Folder + "/swinfo.json", text);
         }
     }

@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.Utility
+namespace Ksp2UnityTools.Editor.Plumes.Utility
 {
     public static class ShaderUtility
     {
@@ -26,4 +26,3 @@ namespace Redux.VFX.Plumes.Editor.Utility
         }
     }
 }
-

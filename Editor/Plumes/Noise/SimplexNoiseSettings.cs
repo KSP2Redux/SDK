@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.Noise
+namespace Ksp2UnityTools.Editor.Plumes.Noise
 {
     [CreateAssetMenu]
     public class SimplexNoiseSettings : NoiseSettings

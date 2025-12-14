@@ -1,9 +1,9 @@
 using Redux.VFX.Plume;
 using Redux.VFX.Plume.Services;
-using Redux.VFX.Plumes.Editor.Services;
+using Ksp2UnityTools.Editor.Plumes.Services;
 using UnityEditor;
 
-namespace Redux.VFX.Plumes.Editor
+namespace Ksp2UnityTools.Editor.Plumes
 {
     [InitializeOnLoad]
     public class Startup

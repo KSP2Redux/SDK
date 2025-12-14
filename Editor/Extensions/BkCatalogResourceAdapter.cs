@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
+namespace Ksp2UnityTools.Editor.Extensions
 {
     public class BkCatalogResourceAdapter : ResourcesAPI
     {
@@ -13,7 +13,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
         private readonly AssetBundle catalogBundle;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void OnRuntimeMethodLoad()
+        private static void OnRuntimeMethodLoad()
         {
             overrideAPI = new BkCatalogResourceAdapter();
         }
@@ -26,15 +26,17 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
             {
                 if (!File.Exists(catalogBundlePath))
                 {
-                    Debug.LogWarning($"Could not find {catalogBundlePath}."
+                    Debug.LogWarning(
+                        $"Could not find {catalogBundlePath}."
                         + "Please run the ThunderKit importer, and then run the import job "
-                        + "at Packages/KSP2UnityTools/ImportKsp2ToEditor to create this file.");
+                        + "at Packages/KSP2UnityTools/ImportKsp2ToEditor to create this file."
+                    );
                     return;
                 }
 
                 Debug.Log("KSP2UT: Loading BundleKit Catalog");
                 catalogBundle = AssetBundle.LoadFromFile(catalogBundlePath);
-                foreach (var shader in catalogBundle.LoadAllAssets<Shader>())
+                foreach (Shader shader in catalogBundle.LoadAllAssets<Shader>())
                 {
                     if (!Shader.Find(shader.name))
                     {
