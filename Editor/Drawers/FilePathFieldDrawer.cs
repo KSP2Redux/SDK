@@ -3,7 +3,7 @@ using KSP.Inspector;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Drawers
+namespace Ksp2UnityTools.Editor.Drawers
 {
     [CustomPropertyDrawer(typeof(FilePathFieldAttribute))]
     public class FilePathFieldDrawer : PropertyDrawer
