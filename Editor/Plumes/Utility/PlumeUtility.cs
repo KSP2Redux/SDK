@@ -5,7 +5,7 @@ using Redux.VFX.Plume.Configs;
 using Redux.VFX.Plume.Services;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.Utility
+namespace Ksp2UnityTools.Editor.Plumes.Utility
 {
     public static class PlumeUtility
     {
@@ -40,7 +40,10 @@ namespace Redux.VFX.Plumes.Editor.Utility
 
                 if (!config.PlumeComponentConfigs.ContainsKey(throttleData.transform.parent.name))
                 {
-                    config.PlumeComponentConfigs.Add(throttleData.transform.parent.name, new List<PlumeComponentConfig>());
+                    config.PlumeComponentConfigs.Add(
+                        throttleData.transform.parent.name,
+                        new List<PlumeComponentConfig>()
+                    );
                 }
 
                 config.PlumeComponentConfigs[throttleData.transform.parent.name].Add(plumeConfig);
@@ -55,7 +58,8 @@ namespace Redux.VFX.Plumes.Editor.Utility
         {
             var createdObjects = new Dictionary<string, GameObject>();
 
-            foreach ((string parentName, List<PlumeComponentConfig> plumeComponentConfigs) in plumeConfig.PlumeComponentConfigs)
+            foreach ((string parentName, List<PlumeComponentConfig> plumeComponentConfigs) in plumeConfig
+                .PlumeComponentConfigs)
             {
                 foreach (PlumeComponentConfig plumeComponentConfig in plumeComponentConfigs)
                 {
@@ -90,7 +94,8 @@ namespace Redux.VFX.Plumes.Editor.Utility
                         throttleData.Config = plumeComponentConfig;
 
                         renderer.sharedMaterial = throttleData.Config.GetEditorMaterial();
-                        renderer.sharedMaterial.shader = AssetManager.GetShader(plumeComponentConfig.ShaderSettings.ShaderName);
+                        renderer.sharedMaterial.shader =
+                            AssetManager.GetShader(plumeComponentConfig.ShaderSettings.ShaderName);
 
                         if (plumeComponentConfig.ShaderSettings.ShaderName.ToLowerInvariant().Contains("volumetric"))
                         {

@@ -1,26 +1,26 @@
 {
-    "name": "ksp2community.ksp2unitytools.editor",
-    "rootNamespace": "ksp2community.ksp2unitytools.editor",
-    "references": [
-        "GUID:9e24947de15b9834991c9d8411ea37cf",
-        "GUID:69448af7b92c7f342b298e06a37122aa",
-        "GUID:84651a3751eca9349aac36a66bba901b",
-        "GUID:48abf88f565f4bb4fb35fbe2385f0894",
-        "GUID:280569ac301428d4d950fdf647900922"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": true,
-    "precompiledReferences": [
-        "Newtonsoft.Json.dll",
-        "Newtonsoft.Json.UnityConverters.dll",
-        "Assembly-CSharp.dll"
-    ],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "ksp2community.ksp2unitytools.editor",
+  "rootNamespace": "Ksp2UnityTools.Editor",
+  "references": [
+    "GUID:9e24947de15b9834991c9d8411ea37cf",
+    "GUID:69448af7b92c7f342b298e06a37122aa",
+    "GUID:84651a3751eca9349aac36a66bba901b",
+    "GUID:48abf88f565f4bb4fb35fbe2385f0894",
+    "GUID:280569ac301428d4d950fdf647900922"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll",
+    "Newtonsoft.Json.UnityConverters.dll",
+    "Assembly-CSharp.dll"
+  ],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

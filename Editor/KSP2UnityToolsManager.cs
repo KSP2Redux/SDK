@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using ksp2community.ksp2unitytools.editor.Editor.Modding;
+using Ksp2UnityTools.Editor.Modding;
 using ThunderKit.Core.Data;
 using ThunderKit.Core.Pipelines;
 using UnityEditor;
@@ -11,7 +11,7 @@ using UnityEngine;
 using Directory = System.IO.Directory;
 using File = System.IO.File;
 
-namespace ksp2community.ksp2unitytools.editor
+namespace Ksp2UnityTools.Editor
 {
     [InitializeOnLoad]
     public static class KSP2UnityToolsManager
@@ -31,20 +31,25 @@ namespace ksp2community.ksp2unitytools.editor
                 Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>("Assets/KSP2UTSettings.asset");
             }
 
-            #if !REDUX
+#if !REDUX
 
             if (!File.Exists("Assets/boot-ksp.unity"))
             {
-
-                File.Copy("Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity", "Assets/boot-ksp.unity");
+                File.Copy(
+                    "Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity",
+                    "Assets/boot-ksp.unity"
+                );
             }
 
             if (!File.Exists("Assets/ImportKsp2ToEditor.asset"))
             {
-                File.Copy("Packages/ksp2community.ksp2unitytools/ImportKsp2ToEditor.asset", "Assets/ImportKsp2ToEditor.asset");
+                File.Copy(
+                    "Packages/ksp2community.ksp2unitytools/ImportKsp2ToEditor.asset",
+                    "Assets/ImportKsp2ToEditor.asset"
+                );
             }
 
-            #endif
+#endif
         }
 
 
@@ -52,11 +57,20 @@ namespace ksp2community.ksp2unitytools.editor
 
         public static PersistentDictionary GetDictionary(string dictionaryName)
         {
-            if (StoredDictionaries.TryGetValue(dictionaryName, out var result)) return result;
-            if (!Directory.Exists("Assets/KSP2UTData")) Directory.CreateDirectory("Assets/KSP2UTData");
+            if (StoredDictionaries.TryGetValue(dictionaryName, out PersistentDictionary result))
+            {
+                return result;
+            }
+
+            if (!Directory.Exists("Assets/KSP2UTData"))
+            {
+                Directory.CreateDirectory("Assets/KSP2UTData");
+            }
+
             if (!File.Exists($"Assets/KSP2UTData/{dictionaryName}.asset"))
             {
-                var dict = StoredDictionaries[dictionaryName] = ScriptableObject.CreateInstance<PersistentDictionary>();
+                PersistentDictionary dict = StoredDictionaries[dictionaryName] =
+                    ScriptableObject.CreateInstance<PersistentDictionary>();
                 AssetDatabase.CreateAsset(dict, $"Assets/KSP2UTData/{dictionaryName}.asset");
                 AssetDatabase.SaveAssets();
                 return dict;
@@ -76,9 +90,9 @@ namespace ksp2community.ksp2unitytools.editor
                 Directory.Delete("Assets/Mods/__Testing", true);
             }
 
-            foreach (var mod in mods)
+            foreach (Mod mod in mods)
             {
-                var testPipeline = mod.Folder + "/Pipelines/Build for Editor.asset";
+                string testPipeline = mod.Folder + "/Pipelines/Build for Editor.asset";
                 var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(testPipeline);
                 await pipeline.Execute();
             }
@@ -91,11 +105,15 @@ namespace ksp2community.ksp2unitytools.editor
         public static async Task TestModsInBuiltGame(params Mod[] mods)
         {
             var settings = ThunderKitSetting.GetOrCreateSettings<ThunderKitSettings>();
-            var testingFolder = Path.Combine(settings.GamePath, "mods/__Testing");
-            if (Directory.Exists(testingFolder)) Directory.Delete(testingFolder, true);
-            foreach (var mod in mods)
+            string testingFolder = Path.Combine(settings.GamePath, "mods/__Testing");
+            if (Directory.Exists(testingFolder))
             {
-                var buildPipeline = mod.Folder + "/Pipelines/Build for Player.asset";
+                Directory.Delete(testingFolder, true);
+            }
+
+            foreach (Mod mod in mods)
+            {
+                string buildPipeline = mod.Folder + "/Pipelines/Build for Player.asset";
                 var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(buildPipeline);
                 await pipeline.Execute();
             }
@@ -111,14 +129,13 @@ namespace ksp2community.ksp2unitytools.editor
 
         public static async Task DeployMods(params Mod[] mods)
         {
-            foreach (var mod in mods)
+            foreach (Mod mod in mods)
             {
                 mod.CreateVersionCheckSwinfo();
-                var deployPipeline = mod.Folder + "/Pipelines/Deploy To Zip File.asset";
+                string deployPipeline = mod.Folder + "/Pipelines/Deploy To Zip File.asset";
                 var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(deployPipeline);
                 await pipeline.Execute();
             }
         }
     }
-
 }

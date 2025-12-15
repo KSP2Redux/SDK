@@ -1,7 +1,7 @@
 ﻿using KSP.Modules;
 using UnityEditor;
 
-namespace ksp2community.ksp2unitytools.editor.CustomEditors
+namespace Ksp2UnityTools.Editor.CustomEditors
 {
     [CustomEditor(typeof(Module_Engine))]
     public class EngineDataEditor : UnityEditor.Editor

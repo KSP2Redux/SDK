@@ -1,7 +1,7 @@
 using Redux.VFX.Plume.Services;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.Services
+namespace Ksp2UnityTools.Editor.Plumes.Services
 {
     public class UnityLogger : IPlumeLogger
     {

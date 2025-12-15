@@ -1,37 +1,41 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ksp2community.ksp2unitytools.editor.API;
+using Ksp2UnityTools.Editor.API;
 using ThunderKit.Core.Attributes;
 using ThunderKit.Core.Paths;
 using ThunderKit.Core.Pipelines;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
+namespace Ksp2UnityTools.Editor.Modding.Thunderkit
 {
-    [PipelineSupport(typeof(Pipeline)), ManifestProcessor, RequiresManifestDatumType(typeof(AddressablesGroupDatum))]
+    [PipelineSupport(typeof(Pipeline))]
+    [ManifestProcessor]
+    [RequiresManifestDatumType(typeof(AddressablesGroupDatum))]
     public class StageAddressablesGroups : PipelineJob
     {
         public override async Task Execute(Pipeline pipeline)
         {
-            var addressablesDatums = pipeline.Manifest.Data.OfType<AddressablesGroupDatum>().ToArray();
-            var settings = AddressableAssetSettingsDefaultObject.Settings;
-            foreach (var datum in addressablesDatums)
+            AddressablesGroupDatum[] addressablesDatums =
+                pipeline.Manifest.Data.OfType<AddressablesGroupDatum>().ToArray();
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            foreach (AddressablesGroupDatum datum in addressablesDatums)
             {
                 AddressableAssetSettingsDefaultObject.Settings.activeProfileId = datum.mod.addressablesProfileId;
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                var outputFolder = datum.targetFolder.Resolve(pipeline, this);
-                var allGroups = datum.mod.AllGroups;
-                var totalAssetCount = 0;
-                foreach (var group in settings.groups)
+                string outputFolder = datum.targetFolder.Resolve(pipeline, this);
+                AddressableAssetGroup[] allGroups = datum.mod.AllGroups;
+                int totalAssetCount = 0;
+                foreach (AddressableAssetGroup group in settings.groups)
                 {
                     if (allGroups.Contains(group))
                     {
-                        if (group.Schemas.OfType<BundledAssetGroupSchema>().FirstOrDefault() is {} schema)
+                        if (group.Schemas.OfType<BundledAssetGroupSchema>().FirstOrDefault() is { } schema)
                         {
                             totalAssetCount += group.entries.Count;
                             schema.IncludeInBuild = true;
@@ -39,7 +43,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
                     }
                     else
                     {
-                        if (group.Schemas.OfType<BundledAssetGroupSchema>().FirstOrDefault() is {} schema)
+                        if (group.Schemas.OfType<BundledAssetGroupSchema>().FirstOrDefault() is { } schema)
                         {
                             schema.IncludeInBuild = false;
                         }
@@ -48,22 +52,26 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
 
                 if (Directory.Exists(outputFolder))
                 {
-                    Directory.Delete(outputFolder,true);
+                    Directory.Delete(outputFolder, true);
                 }
 
                 if (totalAssetCount > 0)
                 {
-                    AddressableAssetSettings.BuildPlayerContent(out var result);
+                    AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
                     if (!string.IsNullOrEmpty(result.Error))
                     {
                         pipeline.Log(LogLevel.Error, result.Error);
                         continue;
                     }
+
                     KSP2UnityTools.CopyDirectory("Library/com.unity.addressables/aa/Windows", outputFolder, true);
                 }
                 else
                 {
-                    pipeline.Log(LogLevel.Information, "No addressables were built for this mod, the addressables folder will not be copied");
+                    pipeline.Log(
+                        LogLevel.Information,
+                        "No addressables were built for this mod, the addressables folder will not be copied"
+                    );
                 }
             }
         }

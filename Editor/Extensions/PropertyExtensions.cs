@@ -17,13 +17,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
 using System.Collections;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
+namespace Ksp2UnityTools.Editor.Extensions
 {
 // Provide simple value get/set methods for SerializedProperty.  Can be used with
 // any data types and with arbitrarily deeply-pathed properties.
@@ -35,8 +36,11 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
             string propertyPath = property.propertyPath;
             object value = property.serializedObject.targetObject;
             int i = 0;
-            while (NextPathComponent(propertyPath, ref i, out var token))
+            while (NextPathComponent(propertyPath, ref i, out PropertyPathComponent token))
+            {
                 value = GetPathComponentValue(value, token);
+            }
+
             return value;
         }
 
@@ -59,27 +63,30 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
             object container = property.serializedObject.targetObject;
 
             int i = 0;
-            NextPathComponent(propertyPath, ref i, out var deferredToken);
-            while (NextPathComponent(propertyPath, ref i, out var token))
+            NextPathComponent(propertyPath, ref i, out PropertyPathComponent deferredToken);
+            while (NextPathComponent(propertyPath, ref i, out PropertyPathComponent token))
             {
                 container = GetPathComponentValue(container, deferredToken);
                 deferredToken = token;
             }
 
-            Debug.Assert(!container.GetType().IsValueType,
-                $"Cannot use SerializedObject.SetValue on a struct object, as the result will be set on a temporary.  Either change {container.GetType().Name} to a class, or use SetValue with a parent member.");
+            Debug.Assert(
+                !container.GetType().IsValueType,
+                "Cannot use SerializedObject.SetValue on a struct object, as the result will be set on a " +
+                $"temporary. Either change {container.GetType().Name} to a class, or use SetValue with a parent member."
+            );
             SetPathComponentValue(container, deferredToken, value);
         }
 
         // Union type representing either a property name or array element index.  The element
         // index is valid only if propertyName is null.
-        struct PropertyPathComponent
+        private struct PropertyPathComponent
         {
             public string propertyName;
             public int elementIndex;
         }
 
-        static Regex arrayElementRegex = new Regex(@"\GArray\.data\[(\d+)\]", RegexOptions.Compiled);
+        private static Regex arrayElementRegex = new(@"\GArray\.data\[(\d+)\]", RegexOptions.Compiled);
 
         // Parse the next path component from a SerializedProperty.propertyPath.  For simple field/property access,
         // this is just tokenizing on '.' and returning each field/property name.  Array/list access is via
@@ -91,20 +98,22 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
         //      int i = 0;
         //      NextPropertyPathToken(propertyPath, ref i, out var component);
         //          => component = { propertyName = "quests" };
-        //      NextPropertyPathToken(propertyPath, ref i, out var component) 
+        //      NextPropertyPathToken(propertyPath, ref i, out var component)
         //          => component = { elementIndex = 0 };
-        //      NextPropertyPathToken(propertyPath, ref i, out var component) 
+        //      NextPropertyPathToken(propertyPath, ref i, out var component)
         //          => component = { propertyName = "goal" };
-        //      NextPropertyPathToken(propertyPath, ref i, out var component) 
+        //      NextPropertyPathToken(propertyPath, ref i, out var component)
         //          => returns false
-        static bool NextPathComponent(string propertyPath, ref int index, out PropertyPathComponent component)
+        private static bool NextPathComponent(string propertyPath, ref int index, out PropertyPathComponent component)
         {
             component = new PropertyPathComponent();
 
             if (index >= propertyPath.Length)
+            {
                 return false;
+            }
 
-            var arrayElementMatch = arrayElementRegex.Match(propertyPath, index);
+            Match arrayElementMatch = arrayElementRegex.Match(propertyPath, index);
             if (arrayElementMatch.Success)
             {
                 index += arrayElementMatch.Length + 1; // Skip past next '.'
@@ -115,7 +124,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
             int dot = propertyPath.IndexOf('.', index);
             if (dot == -1)
             {
-                component.propertyName = propertyPath.Substring(index);
+                component.propertyName = propertyPath[index..];
                 index = propertyPath.Length;
             }
             else
@@ -127,54 +136,68 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
             return true;
         }
 
-        static object GetPathComponentValue(object container, PropertyPathComponent component)
+        private static object GetPathComponentValue(object container, PropertyPathComponent component)
         {
-            if (component.propertyName == null)
-                return ((IList)container)[component.elementIndex];
-            else
-                return GetMemberValue(container, component.propertyName);
+            return component.propertyName == null
+                ? ((IList)container)[component.elementIndex]
+                : GetMemberValue(container, component.propertyName);
         }
 
-        static void SetPathComponentValue(object container, PropertyPathComponent component, object value)
+        private static void SetPathComponentValue(object container, PropertyPathComponent component, object value)
         {
             if (component.propertyName == null)
+            {
                 ((IList)container)[component.elementIndex] = value;
+            }
             else
+            {
                 SetMemberValue(container, component.propertyName, value);
+            }
         }
 
-        static object GetMemberValue(object container, string name)
+        private static object GetMemberValue(object container, string name)
         {
             if (container == null)
-                return null;
-            var type = container.GetType();
-            var members = type.GetMember(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            for (int i = 0; i < members.Length; ++i)
             {
-                if (members[i] is FieldInfo field)
-                    return field.GetValue(container);
-                else if (members[i] is PropertyInfo property)
-                    return property.GetValue(container);
+                return null;
+            }
+
+            Type type = container.GetType();
+            MemberInfo[] members = type.GetMember(
+                name,
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance
+            );
+            foreach (MemberInfo member in members)
+            {
+                switch (member)
+                {
+                    case FieldInfo field:
+                        return field.GetValue(container);
+                    case PropertyInfo property:
+                        return property.GetValue(container);
+                }
             }
 
             return null;
         }
 
-        static void SetMemberValue(object container, string name, object value)
+        private static void SetMemberValue(object container, string name, object value)
         {
-            var type = container.GetType();
-            var members = type.GetMember(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            for (int i = 0; i < members.Length; ++i)
+            Type type = container.GetType();
+            MemberInfo[] members = type.GetMember(
+                name,
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance
+            );
+            foreach (MemberInfo member in members)
             {
-                if (members[i] is FieldInfo field)
+                switch (member)
                 {
-                    field.SetValue(container, value);
-                    return;
-                }
-                else if (members[i] is PropertyInfo property)
-                {
-                    property.SetValue(container, value);
-                    return;
+                    case FieldInfo field:
+                        field.SetValue(container, value);
+                        return;
+                    case PropertyInfo property:
+                        property.SetValue(container, value);
+                        return;
                 }
             }
 

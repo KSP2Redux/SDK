@@ -1,8 +1,8 @@
 ﻿using System;
-using ksp2community.ksp2unitytools.editor.Editor.Modding;
+using Ksp2UnityTools.Editor.Modding;
 using UnityEngine.UIElements;
 
-namespace ksp2community.ksp2unitytools.editor
+namespace Ksp2UnityTools.Editor
 {
     public class DependencyController
     {

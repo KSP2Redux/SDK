@@ -6,26 +6,35 @@ using ThunderKit.Core.Paths;
 using ThunderKit.Core.Pipelines;
 using UnityEditor;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
+namespace Ksp2UnityTools.Editor.Modding.Thunderkit
 {
-    [PipelineSupport(typeof(Pipeline)), ManifestProcessor, RequiresManifestDatumType(typeof(TextAssets))]
+    [PipelineSupport(typeof(Pipeline))]
+    [ManifestProcessor]
+    [RequiresManifestDatumType(typeof(TextAssets))]
     public class StageGeneratedTextAssets : PipelineJob
     {
         public override Task Execute(Pipeline pipeline)
         {
-            var textAssetsDatums = pipeline.Manifest.Data.OfType<TextAssets>().ToArray();
-            foreach (var datum in textAssetsDatums)
+            TextAssets[] textAssetsDatums = pipeline.Manifest.Data.OfType<TextAssets>().ToArray();
+            foreach (TextAssets datum in textAssetsDatums)
             {
-                var assets = AssetDatabase.FindAssets("t:TextAssetGenerator", datum.possibleFolders).Select(x =>
-                    AssetDatabase.LoadAssetAtPath<TextAssetGenerator>(AssetDatabase.GUIDToAssetPath(x))).Where(x => x.ShouldGenerate).ToArray();
+                TextAssetGenerator[] assets = AssetDatabase.FindAssets("t:TextAssetGenerator", datum.possibleFolders)
+                    .Select(x =>
+                        AssetDatabase.LoadAssetAtPath<TextAssetGenerator>(AssetDatabase.GUIDToAssetPath(x))
+                    )
+                    .Where(x => x.ShouldGenerate)
+                    .ToArray();
 
-                foreach (var outputPath in datum.StagingPaths.Select(x => x.Resolve(pipeline, this)))
+                foreach (string outputPath in datum.StagingPaths.Select(x => x.Resolve(pipeline, this)))
                 {
-                    foreach (var asset in assets)
+                    foreach (TextAssetGenerator asset in assets)
                     {
-                        var trueOutputPath = Path.Combine(outputPath, asset.PathInMod);
+                        string trueOutputPath = Path.Combine(outputPath, asset.PathInMod);
                         if (!Directory.Exists(Path.GetDirectoryName(trueOutputPath)))
+                        {
                             Directory.CreateDirectory(Path.GetDirectoryName(trueOutputPath)!);
+                        }
+
                         if (File.Exists(trueOutputPath))
                         {
                             File.Delete(trueOutputPath);
@@ -35,6 +44,7 @@ namespace ksp2community.ksp2unitytools.editor.Editor.Modding.Thunderkit
                     }
                 }
             }
+
             return Task.CompletedTask;
         }
     }

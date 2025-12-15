@@ -6,7 +6,7 @@ using Redux.VFX.Plume.Services;
 using UnityEngine;
 using UnityEditor;
 
-namespace Redux.VFX.Plumes.Editor.Utility
+namespace Ksp2UnityTools.Editor.Plumes.Utility
 {
     internal static class PlumesContextMenu
     {
@@ -83,11 +83,14 @@ namespace Redux.VFX.Plumes.Editor.Utility
         [MenuItem("GameObject/Redux/Plumes/Create Plume from JSON")]
         private static void CreatePlumeFromJson(MenuCommand command)
         {
-            string rawJson = File.OpenText(EditorUtility.OpenFilePanel(
-                "Plume Config File",
-                "Assets",
-                "json"
-            )).ReadToEnd();
+            string rawJson = File.OpenText(
+                    EditorUtility.OpenFilePanel(
+                        "Plume Config File",
+                        "Assets",
+                        "json"
+                    )
+                )
+                .ReadToEnd();
 
             PlumeConfig config = PlumeConfig.Deserialize(rawJson);
             PlumeUtility.CreatePlumeFromConfig(config, (GameObject)command.context);

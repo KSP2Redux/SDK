@@ -3,7 +3,7 @@ using KSP.Modules;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.CustomEditors
+namespace Ksp2UnityTools.Editor.CustomEditors
 {
     [CustomEditor(typeof(Module_Drag))]
     public class ModuleDragEditor : UnityEditor.Editor
@@ -11,14 +11,23 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
         [DrawGizmo(GizmoType.Active | GizmoType.Selected)]
         public static void DrawGizmosForDrag(Module_Drag moduleDrag, GizmoType gizmoType)
         {
-            if (!PartEditor.DragCubeGizmos) return;
-            var mat = moduleDrag.gameObject.transform.localToWorldMatrix;
-            var dataDrag = moduleDrag.GetType().GetField("dataDrag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            if (!PartEditor.DragCubeGizmos)
+            {
+                return;
+            }
+
+            Matrix4x4 mat = moduleDrag.gameObject.transform.localToWorldMatrix;
+            var dataDrag = moduleDrag.GetType()
+                .GetField("dataDrag", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 ?.GetValue(moduleDrag) as Data_Drag;
 
             Gizmos.color = new Color(Color.cyan.r, Color.cyan.g, Color.cyan.b, 0.5f);
-            if (dataDrag == null) return;
-            foreach (var cube in dataDrag.cubes)
+            if (dataDrag == null)
+            {
+                return;
+            }
+
+            foreach (DragCube cube in dataDrag.cubes)
             {
                 Gizmos.DrawCube(mat.MultiplyPoint(cube.Center), mat.MultiplyVector(cube.Size));
             }

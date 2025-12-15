@@ -1,6 +1,6 @@
 ﻿using UnityEngine.UIElements;
 
-namespace ksp2community.ksp2unitytools.editor.Editor.Extensions
+namespace Ksp2UnityTools.Editor.Extensions
 {
     public static class VisualElementExtensions
     {

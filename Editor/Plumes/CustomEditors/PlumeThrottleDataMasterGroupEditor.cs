@@ -4,15 +4,16 @@ using Redux.VFX.Plume.Configs;
 using System.Collections;
 using System.IO;
 using System.Linq;
-using ksp2community.ksp2unitytools.editor.API;
+using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.Modding;
 using Redux.VFX.Plume;
 using Redux.VFX.Plume.Services;
-using Redux.VFX.Plumes.Editor.Utility;
+using Ksp2UnityTools.Editor.Plumes.Utility;
 using UnityEditor;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.CustomEditors
+namespace Ksp2UnityTools.Editor.Plumes.CustomEditors
 {
     [CustomEditor(typeof(PlumeThrottleDataMasterGroup))]
     public class PlumeThrottleDataMasterGroupEditor : UnityEditor.Editor
@@ -56,9 +57,9 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
             EditorGUI.EndDisabledGroup();
             if (EditorGUI.EndChangeCheck())
             {
-                var allMasters = FindObjectsOfType<PlumeThrottleDataMasterGroup>();
+                PlumeThrottleDataMasterGroup[] allMasters = FindObjectsOfType<PlumeThrottleDataMasterGroup>();
 
-                foreach (var master in allMasters)
+                foreach (PlumeThrottleDataMasterGroup master in allMasters)
                 {
                     UpdateVisuals(master);
                 }
@@ -132,7 +133,7 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
                 filename
             );
 
-            foreach (var throttleData in group.GetComponentsInChildren<PlumeThrottleData>())
+            foreach (PlumeThrottleData throttleData in group.GetComponentsInChildren<PlumeThrottleData>())
             {
                 int index = plumeConfig.PlumeComponentConfigs[throttleData.transform.parent.name]
                     .FindIndex(a => a.TargetGameObject == throttleData.name);
@@ -178,25 +179,26 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
             }
 
             throttleGroup.ThrottleDatas.ForEach(throttleData =>
-            {
-                if (!throttleData.IsVisible())
                 {
-                    return;
-                }
+                    if (!throttleData.IsVisible())
+                    {
+                        return;
+                    }
 
-                if (throttleData.Config == null)
-                {
-                    Logger.LogWarning($"Config for {throttleData.name} is null");
-                    return;
-                }
+                    if (throttleData.Config == null)
+                    {
+                        Logger.LogWarning($"Config for {throttleData.name} is null");
+                        return;
+                    }
 
-                throttleData.TriggerUpdateVisuals(
-                    throttleGroup.GroupThrottle / 100f,
-                    throttleGroup.GroupAtmo,
-                    0,
-                    Vector3.zero
-                );
-            });
+                    throttleData.TriggerUpdateVisuals(
+                        throttleGroup.GroupThrottle / 100f,
+                        throttleGroup.GroupAtmo,
+                        0,
+                        Vector3.zero
+                    );
+                }
+            );
         }
 
         private static PlumeConfig LoadFromJson(string path, string filename)
@@ -212,11 +214,14 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
                 path = "Assets";
             }
 
-            string rawJson = File.OpenText(EditorUtility.OpenFilePanel(
-                "LFO Config File",
-                path,
-                "json"
-            )).ReadToEnd();
+            string rawJson = File.OpenText(
+                    EditorUtility.OpenFilePanel(
+                        "LFO Config File",
+                        path,
+                        "json"
+                    )
+                )
+                .ReadToEnd();
 
             return PlumeConfig.Deserialize(rawJson);
         }
@@ -241,8 +246,12 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
         private IEnumerator SaveToAddressables(PlumeConfig config, string filename)
         {
             yield return SaveToJson(config, AddressablesConfigFolder, filename);
-            var mod = KSP2UnityTools.FindParentMod(target);
-            if (mod == null) yield break;
+            Mod mod = KSP2UnityTools.FindParentMod(target);
+            if (mod == null)
+            {
+                yield break;
+            }
+
             AddressablesTools.MakeAddressable(
                 mod.allGroup,
                 Path.Combine(AddressablesConfigFolder, filename),
@@ -252,10 +261,10 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
 
             foreach (PlumeComponentConfig plumeConfig in config.PlumeComponentConfigs.Values.SelectMany(item => item))
             {
-                var meshPath = AssetManager.GetAssetPath<Mesh>(plumeConfig.MeshPath)
-                               ?? AssetManager.GetAssetPath<GameObject>(plumeConfig.MeshPath);
+                string meshPath = AssetManager.GetAssetPath<Mesh>(plumeConfig.MeshPath)
+                    ?? AssetManager.GetAssetPath<GameObject>(plumeConfig.MeshPath);
 
-                MakeAssetAddressable(mod.allGroup,plumeConfig.MeshPath, meshPath);
+                MakeAssetAddressable(mod.allGroup, plumeConfig.MeshPath, meshPath);
 
                 foreach ((string _, object value) in plumeConfig.ShaderSettings.ShaderParams)
                 {

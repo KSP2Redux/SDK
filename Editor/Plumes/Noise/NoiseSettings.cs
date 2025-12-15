@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.Noise
+namespace Ksp2UnityTools.Editor.Plumes.Noise
 {
     public abstract class NoiseSettings : ScriptableObject
     {

@@ -1,31 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using KSP.Game.Missions;
 using KSP.Messages;
-using ksp2community.ksp2unitytools.editor.API;
-using ksp2community.ksp2unitytools.editor.Editor.Extensions;
+using Ksp2UnityTools.Editor.Extensions;
+using Ksp2UnityTools.Editor.API;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Enumerable = UniLinq.Enumerable;
-using StringExtensions = ksp2community.ksp2unitytools.editor.Editor.Extensions.StringExtensions;
+using StringExtensions = Ksp2UnityTools.Editor.Extensions.StringExtensions;
 
-namespace ksp2community.ksp2unitytools.editor.Missions.Editors
+namespace Ksp2UnityTools.Editor.Missions.Editors
 {
     [CustomPropertyDrawer(typeof(MissionAction))]
     public class MissionActionEditor : PropertyDrawer
     {
-        private static List<Type> _validMissionActionTypes = new List<Type>();
+        private static List<Type> _validMissionActionTypes = new();
 
         static MissionActionEditor()
         {
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (var type in assembly.GetTypes()
-                             .Where(x => typeof(IMissionAction).IsAssignableFrom(x) && !x.IsAbstract))
+                foreach (Type type in assembly.GetTypes()
+                    .Where(x => typeof(IMissionAction).IsAssignableFrom(x) && !x.IsAbstract))
                 {
                     _validMissionActionTypes.Add(type);
                 }
@@ -50,8 +51,10 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
                 _keys = property.FindPropertyRelative("keys");
                 _values = property.FindPropertyRelative("values");
                 _generalContainer = new VisualElement();
-                _oabDrawer = new PropertyField(property.FindPropertyRelative("workspaceSelectionData"),
-                    "Selected Workspaces");
+                _oabDrawer = new PropertyField(
+                    property.FindPropertyRelative("workspaceSelectionData"),
+                    "Selected Workspaces"
+                );
                 _dialogDrawer = new PropertyField(property.FindPropertyRelative("dialogEntries"), "Dialogs");
                 _foldout = new Foldout();
                 if (ActionType == null)
@@ -61,9 +64,12 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
 
                 _foldout.text = ActionType?.Name ?? "Unknown Action";
                 var dropdown =
-                    new DropdownField(_validMissionActionTypes.Select(x => x.Name).ToList(),
-                        ActionType?.Name ?? _validMissionActionTypes[0].Name, StringExtensions.PascalToInspectorCase,
-                        StringExtensions.PascalToInspectorCase);
+                    new DropdownField(
+                        _validMissionActionTypes.Select(x => x.Name).ToList(),
+                        ActionType?.Name ?? _validMissionActionTypes[0].Name,
+                        StringExtensions.PascalToInspectorCase,
+                        StringExtensions.PascalToInspectorCase
+                    );
                 dropdown.RegisterValueChangedCallback(ClearOldData);
                 _foldout.Add(dropdown);
                 _foldout.Add(_oabDrawer);
@@ -75,8 +81,12 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
 
             public void ClearOldData(ChangeEvent<string> changeEvent)
             {
-                if (changeEvent.previousValue == changeEvent.newValue) return;
-                var type = _validMissionActionTypes.First(x => x.Name == changeEvent.newValue);
+                if (changeEvent.previousValue == changeEvent.newValue)
+                {
+                    return;
+                }
+
+                Type type = _validMissionActionTypes.First(x => x.Name == changeEvent.newValue);
                 ResetForType(type);
             }
 
@@ -84,21 +94,21 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
             {
                 _property.FindPropertyRelative("actionAqn").stringValue = type.AssemblyQualifiedName;
                 _property.FindPropertyRelative("keys");
-                for (var i = _keys.arraySize - 1; i >= 0; i--)
+                for (int i = _keys.arraySize - 1; i >= 0; i--)
                 {
                     _keys.DeleteArrayElementAtIndex(i);
                     _values.DeleteArrayElementAtIndex(i);
                 }
 
-                foreach (var field in type.GetFields()
-                             .Where(x => x.GetCustomAttributes(typeof(JsonPropertyAttribute), true).Any()))
+                foreach (FieldInfo field in type.GetFields()
+                    .Where(x => x.GetCustomAttributes(typeof(JsonPropertyAttribute), true).Any()))
                 {
                     if (field.FieldType == typeof(string))
                     {
                         SetString(field.Name, "");
                     }
                     else if (field.FieldType == typeof(int) || field.FieldType == typeof(long) ||
-                             field.FieldType == typeof(double) || field.FieldType == typeof(float))
+                        field.FieldType == typeof(double) || field.FieldType == typeof(float))
                     {
                         Set(field.Name, 0);
                     }
@@ -130,8 +140,12 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
                 _oabDrawer.style.display = DisplayStyle.None;
                 _dialogDrawer.style.display = DisplayStyle.None;
                 _foldout.text = newType?.Name.PascalToInspectorCase() ?? "Unknown Action";
-                if (newType == null) return;
-                foreach (var field in newType.GetFields())
+                if (newType == null)
+                {
+                    return;
+                }
+
+                foreach (FieldInfo field in newType.GetFields())
                 {
                     if (field.FieldType == typeof(DialogEntries))
                     {
@@ -214,7 +228,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
                     else if (field.FieldType.IsEnum)
                     {
                         var dropdownField = new DropdownField(field.Name.PascalToInspectorCase());
-                        foreach (var value in Enum.GetValues(field.FieldType))
+                        foreach (object value in Enum.GetValues(field.FieldType))
                         {
                             dropdownField.choices.Add(value.ToString());
                         }
@@ -226,10 +240,12 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
                     }
                     else if (field.FieldType == typeof(Type))
                     {
-                        var messageField =
+                        VisualElement messageField =
                             TypeSelection.CreatePropertyForTypesInheritedFromT<MessageCenterMessage>(
-                                field.Name.PascalToInspectorCase(), x => SetType(field.Name, x),
-                                GetType(field.Name)?.AssemblyQualifiedName ?? "");
+                                field.Name.PascalToInspectorCase(),
+                                x => SetType(field.Name, x),
+                                GetType(field.Name)?.AssemblyQualifiedName ?? ""
+                            );
                         _generalContainer.Add(messageField);
                     }
                 }
@@ -237,7 +253,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
 
             public int KeyIndex(string key)
             {
-                for (var i = 0; i < _keys.arraySize; i++)
+                for (int i = 0; i < _keys.arraySize; i++)
                 {
                     if (_keys.GetArrayElementAtIndex(i).stringValue == key)
                     {
@@ -250,7 +266,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
 
             public void SetString(string key, string value)
             {
-                var index = KeyIndex(key);
+                int index = KeyIndex(key);
                 if (index == -1)
                 {
                     _keys.InsertArrayElementAtIndex(_keys.arraySize);
@@ -283,50 +299,78 @@ namespace ksp2community.ksp2unitytools.editor.Missions.Editors
 
             public string GetString(string key)
             {
-                var index = KeyIndex(key);
+                int index = KeyIndex(key);
                 return index == -1 ? null : _values.GetArrayElementAtIndex(index).stringValue;
             }
 
             public object GetEnum(string key, Type enumType)
             {
-                var value = GetString(key);
-                if (value == null) return Enum.GetValues(enumType).GetValue(0);
-                return Enum.TryParse(enumType, value, out var result) ? result : Enum.GetValues(enumType).GetValue(0);
+                string value = GetString(key);
+                if (value == null)
+                {
+                    return Enum.GetValues(enumType).GetValue(0);
+                }
+
+                return Enum.TryParse(enumType, value, out object result)
+                    ? result
+                    : Enum.GetValues(enumType).GetValue(0);
             }
 
             public long GetInt(string key)
             {
-                var value = GetString(key);
-                if (value == null) return 0;
-                return long.TryParse(value, out var result) ? result : 0;
+                string value = GetString(key);
+                if (value == null)
+                {
+                    return 0;
+                }
+
+                return long.TryParse(value, out long result) ? result : 0;
             }
 
             public double GetFloat(string key)
             {
-                var value = GetString(key);
-                if (value == null) return 0;
-                return double.TryParse(value, out var result) ? result : 0;
+                string value = GetString(key);
+                if (value == null)
+                {
+                    return 0;
+                }
+
+                return double.TryParse(value, out double result) ? result : 0;
             }
 
             public bool GetBool(string key)
             {
-                var value = GetString(key);
-                if (value == null) return false;
-                return bool.TryParse(value, out var result) && result;
+                string value = GetString(key);
+                if (value == null)
+                {
+                    return false;
+                }
+
+                return bool.TryParse(value, out bool result) && result;
             }
 
             public Type GetType(string key)
             {
-                var value = GetString(key);
-                if (value == null) return null;
+                string value = GetString(key);
+                if (value == null)
+                {
+                    return null;
+                }
+
                 return Type.GetType(value);
             }
 
             public Vector3 GetVector3(string key)
             {
-                var value = GetString(key);
-                if (value == null) return new Vector3();
-                var v = Enumerable.ToArray(value.Split(',').Select(x => float.TryParse(x.Trim(), out var y) ? y : 0));
+                string value = GetString(key);
+                if (value == null)
+                {
+                    return new Vector3();
+                }
+
+                float[] v = Enumerable.ToArray(
+                    value.Split(',').Select(x => float.TryParse(x.Trim(), out float y) ? y : 0)
+                );
                 return new Vector3(v[0], v[1], v[2]);
             }
         }

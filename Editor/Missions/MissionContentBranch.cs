@@ -2,7 +2,7 @@
 using System.Linq;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.Missions
+namespace Ksp2UnityTools.Editor.Missions
 {
     [Serializable]
     public class MissionContentBranch
@@ -13,7 +13,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions
             Debrief,
             OnSubmit
         }
-        
+
         public AcceptableIds id = AcceptableIds.Brief;
         public MissionAction[] actions;
 

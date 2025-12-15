@@ -1,10 +1,11 @@
 ﻿using System.IO;
-using ksp2community.ksp2unitytools.editor.ScriptableObjects;
+using Ksp2UnityTools.Editor.ScriptableObjects;
 using UniLinq;
+using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
 
-namespace ksp2community.ksp2unitytools.editor.CustomEditors
+namespace Ksp2UnityTools.Editor.CustomEditors
 {
     [CustomEditor(typeof(PqsDecalUtility))]
     public class PqsDecalUtilityEditor : UnityEditor.Editor
@@ -13,21 +14,24 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
 
         private static PersistentDictionary PqsDecalNames =>
             _pqsDecalDataNames ??= KSP2UnityToolsManager.GetDictionary("PqsDecalNames");
-        
+
         private PqsDecalUtility Target => target as PqsDecalUtility;
 
         private static (ushort[] data, int width, int height) GetDataFrom(Texture2D texture16)
         {
-            var rawData = texture16.GetRawTextureData<ushort>();
-            var data = new ushort[texture16.width * texture16.height];
+            NativeArray<ushort> rawData = texture16.GetRawTextureData<ushort>();
+            ushort[] data = new ushort[texture16.width * texture16.height];
             rawData.CopyTo(data);
             return (data, texture16.width, texture16.height);
         }
+
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
             GUILayout.Label("PQS Decal Data Baking", EditorStyles.boldLabel);
-            var dataName = PqsDecalNames.TryGetValue(Target.name, out var newDataName) ? newDataName : "NewPQSData";
+            string dataName = PqsDecalNames.TryGetValue(Target.name, out string newDataName)
+                ? newDataName
+                : "NewPQSData";
             PqsDecalNames[Target.name] = dataName = EditorGUILayout.TextField("Data Asset Name", dataName);
             if (GUILayout.Button("Bake"))
             {
@@ -42,7 +46,7 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                 decalData.Count = Target.decals.Count;
                 (decalData.HeightData, decalData.HeightWidth, decalData.HeightHeight) = GetDataFrom(Target.heightData);
                 (decalData.AlphaData, decalData.AlphaWidth, decalData.AlphaHeight) = GetDataFrom(Target.alphaData);
-                var path = AssetDatabase.GetAssetPath(Target);
+                string path = AssetDatabase.GetAssetPath(Target);
                 if (path == "")
                 {
                     path = "Assets";
@@ -52,8 +56,12 @@ namespace ksp2community.ksp2unitytools.editor.CustomEditors
                     path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
                 }
 
-                if (File.Exists($"{path}/{dataName}.asset")) AssetDatabase.DeleteAsset($"{path}/{dataName}.asset");
-                AssetDatabase.CreateAsset(decalData,$"{path}/{dataName}.asset");
+                if (File.Exists($"{path}/{dataName}.asset"))
+                {
+                    AssetDatabase.DeleteAsset($"{path}/{dataName}.asset");
+                }
+
+                AssetDatabase.CreateAsset(decalData, $"{path}/{dataName}.asset");
                 AssetDatabase.Refresh();
             }
         }

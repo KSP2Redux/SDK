@@ -1,15 +1,16 @@
 ﻿using System;
 using KSP.Game.Missions;
 
-namespace ksp2community.ksp2unitytools.editor.Missions.ConditionTree
+namespace Ksp2UnityTools.Editor.Missions.ConditionTree
 {
     // Do this in a very weird way to
     [Serializable]
     public abstract class BaseMissionCondition
     {
-
         public MissionConditionType conditionType;
+
         #region Property Condition
+
         public string propertyType;
         public bool requireCurrentValue;
         public string watchedStringValue;
@@ -19,10 +20,15 @@ namespace ksp2community.ksp2unitytools.editor.Missions.ConditionTree
         public PropertyOperator propertyOperator;
         public bool useStringInput;
         public string stringInput;
+
         #endregion
+
         #region Event Condition
+
         public string eventType;
+
         #endregion
+
         public virtual Condition ToCondition()
         {
             switch (conditionType)
@@ -32,7 +38,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions.ConditionTree
                 case MissionConditionType.EventCondition:
                     return new EventCondition
                     {
-                        EventTypeAQN = eventType,
+                        EventTypeAQN = eventType
                     };
                 case MissionConditionType.PropertyCondition:
                     return new PropertyCondition
@@ -45,7 +51,7 @@ namespace ksp2community.ksp2unitytools.editor.Missions.ConditionTree
                         TestWatchedBool = watchedBooleanValue,
                         propOperator = propertyOperator,
                         isInput = useStringInput,
-                        Inputstring = stringInput,
+                        Inputstring = stringInput
                     };
                 default:
                     return null;

@@ -5,7 +5,7 @@ using Redux.VFX.Plume.Services;
 using UnityEditor;
 using UnityEngine;
 
-namespace Redux.VFX.Plumes.Editor.CustomEditors
+namespace Ksp2UnityTools.Editor.Plumes.CustomEditors
 {
     [CustomEditor(typeof(PlumeThrottleData))]
     public class PlumeThrottleDataEditor : UnityEditor.Editor
@@ -35,7 +35,8 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
                 lfoThrottleData.Config.ShaderSettings.ShaderParams = new Dictionary<string, object>();
             }
 
-            var throttleGroup = lfoThrottleData.gameObject.transform.GetComponentInParent<PlumeThrottleDataMasterGroup>();
+            var throttleGroup =
+                lfoThrottleData.gameObject.transform.GetComponentInParent<PlumeThrottleDataMasterGroup>();
             if (throttleGroup != null)
             {
                 _groupDropdown = EditorGUILayout.Foldout(_groupDropdown, "Group Controls");
@@ -58,7 +59,7 @@ namespace Redux.VFX.Plumes.Editor.CustomEditors
 
             if (lfoThrottleData.Config != null)
             {
-                var serializedProperty = serializedObject.FindProperty("Config");
+                SerializedProperty serializedProperty = serializedObject.FindProperty("Config");
                 if (serializedProperty != null)
                 {
                     EditorGUILayout.PropertyField(serializedProperty);
