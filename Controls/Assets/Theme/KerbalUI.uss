@@ -333,6 +333,12 @@
     color: #c0c7d5;
 }
 
+.uitk-placeholder {
+    color: #888888;
+    padding: 0;
+    margin: 2px 0 0 0;
+}
+
 /* endregion */
 
 /* region ============ Toggle ============ */
@@ -720,6 +726,15 @@
 
 .oab-button.active:hover > .oab-button__inner {
     background-color: rgb(206, 190, 255);
+}
+
+.oab-button:disabled {
+    border-color: rgb(150, 150, 150);
+}
+
+.oab-button:disabled > .oab-button__inner {
+    background-color: rgb(152, 159, 166);
+    color: rgb(60, 60, 60);
 }
 
 .unity-button.oab-close-button {
