@@ -257,6 +257,8 @@
     border-color: rgba(255, 255, 255, 0.2);
     border-radius: 6px;
     font-size: 14px;
+    transition-property: -unity-background-image-tint-color, background-color, border-color;
+    transition-duration: 0.3s;
 }
 
 .unity-button:hover {
@@ -307,22 +309,33 @@
 }
 
 .unity-base-text-field > .unity-base-text-field__input {
-    background-color: rgba(0, 0, 0, 0.3);
-    border-color: rgba(0, 0, 0, 0);
+    transition-property: background-color;
+    transition-duration: 0.3s;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(86, 90, 100, 1);
+    border-width: 1px;
     padding: 5px;
     margin: 2px 0 0 0;
+    border-radius: 6px;
 }
 
 .unity-base-text-field:hover > .unity-base-text-field__input {
-    background-color: #001632;
-    padding: 5px;
-    margin: 2px 0 0 0;
+    border-color: rgba(86, 90, 100, 1);
+}
+
+.unity-base-text-field > .unity-base-text-field__input:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: rgba(86, 90, 100, 1);
+}
+
+.unity-base-text-field > .unity-base-text-field__input:active {
+    background-color: rgba(28, 42, 64, 1);
+    border-color: rgba(86, 90, 100, 1);
 }
 
 .unity-base-text-field:focus > .unity-base-text-field__input {
-    background-color: #00260d;
-    padding: 5px;
-    margin: 2px 0 0 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-color: rgba(86, 90, 100, 1);
 }
 
 .unity-base-text-field > .unity-base-field__label {
@@ -341,7 +354,7 @@
 
 /* endregion */
 
-/* region ============ Toggle ============ */
+/* region ============ Toggle (Button) ============ */
 
 .unity-toggle.toggle {
     justify-content: space-between;
@@ -409,6 +422,43 @@
 
 /* endregion */
 
+/* region ========== Toggle (Switch) ========== */
+
+.unity-toggle.switch {
+    justify-content: space-between;
+    margin: 0;
+}
+
+.unity-toggle.switch > .unity-label {
+    color: #c0c7d5;
+    padding-bottom: 0;
+    padding-top: 3px;
+}
+
+/* Unchecked */
+.unity-toggle.switch > .unity-base-field__input {
+    border-width: 0;
+    border-color: transparent;
+    background-color: transparent;
+    height: 24px;
+    width: 60px;
+    background-image: url("project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/toggle-off.png?fileID=21300000&guid=9b57712cd13e9d24994dca1526184dd3&type=3#toggle-off");
+}
+
+.unity-toggle.switch > .unity-base-field__input > .unity-toggle__checkmark {
+    display: none;
+}
+
+/* Checked */
+.unity-toggle.switch:checked > .unity-base-field__input {
+    background-color: transparent;
+    background-image: url("project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/toggle-on.png?fileID=21300000&guid=49ace12d890daf14aaddd69cfebc8442&type=3#toggle-on");
+}
+
+.unity-toggle.switch:checked > .unity-base-field__input > .unity-toggle__checkmark {
+    display: none;
+}
+
 /* region ============ RadioButton ============ */
 
 .unity-radio-button {
@@ -442,7 +492,6 @@
     border-color: #7a7f88;
 }
 
-
 .unity-radio-button:checked > .unity-radio-button__input,
 .unity-radio-button:focus > .unity-radio-button__input {
     border-color: #00cc53;
@@ -467,49 +516,59 @@
 /* region ============ Foldout ============ */
 
 .unity-foldout {
-    background-color: #2e3540;
+    transition-property: background-color;
+    transition-duration: 0.2s;
+    background-color: rgb(27, 29, 35);
     border-radius: 6px;
-    border-width: 2px;
-    border-color: #354051;
-    color: #c0c7d5;
+}
+
+.unity-foldout:hover {
+    background-color: rgb(56, 61, 75);
+}
+
+.unity-foldout:focus {
+    background-color: rgb(34, 42, 50);
+}
+
+.unity-foldout:checked {
+    background-color: rgb(46, 53, 64);
+}
+
+.unity-foldout:checked:hover {
+    background-color: rgb(56, 61, 75);
 }
 
 .unity-foldout > .unity-foldout__content {
     padding: 0;
-    margin: 4px;
+    margin: 2px;
+    background-color: rgb(28, 34, 42);
+    border-radius: 4px;
+    flex-grow: 1;
 }
 
 .unity-foldout > .unity-foldout__toggle {
-    color: #d6e0ff;
-    margin: 2px;
+    color: rgb(214, 224, 255);
+    margin: 4px 0 2px 0;
     border-radius: 6px;
-    padding: 4px 0;
 }
 
 .unity-foldout > .unity-foldout__toggle:focus .unity-text-element {
-    color: #d6e0ff;
-}
-
-.unity-foldout > .unity-foldout__toggle:hover {
-    background-color: #3f4487;
-}
-
-.unity-foldout > .unity-foldout__toggle:checked, .unity-foldout > .unity-foldout__toggle:active {
-    background-color: #4b50b0;
+    color: rgb(214, 224, 255);
 }
 
 .unity-foldout > .unity-foldout__toggle Label {
     padding: 0;
     margin: 2px;
-    color: #ffffff;
+    color: rgb(214, 224, 255);
+    -unity-font-definition: var(--font-regular);
 }
 
 .unity-foldout > .unity-foldout__toggle:active Label {
-    color: #ffffff;
+    color: rgb(214, 224, 255);
 }
 
 .unity-foldout > .unity-foldout__toggle > .unity-base-field__input {
-    -unity-background-image-tint-color: #d5dfff;
+    -unity-background-image-tint-color: rgb(214, 224, 255);
 }
 
 .unity-foldout > .unity-foldout__toggle > .unity-base-field__input:hover {
@@ -517,11 +576,22 @@
 }
 
 .unity-foldout > .unity-foldout__toggle > .unity-base-field__input > .unity-toggle__checkmark {
-    -unity-background-image-tint-color: #d5dfff;
+    transition-property: rotate;
+    transition-duration: 0.2s;
+    -unity-background-image-tint-color: rgb(214, 224, 255);
+    background-size: 16px;
+    background-position-y: top 30%;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
+}
+
+.unity-foldout > .unity-foldout__toggle:checked > .unity-base-field__input > .unity-toggle__checkmark {
+    rotate: 90deg;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
 }
 
 .unity-foldout > .unity-foldout__toggle:active > .unity-base-field__input > .unity-toggle__checkmark {
-    -unity-background-image-tint-color: #d5dfff;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
+    -unity-background-image-tint-color: rgb(214, 224, 255);
 }
 
 /* endregion */
@@ -541,21 +611,19 @@
     width: 32px;
     margin-right: 10px;
     font-size: 30px;
-    background-color: rgba(0, 0, 0, 0);
-    border-width: 2px;
-    border-color: rgb(175, 178, 190);
-    color: rgb(175, 178, 190);
+    border-width: 0;
+    -unity-background-image-tint-color: rgb(175, 178, 190);
+    background-color: transparent;
     border-radius: 8px;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/back-button.png?fileID=21300000&guid=412fc87dea660074a900f698a38bb191&type=3#back-button');
 }
 
 #title-bar > .unity-button:hover {
-    border-color: #e8ecfe;
-    color: #e8ecfe;
+    -unity-background-image-tint-color: rgb(232, 236, 254);
 }
 
 #title-bar > .unity-button:active {
-    border-color: #b4bce4;
-    color: #b4bce4;
+    -unity-background-image-tint-color: rgb(180, 188, 228);
 }
 
 #title-bar > .unity-label {
@@ -588,9 +656,13 @@
     margin-right: 0;
 }
 
-.unity-popup-field__arrow,
-.unity-enum-field__arrow {
-    margin-right: 5px;
+.unity-base-popup-field__arrow,
+.unity-base-enum-field__arrow {
+    margin-top: 2px;
+    margin-right: -7px;
+    background-image: url("project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/dropdown-arrows.png?fileID=21300000&guid=c1b40be4e4feb5f4ab5973a3b0f202e4&type=3#dropdown-arrows");
+    -unity-background-image-tint-color: rgb(128, 134, 149);
+    height: 14px;
 }
 
 .unity-popup-field > .unity-popup-field__input,
@@ -598,16 +670,13 @@
     flex-grow: 1;
     padding: 5px 12px;
     color: rgb(4, 16, 41);
-    background-color: rgba(0, 0, 0, 0.25);
+    background-color: rgba(0, 0, 0, 0.2);
+    transition-property: background-color;
+    transition-duration: 0.3s;
     -unity-background-image-tint-color: rgb(0, 0, 0);
-    border-left-width: 1px;
-    border-right-width: 1px;
-    border-top-width: 1px;
-    border-bottom-width: 1px;
-    border-left-color: rgba(0, 0, 0, 0);
-    border-right-color: rgba(0, 0, 0, 0);
-    border-top-color: rgba(0, 0, 0, 0);
-    border-bottom-color: rgba(0, 0, 0, 0);
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: rgba(86, 90, 100, 1);
 }
 
 .unity-popup-field .unity-text-element,
@@ -625,18 +694,16 @@
 
 .unity-popup-field:hover .unity-popup-field__input,
 .unity-enum-field:hover .unity-enum-field__input {
-    background-color: #001632;
-    border-left-color: rgb(50, 50, 50);
-    border-right-color: rgb(50, 50, 50);
-    border-top-color: rgb(50, 50, 50);
-    border-bottom-color: rgb(50, 50, 50);
+    border-color: rgba(86, 90, 100, 1);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .unity-popup-field:active .unity-popup-field__input,
 .unity-enum-field:active .unity-enum-field__input,
 .unity-popup-field:focus .unity-popup-field__input,
 .unity-enum-field:focus .unity-enum-field__input {
-    background-color: #00260d;
+    border-color: rgba(86, 90, 100, 1);
+    background-color: rgba(28, 42, 64, 1);
 }
 
 /* endregion */
@@ -667,6 +734,8 @@
     background-color: rgb(189, 196, 209);
     border-radius: 7px;
     justify-content: center;
+    transition-property: background-color, border-color;
+    transition-duration: 0.3s;
 }
 
 .oab-button:hover > .oab-button__inner {
@@ -858,18 +927,15 @@
     margin: 0;
     -unity-background-image-tint-color: rgba(0, 0, 0, 0.3);
     justify-content: center;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/ELE-frame-pixel.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#ELE-frame-pixel');
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/bar-toggle-bg.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#bar-toggle-bg');
+    -unity-slice-scale: 0.5px;
     transition-duration: 0.3s;
+    /*noinspection CssInvalidPropertyValue*/
     transition-property: -unity-background-image-tint-color;
 }
 
 .bar-toggle-vertical {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/ELE-frame-pixel.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#ELE-frame-pixel');
-    -unity-slice-scale: 0.5px;
-}
-
-.bar-toggle {
-    -unity-slice-scale: 0.5px;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/bar-toggle-bg.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#bar-toggle-bg');
 }
 
 .bar-toggle.dark {
