@@ -137,7 +137,7 @@ MonoBehaviour:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
   m_FallbackFontAssetTable:
-  - {fileID: 11400000, guid: 681337f2f7799d74e9e1bb98816850cf, type: 2}
+  - {fileID: 11400000, guid: eff8a0bafc62c72458db9d10ab25c15e, type: 2}
   - {fileID: 11400000, guid: 4348a81ca6b868e4cb7cc610cbce7b5b, type: 2}
   - {fileID: 11400000, guid: 1e6daff170dc108449d5d1ed8a99a47c, type: 2}
   - {fileID: 11400000, guid: 09b10ed121d5ec74d90146179360802d, type: 2}

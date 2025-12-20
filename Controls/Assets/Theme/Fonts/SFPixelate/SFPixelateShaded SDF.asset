@@ -11,12 +11,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 19001, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: SFPixelateShaded SDF
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   m_Version: 1.1.0
   m_Material: {fileID: 5327779948061549408}
   m_SourceFontFileGUID: f09cde8a25fe4544c920b56ea66bb148
   m_SourceFontFile: {fileID: 12800000, guid: f09cde8a25fe4544c920b56ea66bb148, type: 3}
-  m_SourceFontFilePath:
+  m_SourceFontFilePath: 
   m_AtlasPopulationMode: 1
   InternalDynamicOS: 0
   m_FaceInfo:
@@ -65,7 +65,7 @@ MonoBehaviour:
     m_MarkToBaseAdjustmentRecords: []
     m_MarkToMarkAdjustmentRecords: []
   m_FallbackFontAssetTable:
-  - {fileID: 11400000, guid: 5d23620e1b8bb5e49ab80186ee3fed9b, type: 2}
+  - {fileID: 11400000, guid: f5454c9c675002c44a5a7234bd40c390, type: 2}
   - {fileID: 11400000, guid: d33ea30b993a81b488080baaf5774437, type: 2}
   - {fileID: 11400000, guid: d3b1a1905b29fcf4486068baa3e2ff48, type: 2}
   - {fileID: 11400000, guid: cbfd30a0bf5f0de44ab9795b2f6a09a8, type: 2}
@@ -81,9 +81,9 @@ MonoBehaviour:
     atlasWidth: 1024
     atlasHeight: 1024
     characterSetSelectionMode: 7
-    characterSequence:
-    referencedFontAssetGUID:
-    referencedTextAssetGUID:
+    characterSequence: 
+    referencedFontAssetGUID: 
+    referencedTextAssetGUID: 
     fontStyle: 0
     fontStyleModifier: 0
     renderMode: 4165
@@ -138,7 +138,7 @@ Texture2D:
   m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName:
+  m_MipmapLimitGroupName: 
   m_StreamingMipmaps: 0
   m_StreamingMipmapsPriority: 0
   m_VTOnly: 0
@@ -155,14 +155,14 @@ Texture2D:
     m_WrapW: 0
   m_LightmapFormat: 0
   m_ColorSpace: 1
-  m_PlatformBlob:
+  m_PlatformBlob: 
   image data: 0
-  _typelessdata:
+  _typelessdata: 
   m_StreamData:
     serializedVersion: 2
     offset: 0
     size: 0
-    path:
+    path: 
 --- !u!21 &5327779948061549408
 Material:
   serializedVersion: 8
@@ -182,7 +182,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:

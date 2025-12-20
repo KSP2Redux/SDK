@@ -23,7 +23,7 @@ Texture2D:
   m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
-  m_MipmapLimitGroupName:
+  m_MipmapLimitGroupName: 
   m_StreamingMipmaps: 0
   m_StreamingMipmapsPriority: 0
   m_VTOnly: 0
@@ -40,14 +40,14 @@ Texture2D:
     m_WrapW: 0
   m_LightmapFormat: 0
   m_ColorSpace: 1
-  m_PlatformBlob:
+  m_PlatformBlob: 
   image data: 0
-  _typelessdata:
+  _typelessdata: 
   m_StreamData:
     serializedVersion: 2
     offset: 0
     size: 0
-    path:
+    path: 
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59,7 +59,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: LEDCounter7Mod TMP
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   hashCode: -838877023
   material: {fileID: 7444484234119355382}
   materialHashCode: -1035308063
@@ -104,7 +104,7 @@ MonoBehaviour:
     m_Width: 1023
     m_Height: 1023
   m_fontInfo:
-    Name:
+    Name: 
     PointSize: 0
     Scale: 0
     CharacterCount: 0
@@ -137,13 +137,13 @@ MonoBehaviour:
     m_GlyphPairAdjustmentRecords: []
   fallbackFontAssets: []
   m_FallbackFontAssetTable:
-  - {fileID: 11400000, guid: 681337f2f7799d74e9e1bb98816850cf, type: 2}
+  - {fileID: 11400000, guid: eff8a0bafc62c72458db9d10ab25c15e, type: 2}
   - {fileID: 11400000, guid: 4348a81ca6b868e4cb7cc610cbce7b5b, type: 2}
   - {fileID: 11400000, guid: 1e6daff170dc108449d5d1ed8a99a47c, type: 2}
   - {fileID: 11400000, guid: 09b10ed121d5ec74d90146179360802d, type: 2}
   - {fileID: 11400000, guid: 66f4195e97e909d438f51e9991fe9be1, type: 2}
   m_CreationSettings:
-    sourceFontFileName:
+    sourceFontFileName: 
     sourceFontFileGUID: 18bda48b594af194bb1956c3d7cd6aaa
     pointSizeSamplingMode: 0
     pointSize: 90
@@ -152,9 +152,9 @@ MonoBehaviour:
     atlasWidth: 1024
     atlasHeight: 1024
     characterSetSelectionMode: 7
-    characterSequence:
-    referencedFontAssetGUID:
-    referencedTextAssetGUID:
+    characterSequence: 
+    referencedFontAssetGUID: 
+    referencedTextAssetGUID: 
     fontStyle: 0
     fontStyleModifier: 0
     renderMode: 4165
@@ -206,7 +206,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties:
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:

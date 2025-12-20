@@ -139,7 +139,7 @@ MonoBehaviour:
     m_MarkToBaseAdjustmentRecords: []
     m_MarkToMarkAdjustmentRecords: []
   m_FallbackFontAssetTable:
-  - {fileID: 11400000, guid: 5d23620e1b8bb5e49ab80186ee3fed9b, type: 2}
+  - {fileID: 11400000, guid: f5454c9c675002c44a5a7234bd40c390, type: 2}
   - {fileID: 11400000, guid: d33ea30b993a81b488080baaf5774437, type: 2}
   - {fileID: 11400000, guid: d3b1a1905b29fcf4486068baa3e2ff48, type: 2}
   - {fileID: 11400000, guid: cbfd30a0bf5f0de44ab9795b2f6a09a8, type: 2}
