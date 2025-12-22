@@ -4,6 +4,7 @@ using KSP;
 using KSP.IO;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -112,79 +113,85 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
             GUILayout.Label("Part Saving", EditorStyles.boldLabel);
             // var patchPath = "plugin_template/patches/%NAME%.patch";
-            string jsonPath = Path.GetDirectoryName(AssetDatabase.GetAssetPath(TargetData)) +
-                $"/{TargetData.name}.json";
-            if (GUILayout.Button("Save Part JSON"))
+            string prefabPath = PathUtils.GetPrefabOrAssetPath(TargetData, TargetObject);
+            if (string.IsNullOrEmpty(prefabPath))
             {
-                if (!_initialized)
+                return;
+            }
+
+            string jsonPath = Path.GetDirectoryName(prefabPath) + $"/{TargetData.name}.json";
+            if (!GUILayout.Button("Save Part JSON"))
+            {
+                return;
+            }
+
+            if (!_initialized)
+            {
+                Initialize();
+            }
+
+            if (TargetCore == null)
+            {
+                return;
+            }
+
+            // Clear out the serialized part modules and reserialize them
+            TargetCore.data.serializedPartModules.Clear();
+            foreach (Component child in TargetObject.GetComponents<Component>())
+            {
+                if (child is not PartBehaviourModule partBehaviourModule)
                 {
-                    Initialize();
+                    continue;
                 }
 
-                if (TargetCore == null)
+                MethodInfo addMethod =
+                    child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                    child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
+                addMethod?.Invoke(child, new object[] { });
+                foreach (ModuleData data in partBehaviourModule.DataModules.Values)
                 {
-                    return;
+                    MethodInfo rebuildMethod =
+                        data.GetType()
+                            .GetMethod(
+                                "RebuildDataContext",
+                                BindingFlags.Instance | BindingFlags.NonPublic
+                            ) ?? data.GetType()
+                            .GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.Public);
+                    rebuildMethod?.Invoke(data, new object[] { });
                 }
 
-                // Clear out the serialized part modules and reserialize them
-                TargetCore.data.serializedPartModules.Clear();
-                foreach (Component child in TargetObject.GetComponents<Component>())
-                {
-                    if (!(child is PartBehaviourModule partBehaviourModule))
-                    {
-                        continue;
-                    }
+                TargetCore.data.serializedPartModules.Add(new SerializedPartModule(partBehaviourModule, false));
+            }
 
-                    MethodInfo addMethod =
-                        child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                        child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
-                    addMethod?.Invoke(child, new object[] { });
-                    foreach (ModuleData data in partBehaviourModule.DataModules.Values)
-                    {
-                        MethodInfo rebuildMethod =
-                            data.GetType()
-                                .GetMethod(
-                                    "RebuildDataContext",
-                                    BindingFlags.Instance | BindingFlags.NonPublic
-                                ) ?? data.GetType()
-                                .GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.Public);
-                        rebuildMethod?.Invoke(data, new object[] { });
-                    }
-
-                    TargetCore.data.serializedPartModules.Add(new SerializedPartModule(partBehaviourModule, false));
-                }
-
-                string json = IOProvider.ToJson(TargetCore);
-                JObject jObject = JObject.Parse(json);
-                json = jObject.ToString(Formatting.Indented);
-                string path = $"Assets/{jsonPath}";
-                path = path.Replace("%NAME%", TargetCore.data.partName);
-                string directoryName = new FileInfo(path).DirectoryName;
-                Directory.CreateDirectory(directoryName);
-                File.WriteAllText($"{path}", json);
-                AssetDatabase.ImportAsset(path);
-                bool madeAddressable = false;
-                if (KSP2UnityTools.FindParentMod(target) is { } mod)
-                {
-                    madeAddressable = true;
-                    AddressablesTools.MakeAddressable(
-                        mod.partsGroup,
-                        path,
-                        $"{TargetCore.data.partName}.json",
-                        "parts_data"
-                    );
-                }
-
-                AssetDatabase.Refresh();
-                AssetDatabase.SaveAssets();
-                EditorUtility.DisplayDialog(
-                    "Part Exported",
-                    madeAddressable == false
-                        ? $"Json is at: {path}, you need to manually make it addressable"
-                        : $"Json is at: {path}",
-                    "ok"
+            string json = IOProvider.ToJson(TargetCore);
+            JObject jObject = JObject.Parse(json);
+            json = jObject.ToString(Formatting.Indented);
+            string path = jsonPath.Replace("%NAME%", TargetCore.data.partName);
+            string directoryName = new FileInfo(path).DirectoryName;
+            Directory.CreateDirectory(directoryName);
+            File.WriteAllText($"{path}", json);
+            AssetDatabase.ImportAsset(path);
+            bool madeAddressable = false;
+            if (KSP2UnityTools.FindParentMod(target) is { } mod)
+            {
+                madeAddressable = true;
+                AddressablesTools.MakeAddressable(
+                    mod.partsGroup,
+                    path,
+                    $"{TargetCore.data.partName}.json",
+                    "parts_data"
                 );
             }
+
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "Part Exported",
+                !madeAddressable
+                    ? $"Json is at: {path}, you need to manually make it addressable"
+                    : $"Json is at: {path}",
+                "ok"
+            );
         }
 
         [DrawGizmo(GizmoType.Active | GizmoType.Selected)]

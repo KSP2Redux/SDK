@@ -56,12 +56,12 @@ namespace Ksp2UnityTools.Editor.API
         public static Mod FindParentMod(Object thisAsset)
         {
             string path = AssetDatabase.GetAssetPath(thisAsset);
-            // Now we want to find the folder immediately after assets
-            int assetsStart = path.IndexOf("Assets/");
-            int trueStart = path.IndexOf('/', assetsStart + "Assets/".Length);
-            string truePath = path[..trueStart];
             try
             {
+                // Now we want to find the folder immediately after assets
+                int assetsStart = path.IndexOf("Assets/");
+                int trueStart = path.IndexOf('/', assetsStart + "Assets/".Length);
+                string truePath = path[..trueStart];
                 var mod = AssetDatabase.LoadAssetAtPath<Mod>(truePath + "/swinfo.asset");
                 return mod;
             }
