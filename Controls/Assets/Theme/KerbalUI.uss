@@ -497,7 +497,7 @@
     background-color: rgb(0, 0, 0);
     border-radius: 10px;
     background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/control-frame.png?fileID=21300000&guid=a5c196a2bc627c1469f6f790adb266a8&type=3#control-frame');
-    -unity-slice-scale: 0.5;
+    -unity-slice-scale: 0.5px;
     -unity-background-image-tint-color: rgb(73, 77, 91);
 }
 
@@ -1280,7 +1280,7 @@
     border-color: rgb(0, 0, 0);
     border-bottom-width: 3px;
     -unity-text-align: upper-right;
-    letter-spacing: 16;
+    letter-spacing: 16px;
 }
 
 /* endregion */
