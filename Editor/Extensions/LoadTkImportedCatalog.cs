@@ -31,13 +31,11 @@ namespace Ksp2UnityTools.Editor.Extensions
             bool didDomainReload
         )
         {
-            if (!didDomainReload)
+            string ksp2CatalogFullPath = Path.Join(Application.dataPath, loadTkImportedCatalogPath);
+            if (!didDomainReload || !File.Exists(ksp2CatalogFullPath))
             {
                 return;
             }
-
-            string tkAssetCatalogPath = loadTkImportedCatalogPath;
-            string ksp2CatalogFullPath = Path.Join(Application.dataPath, tkAssetCatalogPath);
 
             if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Contains(ksp2CatalogFullPath))
             {
