@@ -3,7 +3,8 @@ using UnityEngine.UIElements;
 
 namespace UitkForKsp2.Controls
 {
-    public class InvertedCornerBox : VisualElement
+    [UxmlElement]
+    public partial class InvertedCornerBox : VisualElement
     {
         private static readonly Color DefaultBorderColor = new Color32(116, 118, 128, 255);
         private static readonly Color DefaultBackgroundColor = new Color32(27, 30, 36, 255);
@@ -63,6 +64,7 @@ namespace UitkForKsp2.Controls
             painter.Fill();
         }
 
+        [UxmlAttribute("border-thickness")]
         public float BorderThickness
         {
             get => _borderThickness;
@@ -73,6 +75,7 @@ namespace UitkForKsp2.Controls
             }
         }
 
+        [UxmlAttribute("notch-size")]
         public float NotchSize
         {
             get => _notchSize;
@@ -83,6 +86,7 @@ namespace UitkForKsp2.Controls
             }
         }
 
+        [UxmlAttribute("border-color")]
         public Color BorderColor
         {
             get => _borderColor;
@@ -93,6 +97,7 @@ namespace UitkForKsp2.Controls
             }
         }
 
+        [UxmlAttribute("background-color")]
         public Color BackgroundColor
         {
             get => _backgroundColor;
@@ -100,45 +105,6 @@ namespace UitkForKsp2.Controls
             {
                 _backgroundColor = value;
                 MarkDirtyRepaint();
-            }
-        }
-
-        public new class UxmlFactory : UxmlFactory<InvertedCornerBox, UxmlTraits> { }
-
-        public new class UxmlTraits : VisualElement.UxmlTraits
-        {
-            private readonly UxmlFloatAttributeDescription _borderThickness = new()
-            {
-                name = "border-thickness",
-                defaultValue = 1f
-            };
-
-            private readonly UxmlFloatAttributeDescription _notchSize = new()
-            {
-                name = "notch-size",
-                defaultValue = 5f
-            };
-
-            private readonly UxmlColorAttributeDescription _borderColor = new()
-            {
-                name = "border-color",
-                defaultValue = DefaultBorderColor
-            };
-
-            private readonly UxmlColorAttributeDescription _backgroundColor = new()
-            {
-                name = "background-color",
-                defaultValue = DefaultBackgroundColor
-            };
-
-            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
-            {
-                base.Init(ve, bag, cc);
-                var element = (InvertedCornerBox)ve;
-                element.BorderThickness = _borderThickness.GetValueFromBag(bag, cc);
-                element.NotchSize = _notchSize.GetValueFromBag(bag, cc);
-                element.BorderColor = _borderColor.GetValueFromBag(bag, cc);
-                element.BackgroundColor = _backgroundColor.GetValueFromBag(bag, cc);
             }
         }
     }

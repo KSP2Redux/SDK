@@ -4,7 +4,8 @@ using UnityEngine.UIElements;
 // ReSharper disable once CheckNamespace
 namespace UitkForKsp2.Controls
 {
-    public class Selector : BaseControl, INotifyValueChanged<int>
+    [UxmlElement]
+    public partial class Selector : BaseControl, INotifyValueChanged<int>
     {
         public Button ToStartButton;
         public Button PreviousButton;
@@ -14,6 +15,7 @@ namespace UitkForKsp2.Controls
 
         public event Action<int> OnValueChanged;
 
+        [UxmlAttribute("showLimiterButtons")]
         public bool ShowLimiterButtons
         {
             get => _showLimiterButtons;
@@ -59,7 +61,7 @@ namespace UitkForKsp2.Controls
                 }
 
 
-                if (choicesList != null && choicesList.Length > 0)
+                if (choicesList is { Length: > 0 })
                 {
                     ValueLabel.text = choicesList[value];
                 }
@@ -70,6 +72,7 @@ namespace UitkForKsp2.Controls
 
         private int _index;
 
+        [UxmlAttribute("wrapMode")]
         public WrapMode wrapMode
         {
             get => _wrapMode;
@@ -82,10 +85,7 @@ namespace UitkForKsp2.Controls
 
         private WrapMode _wrapMode = WrapMode.Loop;
 
-        internal string choices
-        {
-            get => string.Join(",", choicesList);
-        }
+        internal string choices => string.Join(",", choicesList);
 
         public string[] choicesList = { "" };
 
@@ -93,7 +93,7 @@ namespace UitkForKsp2.Controls
         {
             Loop,
             Clamp
-        };
+        }
 
         private void UpdateButtons()
         {
@@ -126,7 +126,7 @@ namespace UitkForKsp2.Controls
 
         public void SetChoices(params string[] choices)
         {
-            if (choices != null && choices.Length > 0)
+            if (choices is { Length: > 0 })
             {
                 choicesList = choices;
             }
@@ -141,7 +141,7 @@ namespace UitkForKsp2.Controls
         {
             AddToClassList(UssClassName);
 
-            ToStartButton = new Button()
+            ToStartButton = new Button
             {
                 name = "to-start-button"
             };
@@ -149,7 +149,7 @@ namespace UitkForKsp2.Controls
             InputContainer.Add(ToStartButton);
             ToStartButton.clicked += () => index = 0;
 
-            PreviousButton = new Button()
+            PreviousButton = new Button
             {
                 name = "previous-button"
             };
@@ -221,7 +221,7 @@ namespace UitkForKsp2.Controls
                 }
             };
 
-            ToEndButton = new Button()
+            ToEndButton = new Button
             {
                 name = "to-end-button"
             };
@@ -245,57 +245,7 @@ namespace UitkForKsp2.Controls
         {
         }
 
-        public new class UxmlFactory : UxmlFactory<Selector, UxmlTraits>
-        {
-        }
-
-        public new class UxmlTraits : BaseControl.UxmlTraits
-        {
-            UxmlEnumAttributeDescription<WrapMode> wrapMode = new UxmlEnumAttributeDescription<WrapMode>
-            {
-                name = "wrapMode",
-                defaultValue = WrapMode.Loop
-            };
-
-            UxmlBoolAttributeDescription showLimiterButtons = new UxmlBoolAttributeDescription
-            {
-                name = "showLimiterButtons",
-                defaultValue = true
-            };
-
-            UxmlStringAttributeDescription choices = new UxmlStringAttributeDescription
-            {
-                name = "choices",
-                defaultValue = "You,can,cycle,through,options!"
-            };
-
-            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
-            {
-                base.Init(ve, bag, cc);
-
-                if (!(ve is Selector selector))
-                {
-                    return;
-                }
-
-                selector.wrapMode = wrapMode.GetValueFromBag(bag, cc);
-                string _choices = choices.GetValueFromBag(bag, cc);
-
-                if (!string.IsNullOrEmpty(_choices.Trim()))
-                {
-                    string[] choicesArray = _choices.Split(',');
-                    selector.SetChoices(choicesArray);
-                }
-                else
-                {
-                    selector.SetChoices("");
-                }
-
-                selector.ShowLimiterButtons = showLimiterButtons.GetValueFromBag(bag, cc);
-            }
-        }
-
-        public static new string UssClassName = "selector";
+        public new static string UssClassName = "selector";
 
         public static string UssToStartButtonClassName = UssClassName + "__input-to-start-button";
         public static string UssPreviousButtonClassName = UssClassName + "__input-previous-button";

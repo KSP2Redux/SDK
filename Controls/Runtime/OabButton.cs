@@ -3,12 +3,14 @@ using UnityEngine.UIElements;
 
 namespace UitkForKsp2.Controls
 {
-    public class OabButton : Button
+    [UxmlElement]
+    public partial class OabButton : Button
     {
         private readonly VisualElement _innerContainer;
         private readonly Label _textLabel;
 
-        public override string text
+        [UxmlAttribute("text")]
+        private string textOverride
         {
             get => _textLabel.text;
             set => _textLabel.text = value;
@@ -28,29 +30,6 @@ namespace UitkForKsp2.Controls
             _innerContainer = CreateInnerContainer();
             _textLabel = CreateTextLabel();
             BuildVisualTree();
-        }
-
-        public new class UxmlFactory : UxmlFactory<OabButton, UxmlTraits>
-        {
-        }
-
-        public new class UxmlTraits : Button.UxmlTraits
-        {
-            private readonly UxmlStringAttributeDescription _uxmlText = new() { name = "text", defaultValue = "" };
-
-            public override void Init(VisualElement element, IUxmlAttributes bag, CreationContext context)
-            {
-                base.Init(element, bag, context);
-
-                if (element is OabButton btn)
-                {
-                    string parsed = _uxmlText.GetValueFromBag(bag, context);
-                    if (!string.IsNullOrEmpty(parsed))
-                    {
-                        btn.text = parsed;
-                    }
-                }
-            }
         }
 
         private static VisualElement CreateInnerContainer()
