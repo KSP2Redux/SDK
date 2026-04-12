@@ -11,17 +11,20 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2705215ac5b84b70bacc50632be6e391, type: 3}
   m_Name: TMP Settings
-  m_EditorClassIdentifier: 
-  m_enableWordWrapping: 1
+  m_EditorClassIdentifier:
+  assetVersion: 2
+  m_TextWrappingMode: 1
   m_enableKerning: 1
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   m_enableTintAllSprites: 0
   m_enableParseEscapeCharacters: 1
   m_EnableRaycastTarget: 1
   m_GetFontFeaturesAtRuntime: 1
   m_missingGlyphCharacter: 0
+  m_ClearDynamicDataOnBuild: 1
   m_warningsDisabled: 0
-  m_defaultFontAsset: {fileID: 11400000, guid: 9ca80e684bd69874ea82f35344faad94, type: 2}
+  m_defaultFontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_defaultFontAssetPath: Fonts & Materials/
   m_defaultFontSize: 36
   m_defaultAutoSizeMinRatio: 0.5
@@ -30,15 +33,21 @@ MonoBehaviour:
   m_defaultTextMeshProUITextContainerSize: {x: 200, y: 50}
   m_autoSizeTextContainer: 0
   m_IsTextObjectScaleStatic: 0
-  m_fallbackFontAssets: []
+  m_fallbackFontAssets:
+  - {fileID: 11400000, guid: a38655de65be2c44f8aed08ccdb98b5c, type: 2}
+  - {fileID: 11400000, guid: b9b1c315b8494f64ba4bcc71a5f72b4b, type: 2}
+  - {fileID: 11400000, guid: 3ca1fd64673df9842a481bfbaf677e45, type: 2}
+  - {fileID: 11400000, guid: e7f79fff80586394782c7d56ef886495, type: 2}
   m_matchMaterialPreset: 1
-  m_defaultSpriteAsset: {fileID: 11400000, guid: 9f36429b6e73c0f49b2b5a08bbfe6e80, type: 2}
+  m_HideSubTextObjects: 0
+  m_defaultSpriteAsset: {fileID: 11400000, guid: c41005c129ba4d66911b75229fd70b45, type: 2}
   m_defaultSpriteAssetPath: Sprite Assets/
   m_enableEmojiSupport: 1
   m_MissingCharacterSpriteUnicode: 0
+  m_EmojiFallbackTextAssets: []
   m_defaultColorGradientPresetsPath: Color Gradient Presets/
-  m_defaultStyleSheet: {fileID: 11400000, guid: 25667424aa509e343b3e7aeccd943384, type: 2}
-  m_StyleSheetsResourcePath: 
-  m_leadingCharacters: {fileID: 4900000, guid: d68889adf4cdb8d4baad799b7c438bbd, type: 3}
-  m_followingCharacters: {fileID: 4900000, guid: ac368c8369bf9cf42b65a5167b888831, type: 3}
+  m_defaultStyleSheet: {fileID: 11400000, guid: f952c082cb03451daed3ee968ac6c63e, type: 2}
+  m_StyleSheetsResourcePath: Style Sheets/
+  m_leadingCharacters: {fileID: 4900000, guid: d82c1b31c7e74239bff1220585707d2b, type: 3}
+  m_followingCharacters: {fileID: 4900000, guid: fade42e8bc714b018fac513c043d323b, type: 3}
   m_UseModernHangulLineBreakingRules: 0
