@@ -1,0 +1,1489 @@
+fileFormatVersion: 2
+guid: 198de907f3f7e914db0e6862b4f83880
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: Input-Gamepad_13
+  - first:
+      213: 21300002
+    second: Input-Gamepad_1
+  - first:
+      213: 21300004
+    second: Input-Gamepad_10
+  - first:
+      213: 21300006
+    second: Input-Gamepad_27
+  - first:
+      213: 21300008
+    second: Input-Gamepad_24
+  - first:
+      213: 21300010
+    second: Input-Gamepad_22
+  - first:
+      213: 21300012
+    second: Input-Gamepad_11
+  - first:
+      213: 21300014
+    second: Input-Gamepad_17
+  - first:
+      213: 21300016
+    second: Input-Gamepad_31
+  - first:
+      213: 21300018
+    second: Input-Gamepad_0
+  - first:
+      213: 21300020
+    second: Input-Gamepad_23
+  - first:
+      213: 21300022
+    second: Input-Gamepad_3
+  - first:
+      213: 21300024
+    second: Input-Gamepad_18
+  - first:
+      213: 21300026
+    second: Input-Gamepad_15
+  - first:
+      213: 21300028
+    second: Input-Gamepad_5
+  - first:
+      213: 21300030
+    second: Input-Gamepad_16
+  - first:
+      213: 21300032
+    second: Input-Gamepad_26
+  - first:
+      213: 21300034
+    second: Input-Gamepad_4
+  - first:
+      213: 21300036
+    second: Input-Gamepad_6
+  - first:
+      213: 21300038
+    second: Input-Gamepad_7
+  - first:
+      213: 21300040
+    second: Input-Gamepad_21
+  - first:
+      213: 21300042
+    second: Input-Gamepad_29
+  - first:
+      213: 21300044
+    second: Input-Gamepad_20
+  - first:
+      213: 21300046
+    second: Input-Gamepad_12
+  - first:
+      213: 21300048
+    second: Input-Gamepad_32
+  - first:
+      213: 21300050
+    second: Input-Gamepad_19
+  - first:
+      213: 21300052
+    second: Input-Gamepad_25
+  - first:
+      213: 21300054
+    second: Input-Gamepad_14
+  - first:
+      213: 21300056
+    second: Input-Gamepad_8
+  - first:
+      213: 21300058
+    second: Input-Gamepad_2
+  - first:
+      213: 21300060
+    second: Input-Gamepad_9
+  - first:
+      213: 21300062
+    second: Input-Gamepad_30
+  - first:
+      213: 21300064
+    second: Input-Gamepad_33
+  - first:
+      213: 21300066
+    second: Input-Gamepad_28
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 12
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 0
+  flipbookColumns: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Input-Gamepad_13
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb37186219d44344ae0220d30d6a1b4a
+      internalID: 21300000
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_1
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 74836a0ee43449c9a98e44805e8fb8c5
+      internalID: 21300002
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4a8024309a34e34a0b0b136c076b117
+      internalID: 21300004
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_27
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe14cc00f4ee405f95a1830e9b3d2a58
+      internalID: 21300006
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_24
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be387e7f9971496c976687d2ede8ff96
+      internalID: 21300008
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_22
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ed7e18aeba444d08027efb9f9d1f0ed
+      internalID: 21300010
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_11
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c56d6e51b1aa4312b6dd09f23ab7e657
+      internalID: 21300012
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_17
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 78e8abb9a50446b5807aaaae69cd3cdc
+      internalID: 21300014
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_31
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2804d5138c30420c8b91a1aef6357e8a
+      internalID: 21300016
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b969fd7eddc645dea0731b4be86e266d
+      internalID: 21300018
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_23
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4d7c1ce18d9d4b1db74bd97ca94b7996
+      internalID: 21300020
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_3
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ab7bbc9e8534f36b9f3db059c89ab71
+      internalID: 21300022
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_18
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 937ddcd67e9d41bc832e4e586150167b
+      internalID: 21300024
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_15
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5a7f3e7b93e49a0947733302a13e088
+      internalID: 21300026
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_5
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee36fd7f3d5e4e6083a3f498258eb0b8
+      internalID: 21300028
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_16
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e6dfc778a30445398be449363aab918
+      internalID: 21300030
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_26
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d11bf852ff204b7abe7c7308da744102
+      internalID: 21300032
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_4
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 54710184b1524ea9acd7ffa7ebce1aac
+      internalID: 21300034
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_6
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 50deb811525846a6bab7e3d72e368c2d
+      internalID: 21300036
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_7
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 605d4881bfc74d10b387e4d87ad1b8df
+      internalID: 21300038
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_21
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f45525d0b8e4420d833e2415123e49e4
+      internalID: 21300040
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_29
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fb95a3859eab4b459270102bd8abf54c
+      internalID: 21300042
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_20
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1bc9af64c464c8abb79991bcf15a3df
+      internalID: 21300044
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_12
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7084cbc4890e455ab753ad09eb745657
+      internalID: 21300046
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_32
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e1d16e20c729474f894a7f79c4782f41
+      internalID: 21300048
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_19
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f526e2c3c7de414189a9ffa268c6e813
+      internalID: 21300050
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_25
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c59a3b46a32248fb9318661a916fd6cb
+      internalID: 21300052
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_14
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a049109f47914715acb9d88bff4bd93b
+      internalID: 21300054
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_8
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5750091b082447bac94d3c6b3d24c1b
+      internalID: 21300056
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_2
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -23, y: -28}
+        - {x: -32, y: -19}
+        - {x: -32, y: 31}
+        - {x: -29, y: 32}
+        - {x: 29, y: 32}
+        - {x: 32, y: 26}
+        - {x: 32, y: -17}
+        - {x: 31, y: -25}
+        - {x: 16, y: -32}
+        - {x: -15.000001, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 998fe3eeff184d4b87eaee23ed867971
+      internalID: 21300058
+      vertices:
+      - {x: 64, y: 58}
+      - {x: 63, y: 7}
+      - {x: 64, y: 15}
+      - {x: 61, y: 64}
+      - {x: 48, y: 0}
+      - {x: 17, y: 0}
+      - {x: 9, y: 4}
+      - {x: 3, y: 64}
+      - {x: 0, y: 63}
+      - {x: 0, y: 13}
+      indices: 090000000800000006000000070000000600000008000000030000000600000007000000050000000600000003000000040000000500000003000000010000000400000003000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_9
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c206135548345c8b6c99d5541276431
+      internalID: 21300060
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_30
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05870ffbe33b4c72a16f4911ac608e1c
+      internalID: 21300062
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_33
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 494ca01bc720468783c05c6f7fd8bdf4
+      internalID: 21300064
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Gamepad_28
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 30.000002}
+        - {x: -28, y: 32}
+        - {x: 27.000002, y: 32}
+        - {x: 32, y: 27.000002}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 468da7f327474d74b0c714a0c30e15d0
+      internalID: 21300066
+      vertices:
+      - {x: 59, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 59}
+      - {x: 4, y: 64}
+      - {x: 0, y: 62}
+      - {x: 0, y: 0}
+      indices: 050000000400000001000000030000000100000004000000000000000100000003000000020000000100000000000000
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Input-Gamepad_0: 21300018
+      Input-Gamepad_1: 21300002
+      Input-Gamepad_10: 21300004
+      Input-Gamepad_11: 21300012
+      Input-Gamepad_12: 21300046
+      Input-Gamepad_13: 21300000
+      Input-Gamepad_14: 21300054
+      Input-Gamepad_15: 21300026
+      Input-Gamepad_16: 21300030
+      Input-Gamepad_17: 21300014
+      Input-Gamepad_18: 21300024
+      Input-Gamepad_19: 21300050
+      Input-Gamepad_2: 21300058
+      Input-Gamepad_20: 21300044
+      Input-Gamepad_21: 21300040
+      Input-Gamepad_22: 21300010
+      Input-Gamepad_23: 21300020
+      Input-Gamepad_24: 21300008
+      Input-Gamepad_25: 21300052
+      Input-Gamepad_26: 21300032
+      Input-Gamepad_27: 21300006
+      Input-Gamepad_28: 21300066
+      Input-Gamepad_29: 21300042
+      Input-Gamepad_3: 21300022
+      Input-Gamepad_30: 21300062
+      Input-Gamepad_31: 21300016
+      Input-Gamepad_32: 21300048
+      Input-Gamepad_33: 21300064
+      Input-Gamepad_4: 21300034
+      Input-Gamepad_5: 21300028
+      Input-Gamepad_6: 21300036
+      Input-Gamepad_7: 21300038
+      Input-Gamepad_8: 21300056
+      Input-Gamepad_9: 21300060
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
