@@ -174,6 +174,7 @@ namespace Ksp2UnityTools.Editor.Modding
             manifest.Identity.Author = author;
             manifest.Identity.Description = description;
             manifest.Identity.Version = version;
+            manifest.Identity.Dependencies = new Manifest[] {};
             manifest.Data = new ComposableElement[] { };
             AssetDatabase.CreateAsset(manifest, manifestPath);
             AssetDatabase.AddObjectToAsset(manifest.Identity, manifest);
