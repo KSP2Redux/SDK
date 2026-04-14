@@ -66,35 +66,6 @@ MonoBehaviour:
   EstablishDestination: 0
   Source: <GamePath>/KSP2_x64_Data/resources.assets.resS
   Destination: resources.assets.resS
---- !u!114 &-3964519462820207570
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8465a7e736379e1488e1276bf4c917a0, type: 3}
-  m_Name: CreateCatalogBundle
-  m_EditorClassIdentifier: 
-  Active: 1
-  outputAssetBundlePath: Assets/DoNotDistribute/ksp2.catalog
-  filters:
-  - nameRegex: []
-    assetClass: 48
-  - nameRegex: []
-    assetClass: 28
-  - nameRegex: []
-    assetClass: 89
-  - nameRegex: []
-    assetClass: 21
-  - nameRegex: []
-    assetClass: 43
-  - nameRegex: []
-    assetClass: 1
-  - nameRegex: []
-    assetClass: 72
 --- !u!114 &-1734159886244972023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,7 +120,6 @@ MonoBehaviour:
   m_Name: ImportKsp2ToEditor
   m_EditorClassIdentifier: 
   Data:
-  - {fileID: -3964519462820207570}
   - {fileID: -6160294729922553416}
   - {fileID: -61196321748870910}
   - {fileID: -1734159886244972023}
