@@ -8,7 +8,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 {
     public class BkCatalogResourceAdapter : ResourcesAPI
     {
-        private static readonly string catalogBundlePath = "Assets/DoNotDistribute/ksp2.catalog";
+        private static readonly string catalogBundlePath = "Redux/Addressables/StandaloneWindows64/ksp2.catalog";
 
         private readonly AssetBundle catalogBundle;
 
