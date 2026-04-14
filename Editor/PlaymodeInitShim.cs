@@ -5,6 +5,7 @@ using UnityEngine.Assemblies;
 
 namespace Ksp2UnityTools.Editor
 {
+#if !REDUX
     public static class PlaymodeInitShim
     {
         private static readonly MethodInfo[] initMethods = GetAllReduxInitMethods();
@@ -58,4 +59,5 @@ namespace Ksp2UnityTools.Editor
             }
         }
     }
+#endif
 }
