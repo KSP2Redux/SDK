@@ -19,7 +19,7 @@ namespace Ksp2UnityTools.Editor.Modding
         {
             TemplateContainer doc = AssetDatabase
                 .LoadAssetAtPath<VisualTreeAsset>(
-                    "Packages/ksp2community.ksp2unitytools/Assets/Windows/CreateNewModWindow.uxml"
+                    SDKConfiguration.BasePath + "/Assets/Windows/CreateNewModWindow.uxml"
                 )
                 .Instantiate();
             rootVisualElement.Add(doc);

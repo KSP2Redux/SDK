@@ -204,7 +204,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 centerOfMassPosition = localToWorldMatrix.MultiplyPoint(centerOfMassPosition);
                 Gizmos.DrawIcon(
                     centerOfMassPosition,
-                    "Packages/ksp2community.ksp2unitytools/Assets/Gizmos/com_icon.png",
+                    SDKConfiguration.BasePath + "/Assets/Gizmos/com_icon.png",
                     false
                 );
             }
@@ -215,7 +215,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 centerOfLiftPosition = localToWorldMatrix.MultiplyPoint(centerOfLiftPosition);
                 Gizmos.DrawIcon(
                     centerOfLiftPosition,
-                    "Packages/ksp2community.ksp2unitytools/Assets/Gizmos/col_icon.png",
+                    SDKConfiguration.BasePath + "/Assets/Gizmos/col_icon.png",
                     false
                 );
             }

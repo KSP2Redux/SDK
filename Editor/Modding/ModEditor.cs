@@ -10,7 +10,7 @@ namespace Ksp2UnityTools.Editor.Modding
         public override VisualElement CreateInspectorGUI()
         {
             var gui = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/ksp2community.ksp2unitytools/Assets/Windows/ModEditor.uxml"
+                SDKConfiguration.BasePath + "/Assets/Windows/ModEditor.uxml"
             );
             TemplateContainer root = gui.CloneTree();
             var addCode = root.Q<Button>("AddCodeButton");

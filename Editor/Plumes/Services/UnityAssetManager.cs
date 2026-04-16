@@ -9,7 +9,7 @@ namespace Ksp2UnityTools.Editor.Plumes.Services
     public class UnityAssetManager : BaseAssetManager
     {
         private static IPlumeLogger Logger => ServiceProvider.GetService<IPlumeLogger>();
-        private static readonly string[] AssetFolders = { "Assets", "Packages/ksp2community.ksp2unitytools/Assets" };
+        private static readonly string[] AssetFolders = { "Assets", SDKConfiguration.BasePath + "/Assets" };
 
         private string[] FindGuids(string name)
         {

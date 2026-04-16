@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor
         private void CreateGUI()
         {
             var asset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/ksp2community.ksp2unitytools/Assets/Windows/KSP2UnityTools.uxml"
+                SDKConfiguration.BasePath + "/Assets/Windows/KSP2UnityTools.uxml"
             );
             rootVisualElement.Add(asset.Instantiate());
             foreach (StyleSheet stylesheet in asset.stylesheets)

@@ -36,7 +36,7 @@ namespace Ksp2UnityTools.Editor
             if (!File.Exists("Assets/boot-ksp.unity"))
             {
                 File.Copy(
-                    "Packages/ksp2community.ksp2unitytools/Assets/Scenes/boot-ksp.unity",
+                    SDKConfiguration.BasePath + "/Assets/Scenes/boot-ksp.unity",
                     "Assets/boot-ksp.unity"
                 );
             }
@@ -44,7 +44,7 @@ namespace Ksp2UnityTools.Editor
             if (!File.Exists("Assets/ImportKsp2ToEditor.asset"))
             {
                 File.Copy(
-                    "Packages/ksp2community.ksp2unitytools/ImportKsp2ToEditor.asset",
+                    SDKConfiguration.BasePath + "/ImportKsp2ToEditor.asset",
                     "Assets/ImportKsp2ToEditor.asset"
                 );
             }
