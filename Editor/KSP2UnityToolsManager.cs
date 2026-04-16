@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Ksp2UnityTools.Editor.Modding;
 using ThunderKit.Core.Data;
@@ -121,7 +122,8 @@ namespace Ksp2UnityTools.Editor
             var info = new ProcessStartInfo
             {
                 WorkingDirectory = settings.GamePath,
-                FileName = Path.Combine(settings.GamePath, settings.GameExecutable)
+                FileName = Path.Combine(settings.GamePath, settings.GameExecutable),
+                Arguments = string.Join(' ', Settings.gameLaunchArguments)
             };
 
             Process.Start(info);

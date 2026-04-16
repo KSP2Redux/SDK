@@ -12,6 +12,7 @@ namespace Ksp2UnityTools.Editor
         public string savedBuildMode = "Everything";
         public string savedModAddressablesPath = "";
         public string savedKsp2Path = "";
+        public string[] gameLaunchArguments = { "-popupwindow" };
 
         public void AddIgnoredFile(string file)
         {
