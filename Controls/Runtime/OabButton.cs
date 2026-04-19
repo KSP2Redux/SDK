@@ -9,11 +9,20 @@ namespace UitkForKsp2.Controls
         private readonly VisualElement _innerContainer;
         private readonly Label _textLabel;
 
-        [UxmlAttribute("text")]
-        private string textOverride
+        public override string text
         {
-            get => _textLabel.text;
-            set => _textLabel.text = value;
+            get => _textLabel != null ? _textLabel.text : base.text;
+            set
+            {
+                if (_textLabel != null)
+                {
+                    _textLabel.text = value;
+                }
+                else
+                {
+                    base.text = value;
+                }
+            }
         }
 
         public override VisualElement contentContainer => _innerContainer;
