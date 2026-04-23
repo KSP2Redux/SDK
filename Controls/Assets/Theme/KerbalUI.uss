@@ -749,10 +749,16 @@
     width: 32px;
     margin-right: 10px;
     font-size: 30px;
-    border-width: 0;
     -unity-background-image-tint-color: rgb(175, 178, 190);
     background-color: transparent;
     border-radius: 8px;
+    border-width: 2px;
+    border-color: rgb(175, 178, 190);
+    color: rgb(175, 178, 190);
+}
+
+#title-bar > .unity-button.unity-text-element.back-button {
+    border-width: 0;
     background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/back-button.png?fileID=21300000&guid=412fc87dea660074a900f698a38bb191&type=3#back-button');
 }
 
