@@ -1,4 +1,4 @@
-# KSP 2 Unity Tools
-A collection of Unity editor scripts and the like to make developing Kerbal Space Program 2 mods easier.
+# KSP2 Redux SDK
+Unity package for developing mods for KSP2 Redux.
 ## Installation
-Install by adding a package into unity from git (https://github.com/KSP2Community/KSP2UnityTools.git)
+Install by adding a package into Unity from Git (https://github.com/KSP2Redux/SDK.git)
