@@ -274,7 +274,7 @@ namespace Ksp2UnityTools.Editor.Modding
                 AssetDatabase.DeleteAsset(buildForEditorManifest);
             }
 
-            GeneratePipeline($"Assets/Mods/__Testing/{id}", buildForEditorManifest, buildForEditor, "Editor");
+            GeneratePipeline($"Assets/Mods/__Testing/{id}", buildForEditorManifest, buildForEditor, "Editor",true);
             if (File.Exists(buildForPlayer))
             {
                 AssetDatabase.DeleteAsset(buildForPlayer);
