@@ -22,46 +22,62 @@ namespace UitkForKsp2.Controls
         private void OnGenerateVisualContent(MeshGenerationContext mgc)
         {
             Rect rect = contentRect;
-            float width = rect.width;
-            float height = rect.height;
-            float paddingX = resolvedStyle.paddingLeft + resolvedStyle.paddingRight;
-            float paddingY = resolvedStyle.paddingTop + resolvedStyle.paddingBottom;
+            float width = resolvedStyle.width;
+            float height = resolvedStyle.height;
 
-            if (width <= 0 || height <= 0 || width + paddingX < 2 * _notchSize || height + paddingY < 2 * _notchSize)
+            if (float.IsNaN(width) || width <= 0)
+            {
+                width = rect.width + resolvedStyle.paddingLeft + resolvedStyle.paddingRight;
+            }
+
+            if (float.IsNaN(height) || height <= 0)
+            {
+                height = rect.height + resolvedStyle.paddingTop + resolvedStyle.paddingBottom;
+            }
+
+            float strokeWidth = Mathf.Max(1f, _borderThickness);
+            float halfStroke = strokeWidth * 0.5f;
+            float xMin = halfStroke;
+            float yMin = halfStroke;
+            float xMax = width - halfStroke;
+            float yMax = height - halfStroke;
+            float notchSize = Mathf.Min(_notchSize, (xMax - xMin) * 0.5f, (yMax - yMin) * 0.5f);
+
+            if (xMax <= xMin || yMax <= yMin || notchSize <= 0)
             {
                 return;
             }
 
             var painter = mgc.painter2D;
             painter.strokeColor = _borderColor;
-            painter.lineWidth = 1 + _borderThickness;
+            painter.lineWidth = strokeWidth;
             painter.lineCap = LineCap.Butt;
             painter.lineJoin = LineJoin.Miter;
             painter.fillColor = _backgroundColor;
 
             painter.BeginPath();
             // Top left notch
-            painter.MoveTo(new Vector2(0, _notchSize));
-            painter.LineTo(new Vector2(_notchSize, _notchSize));
-            painter.LineTo(new Vector2(_notchSize, 0));
+            painter.MoveTo(new Vector2(xMin, yMin + notchSize));
+            painter.LineTo(new Vector2(xMin + notchSize, yMin + notchSize));
+            painter.LineTo(new Vector2(xMin + notchSize, yMin));
             // Top right notch
-            painter.LineTo(new Vector2(width + paddingX - _notchSize, 0));
-            painter.LineTo(new Vector2(width + paddingX - _notchSize, _notchSize));
-            painter.LineTo(new Vector2(width + paddingX, _notchSize));
+            painter.LineTo(new Vector2(xMax - notchSize, yMin));
+            painter.LineTo(new Vector2(xMax - notchSize, yMin + notchSize));
+            painter.LineTo(new Vector2(xMax, yMin + notchSize));
             // Bottom right notch
-            painter.LineTo(new Vector2(width + paddingX, height + paddingY - _notchSize));
-            painter.LineTo(new Vector2(width + paddingX - _notchSize, height + paddingY - _notchSize));
-            painter.LineTo(new Vector2(width + paddingX - _notchSize, height + paddingY));
+            painter.LineTo(new Vector2(xMax, yMax - notchSize));
+            painter.LineTo(new Vector2(xMax - notchSize, yMax - notchSize));
+            painter.LineTo(new Vector2(xMax - notchSize, yMax));
             // Bottom left notch
-            painter.LineTo(new Vector2(_notchSize, height + paddingY));
-            painter.LineTo(new Vector2(_notchSize, height + paddingY - _notchSize));
-            painter.LineTo(new Vector2(0, height + paddingY - _notchSize));
+            painter.LineTo(new Vector2(xMin + notchSize, yMax));
+            painter.LineTo(new Vector2(xMin + notchSize, yMax - notchSize));
+            painter.LineTo(new Vector2(xMin, yMax - notchSize));
             // Close the path
-            painter.LineTo(new Vector2(0, _notchSize));
+            painter.LineTo(new Vector2(xMin, yMin + notchSize));
             painter.ClosePath();
 
-            painter.Stroke();
             painter.Fill();
+            painter.Stroke();
         }
 
         [UxmlAttribute("border-thickness")]

@@ -1312,4 +1312,22 @@
     letter-spacing: 16px;
 }
 
+.window-resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.window-resize-handle-icon {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    width: 8px;
+    height: 8px;
+    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/resize-handle.png?fileID=21300000&guid=f7dffbf299f76974fbad8b1ffbbec363&type=3#resize-handle');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 /* endregion */
