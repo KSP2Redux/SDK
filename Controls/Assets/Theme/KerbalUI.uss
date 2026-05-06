@@ -749,6 +749,7 @@
     width: 32px;
     margin-right: 10px;
     font-size: 30px;
+    -unity-text-auto-size: best-fit 12px 30px;
     -unity-background-image-tint-color: rgb(175, 178, 190);
     background-color: transparent;
     border-radius: 8px;
@@ -829,6 +830,8 @@
 .unity-enum-field .unity-text-element {
     -unity-text-align: upper-left;
     -unity-font-definition: var(--font-regular);
+    -unity-text-generator: advanced;
+    -unity-text-auto-size: best-fit 8px 14px;
     color: rgb(192, 199, 213);
 }
 
@@ -876,6 +879,8 @@
 
 .unity-base-dropdown .unity-base-dropdown__item > .unity-base-dropdown__item-content > .unity-base-dropdown__label {
     -unity-font-definition: var(--font-regular);
+    -unity-text-generator: advanced;
+    -unity-text-auto-size: best-fit 8px 14px;
     color: rgb(156, 162, 173);
     padding: 4px 8px;
 }
@@ -970,8 +975,10 @@
 
 .oab-button.unity-text-element > .oab-button__inner > .oab-button__label {
     color: rgb(34, 38, 46);
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     -unity-font-style: bold;
+    -unity-text-generator: advanced;
+    -unity-text-auto-size: best-fit 8px 16px;
     height: 100%;
     padding-top: 6px;
     font-size: 16px;
@@ -1029,13 +1036,14 @@
 }
 
 .unity-button.unity-text-element.oab-close-button {
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     width: 24px;
     height: 24px;
     padding: 0;
     margin-right: -4px;
     margin-top: -4px;
     font-size: 20px;
+    -unity-text-auto-size: best-fit 8px 20px;
     border-color: rgba(0, 0, 0, 0);
     background-color: rgba(0, 0, 0, 0);
     color: rgb(127, 133, 152);
@@ -1089,8 +1097,10 @@
 
 .oab-button-toggle > .oab-button-toggle__label {
     color: rgb(34, 38, 46);
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     -unity-font-style: bold;
+    -unity-text-generator: advanced;
+    -unity-text-auto-size: best-fit 8px 16px;
     height: 100%;
     padding-top: 6px;
     font-size: 16px;
@@ -1129,8 +1139,10 @@
 
 .oab-button-toggle > .oab-button-toggle-label {
     color: rgb(34, 38, 46);
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/pixelate%20SDF.asset?fileID=11400000&guid=b04efd89de5b82b47829ada6e728086c&type=2#pixelate SDF');
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     -unity-font-style: bold;
+    -unity-text-generator: advanced;
+    -unity-text-auto-size: best-fit 8px 16px;
     height: 100%;
     padding-top: 6px;
     font-size: 16px;

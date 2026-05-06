@@ -77,11 +77,23 @@ namespace UitkForKsp2.Controls
 
         public virtual void Show(VisualElement target, int delay, int fadeInDuration, int fadeOutDuration)
         {
+            ParseTooltip(target, out char hint, out string msg);
+            Show(target, msg, hint, delay, fadeInDuration, fadeOutDuration);
+        }
+
+        public virtual void Show(
+            VisualElement target,
+            string msg,
+            char hint,
+            int delay,
+            int fadeInDuration,
+            int fadeOutDuration
+        )
+        {
             task?.Pause();
             currentTarget = target;
             int version = ++transitionVersion;
 
-            ParseTooltip(target, out char hint, out string msg);
             label.text = msg;
             currentFadeOutDuration = Mathf.Max(0, fadeOutDuration);
             style.visibility = Visibility.Hidden;
@@ -143,11 +155,16 @@ namespace UitkForKsp2.Controls
             }
         }
 
-        private static void ParseTooltip(VisualElement target, out char hint, out string msg)
+        public static void ParseTooltip(VisualElement target, out char hint, out string msg)
+        {
+            ParseTooltip(target.tooltip, out hint, out msg);
+        }
+
+        public static void ParseTooltip(string tooltipText, out char hint, out string msg)
         {
             // check if there is position hint in tooltip
             hint = 'B';
-            msg = target.tooltip ?? string.Empty;
+            msg = tooltipText ?? string.Empty;
             if (msg.Length > 2 && msg[1] == ':')
             {
                 hint = msg[0] switch
@@ -218,28 +235,30 @@ namespace UitkForKsp2.Controls
                     break;
             }
 
-            if (left < parent.worldBound.xMin)
+            Rect parentBounds = parent.worldBound;
+            if (left < parentBounds.xMin)
             {
-                left = parent.worldBound.xMin;
+                left = parentBounds.xMin;
             }
 
-            if (left + worldBound.width > parent.worldBound.xMax)
+            if (left + worldBound.width > parentBounds.xMax)
             {
-                left = parent.worldBound.xMax - worldBound.width;
+                left = parentBounds.xMax - worldBound.width;
             }
 
-            if (top < parent.worldBound.yMin)
+            if (top < parentBounds.yMin)
             {
-                top = parent.worldBound.yMin;
+                top = parentBounds.yMin;
             }
 
-            if (top + worldBound.height > parent.worldBound.yMax)
+            if (top + worldBound.height > parentBounds.yMax)
             {
-                top = parent.worldBound.yMax - worldBound.height;
+                top = parentBounds.yMax - worldBound.height;
             }
 
-            style.left = left;
-            style.top = top;
+            Vector2 localPosition = parent.WorldToLocal(new Vector2(left, top));
+            style.left = localPosition.x;
+            style.top = localPosition.y;
         }
 
         private void StartOpacityAnimation(float startOpacity, float endOpacity, int duration, int version, bool hideWhenComplete)
