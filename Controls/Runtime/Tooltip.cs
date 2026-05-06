@@ -8,14 +8,47 @@ namespace UitkForKsp2.Controls
     [UxmlElement]
     public partial class Tooltip : VisualElement
     {
+        private const int FadeStepMilliseconds = 16;
+        private const int FadeTimeSteps = 10;
+
         [UxmlAttribute("delay")]
         public int Delay { get; set; } = 500; // how long to wait before appearing
 
         [UxmlAttribute("fade-time")]
-        public int FadeTime { get; set; } = 15; // speed at which it fades in and out (lower = faster)
+        public int FadeTime
+        {
+            get => _fadeTime;
+            set
+            {
+                _fadeTime = Mathf.Max(0, value);
+                int duration = _fadeTime * FadeTimeSteps;
+                _fadeInDuration = duration;
+                _fadeOutDuration = duration;
+            }
+        }
+
+        [UxmlAttribute("fade-in-duration")]
+        public int FadeInDuration
+        {
+            get => _fadeInDuration;
+            set => _fadeInDuration = Mathf.Max(0, value);
+        }
+
+        [UxmlAttribute("fade-out-duration")]
+        public int FadeOutDuration
+        {
+            get => _fadeOutDuration;
+            set => _fadeOutDuration = Mathf.Max(0, value);
+        }
 
         private Label label;
         private IVisualElementScheduledItem task;
+        private VisualElement currentTarget;
+        private int transitionVersion;
+        private int currentFadeOutDuration = 150;
+        private int _fadeTime = 15;
+        private int _fadeInDuration = 150;
+        private int _fadeOutDuration = 150;
 
         private const string ussClassName = "tooltip";
         private const string ussLabel = ussClassName + "__label";
@@ -39,30 +72,85 @@ namespace UitkForKsp2.Controls
 
         public virtual void Show(VisualElement target)
         {
-            if (FadeTime > 0.0f)
+            Show(target, Delay, FadeInDuration, FadeOutDuration);
+        }
+
+        public virtual void Show(VisualElement target, int delay, int fadeInDuration, int fadeOutDuration)
+        {
+            task?.Pause();
+            currentTarget = target;
+            int version = ++transitionVersion;
+
+            ParseTooltip(target, out char hint, out string msg);
+            label.text = msg;
+            currentFadeOutDuration = Mathf.Max(0, fadeOutDuration);
+            style.visibility = Visibility.Hidden;
+            style.opacity = 0f;
+
+            int clampedDelay = Mathf.Max(0, delay);
+            int clampedFadeInDuration = Mathf.Max(0, fadeInDuration);
+            if (clampedDelay > 0)
             {
-                task?.Pause();
-                style.visibility = Visibility.Visible;
-                style.opacity = 0f;
-                task = schedule
-                    .Execute(() => style.opacity = Mathf.Clamp01(resolvedStyle.opacity + 0.1f))
-                    .Every(FadeTime) // ms
-                    .Until(() => resolvedStyle.opacity >= 1.0f)
-                    .StartingIn(Delay);
+                task = schedule.Execute(() => BeginShow(target, hint, clampedFadeInDuration, version))
+                    .StartingIn(clampedDelay);
+                return;
+            }
+
+            BeginShow(target, hint, clampedFadeInDuration, version);
+        }
+
+        public virtual void Close()
+        {
+            Close(currentFadeOutDuration);
+        }
+
+        public virtual void Close(VisualElement target)
+        {
+            Close(target, currentFadeOutDuration);
+        }
+
+        public virtual void Close(VisualElement target, int fadeOutDuration)
+        {
+            if (!ReferenceEquals(currentTarget, target))
+            {
+                return;
+            }
+
+            Close(fadeOutDuration);
+        }
+
+        public virtual void Close(int fadeOutDuration)
+        {
+            task?.Pause();
+            currentTarget = null;
+            int version = ++transitionVersion;
+            int clampedFadeOutDuration = Mathf.Max(0, fadeOutDuration);
+
+            if (clampedFadeOutDuration > 0 && resolvedStyle.visibility != Visibility.Hidden)
+            {
+                StartOpacityAnimation(
+                    resolvedStyle.opacity,
+                    0f,
+                    clampedFadeOutDuration,
+                    version,
+                    hideWhenComplete: true
+                );
             }
             else
             {
-                style.visibility = Visibility.Visible;
-                style.opacity = 1f;
+                style.visibility = Visibility.Hidden;
+                style.opacity = 0f;
             }
+        }
 
-
+        private static void ParseTooltip(VisualElement target, out char hint, out string msg)
+        {
             // check if there is position hint in tooltip
-            char hint = 'B';
-            string msg = target.tooltip;
+            hint = 'B';
+            msg = target.tooltip ?? string.Empty;
             if (msg.Length > 2 && msg[1] == ':')
             {
-                hint = target.tooltip[0] switch
+                hint = msg[0] switch
                 {
                     'B' => 'B',
                     'b' => 'B',
@@ -77,8 +165,36 @@ namespace UitkForKsp2.Controls
 
                 msg = msg[2..];
             }
+        }
 
-            label.text = msg;
+        private void BeginShow(VisualElement target, char hint, int fadeInDuration, int version)
+        {
+            if (version != transitionVersion || !IsAttached(target))
+            {
+                return;
+            }
+
+            style.visibility = Visibility.Visible;
+            style.opacity = 0f;
+
+            task = schedule.Execute(() =>
+            {
+                if (version != transitionVersion || !IsAttached(target))
+                {
+                    return;
+                }
+
+                PositionForTarget(target, hint);
+                StartOpacityAnimation(0f, 1f, fadeInDuration, version, hideWhenComplete: false);
+            });
+        }
+
+        private void PositionForTarget(VisualElement target, char hint)
+        {
+            if (parent == null)
+            {
+                return;
+            }
 
             float top = 0f;
             float left = 0f;
@@ -126,30 +242,65 @@ namespace UitkForKsp2.Controls
             style.top = top;
         }
 
-        public virtual void Close()
+        private void StartOpacityAnimation(float startOpacity, float endOpacity, int duration, int version, bool hideWhenComplete)
         {
-            if (FadeTime > 0.0f && resolvedStyle.visibility != Visibility.Hidden)
+            task?.Pause();
+
+            if (duration <= 0)
             {
-                task?.Pause();
-                task = schedule
-                    .Execute(() =>
-                        {
-                            float o = Mathf.Clamp01(resolvedStyle.opacity - 0.1f);
-                            style.opacity = o;
-                            if (o <= 0.0f)
-                            {
-                                style.visibility = Visibility.Hidden;
-                            }
-                        }
-                    )
-                    .Every(FadeTime) // ms
-                    .Until(() => resolvedStyle.opacity <= 0.0f);
+                style.opacity = endOpacity;
+                if (hideWhenComplete)
+                {
+                    style.visibility = Visibility.Hidden;
+                }
+
+                return;
             }
-            else
+
+            float startTime = Time.realtimeSinceStartup;
+            style.opacity = Mathf.Clamp01(startOpacity);
+            bool isComplete = false;
+            task = schedule.Execute(() =>
+                {
+                    if (version != transitionVersion)
+                    {
+                        return;
+                    }
+
+                    float elapsedMilliseconds = (Time.realtimeSinceStartup - startTime) * 1000f;
+                    float t = Mathf.Clamp01(elapsedMilliseconds / duration);
+                    style.opacity = Mathf.Lerp(startOpacity, endOpacity, t);
+                    if (t >= 1f && hideWhenComplete)
+                    {
+                        style.visibility = Visibility.Hidden;
+                    }
+
+                    isComplete = t >= 1f;
+                })
+                .Every(FadeStepMilliseconds)
+                .Until(() => version != transitionVersion || isComplete);
+        }
+
+        private static bool IsAttached(VisualElement target)
+        {
+            if (target.panel == null)
             {
-                style.visibility = Visibility.Hidden;
-                style.opacity = 0f;
+                return false;
             }
+
+            VisualElement element = target;
+            while (element != null)
+            {
+                if (element.resolvedStyle.display == DisplayStyle.None ||
+                    element.resolvedStyle.visibility == Visibility.Hidden)
+                {
+                    return false;
+                }
+
+                element = element.parent;
+            }
+
+            return true;
         }
 
         // ============================================================================================================
