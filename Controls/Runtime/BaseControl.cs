@@ -1,12 +1,14 @@
 ﻿using UnityEngine.UIElements;
 
 // ReSharper disable once CheckNamespace
-namespace UitkForKsp2.Unity
+namespace UitkForKsp2.Controls
 {
     public abstract class BaseControl : VisualElement
     {
         public VisualElement LabelContainer;
         public Label LabelElement;
+
+        [UxmlAttribute("label")]
         public string Label
         {
             get => LabelElement.text;
@@ -71,26 +73,6 @@ namespace UitkForKsp2.Unity
             };
             InputContainer.AddToClassList(UssInputContainerClassName);
             Add(InputContainer);
-        }
-
-
-        public new class UxmlTraits : VisualElement.UxmlTraits
-        {
-            public UxmlStringAttributeDescription label = new UxmlStringAttributeDescription
-            {
-                name = "label",
-                defaultValue = "Label"
-            };
-
-            public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc)
-            {
-                base.Init(ve, bag, cc);
-
-                if (ve is Selector selector)
-                {
-                    selector.Label = label.GetValueFromBag(bag, cc);
-                }
-            }
         }
 
         public static readonly string UssClassName = "uitkforksp2-base";

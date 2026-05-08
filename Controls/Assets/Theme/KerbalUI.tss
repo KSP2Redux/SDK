@@ -1,7 +1,3 @@
-/* Import base Unity styles */
 @import url("../UI Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss");
-
-/* Import themes */
-@import url("Styles/theme-default/theme-default.scss");
-@import url("Styles/theme-compact/theme-compact.scss");
-@import url("Styles/theme-large/theme-large.scss");
+@import url("KerbalUI.uss");
+@import url("UitkForKsp2.uss");
