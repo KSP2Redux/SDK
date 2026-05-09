@@ -21,7 +21,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             EditorUtility.DisplayDialog(
                 "Redux Planet Authoring",
-                "Validation Report window is not yet implemented (Phase 5).",
+                "Validation Report window is not yet implemented.",
                 "OK"
             );
         }
@@ -31,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             EditorUtility.DisplayDialog(
                 "Redux Planet Authoring",
-                "Environment window is not yet implemented (Phase 3).",
+                "Environment window is not yet implemented.",
                 "OK"
             );
         }
@@ -41,7 +41,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             EditorUtility.DisplayDialog(
                 "Redux Planet Authoring",
-                "Biome Painter is not yet implemented (Phase 4).",
+                "Biome Painter is not yet implemented.",
                 "OK"
             );
         }
@@ -51,7 +51,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             EditorUtility.DisplayDialog(
                 "Redux Planet Authoring",
-                "Decal Manager is not yet implemented (Phase 4).",
+                "Decal Manager is not yet implemented.",
                 "OK"
             );
         }
@@ -61,7 +61,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             EditorUtility.DisplayDialog(
                 "Redux Planet Authoring",
-                "Discoverable Manager is not yet implemented (Phase 4).",
+                "Discoverable Manager is not yet implemented.",
                 "OK"
             );
         }
@@ -71,7 +71,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             EditorUtility.DisplayDialog(
                 "Redux Planet Authoring",
-                "Preset Browser is not yet implemented (Phase 6).",
+                "Preset Browser is not yet implemented.",
                 "OK"
             );
         }
@@ -85,11 +85,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             root.style.paddingBottom = 8f;
 
             root.Add(new Label("Redux Planet Authoring") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 4f } });
-            root.Add(new Label("Phase 0 scaffolding — preview lifecycle lands in Phase 1.") { style = { whiteSpace = WhiteSpace.Normal, marginBottom = 8f } });
+            root.Add(new Label("Scaffolding only; preview is not yet wired up.") { style = { whiteSpace = WhiteSpace.Normal, marginBottom = 8f } });
 
             var enableButton = new Button { text = "Enable Preview" };
             enableButton.SetEnabled(false);
-            enableButton.tooltip = "Available once PlanetAuthoringSession is implemented (Phase 1).";
+            enableButton.tooltip = "Available once PlanetAuthoringSession is wired up.";
             root.Add(enableButton);
         }
     }
