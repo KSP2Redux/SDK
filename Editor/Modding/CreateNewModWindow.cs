@@ -52,6 +52,12 @@ namespace Ksp2UnityTools.Editor.Modding
 
             Directory.CreateDirectory($"Assets/{id}");
             Directory.CreateDirectory($"Assets/{id}/Copied");
+            Directory.CreateDirectory($"Assets/{id}/Copied/localizations");
+            Directory.CreateDirectory($"Assets/{id}/Copied/Patches");
+            Directory.CreateDirectory($"Assets/{id}/Definitions/Parts");
+            Directory.CreateDirectory($"Assets/{id}/Definitions/Missions");
+            Directory.CreateDirectory($"Assets/{id}/Definitions/Experiments");
+
             var info = CreateInstance<Mod>();
             info.id = id;
             AssetDatabase.CreateAsset(info, $"Assets/{id}/swinfo.asset");
