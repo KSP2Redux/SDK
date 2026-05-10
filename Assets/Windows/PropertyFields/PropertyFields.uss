@@ -1,0 +1,167 @@
+.property-fields-row {
+    flex-direction: row;
+}
+
+/* ===== Vector4Channels ===== */
+
+.vec4-channels-field {
+    flex-grow: 1;
+    min-width: 40px;
+    margin-left: 0;
+    margin-right: 2px;
+}
+
+.vec4-channels-field > .unity-base-field__label {
+    min-width: 22px;
+    flex-basis: 22px;
+    margin-right: 2px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    align-self: center;
+    -unity-text-align: middle-center;
+}
+
+/* ===== FadeCurveField (inline preview) ===== */
+
+.fade-curve-preview {
+    flex-direction: row;
+    align-items: center;
+    height: 18px;
+    padding-left: 0;
+    padding-right: 4px;
+}
+
+.fade-curve-thumbnail {
+    width: 60px;
+    height: 16px;
+    margin-left: 1px;
+    margin-right: 4px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+.fade-curve-summary {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    font-size: 11px;
+}
+
+/* ===== FadeCurvePopup ===== */
+
+.fade-curve-popup-root {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.fade-curve-popup-graph {
+    height: 160px;
+    margin-bottom: 6px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.fade-curve-popup-field {
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+/* ===== SmallLayerMatrix ===== */
+
+.small-layer-matrix {
+    flex-direction: column;
+}
+
+.small-layer-matrix-row {
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.small-layer-matrix-header-row {
+    margin-bottom: 2px;
+}
+
+.small-layer-matrix-corner {
+    width: 60px;
+    flex-shrink: 0;
+}
+
+.small-layer-matrix-row-header {
+    width: 60px;
+    flex-shrink: 0;
+    -unity-text-align: middle-right;
+    -unity-font-style: bold;
+    padding-right: 6px;
+}
+
+.small-layer-matrix-col-header {
+    flex-grow: 1;
+    flex-basis: 0;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    margin-left: 2px;
+    margin-right: 2px;
+    color: rgb(180, 200, 220);
+}
+
+.small-layer-matrix-cell {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin: 2px;
+    padding: 4px;
+    background-color: rgba(40, 45, 55, 0.5);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 2px;
+    border-bottom-width: 2px;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.small-layer-matrix-cell:hover {
+    background-color: rgba(60, 70, 90, 0.5);
+}
+
+.small-layer-matrix-cell--selected {
+    border-left-color: rgb(95, 150, 210);
+    border-right-color: rgb(95, 150, 210);
+    border-top-color: rgb(95, 150, 210);
+    border-bottom-color: rgb(95, 150, 210);
+    background-color: rgba(70, 100, 140, 0.55);
+}
+
+.small-layer-matrix-cell--empty {
+    background-color: rgba(30, 30, 35, 0.4);
+}
+
+.small-layer-matrix-cell-tex {
+    margin-bottom: 2px;
+}
+
+.small-layer-matrix-cell-summary {
+    font-size: 10px;
+    color: rgb(170, 175, 180);
+    -unity-text-align: middle-left;
+    white-space: normal;
+}
+
+.small-layer-matrix-cell-empty-label {
+    font-size: 10px;
+    color: rgb(120, 120, 125);
+    -unity-font-style: italic;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}

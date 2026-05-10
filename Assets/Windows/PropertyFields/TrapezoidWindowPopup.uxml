@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="fade-curve-popup-root">
+        <engine:VisualElement name="graph" class="fade-curve-popup-graph" />
+        <editor:FloatField name="start" label="Start" class="fade-curve-popup-field" />
+        <editor:FloatField name="end" label="End" class="fade-curve-popup-field" />
+        <editor:FloatField name="fadeOut" label="Fade" class="fade-curve-popup-field" />
+    </engine:VisualElement>
+
+</engine:UXML>

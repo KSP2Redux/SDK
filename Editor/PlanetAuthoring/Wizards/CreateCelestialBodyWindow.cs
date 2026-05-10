@@ -21,22 +21,59 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 {
     /// <summary>
-    /// Wizard for creating a new celestial body. Generates a Celestial.&lt;Key&gt;.prefab root carrying
-    /// CoreCelestialBodyData (with the addressable keys for Scaled and, when solid, Local). Scaled
-    /// and Local are separate addressable prefab assets. An editor-only authoring scene with all three
-    /// prefab instances plus a directional light is also created so live preview runs against a real
-    /// Unity scene rather than a nested-prefab graph.
+    /// Wizard for creating a new celestial body.
     /// </summary>
+    /// <remarks>
+    /// Generates a Celestial.&lt;Key&gt;.prefab root carrying CoreCelestialBodyData with the addressable
+    /// keys for Scaled and, when solid, Local. Scaled and Local are separate addressable prefab assets.
+    /// An editor-only authoring scene with all three prefab instances plus a directional light is also
+    /// created so live preview runs against a real Unity scene rather than a nested-prefab graph.
+    /// </remarks>
     public class CreateCelestialBodyWindow : EditorWindow
     {
         private const string CelestialBodiesLabel = "celestial_bodies";
         private const string ProjectLevelGroupName = "Celestial Bodies";
+
+        // Default sun direction for new authoring scenes. Tuned to cast visible shadows across a
+        // sphere centered at world origin without being directly overhead or grazing.
+        private const float SunIntensity = 1.0f;
+        private static readonly Quaternion SunRotation = Quaternion.Euler(50f, -30f, 0f);
+
+        private const string LocalShaderName = "Redux/Environment/CelestialBody_Local";
+        private const string ScaledShaderName = "KSP2/Planets/Scaled";
 
         private static readonly Color OkColor = new(0.4f, 0.8f, 0.4f);
         private static readonly Color ErrorColor = new(0.85f, 0.45f, 0.3f);
 
         private enum BodyType { SolidSurface, GasGiant, Star }
 
+        private static readonly (BodyType Type, string Label)[] BodyTypeOptions =
+        {
+            (BodyType.SolidSurface, "Solid Surface"),
+            (BodyType.GasGiant, "Gas Giant"),
+            (BodyType.Star, "Star"),
+        };
+
+        /// <summary>
+        /// Centralized naming convention for celestial body assets. Keeping every "Celestial.{key}"
+        /// and "_Local.mat" string in one place so a future rename is a single edit.
+        /// </summary>
+        private static class Naming
+        {
+            public static string RootPrefab(string key) => $"Celestial.{key}.prefab";
+            public static string ScaledPrefab(string key) => $"Celestial.{key}.Scaled.prefab";
+            public static string LocalPrefab(string key) => $"Celestial.{key}.Local.prefab";
+            public static string Scene(string key) => $"Celestial.{key}.unity";
+            public static string ScaledMaterial(string key) => $"{key}_Scaled.mat";
+            public static string LocalMaterial(string key) => $"{key}_Local.mat";
+            public static string PqsData(string key) => $"{key}_PQS.asset";
+            public static string PqsDecalData(string key) => $"{key}_PQSDecalData.asset";
+            public static string RootGameObject(string key) => $"Celestial.{key}";
+        }
+
+        /// <summary>
+        /// Opens the Create Celestial Body wizard window.
+        /// </summary>
         [MenuItem("Assets/KSP2 Unity Tools/Celestial Body", priority = KSP2UnityTools.MenuPriority)]
         public static void ShowWindow()
         {
@@ -46,9 +83,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         }
 
         /// <summary>
-        /// Generates an authoring scene next to a selected celestial body root prefab. Migrates bodies
-        /// without an existing authoring scene to the scene-based authoring flow.
+        /// Generates an authoring scene next to a selected celestial body root prefab.
         /// </summary>
+        /// <remarks>
+        /// Migrates bodies without an existing authoring scene to the scene-based authoring flow.
+        /// </remarks>
         [MenuItem("Assets/KSP2 Unity Tools/Create Authoring Scene For Selected Celestial Body", priority = KSP2UnityTools.MenuPriority + 1)]
         public static void CreateAuthoringSceneForSelected()
         {
@@ -70,6 +109,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             string folder = Path.GetDirectoryName(prefabPath)?.Replace('\\', '/');
             string fileName = Path.GetFileNameWithoutExtension(prefabPath);
             string scenePath = folder + "/" + fileName + ".unity";
+
+            if (File.Exists(scenePath))
+            {
+                bool overwrite = EditorUtility.DisplayDialog(
+                    "Authoring scene exists",
+                    $"An authoring scene already exists at {scenePath}. Overwriting will discard any edits to it. Continue?",
+                    "Overwrite",
+                    "Cancel"
+                );
+                if (!overwrite)
+                    return;
+            }
 
             CelestialBodyData data = rootPrefab.GetComponent<CoreCelestialBodyData>().Core?.data;
             string scaledKey = data?.assetKeyScaled;
@@ -116,7 +167,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 
             _typeField = new DropdownField(
                 "Body Type",
-                new List<string> { "Solid Surface", "Gas Giant", "Star" },
+                BodyTypeOptions.Select(o => o.Label).ToList(),
                 0
             );
             _typeField.tooltip = "Solid Surface bodies get both Local and Scaled prefabs. Gas Giants and Stars get only the Scaled prefab.";
@@ -178,12 +229,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 
         private BodyType CurrentBodyType()
         {
-            return _typeField.value switch
+            string label = _typeField.value;
+            foreach (var option in BodyTypeOptions)
             {
-                "Gas Giant" => BodyType.GasGiant,
-                "Star" => BodyType.Star,
-                _ => BodyType.SolidSurface,
-            };
+                if (option.Label == label)
+                    return option.Type;
+            }
+            return BodyType.SolidSurface;
         }
 
         private void Validate()
@@ -202,18 +254,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             string folder = parent + "/" + key;
             if (Directory.Exists(folder))
             {
-                _statusLabel.text = "Folder " + folder + " already exists.";
+                _statusLabel.text = $"Folder {folder} already exists.";
                 _statusLabel.style.color = ErrorColor;
                 _createButton.SetEnabled(false);
                 return;
             }
 
             bool solid = CurrentBodyType() == BodyType.SolidSurface;
-            string preview = "Will create folder " + folder + " with:\n  Celestial." + key + ".prefab\n  Celestial." + key + ".Scaled.prefab\n  " + key + "_Scaled.mat";
+            string preview = $"Will create folder {folder} with:\n  {Naming.RootPrefab(key)}\n  {Naming.ScaledPrefab(key)}\n  {Naming.ScaledMaterial(key)}";
             if (solid)
-            {
-                preview += "\n  Celestial." + key + ".Local.prefab\n  " + key + "_Local.mat\n  " + key + "_PQS.asset";
-            }
+                preview += $"\n  {Naming.LocalPrefab(key)}\n  {Naming.LocalMaterial(key)}\n  {Naming.PqsData(key)}";
             _statusLabel.text = preview;
             _statusLabel.style.color = OkColor;
             _createButton.SetEnabled(true);
@@ -227,107 +277,218 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 
             try
             {
-                CreateAssets(key, parent, type);
-                Close();
+                if (CreateAssets(key, parent, type))
+                    Close();
             }
             catch (Exception ex)
             {
                 Debug.LogException(ex);
-                EditorUtility.DisplayDialog("Create Celestial Body Failed", ex.Message, "OK");
+                EditorUtility.DisplayDialog("Create Celestial Body Failed", ex.Message + "\n\nPartial assets were rolled back.", "OK");
             }
         }
 
-        private static void CreateAssets(string key, string parentFolder, BodyType type)
+        // Returns false when the user aborted (e.g. shader missing dialog), true on success.
+        // Throws on a creation error after rolling back the assets it produced.
+        private static bool CreateAssets(string key, string parentFolder, BodyType type)
         {
+            if (!TryResolveShaders(type, out Shader localShader, out Shader scaledShader))
+                return false;
+
             string folder = parentFolder + "/" + key;
-            AssetDatabase.CreateFolder(parentFolder, key);
+            var createdPaths = new List<string>();
+            bool succeeded = false;
 
-            bool solid = type == BodyType.SolidSurface;
-
-            Shader localShader = Shader.Find("Redux/Environment/CelestialBody_Local");
-            Shader scaledShader = Shader.Find("KSP2/Planets/Scaled");
-            Shader fallback = Shader.Find("Standard");
-
-            Material scaledMaterial = new Material(scaledShader != null ? scaledShader : fallback)
+            try
             {
-                name = key + "_Scaled",
-            };
-            AssetDatabase.CreateAsset(scaledMaterial, folder + "/" + key + "_Scaled.mat");
+                AssetDatabase.CreateFolder(parentFolder, key);
+                createdPaths.Add(folder);
 
-            Material localMaterial = null;
-            PQSData pqsData = null;
-            PQSDecalData decalData = null;
-            if (solid)
+                bool solid = type == BodyType.SolidSurface;
+                Material scaledMaterial = CreateScaledMaterial(key, folder, scaledShader, createdPaths);
+                Material localMaterial = solid ? CreateLocalMaterial(key, folder, localShader, createdPaths) : null;
+                PQSData pqsData = solid ? CreatePqsData(key, folder, localMaterial, createdPaths) : null;
+                PQSDecalData decalData = solid ? CreatePqsDecalData(key, folder, createdPaths) : null;
+
+                GameObject scaledPrefab = CreateScaledPrefab(key, folder, scaledMaterial, createdPaths);
+                GameObject localPrefab = solid ? CreateLocalPrefab(key, folder, pqsData, decalData, createdPaths) : null;
+                GameObject rootPrefab = CreateRootPrefab(key, folder, type, createdPaths);
+
+                RegisterAddressables(scaledPrefab, localPrefab, key);
+
+                string scenePath = folder + "/" + Naming.Scene(key);
+                CreateAuthoringScene(scenePath, rootPrefab, scaledPrefab, localPrefab);
+                createdPaths.Add(scenePath);
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                Selection.activeObject = rootPrefab;
+                EditorGUIUtility.PingObject(rootPrefab);
+                succeeded = true;
+                return true;
+            }
+            finally
             {
-                localMaterial = new Material(localShader != null ? localShader : fallback)
-                {
-                    name = key + "_Local",
-                };
-                AssetDatabase.CreateAsset(localMaterial, folder + "/" + key + "_Local.mat");
+                if (!succeeded)
+                    Rollback(createdPaths);
+            }
+        }
 
-                pqsData = ScriptableObject.CreateInstance<PQSData>();
-                pqsData.materialSettings.surfaceMaterial = localMaterial;
-                AssetDatabase.CreateAsset(pqsData, folder + "/" + key + "_PQS.asset");
+        private static bool TryResolveShaders(BodyType type, out Shader localShader, out Shader scaledShader)
+        {
+            scaledShader = Shader.Find(ScaledShaderName);
+            localShader = type == BodyType.SolidSurface ? Shader.Find(LocalShaderName) : null;
 
-                decalData = ScriptableObject.CreateInstance<PQSDecalData>();
-                AssetDatabase.CreateAsset(decalData, folder + "/" + key + "_PQSDecalData.asset");
+            if (scaledShader == null)
+            {
+                EditorUtility.DisplayDialog(
+                    "Shader missing",
+                    $"Could not find shader '{ScaledShaderName}'. Ensure the SDK shader package is imported before creating a celestial body.",
+                    "OK"
+                );
+                return false;
             }
 
-            string scaledPath = folder + "/Celestial." + key + ".Scaled.prefab";
-            var scaledTemp = new GameObject("Scaled");
-            scaledTemp.AddComponent<MeshFilter>();
-            MeshRenderer scaledRenderer = scaledTemp.AddComponent<MeshRenderer>();
-            scaledRenderer.sharedMaterial = scaledMaterial;
-            scaledTemp.AddComponent<CelestialBodyLighting>();
-            scaledTemp.AddComponent<CelestialBodyPostProcess>();
-            scaledTemp.AddComponent<CelestialScaledMaterialReplacer>();
-            GameObject scaledPrefab = PrefabUtility.SaveAsPrefabAsset(scaledTemp, scaledPath);
-            DestroyImmediate(scaledTemp);
-
-            GameObject localPrefab = null;
-            if (solid)
+            if (type == BodyType.SolidSurface && localShader == null)
             {
-                string localPath = folder + "/Celestial." + key + ".Local.prefab";
-                var localTemp = new GameObject("Local");
-                PQS pqs = localTemp.AddComponent<PQS>();
-                PQSRenderer pqsRenderer = localTemp.AddComponent<PQSRenderer>();
+                EditorUtility.DisplayDialog(
+                    "Shader missing",
+                    $"Could not find shader '{LocalShaderName}'. Ensure the SDK shader package is imported before creating a solid-surface body.",
+                    "OK"
+                );
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void Rollback(List<string> createdPaths)
+        {
+            // Reverse order so leaves go before their parent folder.
+            for (int i = createdPaths.Count - 1; i >= 0; i--)
+            {
+                string p = createdPaths[i];
+                if (!string.IsNullOrEmpty(p))
+                    AssetDatabase.DeleteAsset(p);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private static Material CreateScaledMaterial(string key, string folder, Shader shader, List<string> createdPaths)
+        {
+            Material mat = new(shader) { name = $"{key}_Scaled" };
+            string path = folder + "/" + Naming.ScaledMaterial(key);
+            AssetDatabase.CreateAsset(mat, path);
+            createdPaths.Add(path);
+            return mat;
+        }
+
+        private static Material CreateLocalMaterial(string key, string folder, Shader shader, List<string> createdPaths)
+        {
+            Material mat = new(shader) { name = $"{key}_Local" };
+            string path = folder + "/" + Naming.LocalMaterial(key);
+            AssetDatabase.CreateAsset(mat, path);
+            createdPaths.Add(path);
+            return mat;
+        }
+
+        private static PQSData CreatePqsData(string key, string folder, Material localMaterial, List<string> createdPaths)
+        {
+            PQSData data = ScriptableObject.CreateInstance<PQSData>();
+            data.materialSettings.surfaceMaterial = localMaterial;
+            string path = folder + "/" + Naming.PqsData(key);
+            AssetDatabase.CreateAsset(data, path);
+            createdPaths.Add(path);
+            return data;
+        }
+
+        private static PQSDecalData CreatePqsDecalData(string key, string folder, List<string> createdPaths)
+        {
+            PQSDecalData data = ScriptableObject.CreateInstance<PQSDecalData>();
+            string path = folder + "/" + Naming.PqsDecalData(key);
+            AssetDatabase.CreateAsset(data, path);
+            createdPaths.Add(path);
+            return data;
+        }
+
+        private static GameObject CreateScaledPrefab(string key, string folder, Material scaledMaterial, List<string> createdPaths)
+        {
+            GameObject temp = new("Scaled");
+            try
+            {
+                temp.AddComponent<MeshFilter>();
+                MeshRenderer renderer = temp.AddComponent<MeshRenderer>();
+                renderer.sharedMaterial = scaledMaterial;
+                temp.AddComponent<CelestialBodyLighting>();
+                temp.AddComponent<CelestialBodyPostProcess>();
+                temp.AddComponent<CelestialScaledMaterialReplacer>();
+
+                string path = folder + "/" + Naming.ScaledPrefab(key);
+                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
+                createdPaths.Add(path);
+                return prefab;
+            }
+            finally
+            {
+                if (temp != null)
+                    DestroyImmediate(temp);
+            }
+        }
+
+        private static GameObject CreateLocalPrefab(string key, string folder, PQSData pqsData, PQSDecalData decalData, List<string> createdPaths)
+        {
+            GameObject temp = new("Local");
+            try
+            {
+                PQS pqs = temp.AddComponent<PQS>();
+                PQSRenderer pqsRenderer = temp.AddComponent<PQSRenderer>();
                 pqs.PQSRenderer = pqsRenderer;
                 pqsRenderer.Pqs = pqs;
                 pqs.data = pqsData;
                 pqs.isActive = true;
-                localTemp.AddComponent<CelestialSimulationMaterialReplacer>();
-                localTemp.AddComponent<PqsTerrain>();
-                PQSDecalController decalController = localTemp.AddComponent<PQSDecalController>();
+                temp.AddComponent<CelestialSimulationMaterialReplacer>();
+                temp.AddComponent<PqsTerrain>();
+                PQSDecalController decalController = temp.AddComponent<PQSDecalController>();
                 decalController.PqsDecalData = decalData;
                 decalController.Pqs = pqs;
-                localPrefab = PrefabUtility.SaveAsPrefabAsset(localTemp, localPath);
-                DestroyImmediate(localTemp);
+
+                string path = folder + "/" + Naming.LocalPrefab(key);
+                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
+                createdPaths.Add(path);
+                return prefab;
             }
-
-            string rootPath = folder + "/Celestial." + key + ".prefab";
-            var rootTemp = new GameObject("Celestial." + key);
-            CoreCelestialBodyData coreData = rootTemp.AddComponent<CoreCelestialBodyData>();
-            coreData.Core.data = new CelestialBodyData
+            finally
             {
-                bodyName = key,
-                isStar = type == BodyType.Star,
-                hasSolidSurface = solid,
-                assetKeyScaled = "Celestial." + key + ".Scaled.prefab",
-                assetKeySimulation = "Celestial." + key + ".Local.prefab",
-            };
+                if (temp != null)
+                    DestroyImmediate(temp);
+            }
+        }
 
-            GameObject rootPrefab = PrefabUtility.SaveAsPrefabAsset(rootTemp, rootPath);
-            DestroyImmediate(rootTemp);
+        private static GameObject CreateRootPrefab(string key, string folder, BodyType type, List<string> createdPaths)
+        {
+            GameObject temp = new(Naming.RootGameObject(key));
+            try
+            {
+                CoreCelestialBodyData coreData = temp.AddComponent<CoreCelestialBodyData>();
+                coreData.Core.data = new CelestialBodyData
+                {
+                    bodyName = key,
+                    isStar = type == BodyType.Star,
+                    hasSolidSurface = type == BodyType.SolidSurface,
+                    assetKeyScaled = Naming.ScaledPrefab(key),
+                    assetKeySimulation = Naming.LocalPrefab(key),
+                };
 
-            RegisterAddressables(scaledPrefab, localPrefab, key);
-
-            string scenePath = folder + "/Celestial." + key + ".unity";
-            CreateAuthoringScene(scenePath, rootPrefab, scaledPrefab, localPrefab);
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            Selection.activeObject = rootPrefab;
-            EditorGUIUtility.PingObject(rootPrefab);
+                string path = folder + "/" + Naming.RootPrefab(key);
+                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
+                createdPaths.Add(path);
+                return prefab;
+            }
+            finally
+            {
+                if (temp != null)
+                    DestroyImmediate(temp);
+            }
         }
 
         // Editor-only authoring scene with root, Scaled, and Local prefab instances plus a sun light.
@@ -340,8 +501,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             var sun = new GameObject("Sun");
             Light light = sun.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 1.0f;
-            sun.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+            light.intensity = SunIntensity;
+            sun.transform.rotation = SunRotation;
             SceneManager.MoveGameObjectToScene(sun, authoringScene);
 
             GameObject rootInstance = (GameObject)PrefabUtility.InstantiatePrefab(rootPrefab, authoringScene);
@@ -375,7 +536,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             {
                 bool ok = EditorUtility.DisplayDialog(
                     "Register addressables",
-                    "Register the new Scaled and Local prefabs in the '" + ProjectLevelGroupName + "' addressables group?",
+                    $"Register the new Scaled and Local prefabs in the '{ProjectLevelGroupName}' addressables group? Declining means you'll need to wire them in manually.",
                     "Yes",
                     "No"
                 );
@@ -386,16 +547,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 
             EditorUtility.DisplayDialog(
                 "Addressables not registered",
-                "No parent mod and no '" + ProjectLevelGroupName + "' addressables group found. The Scaled and Local prefabs were created but not registered. Add them to addressables manually.",
+                $"No parent mod and no '{ProjectLevelGroupName}' addressables group found. The Scaled and Local prefabs were created but not registered. Add them to addressables manually.",
                 "OK"
             );
         }
 
         private static void AddToGroup(AddressableAssetGroup group, GameObject scaled, GameObject local, string key)
         {
-            AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(scaled), "Celestial." + key + ".Scaled.prefab", CelestialBodiesLabel);
+            AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(scaled), Naming.ScaledPrefab(key), CelestialBodiesLabel);
             if (local != null)
-                AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(local), "Celestial." + key + ".Local.prefab", CelestialBodiesLabel);
+                AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(local), Naming.LocalPrefab(key), CelestialBodiesLabel);
         }
     }
 }

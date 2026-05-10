@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="pqs-inspector-root">
+
+        <engine:Foldout text="Authoring" value="true" class="pqs-inspector-section">
+            <editor:PropertyField binding-path="data" label="Data" tooltip="The PQSData ScriptableObject. Owns the heightmap stack, biome structure, and references to surface and scaled-space materials." />
+            <editor:PropertyField binding-path="generatePhysics" label="Generate Physics" tooltip="When true, terrain colliders spawn for visible quads. Required for landing, walking, and rover driving." />
+            <editor:PropertyField binding-path="UseFixedLevel" label="Use Fixed Level" tooltip="Hold the PQS at a fixed subdivision level instead of subdividing based on camera distance. Useful for previews and validation." />
+            <editor:PropertyField binding-path="FixedLevel" label="Fixed Level" tooltip="Subdivision level held when Use Fixed Level is on. Higher = more detailed mesh, more memory." />
+            <editor:PropertyField binding-path="maxRaycastDistance" label="Raycast Distance (m)" tooltip="Maximum distance for surface raycasts (GetSurfaceHeight, decal projection, picking)." />
+
+            <engine:Label text="Scaled-space texture bake" class="pqs-inspector-group-label" />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.IncludeBackground" label="Include Background" tooltip="Render the celestial background (sky, sun, other bodies) into the scaled-space bake. Off produces a transparent background." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.IncludeOcean" label="Include Ocean" tooltip="Bake the ocean layer. Pair with Ocean Height and Ocean Color." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.OceanHeight" label="Ocean Height (m)" tooltip="Altitude of the ocean surface relative to body radius during the bake. Should match the runtime ocean altitude." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.OceanColor" label="Ocean Color" tooltip="Color tint of the ocean layer in the scaled-space bake." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.ExportDiffuse" label="Export Diffuse" tooltip="Bake out the scaled albedo / diffuse map." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.ExportEmission" label="Export Emission" tooltip="Bake out the scaled emission map." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.ExportSpecular" label="Export Specular" tooltip="Bake out the scaled specular / packed PBR map." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.ExportNormal" label="Export Normal" tooltip="Bake out the scaled normal map." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.OverrideDiffuseTexture" label="Diffuse Override" tooltip="Optional Texture2D used in place of the baked diffuse output." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.OverrideNormalTexture" label="Normal Override" tooltip="Optional Texture2D used in place of the baked normal output." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.SaveAsPNG" label="Save As PNG" tooltip="When true, baked maps write to disk as PNG alongside the body assets." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.PolarNormals" label="Polar Normals" tooltip="Optional polar normal-map source used to mask polar distortion in the bake." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.TotalLines" label="Total Lines" tooltip="Total scanlines used during baking (vertical resolution of the equirectangular pass)." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.BlendLines" label="Blend Lines" tooltip="Scanlines blended at the polar seams during the bake." />
+            <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.UsePolarNormals" label="Use Polar Normals" tooltip="Mix the Polar Normals texture into the baked normal output near the poles." />
+        </engine:Foldout>
+
+        <engine:VisualElement name="surface-authoring-slot" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

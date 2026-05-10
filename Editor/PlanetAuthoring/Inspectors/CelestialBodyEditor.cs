@@ -19,10 +19,12 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Custom inspector for <see cref="CoreCelestialBodyData" />. Adds a readiness checklist, the
-    /// Enable/Disable preview toggle, quick-launch shortcuts to the per-body authoring windows, and a
-    /// Save Body JSON action that writes alongside the prefab.
+    /// Custom inspector for <see cref="CoreCelestialBodyData" />.
     /// </summary>
+    /// <remarks>
+    /// Adds a readiness checklist, the Enable/Disable preview toggle, quick-launch shortcuts to the
+    /// per-body authoring windows, and a Save Body JSON action that writes alongside the prefab.
+    /// </remarks>
     [CustomEditor(typeof(CoreCelestialBodyData))]
     public class CelestialBodyEditor : UnityEditor.Editor
     {
@@ -64,13 +66,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _starSection = root.Q<VisualElement>("star-section");
 
             WireQuickToolButton(root, "quick-preview-controls", PreviewControlsWindow.ShowWindow);
-            WireQuickToolButton(root, "quick-validation", PreviewControlsWindow.ShowValidationReportPlaceholder);
-            WireQuickToolButton(root, "quick-environment", PreviewControlsWindow.ShowEnvironmentPlaceholder);
-            WireQuickToolButton(root, "quick-biome-painter", PreviewControlsWindow.ShowBiomePainterPlaceholder);
-            WireQuickToolButton(root, "quick-decal-manager", PreviewControlsWindow.ShowDecalManagerPlaceholder);
-            WireQuickToolButton(root, "quick-discoverable-manager", PreviewControlsWindow.ShowDiscoverableManagerPlaceholder);
+            WireQuickToolButton(root, "quick-validation", PlanetAuthoringWindows.ShowValidationReportPlaceholder);
+            WireQuickToolButton(root, "quick-environment", PlanetAuthoringWindows.ShowEnvironmentPlaceholder);
+            WireQuickToolButton(root, "quick-biome-painter", PlanetAuthoringWindows.ShowBiomePainterPlaceholder);
+            WireQuickToolButton(root, "quick-decal-manager", PlanetAuthoringWindows.ShowDecalManagerPlaceholder);
+            WireQuickToolButton(root, "quick-discoverable-manager", PlanetAuthoringWindows.ShowDiscoverableManagerPlaceholder);
 
-            BuildSaveSection(root.Q<VisualElement>("save-section"));
+            BuildSaveSection(root.Q<VisualElement>("save-section-content"));
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));
 
             root.Bind(serializedObject);
@@ -91,12 +93,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             if (container == null)
                 return;
-
-            container.Clear();
-
-            var header = new Label("Body Saving");
-            header.AddToClassList("body-inspector-save-header");
-            container.Add(header);
 
             string prefabPath = PathUtils.GetPrefabOrAssetPath(target, TargetObject);
             if (string.IsNullOrEmpty(prefabPath))
@@ -166,7 +162,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return;
             }
 
-            PlanetAuthoringSession.Begin(sceneBody);
+            var session = PlanetAuthoringSession.Begin(sceneBody);
+            if (session != null && !EditorWindow.HasOpenInstances<Windows.PreviewControlsWindow>())
+                Windows.PreviewControlsWindow.ShowWindow();
             RefreshDynamicState();
         }
 
@@ -197,8 +195,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                     break;
                 }
             }
+            // Additive so any other scenes the user has open (boot-ksp, work scenes) survive.
+            // Single-mode loading would close them and risk losing unsaved changes.
             if (!scene.IsValid())
-                scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
 
             string bodyName = target.Core?.data?.bodyName;
             foreach (GameObject go in scene.GetRootGameObjects())
@@ -249,22 +249,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 : "Readiness (" + count + " issues):";
             _readinessHeader.AddToClassList("has-errors");
 
-            foreach (string error in report.Errors)
+            foreach (PlanetAuthoringSession.ReadinessError error in report.Errors)
             {
                 _readinessErrors.Add(BuildErrorRow(error));
             }
         }
 
-        private VisualElement BuildErrorRow(string error)
+        private VisualElement BuildErrorRow(PlanetAuthoringSession.ReadinessError error)
         {
             var row = new VisualElement();
             row.AddToClassList("body-inspector-error-row");
 
-            var label = new Label("- " + error);
+            var label = new Label("- " + error.Message);
             label.AddToClassList("body-inspector-error-label");
             row.Add(label);
 
-            if (error.Contains("PQSData asset"))
+            if (error.Code == PlanetAuthoringSession.ReadinessErrorCode.NoPqsData)
             {
                 var fix = new Button(CreateEmptyPqsData) { text = "Fix" };
                 fix.AddToClassList("body-inspector-error-fix");

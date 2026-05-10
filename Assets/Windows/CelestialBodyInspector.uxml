@@ -104,7 +104,10 @@
 
         </engine:VisualElement>
 
-        <engine:VisualElement name="save-section" class="body-inspector-save" />
+        <engine:VisualElement name="save-section" class="body-inspector-save">
+            <engine:Label text="Body Saving" class="body-inspector-save-header" />
+            <engine:VisualElement name="save-section-content" />
+        </engine:VisualElement>
 
     </engine:VisualElement>
 

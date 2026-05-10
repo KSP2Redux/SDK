@@ -41,8 +41,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         public bool CameraMoved { get; private set; }
 
         /// <summary>
-        /// Binds a SceneView as the active subdivision target. Replaces any previously bound SceneView.
+        /// Binds a SceneView as the active subdivision target.
         /// </summary>
+        /// <remarks>
+        /// Replaces any previously bound SceneView.
+        /// </remarks>
         /// <param name="sceneView">The SceneView to bind. Pass null to detach (equivalent to <see cref="Unbind" />).</param>
         public void Bind(SceneView sceneView)
         {
@@ -51,6 +54,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 Unbind();
                 return;
             }
+
+            // Idempotent rebind to the same SceneView. Sync handles per-frame work.
+            if (_boundSceneView == sceneView)
+                return;
+
+            // Switching SceneViews: restore the previous one before capturing the new one's
+            // camera.enabled state. Without the Unbind, _previousCameraEnabled would be
+            // overwritten with the value we set ourselves, leaking enabled=true on End.
+            if (_boundSceneView != null)
+                Unbind();
 
             _boundSceneView = sceneView;
             _pqs.SetTarget(new PQSTargetProvider(_pqs.transform, sceneView.camera));

@@ -7,9 +7,11 @@ using UnityEngine.SceneManagement;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring
 {
     /// <summary>
-    /// Blocks entering play mode while a celestial body authoring scene is the active scene. The runtime
-    /// never loads authoring scenes, so play mode would boot the game into an invalid state.
+    /// Blocks entering play mode while a celestial body authoring scene is the active scene.
     /// </summary>
+    /// <remarks>
+    /// The runtime never loads authoring scenes, so play mode would boot the game into an invalid state.
+    /// </remarks>
     [InitializeOnLoad]
     public static class CelestialBodyAuthoringSceneGuard
     {
