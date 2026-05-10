@@ -830,7 +830,9 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                         childRect,
                         sizeLabel,
                         GetSizeKeyProperty(property, sizeFieldName),
-                        GetLegacyProperty(property, hiddenCompatibilityFieldName),
+                        legacyMode == LegacyPartSizeMode.AttachNode
+                            ? iterator
+                            : GetLegacyProperty(property, hiddenCompatibilityFieldName),
                         legacyMode
                     );
                 }
