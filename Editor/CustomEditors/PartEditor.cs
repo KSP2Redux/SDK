@@ -13,7 +13,9 @@ using Ksp2UnityTools.Editor.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Redux.Assets.PartIconRendering;
+using Redux.VFX.ReentryMeshGeneration;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -43,6 +45,9 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private PartIconRenderSettings _iconPreviewSettings;
         private Texture2D _iconPreviewTexture;
         private bool _iconPreviewRefreshQueued;
+        private bool _reentryMeshFoldout = true;
+        private bool _reentryMeshPreviewFoldout = true;
+        private string _reentryMeshStatus;
 
         // Just initialize all the conversion stuff
         private static void Initialize()
@@ -66,7 +71,8 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private CorePartData TargetData => target as CorePartData;
         private PartCore TargetCore => TargetData.Core;
 
-        private PartIconRenderSettings IconPreviewSettings => _iconPreviewSettings ??= PartIconRenderSettings.CreateDefault();
+        private PartIconRenderSettings IconPreviewSettings =>
+            _iconPreviewSettings ??= PartIconRenderSettings.CreateDefault();
 
         private void OnDisable()
         {
@@ -78,6 +84,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         {
             base.OnInspectorGUI();
             DrawIconPreview();
+            DrawReentryMeshGenerator();
             GUILayout.Label("Attach Node Settings");
             if (GUILayout.Button("Auto Generate AttachNodes"))
             {
@@ -250,7 +257,11 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             );
             if (texture == null)
             {
-                EditorUtility.DisplayDialog("Icon Export Failed", "No renderable meshes were found for this part.", "ok");
+                EditorUtility.DisplayDialog(
+                    "Icon Export Failed",
+                    "No renderable meshes were found for this part.",
+                    "ok"
+                );
                 return;
             }
 
@@ -373,7 +384,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             bool changed = false;
 
             EditorGUI.BeginChangeCheck();
-            PartIconCameraPreset preset = (PartIconCameraPreset)EditorGUILayout.EnumPopup("Preset", _iconPreviewPreset);
+            var preset = (PartIconCameraPreset)EditorGUILayout.EnumPopup("Preset", _iconPreviewPreset);
             if (EditorGUI.EndChangeCheck())
             {
                 _iconPreviewPreset = preset;
@@ -392,8 +403,18 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 {
                     EditorGUI.BeginChangeCheck();
                     settings.cameraYawDegrees = EditorGUILayout.Slider("Yaw", settings.cameraYawDegrees, -180f, 180f);
-                    settings.cameraPitchDegrees = EditorGUILayout.Slider("Pitch", settings.cameraPitchDegrees, -80f, 80f);
-                    settings.cameraOrbitDegrees = EditorGUILayout.Slider("Roll", settings.cameraOrbitDegrees, -180f, 180f);
+                    settings.cameraPitchDegrees = EditorGUILayout.Slider(
+                        "Pitch",
+                        settings.cameraPitchDegrees,
+                        -80f,
+                        80f
+                    );
+                    settings.cameraOrbitDegrees = EditorGUILayout.Slider(
+                        "Roll",
+                        settings.cameraOrbitDegrees,
+                        -180f,
+                        180f
+                    );
                     changed |= EditorGUI.EndChangeCheck();
                 }
             }
@@ -404,14 +425,30 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 using (new EditorGUI.IndentLevelScope())
                 {
                     EditorGUI.BeginChangeCheck();
-                    settings.frontKeyIntensity = EditorGUILayout.Slider("Front Key", settings.frontKeyIntensity, 0f, 2f);
-                    settings.frontKeyDirection = EditorGUILayout.Vector3Field("Front Key Direction", settings.frontKeyDirection);
+                    settings.frontKeyIntensity = EditorGUILayout.Slider(
+                        "Front Key",
+                        settings.frontKeyIntensity,
+                        0f,
+                        2f
+                    );
+                    settings.frontKeyDirection = EditorGUILayout.Vector3Field(
+                        "Front Key Direction",
+                        settings.frontKeyDirection
+                    );
                     settings.topKeyIntensity = EditorGUILayout.Slider("Top Key", settings.topKeyIntensity, 0f, 2f);
-                    settings.topKeyDirection = EditorGUILayout.Vector3Field("Top Key Direction", settings.topKeyDirection);
+                    settings.topKeyDirection = EditorGUILayout.Vector3Field(
+                        "Top Key Direction",
+                        settings.topKeyDirection
+                    );
                     settings.rimIntensity = EditorGUILayout.Slider("Rim", settings.rimIntensity, 0f, 1.5f);
                     settings.rimDirection = EditorGUILayout.Vector3Field("Rim Direction", settings.rimDirection);
                     settings.fillIntensity = EditorGUILayout.Slider("Uniform Fill", settings.fillIntensity, 0f, 1.5f);
-                    settings.keyLightSpreadDegrees = EditorGUILayout.Slider("Key Softness", settings.keyLightSpreadDegrees, 0f, 35f);
+                    settings.keyLightSpreadDegrees = EditorGUILayout.Slider(
+                        "Key Softness",
+                        settings.keyLightSpreadDegrees,
+                        0f,
+                        35f
+                    );
                     changed |= EditorGUI.EndChangeCheck();
                 }
             }
@@ -422,7 +459,10 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 using (new EditorGUI.IndentLevelScope())
                 {
                     EditorGUI.BeginChangeCheck();
-                    settings.applyModuleColorPalette = EditorGUILayout.Toggle("Use Icon Palette", settings.applyModuleColorPalette);
+                    settings.applyModuleColorPalette = EditorGUILayout.Toggle(
+                        "Use Icon Palette",
+                        settings.applyModuleColorPalette
+                    );
                     using (new EditorGUI.DisabledScope(!settings.applyModuleColorPalette))
                     {
                         settings.moduleColorBase = EditorGUILayout.ColorField("Base", settings.moduleColorBase);
@@ -516,6 +556,392 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
             DestroyImmediate(_iconPreviewTexture);
             _iconPreviewTexture = null;
+        }
+
+        private void DrawReentryMeshGenerator()
+        {
+            GUILayout.Space(8f);
+            _reentryMeshFoldout = EditorGUILayout.Foldout(_reentryMeshFoldout, "Reentry Mesh Generator", true);
+            if (!_reentryMeshFoldout)
+            {
+                return;
+            }
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                string prefabPath = PathUtils.GetPrefabOrAssetPath(TargetData, TargetObject);
+                using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(prefabPath)))
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("Validate Existing"))
+                        {
+                            ValidateReentryMeshes();
+                        }
+
+                        if (GUILayout.Button("Generate/Rebuild"))
+                        {
+                            GenerateReentryMeshes(prefabPath);
+                        }
+
+                        if (GUILayout.Button("Remove Generated"))
+                        {
+                            RemoveGeneratedReentryMeshes(prefabPath);
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(prefabPath))
+                {
+                    EditorGUILayout.HelpBox(
+                        "Open or select a prefab-backed part to generate reentry meshes.",
+                        MessageType.Info
+                    );
+                }
+                else if (!string.IsNullOrWhiteSpace(_reentryMeshStatus))
+                {
+                    EditorGUILayout.HelpBox(_reentryMeshStatus, MessageType.Info);
+                }
+
+                DrawReentryMeshPreview();
+            }
+        }
+
+        private void DrawReentryMeshPreview()
+        {
+            Rect foldoutRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
+            foldoutRect.x += 12f;
+            foldoutRect.width = Mathf.Max(1f, foldoutRect.width - 12f);
+            _reentryMeshPreviewFoldout = EditorGUI.Foldout(
+                foldoutRect,
+                _reentryMeshPreviewFoldout,
+                "Reentry Mesh Preview",
+                true
+            );
+            if (!_reentryMeshPreviewFoldout)
+            {
+                return;
+            }
+
+            List<ReentryMeshPreviewEntry> entries = CollectReentryMeshPreviewEntries(TargetObject);
+            if (entries.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No reentry mesh renderer meshes found on this part.", MessageType.Info);
+                return;
+            }
+
+            int groupCount = CountReentryPreviewGroups(entries);
+            EditorGUILayout.LabelField(
+                $"Showing {entries.Count} reentry mesh preview{(entries.Count == 1 ? string.Empty : "s")} across {groupCount} group{(groupCount == 1 ? string.Empty : "s")}.",
+                EditorStyles.miniLabel
+            );
+
+            const float previewSize = 96f;
+            const float labelHeight = 44f;
+            const float cellPadding = 8f;
+            float cellWidth = previewSize + cellPadding;
+            float cellHeight = previewSize + labelHeight + cellPadding;
+            float availableWidth = Mathf.Max(cellWidth, EditorGUIUtility.currentViewWidth - 64f);
+            int columns = Mathf.Max(1, Mathf.FloorToInt(availableWidth / cellWidth));
+            int rows = Mathf.CeilToInt(entries.Count / (float)columns);
+            Rect gridRect = GUILayoutUtility.GetRect(availableWidth, rows * cellHeight, GUILayout.ExpandWidth(true));
+            bool pendingPreview = DrawReentryMeshPreviewGrid(
+                entries,
+                gridRect,
+                columns,
+                previewSize,
+                labelHeight,
+                cellWidth,
+                cellHeight
+            );
+
+            if (pendingPreview)
+            {
+                Repaint();
+            }
+        }
+
+        private static List<ReentryMeshPreviewEntry> CollectReentryMeshPreviewEntries(GameObject root)
+        {
+            var entries = new List<ReentryMeshPreviewEntry>();
+            if (root == null)
+            {
+                return entries;
+            }
+
+            foreach (KSP.VFX.Reentry.ReentryMesh reentryMesh in root
+                .GetComponentsInChildren<KSP.VFX.Reentry.ReentryMesh>(true))
+            {
+                if (reentryMesh == null || reentryMesh.ReentryRenderers == null)
+                {
+                    continue;
+                }
+
+                string groupName = reentryMesh.gameObject.name;
+                for (int i = 0; i < reentryMesh.ReentryRenderers.Length; i++)
+                {
+                    Renderer renderer = reentryMesh.ReentryRenderers[i];
+                    if (renderer == null || !renderer.TryGetComponent(out MeshFilter meshFilter) ||
+                        meshFilter.sharedMesh == null)
+                    {
+                        continue;
+                    }
+
+                    entries.Add(
+                        new ReentryMeshPreviewEntry
+                        {
+                            GroupName = groupName,
+                            LodIndex = i,
+                            Mesh = meshFilter.sharedMesh
+                        }
+                    );
+                }
+            }
+
+            return entries;
+        }
+
+        private static int CountReentryPreviewGroups(List<ReentryMeshPreviewEntry> entries)
+        {
+            var groups = new HashSet<string>();
+            foreach (ReentryMeshPreviewEntry entry in entries)
+            {
+                groups.Add(entry.GroupName);
+            }
+
+            return groups.Count;
+        }
+
+        private static bool DrawReentryMeshPreviewGrid(
+            List<ReentryMeshPreviewEntry> entries,
+            Rect gridRect,
+            int columns,
+            float previewSize,
+            float labelHeight,
+            float cellWidth,
+            float cellHeight
+        )
+        {
+            bool pendingPreview = false;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                int row = i / columns;
+                int column = i % columns;
+                Rect cellRect = new(
+                    gridRect.x + column * cellWidth,
+                    gridRect.y + row * cellHeight,
+                    previewSize,
+                    cellHeight
+                );
+                pendingPreview |= DrawReentryMeshPreviewEntry(entries[i], cellRect, previewSize, labelHeight);
+            }
+
+            return pendingPreview;
+        }
+
+        private static bool DrawReentryMeshPreviewEntry(
+            ReentryMeshPreviewEntry entry,
+            Rect cellRect,
+            float previewSize,
+            float labelHeight
+        )
+        {
+            bool pendingPreview = false;
+            Rect previewRect = new(cellRect.x, cellRect.y, previewSize, previewSize);
+            GUI.Box(previewRect, GUIContent.none);
+            if (Event.current.type == EventType.MouseDown && previewRect.Contains(Event.current.mousePosition))
+            {
+                Selection.activeObject = entry.Mesh;
+                EditorGUIUtility.PingObject(entry.Mesh);
+                Event.current.Use();
+            }
+
+            Texture2D preview = AssetPreview.GetAssetPreview(entry.Mesh);
+            if (preview == null)
+            {
+                preview = AssetPreview.GetMiniThumbnail(entry.Mesh);
+                pendingPreview = true;
+            }
+
+            if (preview != null)
+            {
+                EditorGUI.DrawPreviewTexture(previewRect, preview, null, ScaleMode.ScaleToFit);
+            }
+            else
+            {
+                EditorGUI.LabelField(previewRect, "No Preview", EditorStyles.centeredGreyMiniLabel);
+            }
+
+            string label = $"{entry.GroupName}\nLOD {entry.LodIndex}  {entry.Mesh.vertexCount}v";
+            Rect labelRect = new(cellRect.x, cellRect.y + previewSize + 2f, previewSize, labelHeight);
+            EditorGUI.LabelField(labelRect, label, EditorStyles.wordWrappedMiniLabel);
+
+            return pendingPreview;
+        }
+
+        private struct ReentryMeshPreviewEntry
+        {
+            public string GroupName;
+            public int LodIndex;
+            public Mesh Mesh;
+        }
+
+        private void ValidateReentryMeshes()
+        {
+            int reentryMeshCount = TargetObject.GetComponentsInChildren<KSP.VFX.Reentry.ReentryMesh>(true).Length;
+            int generatedCount = TargetObject.GetComponentsInChildren<GeneratedReentryMeshRoot>(true).Length;
+            int rendererCount = 0;
+            foreach (Renderer renderer in TargetObject.GetComponentsInChildren<Renderer>(true))
+            {
+                if (renderer is ParticleSystemRenderer ||
+                    renderer.GetComponentInParent<KSP.VFX.Reentry.ReentryMesh>(true) != null ||
+                    renderer.GetComponentInParent<GeneratedReentryMeshRoot>(true) != null)
+                {
+                    continue;
+                }
+
+                rendererCount++;
+            }
+
+            _reentryMeshStatus =
+                $"ReentryMesh components: {reentryMeshCount}. Generated roots: {generatedCount}. Candidate source renderers: {rendererCount}.";
+        }
+
+        private void GenerateReentryMeshes(string prefabPath)
+        {
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                return;
+            }
+
+            var settings = ReentryMeshGenerationSettings.CreateDefault();
+            settings.previewMaterial = AssetDatabase.LoadAssetAtPath<Material>(
+                "Assets/ReduxAssets/Definitions/Parts/Common/ReentryMat.mat"
+            );
+
+            string partName = GetTargetPartName();
+            ReentryMeshGenerator.Result result = ReentryMeshGenerator.GenerateForPart(
+                TargetObject,
+                partName,
+                settings,
+                true
+            );
+
+            if (!result.Success)
+            {
+                _reentryMeshStatus = "No reentry meshes were generated. " + string.Join(" ", result.Warnings);
+                return;
+            }
+
+            SaveGeneratedReentryMeshAssets(result, prefabPath, partName);
+            SavePrefabChanges(prefabPath);
+            _reentryMeshStatus =
+                $"Generated {result.Groups.Count} reentry groups from {result.SourceRendererCount} source renderers " +
+                $"and {result.SourceVertexCount} source vertices.";
+            if (result.Warnings.Count > 0)
+            {
+                _reentryMeshStatus += " Warnings: " + string.Join(" ", result.Warnings);
+            }
+        }
+
+        private void RemoveGeneratedReentryMeshes(string prefabPath)
+        {
+            string partName = GetTargetPartName();
+            ReentryMeshGenerator.RemoveGenerated(TargetObject);
+            DeleteGeneratedReentryMeshAssets(prefabPath, partName);
+            SavePrefabChanges(prefabPath);
+            _reentryMeshStatus = "Removed generated reentry mesh roots and generated mesh assets for this part.";
+        }
+
+        private static void SaveGeneratedReentryMeshAssets(
+            ReentryMeshGenerator.Result result,
+            string prefabPath,
+            string partName
+        )
+        {
+            string directory = Path.Combine(Path.GetDirectoryName(prefabPath), "ReentryMeshes").Replace('\\', '/');
+            Directory.CreateDirectory(directory);
+
+            foreach (ReentryMeshGenerator.GeneratedGroup group in result.Groups)
+            {
+                for (int i = 0; i < group.LodMeshes.Length; i++)
+                {
+                    Mesh mesh = group.LodMeshes[i];
+                    string assetPath =
+                        $"{directory}/{SanitizeAssetName(partName)}_{SanitizeAssetName(group.Name)}_lod{i}.asset";
+                    AssetDatabase.DeleteAsset(assetPath);
+                    AssetDatabase.CreateAsset(mesh, assetPath);
+                    var savedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+                    if (savedMesh != null && group.LodRenderers[i] != null &&
+                        group.LodRenderers[i].TryGetComponent(out MeshFilter meshFilter))
+                    {
+                        meshFilter.sharedMesh = savedMesh;
+                    }
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private static void DeleteGeneratedReentryMeshAssets(string prefabPath, string partName)
+        {
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                return;
+            }
+
+            string directory = Path.Combine(Path.GetDirectoryName(prefabPath), "ReentryMeshes").Replace('\\', '/');
+            if (!Directory.Exists(directory))
+            {
+                return;
+            }
+
+            foreach (string file in Directory.GetFiles(directory, $"{SanitizeAssetName(partName)}_*_lod*.asset"))
+            {
+                AssetDatabase.DeleteAsset(file.Replace('\\', '/'));
+            }
+
+            AssetDatabase.Refresh();
+        }
+
+        private void SavePrefabChanges(string prefabPath)
+        {
+            EditorUtility.SetDirty(TargetObject);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(TargetObject);
+            PrefabStage stage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (stage != null && stage.prefabContentsRoot != null &&
+                TargetObject.transform.root == stage.prefabContentsRoot.transform)
+            {
+                PrefabUtility.SaveAsPrefabAsset(stage.prefabContentsRoot, prefabPath);
+                return;
+            }
+
+            if (PrefabUtility.IsPartOfPrefabAsset(TargetObject))
+            {
+                PrefabUtility.SavePrefabAsset(TargetObject.transform.root.gameObject);
+            }
+
+            AssetDatabase.SaveAssets();
+        }
+
+        private static string SanitizeAssetName(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "part";
+            }
+
+            char[] chars = value.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (Array.IndexOf(Path.GetInvalidFileNameChars(), chars[i]) >= 0 || chars[i] == ' ')
+                {
+                    chars[i] = '_';
+                }
+            }
+
+            return new string(chars);
         }
 
         [DrawGizmo(GizmoType.Active | GizmoType.Selected)]
@@ -615,8 +1041,10 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         }
 
         private static readonly Dictionary<int, ShroudPreviewSettings> SettingsByModule = new();
+
         private static readonly FieldInfo FairingDataField =
             typeof(Module_Fairing).GetField("_dataFairing", BindingFlags.Instance | BindingFlags.NonPublic);
+
         private static readonly Color PreviewFillColor = new(0.16f, 0.55f, 0.95f, 0.16f);
         private static readonly Color PreviewLineColor = new(0.16f, 0.85f, 1f, 0.9f);
         private static GUIContent[] _sizeOptions;
@@ -787,12 +1215,14 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
             if (fairing.MaxAutoFairingTargetRadius > 0 && resolvedDiameter > hostDiameter)
             {
-                float maxDiameter = PartSizeRegistry.GetLegacyAttachNodeSize(fairing.MaxAutoFairingTargetRadius).Diameter;
+                float maxDiameter = PartSizeRegistry.GetLegacyAttachNodeSize(fairing.MaxAutoFairingTargetRadius)
+                    .Diameter;
                 resolvedDiameter = Mathf.Max(hostDiameter, Mathf.Min(maxDiameter, resolvedDiameter));
             }
             else if (fairing.MinAutoFairingTargetRadius > 0 && resolvedDiameter < hostDiameter)
             {
-                float minDiameter = PartSizeRegistry.GetLegacyAttachNodeSize(fairing.MinAutoFairingTargetRadius).Diameter;
+                float minDiameter = PartSizeRegistry.GetLegacyAttachNodeSize(fairing.MinAutoFairingTargetRadius)
+                    .Diameter;
                 resolvedDiameter = Mathf.Max(minDiameter, resolvedDiameter);
             }
 
@@ -994,8 +1424,10 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         {
             serializedObject.Update();
 
-            SerializedProperty sizeProperty = serializedObject.FindProperty(PartSizeInspectorFields.AttachNodeSizeFieldName);
-            SerializedProperty sizeKeyProperty = serializedObject.FindProperty(PartSizeInspectorFields.AttachNodeSizeKeyFieldName);
+            SerializedProperty sizeProperty =
+                serializedObject.FindProperty(PartSizeInspectorFields.AttachNodeSizeFieldName);
+            SerializedProperty sizeKeyProperty =
+                serializedObject.FindProperty(PartSizeInspectorFields.AttachNodeSizeKeyFieldName);
             SerializedProperty iterator = serializedObject.GetIterator();
             bool enterChildren = true;
 
@@ -1241,9 +1673,10 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
         private static float GetSizeKeyFieldHeight(SerializedProperty sizeKeyProperty)
         {
-            return IsCustomKey(sizeKeyProperty?.stringValue) || CustomModePropertyPaths.Contains(GetPathKey(sizeKeyProperty))
-                ? EditorGUIUtility.singleLineHeight * 2f + VerticalSpacing
-                : EditorGUIUtility.singleLineHeight;
+            return IsCustomKey(sizeKeyProperty?.stringValue) ||
+                CustomModePropertyPaths.Contains(GetPathKey(sizeKeyProperty))
+                    ? EditorGUIUtility.singleLineHeight * 2f + VerticalSpacing
+                    : EditorGUIUtility.singleLineHeight;
         }
 
         private static SerializedProperty GetSizeKeyProperty(SerializedProperty property, string sizeFieldName)
@@ -1253,7 +1686,10 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 : property.FindPropertyRelative(PartSizeFieldName);
         }
 
-        private static SerializedProperty GetLegacyProperty(SerializedProperty property, string hiddenCompatibilityFieldName)
+        private static SerializedProperty GetLegacyProperty(
+            SerializedProperty property,
+            string hiddenCompatibilityFieldName
+        )
         {
             return property.FindPropertyRelative(hiddenCompatibilityFieldName);
         }
