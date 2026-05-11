@@ -214,7 +214,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
             }
         }
 
-        private static string TryGetGuid(Object asset)
+        private static string TryGetGuid(UnityEngine.Object asset)
         {
             if (asset == null) return null;
             var path = AssetDatabase.GetAssetPath(asset);
