@@ -1,4 +1,5 @@
 using System;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -82,6 +83,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             Texture2DArrayPacker.MigrateFromPackedState(data, material);
 
             var pqsDataSO = new SerializedObject(data);
+            // The PQSData's authoring sidecar holds the small-biome and subzone-normal source textures - the runtime PQSData no longer carries them.
+            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(data);
+            var pqsDataAuthoringSO = authoring != null ? new SerializedObject(authoring) : null;
 
             // Self-referencing closure: refresh recurses through BuildSections, which re-emits
             // the Quality section with this same refresh hooked to its keyword toggles. The
@@ -90,16 +94,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             refresh = () =>
             {
                 slot.Clear();
-                BuildSections(slot, material, pqsDataSO, data, refresh);
+                BuildSections(slot, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
             };
 
-            BuildSections(slot, material, pqsDataSO, data, refresh);
+            BuildSections(slot, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
         }
 
         private static void BuildSections(
             VisualElement slot,
             Material material,
             SerializedObject pqsDataSO,
+            SerializedObject pqsDataAuthoringSO,
             PQSData pqsData,
             Action refresh
         )
@@ -109,6 +114,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             slot.Add(BuildPoleSettingsSection(pqsDataSO));
             slot.Add(BuildScaledSpaceSection(material));
             slot.Add(BuildBiomeControlSection(material, pqsDataSO));
+            slot.Add(BuildBiomeLookupBakeSection(material, pqsDataAuthoringSO, pqsData));
             slot.Add(BuildTriplanarSection(material));
 
             var subzonesOn = material.IsKeywordEnabled("SUB_ZONES_ENABLED");
@@ -120,12 +126,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (subzonesOn)
             {
                 for (var i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
-                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsData, 3, PqsAuthoringNaming.BiomeChannels[i], i));
+                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 3, PqsAuthoringNaming.BiomeChannels[i], i));
                 for (var i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
-                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsData, 4, PqsAuthoringNaming.BiomeChannels[i], i));
+                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 4, PqsAuthoringNaming.BiomeChannels[i], i));
             }
 
-            slot.Add(BuildSmallBiomeDetailSection(material, pqsDataSO, pqsData));
+            slot.Add(BuildSmallBiomeDetailSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData));
             slot.Add(BuildDecalsSection(material));
             slot.Add(BuildDistanceCascadeSection(material));
             slot.Add(BuildCrossBiomeBlendSection(material));

@@ -1,0 +1,22 @@
+/* Preview Controls window — overrides on top of PlanetAuthoring.uss.
+ * Only rules unique to this window live here; the shared root/section/field
+ * styling is in PlanetAuthoring.uss. */
+
+.preview-status {
+    white-space: normal;
+    margin-bottom: 2px;
+}
+
+.preview-body {
+    margin-bottom: 2px;
+}
+
+.preview-altitude {
+    -unity-font-style: bold;
+    white-space: normal;
+    margin-bottom: 6px;
+}
+
+.preview-jump-stack {
+    flex-direction: column;
+}

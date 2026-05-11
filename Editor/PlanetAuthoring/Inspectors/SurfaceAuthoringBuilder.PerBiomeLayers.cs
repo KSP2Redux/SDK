@@ -191,6 +191,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         public static Foldout BuildSubzoneTierBiomeSection(
             Material material,
             SerializedObject pqsDataSO,
+            SerializedObject pqsDataAuthoringSO,
             PQSData pqsData,
             int tier,
             string c,
@@ -199,7 +200,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var prefix = $"_Subzone{tier}";
             var dataPrefix = $"subzone{tier}{c}";
-            var normalsArrayPath = $"heightMapInfo.subzone{tier}Normals.Array.data[{idx}]";
+            // The normal slice source lives on the PQSDataAuthoring sidecar, not on PQSData itself.
+            var normalsArrayPath = PqsAuthoringNaming.SubzoneNormalPath(tier, idx);
 
             var foldout = new Foldout { text = $"Subzone{tier} Biome {c}", value = false };
             foldout.AddToClassList("pqs-inspector-section");
@@ -249,7 +251,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             ));
 
             foldout.Add(MaterialPropertyFields.PqsDataTexture(
-                pqsDataSO, normalsArrayPath,
+                pqsDataAuthoringSO, normalsArrayPath,
                 "Normal",
                 $"Per-biome tier-{tier} normal map for biome {c}. Assigned textures across all 8 " +
                 "tier-3/4 slots are packed into the shared _SubZonesNormalTextureArray subasset " +

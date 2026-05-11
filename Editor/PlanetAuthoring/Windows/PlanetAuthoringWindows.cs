@@ -33,11 +33,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public const int PriorityValidationReport = 110;
 
         /// <summary>
-        /// Menu priority for the Environment window.
-        /// </summary>
-        public const int PriorityEnvironment = 120;
-
-        /// <summary>
         /// Menu priority for the Biome Painter window.
         /// </summary>
         public const int PriorityBiomePainter = 130;
@@ -64,28 +59,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public static void ShowValidationReportPlaceholder() => ShowNotImplemented("Validation Report");
 
         /// <summary>
-        /// Shows the placeholder dialog for the Environment window.
-        /// </summary>
-        [MenuItem(MenuRoot + "Environment", priority = PriorityEnvironment)]
-        public static void ShowEnvironmentPlaceholder() => ShowNotImplemented("Environment");
-
-        /// <summary>
         /// Shows the placeholder dialog for the Biome Painter window.
         /// </summary>
         [MenuItem(MenuRoot + "Biome Painter", priority = PriorityBiomePainter)]
         public static void ShowBiomePainterPlaceholder() => ShowNotImplemented("Biome Painter");
 
         /// <summary>
-        /// Shows the placeholder dialog for the Decal Manager window.
+        /// Opens the Decal Manager window.
         /// </summary>
-        [MenuItem(MenuRoot + "Decal Manager", priority = PriorityDecalManager)]
-        public static void ShowDecalManagerPlaceholder() => ShowNotImplemented("Decal Manager");
+        public static void ShowDecalManager() => DecalManagerWindow.ShowWindow();
 
         /// <summary>
-        /// Shows the placeholder dialog for the Discoverable Manager window.
+        /// Opens the Discoverable Manager window.
         /// </summary>
         [MenuItem(MenuRoot + "Discoverable Manager", priority = PriorityDiscoverableManager)]
-        public static void ShowDiscoverableManagerPlaceholder() => ShowNotImplemented("Discoverable Manager");
+        public static void ShowDiscoverableManager() => DiscoverableManagerWindow.ShowWindow();
 
         /// <summary>
         /// Shows the placeholder dialog for the Preset Browser window.

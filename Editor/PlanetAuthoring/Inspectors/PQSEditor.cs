@@ -1,4 +1,6 @@
+using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -29,6 +31,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private const string UxmlPath = "/Assets/Windows/PQSInspector.uxml";
         private const string UssPath = "/Assets/Windows/PQSInspector.uss";
 
+        private ValidationSectionBuilder.Handle _validationHandle;
+
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
         {
@@ -42,11 +46,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
             tree.CloneTree(root);
 
-            var styles = AssetDatabase.LoadAssetAtPath<StyleSheet>(SDKConfiguration.BasePath + UssPath);
-            if (styles != null)
-                root.styleSheets.Add(styles);
-            else
-                Debug.LogWarning($"[PQSEditor] Could not load stylesheet at '{SDKConfiguration.BasePath + UssPath}'. Inspector will render unstyled.");
+            Ksp2UnityToolsStyles.Apply(root, UssPath);
+
+            var validationSlot = root.Q<VisualElement>("validation-slot");
+            if (validationSlot != null)
+            {
+                _validationHandle = ValidationSectionBuilder.Mount(validationSlot);
+                RefreshValidation();
+                root.schedule.Execute(RefreshValidation).Every(500);
+            }
 
             var surfaceSlot = root.Q<VisualElement>("surface-authoring-slot");
             if (surfaceSlot != null)
@@ -54,6 +62,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             root.Bind(serializedObject);
             return root;
+        }
+
+        private void RefreshValidation()
+        {
+            if (!_validationHandle.IsValid || target == null)
+                return;
+            var pqs = target as PQS;
+            if (pqs == null)
+                return;
+            CoreCelestialBodyData body = pqs.GetComponentInParent<CoreCelestialBodyData>();
+            ValidationSectionBuilder.Refresh(_validationHandle, body);
         }
     }
 }

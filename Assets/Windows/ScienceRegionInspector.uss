@@ -1,0 +1,56 @@
+/* Science Region inspector v2: overrides on top of Ksp2UnityToolsStyles.uss.
+ * Only rules unique to this inspector live here. */
+
+.science-region-region-row {
+    flex-direction: column;
+    margin-bottom: 4px;
+    padding-left: 6px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-left-width: 3px;
+    border-left-color: rgb(80, 80, 80);
+    background-color: rgba(40, 45, 55, 0.4);
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+.science-region-region-row--collision {
+    border-left-color: rgb(220, 165, 80);
+}
+
+.science-region-region-row-header {
+    flex-direction: row;
+    align-items: center;
+}
+
+.science-region-region-row-scalars {
+    flex-direction: row;
+    margin-top: 4px;
+}
+
+.science-region-region-row-warning {
+    color: rgb(220, 165, 80);
+    -unity-font-style: italic;
+    font-size: 10px;
+    margin-top: 2px;
+    white-space: normal;
+}
+
+.science-region-discoverable-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 1px;
+    font-size: 11px;
+}
+
+.science-region-discoverable-row-id {
+    flex-grow: 1;
+}
+
+.science-region-discoverable-row-coords {
+    width: 140px;
+    flex-shrink: 0;
+    color: rgb(170, 175, 180);
+}

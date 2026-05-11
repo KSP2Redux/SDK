@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="preview-root">
+
+        <engine:Foldout text="Session" value="true" class="preview-section">
+            <engine:Label name="status-label" class="preview-status" />
+            <engine:Label name="body-label" class="preview-body" />
+            <engine:Label name="altitude-label" class="preview-altitude" />
+            <engine:Button name="preview-button" text="Stop Preview" tooltip="Start or stop the planet authoring session. While active, PQS streaming, jump-to-altitude, decal handles, and validation refresh in real time." class="preview-stop-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Surface point" value="true" class="preview-section">
+            <editor:FloatField name="lat-field" label="Latitude (°)" tooltip="Surface point latitude in degrees. -90 = south pole, +90 = north pole." class="preview-coord-field unity-base-field__aligned" />
+            <editor:FloatField name="lon-field" label="Longitude (°)" tooltip="Surface point longitude in degrees. East-positive, range [-180, 180]." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Button name="pick-button" text="Pick on planet" tooltip="Click a point on the body in SceneView to set lat/lon from the surface hit." class="preview-action-button" />
+            <engine:Button name="lookat-button" text="Look at" tooltip="Frame the SceneView camera onto the lat/lon above, sampling actual terrain elevation for the pivot." class="preview-action-button" />
+            <engine:VisualElement class="preview-button-row">
+                <engine:Button name="copy-button" text="Copy" tooltip="Copy lat,lon to the clipboard as a comma-separated pair." />
+                <engine:Button name="paste-button" text="Paste" tooltip="Paste a comma-separated lat,lon pair from the clipboard into the fields above." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Jump to altitude" value="true" class="preview-section">
+            <engine:Slider name="surface-altitude-slider" label="Surface altitude (m)" tooltip="Altitude above the terrain used by the Surface jump button and the Science Region inspector's 'Look from surface' button. 1 m can dip into bumpy terrain. 2-3 m is usually clear." low-value="1" high-value="10" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:VisualElement name="jump-row" class="preview-jump-stack">
+                <engine:Button name="jump-surface-button" text="Surface" tooltip="Frame the camera the configured surface altitude above the terrain in the current view direction." class="preview-jump-button" />
+                <engine:Button name="jump-transition-button" text="Scaled/Local Boundary" tooltip="Frame at the PQSData scaled-to-local transition distance. Useful for tuning where the body swaps from scaled-space to PQS rendering." class="preview-jump-button" />
+                <engine:Button name="jump-loworbit-button" text="Low orbit" tooltip="Frame just above the atmosphere top (or 10% of body radius if there is no atmosphere)." class="preview-jump-button" />
+                <engine:Button name="jump-highorbit-button" text="High orbit" tooltip="Frame at one body radius above the surface." class="preview-jump-button" />
+                <engine:Button name="jump-far-button" text="Far" tooltip="Frame at five body radii above the surface. Useful for scaled-space framing checks." class="preview-jump-button" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Sun" value="false" class="preview-section">
+            <editor:ObjectField name="sun-light-field" label="Sun Light" tooltip="Directional Light treated as the sun. Auto-resolves to the brightest directional light in the scene if left empty." type="UnityEngine.Light, UnityEngine" allow-scene-objects="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:Slider name="sun-azimuth-slider" label="Azimuth (°)" tooltip="Compass direction the sunlight comes from. 0 = north, 90 = east, 180 = south, 270 = west." low-value="0" high-value="360" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:Slider name="sun-elevation-slider" label="Elevation (°)" tooltip="Angle of the sun above the horizon. -90 = directly below, 0 = on the horizon, +90 = directly above." low-value="-90" high-value="90" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:Slider name="sun-intensity-slider" label="Intensity" tooltip="Directional Light intensity multiplier. 1 is the typical mid-day value." low-value="0" high-value="3" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:VisualElement class="preview-button-row">
+                <engine:Button name="sun-day-button" text="Day side" tooltip="Jump the SceneView camera to the sun-facing hemisphere of the body, preserving zoom." />
+                <engine:Button name="sun-night-button" text="Night side" tooltip="Jump the SceneView camera to the anti-sun (night) hemisphere of the body, preserving zoom." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Time of day" value="false" class="preview-section">
+            <engine:VisualElement class="preview-button-row">
+                <engine:Button name="tod-play-button" text="Play" tooltip="Animate the body's rotation around its local Y axis at the speed below. Click again to pause." />
+                <engine:Button name="tod-reset-button" text="Reset" tooltip="Stop the rotation animation and restore the body's rotation to the value it had when the preview session began." />
+            </engine:VisualElement>
+            <engine:Slider name="tod-speed-slider" label="Speed (°/s)" tooltip="Rotation speed in degrees per second. Higher values cycle day/night faster." low-value="0" high-value="180" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Visualization" value="false" class="preview-section">
+            <engine:Toggle name="overlay-biome-toggle" label="Biome mask" tooltip="Render the body's biome mask (R/G/B/A channels) as colored bands over the surface. Useful for checking biome coverage and boundaries." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Toggle name="overlay-subzone-toggle" label="Subzone mask" tooltip="Render the subzone mask (R/G/B/A channels) over the surface. Visible only when SUB_ZONES_ENABLED is on for the body." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Toggle name="overlay-slope-toggle" label="Slope" tooltip="Colorize the surface from green (flat) to red (vertical) based on the geometric normal. Useful for spotting steep terrain that small-layer slope windows should cover." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Toggle name="overlay-altitude-toggle" label="Altitude contours" tooltip="Draw thin topographic contour lines at every multiple of the contour interval below. Every fifth line is highlighted as a major contour. Useful for reading elevation gradients and tuning per-layer altitude windows." class="preview-coord-field unity-base-field__aligned" />
+            <engine:FloatField name="overlay-band-height-field" label="Contour interval (m)" tooltip="Vertical spacing between minor contour lines in meters. Only affects the Altitude contours overlay." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Toggle name="overlay-active-layer-toggle" label="Active layer" tooltip="Show which of the 16 small-biome layers wins per pixel. Hue is the biome (R/G/B/A). Brightness is the layer index within that biome (1 = darkest, 4 = brightest). Click cells in the grid below to mute individual layers." class="preview-coord-field unity-base-field__aligned" />
+            <engine:VisualElement name="overlay-active-layer-grid" />
+            <engine:Toggle name="overlay-science-region-toggle" label="Science region" tooltip="Show this body's science region map as a colored overlay. Use the mode dropdown below to compare the post-bake palette against the source texture you're authoring." class="preview-coord-field unity-base-field__aligned" />
+            <engine:DropdownField name="overlay-science-region-mode" label="Region source" tooltip="Baked palette: colorize the asset the runtime actually loads (post-bake). Source texture: render the raw scienceRegionMap you're authoring, before bake." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="overlay-science-region-status" class="sdk-hint" />
+            <engine:Slider name="overlay-strength-slider" label="Strength" tooltip="Opacity of every enabled overlay against the surface beneath it." low-value="0" high-value="1" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

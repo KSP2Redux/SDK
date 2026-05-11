@@ -24,6 +24,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         public static Foldout BuildSmallBiomeDetailSection(
             Material material,
             SerializedObject pqsDataSO,
+            SerializedObject pqsDataAuthoringSO,
             PQSData pqsData
         )
         {
@@ -36,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             };
             foldout.Add(helpBox);
 
-            var matrix = new SmallLayerMatrix(pqsDataSO, material);
+            var matrix = new SmallLayerMatrix(pqsDataAuthoringSO, material);
             foldout.Add(matrix);
 
             var detailSlot = new VisualElement();
@@ -62,7 +63,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             {
                 detailSlot.Clear();
                 detailSlot.Add(SmallBiomeDetailEditor.Build(
-                    material, pqsDataSO, pqsData,
+                    material, pqsDataSO, pqsDataAuthoringSO, pqsData,
                     matrix.SelectedBiome, matrix.SelectedLayer,
                     repackTiles: Repack
                 ));

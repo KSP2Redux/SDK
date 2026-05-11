@@ -30,6 +30,10 @@
             <editor:PropertyField binding-path="ScaledSpaceTextureGeneratorSettings.UsePolarNormals" label="Use Polar Normals" tooltip="Mix the Polar Normals texture into the baked normal output near the poles." />
         </engine:Foldout>
 
+        <engine:Foldout text="Validation" value="true" class="pqs-inspector-section">
+            <engine:VisualElement name="validation-slot" />
+        </engine:Foldout>
+
         <engine:VisualElement name="surface-authoring-slot" />
 
     </engine:VisualElement>

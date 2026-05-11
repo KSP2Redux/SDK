@@ -1,7 +1,6 @@
-.body-inspector-root {
-    padding-left: 4px;
-    padding-right: 4px;
-}
+/* Celestial Body inspector — overrides on top of PlanetAuthoring.uss.
+ * Only rules unique to this inspector live here; the shared root/section/
+ * validation styling is in PlanetAuthoring.uss. */
 
 .body-inspector-readiness {
     margin-bottom: 4px;
@@ -45,33 +44,6 @@
 .body-inspector-body-data {
     margin-top: 4px;
     margin-bottom: 6px;
-}
-
-.body-inspector-section > Toggle {
-    background-color: rgba(70, 100, 140, 0.45);
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-left: 4px;
-    padding-right: 4px;
-    margin-top: 4px;
-}
-
-.body-inspector-section > Toggle Label {
-    -unity-font-style: bold;
-}
-
-.body-inspector-section > .unity-foldout__content {
-    padding-left: 8px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-}
-
-.body-inspector-section .unity-decorator-drawers-container {
-    display: none;
 }
 
 .body-inspector-save {

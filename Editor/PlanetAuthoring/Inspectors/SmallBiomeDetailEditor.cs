@@ -36,6 +36,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         public static VisualElement Build(
             Material material,
             SerializedObject pqsDataSO,
+            SerializedObject pqsDataAuthoringSO,
             PQSData pqsData,
             int biome,
             int layer,
@@ -56,7 +57,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var slot = biome * 4 + layer;
 
             root.Add(SectionLabel($"Layer {i} of Biome {c}"));
-            root.Add(BuildTileAssets(material, pqsDataSO, slot, c, layer, repackTiles));
+            root.Add(BuildTileAssets(material, pqsDataAuthoringSO, slot, c, layer, repackTiles));
             root.Add(BuildMasterMix(material, c, layer));
             root.Add(BuildHeightWindow(material, pqsData, c, layer, i));
             root.Add(BuildSlopeWindow(material, c, layer, i));
@@ -73,26 +74,26 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         }
 
         private static VisualElement BuildTileAssets(
-            Material material, SerializedObject pqsDataSO, int slot, string c, int layer, Action repackTiles)
+            Material material, SerializedObject pqsDataAuthoringSO, int slot, string c, int layer, Action repackTiles)
         {
             var section = new VisualElement();
             section.Add(GroupLabel("Tile assets"));
             section.Add(MaterialPropertyFields.PqsDataTexture(
-                pqsDataSO, PqsAuthoringNaming.SmallAlbedoTilePath(slot),
+                pqsDataAuthoringSO, PqsAuthoringNaming.SmallAlbedoTilePath(slot),
                 "Albedo",
                 "Albedo (color) tile for this layer. Drag a Texture2D in. The tool packs it " +
                 "into _SmallAlbedoArray automatically. Cell is disabled (slice index -1) if albedo is empty.",
                 onChanged: repackTiles
             ));
             section.Add(MaterialPropertyFields.PqsDataTexture(
-                pqsDataSO, PqsAuthoringNaming.SmallNormalTilePath(slot),
+                pqsDataAuthoringSO, PqsAuthoringNaming.SmallNormalTilePath(slot),
                 "Normal+SAO",
                 "Normal+packed tile. RGBA encodes (metallic-influence, normalY, AO, normalX) DXT5nm-style. " +
                 "Required when albedo is set - leave empty only when the cell has no albedo either.",
                 onChanged: repackTiles
             ));
             section.Add(MaterialPropertyFields.PqsDataTexture(
-                pqsDataSO, PqsAuthoringNaming.SmallMetalTilePath(slot),
+                pqsDataAuthoringSO, PqsAuthoringNaming.SmallMetalTilePath(slot),
                 "Metallic",
                 "Metallic mask tile. Sampled R channel is the per-tile metallic value. Required when albedo is set.",
                 onChanged: repackTiles

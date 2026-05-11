@@ -4,9 +4,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Centralized naming for PQS authoring widgets.
     /// </summary>
     /// <remarks>
-    /// Holds the canonical biome-channel order and the SerializedProperty paths into
-    /// <c>PQSData.heightMapInfo.smallXxxTiles</c> arrays that the matrix view and per-cell
-    /// detail editor both reach into.
+    /// Holds the canonical biome-channel order and the SerializedProperty paths into the
+    /// editor-only <c>PQSDataAuthoring</c> sidecar arrays that the matrix view and per-cell
+    /// detail editor both reach into. The paths are top-level on the sidecar SO, not nested
+    /// under <c>heightMapInfo</c> like they used to be on PQSData.
     /// </remarks>
     internal static class PqsAuthoringNaming
     {
@@ -20,22 +21,32 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <summary>
         /// Returns the SerializedProperty path for the small albedo tile at the given slot.
         /// </summary>
-        /// <param name="slot">The biome slot index.</param>
-        /// <returns>The SerializedProperty path into <c>PQSData.heightMapInfo.smallAlbedoTiles</c>.</returns>
-        public static string SmallAlbedoTilePath(int slot) => $"heightMapInfo.smallAlbedoTiles.Array.data[{slot}]";
+        public static string SmallAlbedoTilePath(int slot) => $"smallAlbedoTiles.Array.data[{slot}]";
 
         /// <summary>
         /// Returns the SerializedProperty path for the small normal tile at the given slot.
         /// </summary>
-        /// <param name="slot">The biome slot index.</param>
-        /// <returns>The SerializedProperty path into <c>PQSData.heightMapInfo.smallNormalTiles</c>.</returns>
-        public static string SmallNormalTilePath(int slot) => $"heightMapInfo.smallNormalTiles.Array.data[{slot}]";
+        public static string SmallNormalTilePath(int slot) => $"smallNormalTiles.Array.data[{slot}]";
 
         /// <summary>
         /// Returns the SerializedProperty path for the small metal tile at the given slot.
         /// </summary>
-        /// <param name="slot">The biome slot index.</param>
-        /// <returns>The SerializedProperty path into <c>PQSData.heightMapInfo.smallMetalTiles</c>.</returns>
-        public static string SmallMetalTilePath(int slot) => $"heightMapInfo.smallMetalTiles.Array.data[{slot}]";
+        public static string SmallMetalTilePath(int slot) => $"smallMetalTiles.Array.data[{slot}]";
+
+        /// <summary>
+        /// Returns the SerializedProperty path for the subzone normal at the given tier (3 or 4) and biome index.
+        /// </summary>
+        public static string SubzoneNormalPath(int tier, int biomeIndex) =>
+            $"subzone{tier}Normals.Array.data[{biomeIndex}]";
+
+        /// <summary>
+        /// Maps a (biomeChannel, secondaryChannel) pair to the flat index used by the 16-slot
+        /// (biome, subzone) and (biome, small-layer) arrays.
+        /// </summary>
+        /// <remarks>
+        /// Each axis is 0..3 (R/G/B/A). Centralizing the multiply removes typo risk at every call
+        /// site that addresses these arrays.
+        /// </remarks>
+        public static int CellIndex(int biomeChannel, int secondaryChannel) => biomeChannel * 4 + secondaryChannel;
     }
 }

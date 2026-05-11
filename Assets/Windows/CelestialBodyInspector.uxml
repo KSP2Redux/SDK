@@ -12,13 +12,16 @@
 
         <engine:Button name="preview-button" class="body-inspector-preview-button" />
 
-        <engine:Foldout text="Quick Tools" value="false" class="body-inspector-quick-tools">
+        <engine:Foldout text="Quick Tools" value="false" class="body-inspector-section body-inspector-quick-tools">
             <engine:Button name="quick-preview-controls" text="Preview Controls" />
             <engine:Button name="quick-validation" text="Validation Report" />
-            <engine:Button name="quick-environment" text="Environment" />
             <engine:Button name="quick-biome-painter" text="Biome Painter" />
             <engine:Button name="quick-decal-manager" text="Decal Manager" />
             <engine:Button name="quick-discoverable-manager" text="Discoverable Manager" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Validation" value="true" class="body-inspector-section">
+            <engine:VisualElement name="validation-slot" />
         </engine:Foldout>
 
         <engine:VisualElement class="body-inspector-body-data">
@@ -53,7 +56,7 @@
                 <editor:PropertyField binding-path="core.data.MaxTerrainHeight" label="Max Terrain Height (m)" tooltip="Highest elevation reached by the heightmap, in meters relative to sea level. Used for camera and physics range calculations." />
                 <editor:PropertyField binding-path="core.data.TerrainHeightScale" label="Terrain Height Scale" tooltip="Multiplier applied to heightmap samples when computing terrain elevation. Increase to make mountains taller without re-baking the heightmap." />
                 <editor:PropertyField binding-path="core.data.TimeWarpAltitudeOffset" label="Time Warp Altitude Offset (m)" tooltip="Altitude above the atmosphere or terrain top at which time warp faster than 4x becomes available, in meters." />
-                <editor:PropertyField binding-path="core.data.SphereOfInfluenceCalculationType" label="SOI Calculation Type" tooltip="Method used to compute this body's sphere of influence. The numeric value selects between the available algorithms." />
+                <engine:VisualElement name="soi-calc-slot" />
             </engine:Foldout>
 
             <engine:Foldout text="Properties - Movement" class="body-inspector-section">

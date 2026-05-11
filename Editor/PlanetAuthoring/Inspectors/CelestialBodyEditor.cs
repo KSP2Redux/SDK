@@ -6,10 +6,12 @@ using KSP.Rendering.Planets;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.IO;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Windows;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -37,6 +39,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private VisualElement _readinessErrors;
         private Button _previewButton;
         private VisualElement _starSection;
+        private ValidationSectionBuilder.Handle _validationHandle;
 
         private CoreCelestialBodyData TargetData => (CoreCelestialBodyData)target;
         private GameObject TargetObject => TargetData.gameObject;
@@ -55,9 +58,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
             tree.CloneTree(root);
 
-            var styles = AssetDatabase.LoadAssetAtPath<StyleSheet>(SDKConfiguration.BasePath + UssPath);
-            if (styles != null)
-                root.styleSheets.Add(styles);
+            Ksp2UnityToolsStyles.Apply(root, UssPath);
 
             _readinessHeader = root.Q<Label>("readiness-header");
             _readinessErrors = root.Q<VisualElement>("readiness-errors");
@@ -65,15 +66,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _previewButton.clicked += OnPreviewButtonClicked;
             _starSection = root.Q<VisualElement>("star-section");
 
+            var validationSlot = root.Q<VisualElement>("validation-slot");
+            if (validationSlot != null)
+                _validationHandle = ValidationSectionBuilder.Mount(validationSlot);
+
             WireQuickToolButton(root, "quick-preview-controls", PreviewControlsWindow.ShowWindow);
             WireQuickToolButton(root, "quick-validation", PlanetAuthoringWindows.ShowValidationReportPlaceholder);
-            WireQuickToolButton(root, "quick-environment", PlanetAuthoringWindows.ShowEnvironmentPlaceholder);
             WireQuickToolButton(root, "quick-biome-painter", PlanetAuthoringWindows.ShowBiomePainterPlaceholder);
-            WireQuickToolButton(root, "quick-decal-manager", PlanetAuthoringWindows.ShowDecalManagerPlaceholder);
-            WireQuickToolButton(root, "quick-discoverable-manager", PlanetAuthoringWindows.ShowDiscoverableManagerPlaceholder);
+            WireQuickToolButton(root, "quick-decal-manager", PlanetAuthoringWindows.ShowDecalManager);
+            WireQuickToolButton(root, "quick-discoverable-manager", PlanetAuthoringWindows.ShowDiscoverableManager);
 
             BuildSaveSection(root.Q<VisualElement>("save-section-content"));
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));
+            BuildSoiCalculationField(root.Q<VisualElement>("soi-calc-slot"));
 
             root.Bind(serializedObject);
 
@@ -105,6 +110,44 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
 
             container.Add(new Button(SaveBodyJson) { text = "Save Body JSON" });
+        }
+
+        private void BuildSoiCalculationField(VisualElement slot)
+        {
+            if (slot == null)
+                return;
+
+            slot.Clear();
+
+            SerializedProperty prop = serializedObject.FindProperty("core.data.SphereOfInfluenceCalculationType");
+            if (prop == null)
+                return;
+
+            var labels = new System.Collections.Generic.List<string>
+            {
+                "Child of Body",
+                "Child of Galactic Origin",
+                "Force None",
+            };
+
+            int initial = Mathf.Clamp(prop.intValue, 0, labels.Count - 1);
+            var dropdown = new DropdownField("SOI Calculation Type", labels, initial)
+            {
+                tooltip = "Method used to compute this body's sphere of influence. " +
+                          "Child of Body: standard SOI relative to the parent body. " +
+                          "Child of Galactic Origin: SOI extends to one light-year (use for system primaries). " +
+                          "Force None: SOI is zero (no gravitational capture).",
+            };
+            dropdown.AddToClassList("unity-base-field__aligned");
+            dropdown.RegisterValueChangedCallback(evt =>
+            {
+                int idx = labels.IndexOf(evt.newValue);
+                if (idx < 0) return;
+                prop.intValue = idx;
+                serializedObject.ApplyModifiedProperties();
+            });
+
+            slot.Add(dropdown);
         }
 
         private void BuildMineDustColorField(VisualElement slot)
@@ -219,6 +262,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             UpdateReadinessSection(report);
             UpdatePreviewButton(report);
             UpdateStarSection();
+            if (_validationHandle.IsValid)
+                ValidationSectionBuilder.Refresh(_validationHandle, TargetData);
         }
 
         private void UpdateStarSection()
@@ -349,11 +394,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             AssetDatabase.ImportAsset(path);
 
             bool madeAddressable = false;
-            if (KSP2UnityTools.FindParentMod(target) is { } mod)
+            AddressableAssetGroup group = PlanetAuthoringAddressables.ResolveCelestialBodiesGroup(target);
+            if (group != null)
             {
                 madeAddressable = true;
                 AddressablesTools.MakeAddressable(
-                    mod.celestialBodiesGroup,
+                    group,
                     path,
                     bodyName + ".json",
                     "celestial_bodies"

@@ -8,6 +8,7 @@ using KSP.Rendering.Planets;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Modding;
+using Ksp2UnityTools.Editor.ScriptableObjects;
 using Redux.CelestialBody;
 using Uber.Scatter;
 using UnityEditor;
@@ -32,7 +33,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
     public class CreateCelestialBodyWindow : EditorWindow
     {
         private const string CelestialBodiesLabel = "celestial_bodies";
-        private const string ProjectLevelGroupName = "Celestial Bodies";
+        private static string ProjectLevelGroupName => PlanetAuthoringAddressables.CelestialBodiesGroupName;
 
         // Default sun direction for new authoring scenes. Tuned to cast visible shadows across a
         // sphere centered at world origin without being directly overhead or grazing.
@@ -68,13 +69,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             public static string LocalMaterial(string key) => $"{key}_Local.mat";
             public static string PqsData(string key) => $"{key}_PQS.asset";
             public static string PqsDecalData(string key) => $"{key}_PQSDecalData.asset";
+            public static string ScienceRegions(string key) => $"{key}_ScienceRegions.asset";
             public static string RootGameObject(string key) => $"Celestial.{key}";
         }
 
         /// <summary>
         /// Opens the Create Celestial Body wizard window.
         /// </summary>
-        [MenuItem("Assets/KSP2 Unity Tools/Celestial Body", priority = KSP2UnityTools.MenuPriority)]
+        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Celestial Body", priority = KSP2UnityTools.MenuPriority)]
         public static void ShowWindow()
         {
             var window = GetWindow<CreateCelestialBodyWindow>();
@@ -88,7 +90,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         /// <remarks>
         /// Migrates bodies without an existing authoring scene to the scene-based authoring flow.
         /// </remarks>
-        [MenuItem("Assets/KSP2 Unity Tools/Create Authoring Scene For Selected Celestial Body", priority = KSP2UnityTools.MenuPriority + 1)]
+        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Create Authoring Scene For Selected Celestial Body", priority = KSP2UnityTools.MenuPriority + 1)]
         public static void CreateAuthoringSceneForSelected()
         {
             UnityEngine.Object selected = Selection.activeObject;
@@ -263,7 +265,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             bool solid = CurrentBodyType() == BodyType.SolidSurface;
             string preview = $"Will create folder {folder} with:\n  {Naming.RootPrefab(key)}\n  {Naming.ScaledPrefab(key)}\n  {Naming.ScaledMaterial(key)}";
             if (solid)
-                preview += $"\n  {Naming.LocalPrefab(key)}\n  {Naming.LocalMaterial(key)}\n  {Naming.PqsData(key)}";
+                preview += $"\n  {Naming.LocalPrefab(key)}\n  {Naming.LocalMaterial(key)}\n  {Naming.PqsData(key)}\n  {Naming.ScienceRegions(key)}";
             _statusLabel.text = preview;
             _statusLabel.style.color = OkColor;
             _createButton.SetEnabled(true);
@@ -308,6 +310,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 Material localMaterial = solid ? CreateLocalMaterial(key, folder, localShader, createdPaths) : null;
                 PQSData pqsData = solid ? CreatePqsData(key, folder, localMaterial, createdPaths) : null;
                 PQSDecalData decalData = solid ? CreatePqsDecalData(key, folder, createdPaths) : null;
+                if (solid)
+                    CreateScienceRegionData(key, folder, createdPaths);
 
                 GameObject scaledPrefab = CreateScaledPrefab(key, folder, scaledMaterial, createdPaths);
                 GameObject localPrefab = solid ? CreateLocalPrefab(key, folder, pqsData, decalData, createdPaths) : null;
@@ -411,6 +415,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             return data;
         }
 
+        private static ScienceRegionData CreateScienceRegionData(string key, string folder, List<string> createdPaths)
+        {
+            ScienceRegionData data = ScriptableObject.CreateInstance<ScienceRegionData>();
+            // Pre-populate BodyName so the asset locator can match this asset to the new body
+            // without the artist having to fill it in manually.
+            data.information.BodyName = key;
+            data.information.Version = "1.0";
+            // Sensible situation-data defaults. Scalars at 1.0 = situation is enabled and unscaled
+            // (0 disables the situation entirely, which is rarely what the artist wants for a fresh body).
+            // Altitudes stay at 0 because they're meaningful only relative to the body's final radius,
+            // which the artist sets after creation.
+            data.information.SituationData = new KSP.Game.Science.CBSituationData
+            {
+                HighOrbitMaxAltitude = 0,
+                LowOrbitMaxAltutude = 0,
+                AtmosphereMaxAltutude = 0,
+                CelestialBodyScalar = 1f,
+                HighOrbitScalar = 1f,
+                LowOrbitScalar = 1f,
+                AtmosphereScalar = 1f,
+                SplashedScalar = 1f,
+                LandedScalar = 1f,
+            };
+            string path = folder + "/" + Naming.ScienceRegions(key);
+            AssetDatabase.CreateAsset(data, path);
+            createdPaths.Add(path);
+            return data;
+        }
+
         private static GameObject CreateScaledPrefab(string key, string folder, Material scaledMaterial, List<string> createdPaths)
         {
             GameObject temp = new("Scaled");
@@ -449,8 +482,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 temp.AddComponent<CelestialSimulationMaterialReplacer>();
                 temp.AddComponent<PqsTerrain>();
                 PQSDecalController decalController = temp.AddComponent<PQSDecalController>();
+                // AddComponent leaves enabled=true by default, but make this explicit so a future
+                // class-level [DisallowMultipleComponent] / OnValidate flip can't quietly disable it.
+                decalController.enabled = true;
                 decalController.PqsDecalData = decalData;
                 decalController.Pqs = pqs;
+                decalController.SharedHeightmap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Flat Decal.png");
+                decalController.SharedAlphaMap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Full Decal Alpha.png");
 
                 string path = folder + "/" + Naming.LocalPrefab(key);
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
@@ -515,6 +553,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             {
                 GameObject localInstance = (GameObject)PrefabUtility.InstantiatePrefab(localPrefab, authoringScene);
                 localInstance.transform.SetParent(rootInstance.transform);
+                // Pre-wire the controller's body reference so DecalControllerHelper doesn't need
+                // its scene-walk fallback for newly-authored bodies. Without this, the controller's
+                // CoreCelestialBodyData stays null until something calls Resolve.
+                var bodyData = rootInstance.GetComponentInChildren<CoreCelestialBodyData>(true);
+                var decalController = localInstance.GetComponentInChildren<PQSDecalController>(true);
+                if (decalController != null && bodyData != null && decalController.CoreCelestialBodyData == null)
+                {
+                    decalController.CoreCelestialBodyData = bodyData;
+                    EditorUtility.SetDirty(decalController);
+                }
             }
 
             EditorSceneManager.SaveScene(authoringScene, scenePath);

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="sdk-root science-region-root">
+
+        <engine:Foldout text="Identity" value="true" class="sdk-section">
+            <editor:PropertyField name="body-name-field" binding-path="information.BodyName" label="Body name" tooltip="Body this Science Region asset binds to. Must match the CoreCelestialBodyData.bodyName for the runtime to load it." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField name="version-field" binding-path="information.Version" label="Version" tooltip="Free-form version string written into the baked JSON. Bump when shipping breaking science data changes." class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Situation data" value="false" class="sdk-section">
+            <editor:PropertyField binding-path="information.SituationData.HighOrbitMaxAltitude" label="High orbit max (m)" tooltip="Vessels above this altitude classify as 'beyond high orbit'. Default 0 means unset. Fill in based on the body's radius." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.LowOrbitMaxAltutude" label="Low orbit max (m)" tooltip="Vessels above this altitude classify as 'high orbit'. Below this and above atmosphere top, they classify as 'low orbit'." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.AtmosphereMaxAltutude" label="Atmosphere max (m)" tooltip="Vessels below this altitude (and above the surface) classify as 'in atmosphere'. Set to 0 for vacuum bodies." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.CelestialBodyScalar" label="Body scalar" tooltip="Multiplier applied to all science gathered on this body. 1.0 = unchanged." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.HighOrbitScalar" label="High orbit scalar" tooltip="Multiplier for science gathered in high orbit. 0 disables the situation entirely (no science possible there)." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.LowOrbitScalar" label="Low orbit scalar" tooltip="Multiplier for science gathered in low orbit." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.AtmosphereScalar" label="Atmosphere scalar" tooltip="Multiplier for science gathered within the atmosphere. 0 for vacuum bodies." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.SplashedScalar" label="Splashed scalar" tooltip="Multiplier for science gathered while splashed down (on an ocean). 0 for bodies without oceans." class="sdk-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="information.SituationData.LandedScalar" label="Landed scalar" tooltip="Multiplier for science gathered while landed on the surface." class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Source map" value="true" class="sdk-section">
+            <editor:PropertyField name="source-map-field" binding-path="scienceRegionMap" label="Region map" tooltip="Equirectangular color-coded texture. Each region claims a unique color. The bake step nearest-color-matches every pixel into a MapId byte array." class="sdk-field unity-base-field__aligned" />
+            <engine:Label name="source-map-stats-label" class="sdk-hint" />
+            <engine:VisualElement name="source-map-warnings" />
+            <engine:Button name="import-and-cluster-button" text="Import &amp; cluster colors..." tooltip="Run k-means on the source texture to discover region clusters automatically. Primary authoring path: drop in a color-coded image, let the tool extract regions, name them, and bake." class="sdk-action-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Regions" value="true" class="sdk-section">
+            <engine:Label name="regions-summary-label" class="sdk-hint" />
+            <engine:VisualElement name="regions-list" />
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="add-region-button" text="+ Add region" tooltip="Add a new empty region row. Useful when manually authoring without the import-and-cluster flow." />
+                <engine:Button name="recluster-button" text="Re-cluster..." tooltip="Re-run import-and-cluster against the current source map. Merge mode preserves your existing region names and scalars while picking up new colors." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Discoverables" value="false" class="sdk-section">
+            <engine:Label name="discoverables-summary-label" class="sdk-hint" />
+            <engine:VisualElement name="discoverables-list" />
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="place-discoverable-button" text="+ Place new on planet" tooltip="Activate the Place Discoverable scene-view tool. Click on the planet to drop a discoverable at that surface point. The region Id auto-fills from the baked map." />
+                <engine:Button name="open-discoverable-manager-button" text="Open Discoverable Manager" tooltip="Open the dedicated window with filter / region / sort for this body's discoverables. Each row has Go (frame the camera at its lat/lon) and Delete." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Bake" value="true" class="sdk-section">
+            <engine:Label name="bake-paths-label" class="sdk-hint" />
+            <engine:Button name="bake-button" text="Bake" tooltip="Write three artifacts next to this asset: regions JSON, discoverables JSON, baked region map. Filenames derive from the lowercased body name. Each artifact is registered with addressables when a parent Mod exists." class="sdk-action-button" />
+            <engine:Label name="bake-status-label" class="sdk-hint" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

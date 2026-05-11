@@ -33,7 +33,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private const string UxmlPath = "/Assets/Windows/PropertyFields/SmallLayerMatrix.uxml";
         private const string UssPath = "/Assets/Windows/PropertyFields/PropertyFields.uss";
 
-        private readonly SerializedObject _pqsDataSO;
+        // SerializedObject of the PQSDataAuthoring sidecar - tile texture fields bind here, not to PQSData.
+        private readonly SerializedObject _authoringSO;
         private readonly Material _material;
 
         private readonly VisualElement[] _cells = new VisualElement[16];
@@ -69,13 +70,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         public int SelectedLayer => _selectedLayer;
 
         /// <summary>
-        /// Creates a new matrix view bound to the given PQSData serialized object and surface material.
+        /// Creates a new matrix view bound to the given PQSDataAuthoring serialized object and surface material.
         /// </summary>
-        /// <param name="pqsDataSO">The serialized PQSData hosting the small-tile property arrays.</param>
+        /// <param name="pqsDataAuthoringSO">The serialized PQSDataAuthoring sidecar hosting the small-tile property arrays.</param>
         /// <param name="material">The surface material used to read window and weight summary values.</param>
-        public SmallLayerMatrix(SerializedObject pqsDataSO, Material material)
+        public SmallLayerMatrix(SerializedObject pqsDataAuthoringSO, Material material)
         {
-            _pqsDataSO = pqsDataSO;
+            _authoringSO = pqsDataAuthoringSO;
             _material = material;
 
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
@@ -116,7 +117,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 allowSceneObjects = false,
             };
             albedoField.AddToClassList("small-layer-matrix-cell-tex");
-            var prop = _pqsDataSO?.FindProperty(PqsAuthoringNaming.SmallAlbedoTilePath(slot));
+            var prop = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallAlbedoTilePath(slot));
             if (prop != null)
             {
                 albedoField.BindProperty(prop);
@@ -156,9 +157,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return;
 
             var hasAlbedo = false;
-            if (_pqsDataSO != null)
+            if (_authoringSO != null)
             {
-                var prop = _pqsDataSO.FindProperty(PqsAuthoringNaming.SmallAlbedoTilePath(slot));
+                var prop = _authoringSO.FindProperty(PqsAuthoringNaming.SmallAlbedoTilePath(slot));
                 hasAlbedo = prop != null && prop.objectReferenceValue != null;
             }
 

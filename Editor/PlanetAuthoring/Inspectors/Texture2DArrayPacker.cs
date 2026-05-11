@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEngine;
@@ -104,15 +105,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (pqsData == null || surfaceMaterial == null)
                 return PackResult.Fail("PQSData or surface material is null.");
 
-            var hmi = pqsData.heightMapInfo;
-            if (hmi == null)
-                return PackResult.Fail("PQSData heightMapInfo is null.");
+            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
+            if (authoring == null)
+                return PackResult.Fail("Could not resolve PQSData authoring sidecar.");
 
             var sources = new Texture2D[8];
             for (var i = 0; i < 4; i++)
-                sources[i] = (hmi.subzone3Normals != null && i < hmi.subzone3Normals.Length) ? hmi.subzone3Normals[i] : null;
+                sources[i] = (authoring.subzone3Normals != null && i < authoring.subzone3Normals.Length) ? authoring.subzone3Normals[i] : null;
             for (var i = 0; i < 4; i++)
-                sources[4 + i] = (hmi.subzone4Normals != null && i < hmi.subzone4Normals.Length) ? hmi.subzone4Normals[i] : null;
+                sources[4 + i] = (authoring.subzone4Normals != null && i < authoring.subzone4Normals.Length) ? authoring.subzone4Normals[i] : null;
 
             if (AllNull(sources))
                 return PackResult.Ok();
@@ -158,18 +159,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (pqsData == null || surfaceMaterial == null)
                 return PackResult.Fail("PQSData or surface material is null.");
 
-            var hmi = pqsData.heightMapInfo;
-            if (hmi == null)
-                return PackResult.Fail("PQSData heightMapInfo is null.");
+            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
+            if (authoring == null)
+                return PackResult.Fail("Could not resolve PQSData authoring sidecar.");
 
             var albedoSources = new Texture2D[16];
             var normalSources = new Texture2D[16];
             var metalSources = new Texture2D[16];
             for (var i = 0; i < 16; i++)
             {
-                albedoSources[i] = (hmi.smallAlbedoTiles != null && i < hmi.smallAlbedoTiles.Length) ? hmi.smallAlbedoTiles[i] : null;
-                normalSources[i] = (hmi.smallNormalTiles != null && i < hmi.smallNormalTiles.Length) ? hmi.smallNormalTiles[i] : null;
-                metalSources[i] = (hmi.smallMetalTiles != null && i < hmi.smallMetalTiles.Length) ? hmi.smallMetalTiles[i] : null;
+                albedoSources[i] = (authoring.smallAlbedoTiles != null && i < authoring.smallAlbedoTiles.Length) ? authoring.smallAlbedoTiles[i] : null;
+                normalSources[i] = (authoring.smallNormalTiles != null && i < authoring.smallNormalTiles.Length) ? authoring.smallNormalTiles[i] : null;
+                metalSources[i] = (authoring.smallMetalTiles != null && i < authoring.smallMetalTiles.Length) ? authoring.smallMetalTiles[i] : null;
             }
 
             for (var cell = 0; cell < 16; cell++)
@@ -388,35 +389,32 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         public static void MigrateFromPackedState(PQSData pqsData, Material surfaceMaterial)
         {
             if (pqsData == null || surfaceMaterial == null) return;
-            var hmi = pqsData.heightMapInfo;
-            if (hmi == null) return;
+            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
+            if (authoring == null) return;
 
-            MigrateSubzoneNormals(pqsData, surfaceMaterial, hmi);
-            MigrateSmallTiles(pqsData, surfaceMaterial, hmi);
+            MigrateSubzoneNormals(pqsData, surfaceMaterial, authoring);
+            MigrateSmallTiles(pqsData, surfaceMaterial, authoring);
         }
 
-        private static void MigrateSubzoneNormals(PQSData pqsData, Material material, PQSData.HeightMapInfo hmi)
+        private static void MigrateSubzoneNormals(PQSData pqsData, Material material, PQSDataAuthoring authoring)
         {
-            if (!AllNull(hmi.subzone3Normals) || !AllNull(hmi.subzone4Normals)) return;
+            if (!AllNull(authoring.subzone3Normals) || !AllNull(authoring.subzone4Normals)) return;
 
             var sz3 = material.GetVector("_Subzone3NormalIndices");
             var sz4 = material.GetVector("_Subzone4NormalIndices");
 
-            var any3 = MigrateArrayFromMaterial(pqsData, material, SubzoneNormalsArrayName, hmi.subzone3Normals, i => (int)sz3[i]);
-            var any4 = MigrateArrayFromMaterial(pqsData, material, SubzoneNormalsArrayName, hmi.subzone4Normals, i => (int)sz4[i]);
+            var any3 = MigrateArrayFromMaterial(pqsData, material, SubzoneNormalsArrayName, authoring.subzone3Normals, i => (int)sz3[i]);
+            var any4 = MigrateArrayFromMaterial(pqsData, material, SubzoneNormalsArrayName, authoring.subzone4Normals, i => (int)sz4[i]);
 
             if (any3 || any4)
-            {
-                EditorUtility.SetDirty(pqsData);
-                AssetDatabase.SaveAssetIfDirty(pqsData);
-            }
+                EditorUtility.SetDirty(authoring);
         }
 
-        private static void MigrateSmallTiles(PQSData pqsData, Material material, PQSData.HeightMapInfo hmi)
+        private static void MigrateSmallTiles(PQSData pqsData, Material material, PQSDataAuthoring authoring)
         {
-            if (!AllNull(hmi.smallAlbedoTiles) ||
-                !AllNull(hmi.smallNormalTiles) ||
-                !AllNull(hmi.smallMetalTiles))
+            if (!AllNull(authoring.smallAlbedoTiles) ||
+                !AllNull(authoring.smallNormalTiles) ||
+                !AllNull(authoring.smallMetalTiles))
                 return;
 
             var albedo = material.GetTexture(SmallAlbedoArrayName) as Texture2DArray;
@@ -432,15 +430,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             int IndexFor(int cell) => (int)perBiomeIndices[cell / 4][cell % 4];
 
             var any = false;
-            if (albedo != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallAlbedoArrayName, hmi.smallAlbedoTiles, IndexFor);
-            if (normal != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallNormalArrayName, hmi.smallNormalTiles, IndexFor);
-            if (metal != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallMetalArrayName, hmi.smallMetalTiles, IndexFor);
+            if (albedo != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallAlbedoArrayName, authoring.smallAlbedoTiles, IndexFor);
+            if (normal != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallNormalArrayName, authoring.smallNormalTiles, IndexFor);
+            if (metal != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallMetalArrayName, authoring.smallMetalTiles, IndexFor);
 
             if (any)
-            {
-                EditorUtility.SetDirty(pqsData);
-                AssetDatabase.SaveAssetIfDirty(pqsData);
-            }
+                EditorUtility.SetDirty(authoring);
         }
 
         // Walks destArray and fills each cell from the corresponding slice of the material's

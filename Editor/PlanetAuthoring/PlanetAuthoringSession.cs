@@ -27,11 +27,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             /// <summary>Unable to classify the body (missing or invalid CoreCelestialBodyData).</summary>
             Unknown,
-            /// <summary>Solid-surface body. Driven by the PQS pipeline.</summary>
+            /// <summary>Solid-surface body, driven by the PQS pipeline.</summary>
             SolidSurface,
-            /// <summary>Gas giant. Scaled-space prefab only, no PQS.</summary>
+            /// <summary>Gas giant, scaled-space prefab only with no PQS.</summary>
             GasGiant,
-            /// <summary>Star. Scaled-space prefab only, no PQS.</summary>
+            /// <summary>Star, scaled-space prefab only with no PQS.</summary>
             Star,
         }
 
@@ -110,7 +110,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             /// <summary>Gets the body classification.</summary>
             public BodyClass Class { get; }
-            /// <summary>Gets the reasons preview cannot start. Empty when ready.</summary>
+            /// <summary>Gets the reasons preview cannot start, or an empty list when ready.</summary>
             public IReadOnlyList<ReadinessError> Errors { get; }
             /// <summary>Gets a value indicating whether preview can start.</summary>
             public bool IsReady => Errors.Count == 0;
@@ -140,6 +140,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         private double _lastTickTime;
         private bool _hasSnapshot;
+        private Quaternion _initialBodyRotation;
 
         // Whitelist of PQS fields the boot harness writes. RevertPropertyOverride at End clears
         // the resulting prefab-instance modifications, leaving user edits to other fields alone.
@@ -177,11 +178,28 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         private static void RevertFieldOverrides(UnityEngine.Object component, string[] fields)
         {
             var so = new SerializedObject(component);
-            foreach (string field in fields)
+            foreach (var field in fields)
             {
-                SerializedProperty prop = so.FindProperty(field);
+                var prop = so.FindProperty(field);
                 if (prop != null)
+                {
                     PrefabUtility.RevertPropertyOverride(prop, InteractionMode.AutomatedAction);
+                }
+            }
+        }
+
+        // Clears a framing-induced prefab override on the body transform's local rotation. Mirrors
+        // the End() restore path so a prior crash mid-rotation doesn't leak a non-identity rotation
+        // forward into TryBootPqs's _initialBodyRotation snapshot.
+        private static void RevertBodyRotationOverride(CoreCelestialBodyData body)
+        {
+            if (body == null) return;
+            if (!PrefabUtility.IsPartOfPrefabInstance(body.transform)) return;
+            var so = new SerializedObject(body.transform);
+            var prop = so.FindProperty("m_LocalRotation");
+            if (prop != null)
+            {
+                PrefabUtility.RevertPropertyOverride(prop, InteractionMode.AutomatedAction);
             }
         }
 
@@ -212,7 +230,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 return new ReadinessReport(BodyClass.Unknown, errors);
             }
 
-            BodyClass bodyClass = ClassifyBody(body);
+            var bodyClass = ClassifyBody(body);
 
             if (bodyClass == BodyClass.SolidSurface)
             {
@@ -267,14 +285,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // resolves outside of play mode. Idempotent.
             ReduxAssets.ConfigureEditorAssets();
 
-            ReadinessReport report = CheckReadiness(body);
+            var report = CheckReadiness(body);
             if (!report.IsReady)
             {
                 ShowReadinessFailure(body, report);
                 return null;
             }
 
-            PQS pqs = report.Class == BodyClass.SolidSurface
+            var pqs = report.Class == BodyClass.SolidSurface
                 ? body.GetComponentInChildren<PQS>(true)
                 : null;
 
@@ -300,6 +318,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // CreateColliders=false override would skip the collider native containers and NRE.
             RevertBootHarnessOverrides(Pqs);
             _hasSnapshot = true;
+            // Revert any leaked body rotation override BEFORE snapshotting so a previous crashed
+            // session doesn't bake a framing-induced rotation in as the new "initial". The sun's
+            // baseline lives in SunCoupling itself (captured when Preview Controls registers the
+            // Light), so the session just calls ResetToBaseline on End.
+            RevertBodyRotationOverride(Body);
+            _initialBodyRotation = Body != null ? Body.transform.rotation : Quaternion.identity;
 
             if (Pqs.settings == null)
                 Pqs.settings = EditorPqsBootstrap.PQSGlobalSettings;
@@ -307,6 +331,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             PrepareRendererForBoot(Pqs);
             BindInitialSceneView();
+            // Initialize the decal controller's NativeArray so the first PQS subdivision job does not NRE on it.
+            Tools.DecalControllerHelper.Resolve(Pqs);
 
             if (!Pqs.BootForEditor())
             {
@@ -344,14 +370,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             // Bind a camera target before BootForEditor so the initial UpdateQuads runs with
             // HasPrimaryTarget true and its TempJob allocations dispose normally.
-            SceneView sv = SceneView.lastActiveSceneView;
+            var sv = SceneView.lastActiveSceneView;
             if (sv != null)
+            {
                 CameraDriver?.Bind(sv);
+            }
         }
 
         private static void ShowReadinessFailure(CoreCelestialBodyData body, ReadinessReport report)
         {
-            string messages = string.Join("\n- ", report.Errors.Select(e => e.Message));
+            var messages = string.Join("\n- ", report.Errors.Select(e => e.Message));
             EditorUtility.DisplayDialog(
                 "Cannot start planet preview",
                 $"Preview is unavailable for '{body.name}':\n\n- " + messages,
@@ -389,6 +417,28 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 Pqs.isActive = true;
                 _hasSnapshot = false;
             }
+            // Revert body rotation. If the body is a prefab instance, the rotation may have been
+            // written as a prefab override during framing. RevertPropertyOverride clears that so the
+            // prefab stays clean. Otherwise just write the snapshot back.
+            if (Body != null)
+            {
+                if (PrefabUtility.IsPartOfPrefabInstance(Body.transform))
+                {
+                    var so = new SerializedObject(Body.transform);
+                    var prop = so.FindProperty("m_LocalRotation");
+                    if (prop != null)
+                    {
+                        PrefabUtility.RevertPropertyOverride(prop, InteractionMode.AutomatedAction);
+                    }
+                }
+                else
+                {
+                    Body.transform.rotation = _initialBodyRotation;
+                }
+            }
+            // Sun baseline is owned by SunCoupling (captured when the Light was registered) so the
+            // restore is a single call.
+            SunCoupling.ResetToBaseline();
             PreviewState?.Clear();
             IsAlive = false;
             if (Active == this)
@@ -400,7 +450,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         private void Subscribe()
         {
             EditorApplication.update += Tick;
-            SceneView.duringSceneGui += OnSceneGui;
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             // OnRenderObject does not fire for the PQS in the editor scene context. Drive DrawPlanet
@@ -411,7 +460,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         private void Unsubscribe()
         {
             EditorApplication.update -= Tick;
-            SceneView.duringSceneGui -= OnSceneGui;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             Camera.onPreCull -= OnCameraPreCull;
@@ -441,6 +489,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // Body went away (deleted, scene closed). Tear down rather than NRE.
             if (Body == null || (Class == BodyClass.SolidSurface && Pqs == null))
             {
+                Debug.LogWarning("[PlanetAuthoringSession] Body or PQS went away mid-session. Ending preview.");
                 End();
                 return;
             }
@@ -450,7 +499,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 return;
             _lastTickTime = now;
 
-            SceneView sv = SceneView.lastActiveSceneView;
+            var sv = SceneView.lastActiveSceneView;
             if (sv == null)
                 return;
 
@@ -470,14 +519,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 PlanetPreviewState.RaiseActiveChanged();
         }
 
-        private void OnSceneGui(SceneView sv)
-        {
-            if (!IsAlive)
-                return;
-
-            // Hook for overlay rendering and scene-view handles.
-        }
-
         private void OnBeforeAssemblyReload()
         {
             // Release native resources before domain reload drops static fields.
@@ -494,13 +535,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         private static BodyClass ClassifyBody(CoreCelestialBodyData body)
         {
             var data = body.Core?.data;
-            if (data == null)
-                return BodyClass.Unknown;
-            if (data.isStar)
-                return BodyClass.Star;
-            if (!data.hasSolidSurface)
-                return BodyClass.GasGiant;
-            return BodyClass.SolidSurface;
+            return data switch
+            {
+                null => BodyClass.Unknown,
+                { isStar: true } => BodyClass.Star,
+                { hasSolidSurface: false } => BodyClass.GasGiant,
+                _ => BodyClass.SolidSurface,
+            };
         }
     }
 }
