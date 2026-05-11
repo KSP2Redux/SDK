@@ -1,0 +1,139 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: vfx_rcs_mesh_bell
+  m_Shader: {fileID: 4800000, guid: 25a5e69708cb4bb4e898225d84a60102, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _DistortionTexture:
+        m_Texture: {fileID: 2800000, guid: 60f1304c070add941afcf70c01eea68f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: 291f89957399fe4488e428b770b643b9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TracesTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AccelerationScaleFactor: 0
+    - _Alpha: 1
+    - _BendCenterOffset: 0
+    - _BendCenterOffsetMultipler: 0
+    - _BendRotationOffset: 1
+    - _BottomErosionAmount: 1
+    - _BottomErosionFallout: 0.2384171
+    - _BottomErosionOffset: 0.2945153
+    - _BumpScale: 1
+    - _CameraDistanceFadeLength: 50
+    - _CameraDistanceFalloff: 1
+    - _CameraDistanceTopGradient: 0
+    - _ColorMask: 15
+    - _ColorTintBoost: 1
+    - _ColorTintEndGradient: 0.12
+    - _ColorTintEndOffset: 0
+    - _ColorTintFalloff: 0.1
+    - _ColorTintGradient: 1
+    - _ColorTintMiddlePos: 0.6
+    - _ColorTintOffset: 0.22
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _ErosionAmount: 0.6
+    - _ErosionFalloffGradient: 0.5
+    - _ErosionPosOffset: 0.15
+    - _FresnelInner: 0
+    - _FresnelInnerBeneath: 0
+    - _FresnelOuter: 0
+    - _FresnelOuterBeneath: 0
+    - _FresnelOuterErosionAmount: 0
+    - _FresnelOuterErosionFalloff: 0.001
+    - _FresnelOuterErosionOffset: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _GradientFalloffBottom: 0.373
+    - _GradientFalloffTop: 0
+    - _GradientOffsetBottom: 0
+    - _GradientOffsetTop: 0
+    - _Metallic: 0
+    - _Mode: 0
+    - _NoiseAmount: 0
+    - _NoiseStrength: 1.0372223
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _ScrollSpeedX: 0.4
+    - _ScrollSpeedY: 4.5
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TdotVScale: 3
+    - _TextureOffsetX: 0.8203947
+    - _TextureOffsetY: 0.60004157
+    - _TextureScale: 1
+    - _TextureScaleX: 6
+    - _TextureScaleY: 2
+    - _TopGradientFalloff: 0
+    - _TopGradientOffset: 0
+    - _TopGradientPosOffset: 0
+    - _TracesAmount: 0
+    - _TracesBottomFalloff: 0
+    - _TracesBottomOffset: 0
+    - _TracesCount: 0
+    - _TracesFresnelOuter: 0
+    - _TracesLength: 0
+    - _TracesStrength: 0
+    - _TracesThickness: 0
+    - _TracesTopFalloff: 0
+    - _TracesTopFalloffGradient: 0
+    - _TracesTopOffset: 0
+    - _TracesTopPosOffset: 0
+    - _UVSec: 0
+    - _UseUIAlphaClip: 0
+    - _VertexDispContrast: 2
+    - _VertexDispFalloff: 0
+    - _VertexDispFalloffGradient: 0.1
+    - _VertexDispOffset: 0
+    - _VertexDispPosOffset: 0.43863854
+    - _VertexDispScale: 2
+    - _ZWrite: 1
+    - __dirty: 0
+    m_Colors:
+    - _AccelerationDir: {r: 0, g: 0, b: 0, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorTintEnd: {r: 0.40945762, g: 0.45847437, b: 0.6320754, a: 1}
+    - _ColorTintMiddle: {r: 0.21374744, g: 0.27949163, b: 0.5188679, a: 1}
+    - _ColorTintStart: {r: 1.3760512, g: 2.1405241, b: 4.867144, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

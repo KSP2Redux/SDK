@@ -17,6 +17,7 @@ namespace Ksp2UnityTools.Editor
         public int multiJointMaxJoint;
         public float multiJointRadiusOffset;
         public int size;
+        public string sizeKey;
         public float visualSize;
         public bool isResourceCrossFeed;
         public bool isRigid;
