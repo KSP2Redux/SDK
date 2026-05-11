@@ -372,25 +372,28 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         {
             bool changed = false;
 
+            EditorGUI.BeginChangeCheck();
+            PartIconCameraPreset preset = (PartIconCameraPreset)EditorGUILayout.EnumPopup("Preset", _iconPreviewPreset);
+            if (EditorGUI.EndChangeCheck())
+            {
+                _iconPreviewPreset = preset;
+                settings.ApplyPreset(preset);
+                changed = true;
+            }
+
+            EditorGUI.BeginChangeCheck();
+            settings.cameraPadding = EditorGUILayout.Slider("Padding", settings.cameraPadding, 0.6f, 3f);
+            changed |= EditorGUI.EndChangeCheck();
+
             _iconPreviewCameraFoldout = DrawIconPreviewSectionFoldout(_iconPreviewCameraFoldout, "Camera");
             if (_iconPreviewCameraFoldout)
             {
                 using (new EditorGUI.IndentLevelScope())
                 {
                     EditorGUI.BeginChangeCheck();
-                    PartIconCameraPreset preset = (PartIconCameraPreset)EditorGUILayout.EnumPopup("Preset", _iconPreviewPreset);
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        _iconPreviewPreset = preset;
-                        settings.ApplyPreset(preset);
-                        changed = true;
-                    }
-
-                    EditorGUI.BeginChangeCheck();
                     settings.cameraYawDegrees = EditorGUILayout.Slider("Yaw", settings.cameraYawDegrees, -180f, 180f);
                     settings.cameraPitchDegrees = EditorGUILayout.Slider("Pitch", settings.cameraPitchDegrees, -80f, 80f);
                     settings.cameraOrbitDegrees = EditorGUILayout.Slider("Roll", settings.cameraOrbitDegrees, -180f, 180f);
-                    settings.cameraPadding = EditorGUILayout.Slider("Padding", settings.cameraPadding, 1f, 1.6f);
                     changed |= EditorGUI.EndChangeCheck();
                 }
             }
