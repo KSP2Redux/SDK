@@ -12,6 +12,7 @@ using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Redux.Assets.PartIconRendering;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -32,6 +33,16 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
 
         public static bool DragCubeGizmos = true;
+
+        private bool _iconPreviewFoldout = true;
+        private bool _iconPreviewCameraFoldout;
+        private bool _iconPreviewLightingFoldout;
+        private bool _iconPreviewColorsFoldout;
+        private bool _iconPreviewOutlineFoldout;
+        private PartIconCameraPreset _iconPreviewPreset = PartIconCameraPreset.Diagonal;
+        private PartIconRenderSettings _iconPreviewSettings;
+        private Texture2D _iconPreviewTexture;
+        private bool _iconPreviewRefreshQueued;
 
         // Just initialize all the conversion stuff
         private static void Initialize()
@@ -55,9 +66,18 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private CorePartData TargetData => target as CorePartData;
         private PartCore TargetCore => TargetData.Core;
 
+        private PartIconRenderSettings IconPreviewSettings => _iconPreviewSettings ??= PartIconRenderSettings.CreateDefault();
+
+        private void OnDisable()
+        {
+            EditorApplication.delayCall -= ProcessQueuedIconPreviewRefresh;
+            DestroyIconPreview();
+        }
+
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
+            DrawIconPreview();
             GUILayout.Label("Attach Node Settings");
             if (GUILayout.Button("Auto Generate AttachNodes"))
             {
@@ -127,11 +147,14 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             }
 
             string jsonPath = Path.GetDirectoryName(prefabPath) + $"/{TargetData.name}.json";
-            if (!GUILayout.Button("Save Part JSON"))
+            if (GUILayout.Button("Save Part JSON"))
             {
-                return;
+                SavePartJson(jsonPath);
             }
+        }
 
+        private void SavePartJson(string jsonPath)
+        {
             if (!_initialized)
             {
                 Initialize();
@@ -199,6 +222,297 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                     : $"Json is at: {path}",
                 "ok"
             );
+        }
+
+        private void SavePartIcon(string prefabPath)
+        {
+            if (!_initialized)
+            {
+                Initialize();
+            }
+
+            if (TargetCore == null)
+            {
+                return;
+            }
+
+            string partName = GetTargetPartName();
+            PartIconRenderSettings settings = IconPreviewSettings.Clone();
+            settings.backgroundColor = new Color(0f, 0f, 0f, 0f);
+            settings.supersampleScale = 2;
+            settings.makeTextureNoLongerReadable = false;
+
+            Texture2D texture = PartIconRenderer.RenderTexture2D(
+                partName + "-editor-saved-icon",
+                TargetCore,
+                TargetObject,
+                settings
+            );
+            if (texture == null)
+            {
+                EditorUtility.DisplayDialog("Icon Export Failed", "No renderable meshes were found for this part.", "ok");
+                return;
+            }
+
+            string path = Path.Combine(Path.GetDirectoryName(prefabPath), $"{partName}_icon.png")
+                .Replace('\\', '/');
+            try
+            {
+                Directory.CreateDirectory(new FileInfo(path).DirectoryName);
+                File.WriteAllBytes(path, texture.EncodeToPNG());
+            }
+            finally
+            {
+                DestroyImmediate(texture);
+            }
+
+            AssetDatabase.ImportAsset(path);
+            ConfigureIconTextureImporter(path);
+            bool madeAddressable = false;
+            if (KSP2UnityTools.FindParentMod(target) is { } mod)
+            {
+                madeAddressable = true;
+                AddressablesTools.MakeAddressable(
+                    mod.partsGroup,
+                    path,
+                    $"{partName}_icon.png"
+                );
+            }
+
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "Part Icon Exported",
+                !madeAddressable
+                    ? $"Icon is at: {path}, you need to manually make it addressable"
+                    : $"Icon is at: {path}",
+                "ok"
+            );
+        }
+
+        private string GetTargetPartName()
+        {
+            return !string.IsNullOrWhiteSpace(TargetCore?.data?.partName)
+                ? TargetCore.data.partName
+                : TargetObject.name;
+        }
+
+        private static void ConfigureIconTextureImporter(string path)
+        {
+            if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
+            {
+                return;
+            }
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.sRGBTexture = true;
+            importer.SaveAndReimport();
+        }
+
+        private void DrawIconPreview()
+        {
+            GUILayout.Space(8f);
+            _iconPreviewFoldout = EditorGUILayout.Foldout(_iconPreviewFoldout, "Part Icon Preview", true);
+            if (!_iconPreviewFoldout)
+            {
+                return;
+            }
+
+            PartIconRenderSettings settings = IconPreviewSettings;
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                if (_iconPreviewTexture == null)
+                {
+                    QueueIconPreviewRefresh();
+                }
+
+                Rect previewRect = GUILayoutUtility.GetRect(144f, 144f, GUILayout.ExpandWidth(false));
+                if (_iconPreviewTexture != null)
+                {
+                    EditorGUI.DrawPreviewTexture(previewRect, _iconPreviewTexture, null, ScaleMode.ScaleToFit);
+                }
+                else
+                {
+                    EditorGUI.HelpBox(previewRect, "No renderable meshes found.", MessageType.Info);
+                }
+
+                bool changed = DrawIconPreviewControls(settings);
+
+                string prefabPath = PathUtils.GetPrefabOrAssetPath(TargetData, TargetObject);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(prefabPath)))
+                    {
+                        if (GUILayout.Button("Save Part Icon"))
+                        {
+                            SavePartIcon(prefabPath);
+                        }
+                    }
+
+                    if (GUILayout.Button("Reset"))
+                    {
+                        DestroyIconPreview();
+                        _iconPreviewSettings = PartIconRenderSettings.CreateDefault();
+                        _iconPreviewPreset = PartIconCameraPreset.Diagonal;
+                        QueueIconPreviewRefresh();
+                    }
+                }
+
+                if (changed)
+                {
+                    QueueIconPreviewRefresh();
+                }
+            }
+        }
+
+        private bool DrawIconPreviewControls(PartIconRenderSettings settings)
+        {
+            bool changed = false;
+
+            _iconPreviewCameraFoldout = DrawIconPreviewSectionFoldout(_iconPreviewCameraFoldout, "Camera");
+            if (_iconPreviewCameraFoldout)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUI.BeginChangeCheck();
+                    PartIconCameraPreset preset = (PartIconCameraPreset)EditorGUILayout.EnumPopup("Preset", _iconPreviewPreset);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        _iconPreviewPreset = preset;
+                        settings.ApplyPreset(preset);
+                        changed = true;
+                    }
+
+                    EditorGUI.BeginChangeCheck();
+                    settings.cameraYawDegrees = EditorGUILayout.Slider("Yaw", settings.cameraYawDegrees, -180f, 180f);
+                    settings.cameraPitchDegrees = EditorGUILayout.Slider("Pitch", settings.cameraPitchDegrees, -80f, 80f);
+                    settings.cameraOrbitDegrees = EditorGUILayout.Slider("Roll", settings.cameraOrbitDegrees, -180f, 180f);
+                    settings.cameraPadding = EditorGUILayout.Slider("Padding", settings.cameraPadding, 1f, 1.6f);
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+            }
+
+            _iconPreviewLightingFoldout = DrawIconPreviewSectionFoldout(_iconPreviewLightingFoldout, "Lighting");
+            if (_iconPreviewLightingFoldout)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUI.BeginChangeCheck();
+                    settings.frontKeyIntensity = EditorGUILayout.Slider("Front Key", settings.frontKeyIntensity, 0f, 2f);
+                    settings.frontKeyDirection = EditorGUILayout.Vector3Field("Front Key Direction", settings.frontKeyDirection);
+                    settings.topKeyIntensity = EditorGUILayout.Slider("Top Key", settings.topKeyIntensity, 0f, 2f);
+                    settings.topKeyDirection = EditorGUILayout.Vector3Field("Top Key Direction", settings.topKeyDirection);
+                    settings.rimIntensity = EditorGUILayout.Slider("Rim", settings.rimIntensity, 0f, 1.5f);
+                    settings.rimDirection = EditorGUILayout.Vector3Field("Rim Direction", settings.rimDirection);
+                    settings.fillIntensity = EditorGUILayout.Slider("Uniform Fill", settings.fillIntensity, 0f, 1.5f);
+                    settings.keyLightSpreadDegrees = EditorGUILayout.Slider("Key Softness", settings.keyLightSpreadDegrees, 0f, 35f);
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+            }
+
+            _iconPreviewColorsFoldout = DrawIconPreviewSectionFoldout(_iconPreviewColorsFoldout, "Colors");
+            if (_iconPreviewColorsFoldout)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUI.BeginChangeCheck();
+                    settings.applyModuleColorPalette = EditorGUILayout.Toggle("Use Icon Palette", settings.applyModuleColorPalette);
+                    using (new EditorGUI.DisabledScope(!settings.applyModuleColorPalette))
+                    {
+                        settings.moduleColorBase = EditorGUILayout.ColorField("Base", settings.moduleColorBase);
+                        settings.moduleColorAccent = EditorGUILayout.ColorField("Accent", settings.moduleColorAccent);
+                    }
+
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+            }
+
+            _iconPreviewOutlineFoldout = DrawIconPreviewSectionFoldout(_iconPreviewOutlineFoldout, "Outline");
+            if (_iconPreviewOutlineFoldout)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUI.BeginChangeCheck();
+                    settings.addOutline = EditorGUILayout.Toggle("Enabled", settings.addOutline);
+                    using (new EditorGUI.DisabledScope(!settings.addOutline))
+                    {
+                        settings.outlineRadius = EditorGUILayout.IntSlider("Radius", settings.outlineRadius, 0, 12);
+                    }
+
+                    changed |= EditorGUI.EndChangeCheck();
+                }
+            }
+
+            return changed;
+        }
+
+        private static bool DrawIconPreviewSectionFoldout(bool value, string label)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Space(12f);
+                return EditorGUILayout.Foldout(value, label, true);
+            }
+        }
+
+        private void QueueIconPreviewRefresh()
+        {
+            if (_iconPreviewRefreshQueued)
+            {
+                return;
+            }
+
+            _iconPreviewRefreshQueued = true;
+            EditorApplication.delayCall -= ProcessQueuedIconPreviewRefresh;
+            EditorApplication.delayCall += ProcessQueuedIconPreviewRefresh;
+        }
+
+        private void ProcessQueuedIconPreviewRefresh()
+        {
+            _iconPreviewRefreshQueued = false;
+            if (target == null)
+            {
+                return;
+            }
+
+            RefreshIconPreview();
+            Repaint();
+        }
+
+        private void RefreshIconPreview()
+        {
+            DestroyIconPreview();
+            if (TargetObject == null || TargetCore == null)
+            {
+                return;
+            }
+
+            string partName = !string.IsNullOrWhiteSpace(TargetCore.data?.partName)
+                ? TargetCore.data.partName
+                : TargetObject.name;
+            PartIconRenderSettings settings = IconPreviewSettings.Clone();
+            settings.backgroundColor = new Color(0x1c / 255f, 0x1f / 255f, 0x27 / 255f, 1f);
+            settings.supersampleScale = 2;
+            _iconPreviewTexture = PartIconRenderer.RenderTexture2D(
+                partName + "-editor-preview",
+                TargetCore,
+                TargetObject,
+                settings
+            );
+        }
+
+        private void DestroyIconPreview()
+        {
+            if (_iconPreviewTexture == null)
+            {
+                return;
+            }
+
+            DestroyImmediate(_iconPreviewTexture);
+            _iconPreviewTexture = null;
         }
 
         [DrawGizmo(GizmoType.Active | GizmoType.Selected)]
