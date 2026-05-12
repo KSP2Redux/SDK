@@ -820,12 +820,22 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             );
 
             string partName = GetTargetPartName();
-            ReentryMeshGenerator.Result result = ReentryMeshGenerator.GenerateForPart(
-                TargetObject,
-                partName,
-                settings,
-                true
-            );
+            ReentryMeshGenerator.Result result;
+            try
+            {
+                result = ReentryMeshGenerator.GenerateForPart(
+                    TargetObject,
+                    partName,
+                    settings,
+                    true,
+                    (progress, status) =>
+                        EditorUtility.DisplayProgressBar($"Generating reentry meshes for {partName}", status, progress)
+                );
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
 
             if (!result.Success)
             {
@@ -833,8 +843,17 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 return;
             }
 
-            SaveGeneratedReentryMeshAssets(result, prefabPath, partName);
-            SavePrefabChanges(prefabPath);
+            try
+            {
+                EditorUtility.DisplayProgressBar(
+                    $"Generating reentry meshes for {partName}", "Saving generated meshes", 0.95f);
+                SaveGeneratedReentryMeshAssets(result, prefabPath, partName);
+                SavePrefabChanges(prefabPath);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
             _reentryMeshStatus =
                 $"Generated {result.Groups.Count} reentry groups from {result.SourceRendererCount} source renderers " +
                 $"and {result.SourceVertexCount} source vertices.";
