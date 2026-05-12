@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 53c24a9582403274280deffd7cf49dc5, type: 3}
-  m_Name: ClimbPreset
+  m_Name: Ladder_Climb
   m_EditorClassIdentifier: Assembly-CSharp::KSP.Game.ClimbPreset
   Flags: 0
-  Type: 1
+  Type: 0
