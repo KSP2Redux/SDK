@@ -33,9 +33,6 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private static bool _centerOfLiftGizmos = true;
         private static bool _attachNodeGizmos = true;
 
-
-        public static bool DragCubeGizmos = true;
-
         private bool _iconPreviewFoldout = true;
         private bool _iconPreviewCameraFoldout;
         private bool _iconPreviewLightingFoldout;
@@ -127,7 +124,6 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             _centerOfMassGizmos = EditorGUILayout.Toggle("CoM gizmos", _centerOfMassGizmos);
             _centerOfLiftGizmos = EditorGUILayout.Toggle("CoL gizmos", _centerOfLiftGizmos);
             _attachNodeGizmos = EditorGUILayout.Toggle("Attach Node Gizmos", _attachNodeGizmos);
-            DragCubeGizmos = EditorGUILayout.Toggle("Drag Cube Gizmos", DragCubeGizmos);
             if (EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(target);

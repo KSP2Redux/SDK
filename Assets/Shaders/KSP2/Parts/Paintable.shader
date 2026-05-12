@@ -2,51 +2,51 @@ Shader "KSP2/Parts/Paintable"
 {
     Properties
     {
-        [Header(Base PBR)]
-        _Color ("Color", Color) = (1,1,1,1)
+        [Header(Surface)]
+        _Color ("Albedo Tint", Color) = (1,1,1,1)
         _MainTex ("Albedo", 2D) = "white" {}
         [NoScaleOffset] _MetallicGlossMap ("Metallic / Smoothness", 2D) = "white" {}
         [Gamma] _Metallic ("Metallic Strength", Range(0, 1)) = 0
-        _GlossMapScale ("Smoothness Scale", Range(0, 1)) = 1
-        _MipBias ("Mip Bias", Range(0, 1)) = 0.8
+        _GlossMapScale ("Smoothness Strength", Range(0, 1)) = 1
+        _MipBias ("Texture Mip Bias", Range(0, 1)) = 0.8
 
         [Header(Normals)]
         [NoScaleOffset] _BumpMap ("Normal Map", 2D) = "bump" {}
         [NoScaleOffset] _DetailBumpMap ("Detail Normal Map", 2D) = "bump" {}
-        _DetailMask ("Detail Mask", 2D) = "white" {}
-        _DetailBumpScale ("Detail Normal Scale", Range(0, 1)) = 1
+        _DetailMask ("Detail Normal Mask", 2D) = "white" {}
+        _DetailBumpScale ("Detail Normal Strength", Range(0, 1)) = 1
         _DetailBumpTiling ("Detail Normal Tiling", Range(0.01, 10)) = 1
 
         [Header(Occlusion)]
-        [NoScaleOffset] _OcclusionMap ("Occlusion", 2D) = "white" {}
-        _OcclusionStrength ("Strength", Range(0, 1)) = 1
+        [NoScaleOffset] _OcclusionMap ("Occlusion Map", 2D) = "white" {}
+        _OcclusionStrength ("Occlusion Strength", Range(0, 1)) = 1
 
         [Header(Emission)]
         [HDR] _EmissionColor ("Emission Color", Color) = (0,0,0,1)
-        [NoScaleOffset] _EmissionMap ("Emission", 2D) = "white" {}
+        [NoScaleOffset] _EmissionMap ("Emission Map", 2D) = "white" {}
 
         [Header(Reentry)]
         [Toggle] _ReentryEmission ("Reentry Heating Enabled", Float) = 0
 
         [Space]
-        [Header(Time of Day Emission Control)]
-        [Toggle(USE_TIME_OF_DAY)] _UseTimeOfDay ("Use Time of Day", Float) = 0
-        _TimeOfDayDotMin ("Surface Dot Sun Min", Range(-1, 1)) = -0.005
-        _TimeOfDayDotMax ("Surface Dot Sun Max", Range(-1, 1)) = 0.005
+        [Header(Sun Angle Emission)]
+        [Toggle(USE_TIME_OF_DAY)] _UseTimeOfDay ("Use Sun-Angle Emission Fade", Float) = 0
+        _TimeOfDayDotMin ("Sun Fade Start", Range(-1, 1)) = -0.005
+        _TimeOfDayDotMax ("Sun Fade End", Range(-1, 1)) = 0.005
 
         [Header(Paint)]
-        _PaintA ("Paint Color A", Color) = (1,1,1,0)
-        _PaintB ("Paint Color B", Color) = (1,1,1,0)
-        [NoScaleOffset] _PaintMaskGlossMap ("Paint Mask (RG Masks B Dirt A Smooth)", 2D) = "white" {}
-        _PaintGlossMapScale ("Paint Smoothness Scale", Range(0, 1)) = 1
-        _PaintSmoothnessDamping ("Paint Smoothness Damping", Range(0, 1)) = 0.85
-        [Toggle] _SmoothnessOverride ("Use PaintMask for Paint Smoothness (And not the Metallic Map)?", Float) = 0
+        _PaintA ("Base Paint", Color) = (1,1,1,0)
+        _PaintB ("Accent Paint", Color) = (1,1,1,0)
+        [NoScaleOffset] _PaintMaskGlossMap ("Paint Mask / Paint Smoothness", 2D) = "white" {}
+        _PaintGlossMapScale ("Paint Smoothness Strength", Range(0, 1)) = 1
+        _PaintSmoothnessDamping ("Paint Matte Damping", Range(0, 1)) = 0.85
+        [Toggle] _SmoothnessOverride ("Use Paint Mask Smoothness", Float) = 0
 
         [Header(Rim)]
         [PerRendererData] _RimFalloff ("Rim Falloff", Range(0.01, 5)) = 0.1
         [PerRendererData] _RimColor ("Rim Color", Color) = (0,0,0,0)
 
-        [Header(Rendering)]
+        [Header(Advanced Rendering)]
         [Enum(UnityEngine.Rendering.CullMode)] _Culling ("Cull Mode", Float) = 2
         _Offset ("Depth Offset", Range(-1, 1)) = 0
     }
@@ -401,5 +401,6 @@ Shader "KSP2/Parts/Paintable"
         ENDCG
     }
 
+    CustomEditor "PaintableShaderGUI"
     FallBack "Standard"
 }
