@@ -16,12 +16,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// per-instance Overrides.
     /// </summary>
     /// <remarks>
-    /// SceneView handles (FreeMoveHandle position via cursor raycast, Disc yaw, ScaleSlider) draw
-    /// only when a planet preview session is active. Tools.hidden is synced to session-active state
-    /// so the standard transform gizmo returns when preview is off.
-    /// Known caveat: OnSceneGUI's decal-handle drawing places the handle on the smooth body radius
-    /// and ignores per-vertex terrain displacement, so on bumpy terrain the handle sits a small
-    /// distance off the rendered decal surface.
+    /// No scene-view handles - decals are authored entirely through the inspector's lat/lon/scale
+    /// fields. <c>Tools.hidden</c> is still synced to the preview-session state so the standard
+    /// transform gizmo doesn't appear, because dragging the GameObject's transform wouldn't update
+    /// the decal's <c>LatLong</c> and would silently snap back on the next <c>UpdateDecalTransform</c>.
     /// Known caveat: SyncToolsHidden mutates the global <c>UnityEditor.Tools.hidden</c> flag from
     /// a per-target editor instance. Process-global state is being driven from a per-instance
     /// editor surface, which can race with other editors that touch the same flag.
@@ -32,7 +30,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private const string UxmlPath = "/Assets/Windows/PQSDecalInstanceInspector.uxml";
         private const string UssPath = "/Assets/Windows/PQSDecalInstanceInspector.uss";
 
-        private static readonly (string overrideField, string valueField, string label, string tooltip)[] OverridePairs =
+        /// <summary>
+        /// Per-instance override field pairs on <see cref="PQSDecalInstance" /> exposed to the
+        /// inspector. Each entry is (override-flag field name, value field name, label, tooltip).
+        /// </summary>
+        /// <remarks>
+        /// Internal so the surface-landmark inspector can reuse the same set when inlining the
+        /// managed decal's override section in cosmetic mode.
+        /// </remarks>
+        internal static readonly (string overrideField, string valueField, string label, string tooltip)[] OverridePairs =
         {
             ("OverrideHeightScale", "HeightScale", "Height Scale", "Vertical scale of the decal heightmap contribution, in meters."),
             ("OverrideHeightBlendMode", "HeightBlendMode", "Height Blend Mode", "How the decal heightmap combines with the surface (Add, Subtract, Replace)."),
@@ -127,7 +133,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
         }
 
-        private static VisualElement BuildOverrideRow(SerializedProperty overrideProp, SerializedProperty valueProp, string label, string tooltip)
+        /// <summary>
+        /// Builds an override row: a toggle bound to <paramref name="overrideProp" /> alongside a
+        /// PropertyField for <paramref name="valueProp" /> that is enabled only while the toggle is on.
+        /// </summary>
+        /// <remarks>
+        /// Internal so the surface-landmark inspector can reuse the same row layout when inlining
+        /// the managed decal's override section in cosmetic mode.
+        /// </remarks>
+        internal static VisualElement BuildOverrideRow(SerializedProperty overrideProp, SerializedProperty valueProp, string label, string tooltip)
         {
             var row = new VisualElement();
             row.AddToClassList("decal-inspector-override-row");
@@ -220,97 +234,5 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _lonField.value = lon;
         }
 
-        private void OnSceneGUI()
-        {
-            if (PlanetAuthoringSession.Active == null) return;
-            var decal = (PQSDecalInstance)target;
-            if (decal == null) return;
-            if (!TryGetBody(decal, out var bodyTransform, out var radius)) return;
-
-            var localRadial = LatLon.GetRelSurfaceNVector(decal.LatLong.x, decal.LatLong.y);
-            var worldRadial = (bodyTransform.rotation * (Vector3)localRadial).normalized;
-            if (worldRadial.sqrMagnitude < 1e-6f) return;
-            var worldPos = bodyTransform.position + worldRadial * (float)radius;
-
-            var refSize = HandleUtility.GetHandleSize(bodyTransform.position) * 0.04f;
-
-            DrawPositionHandle(decal, worldPos, refSize);
-            DrawYawHandle(decal, worldPos, worldRadial, refSize);
-            DrawScaleHandle(decal, worldPos, worldRadial, refSize);
-        }
-
-        private static bool TryGetBody(PQSDecalInstance decal, out Transform bodyTransform, out double radius)
-        {
-            bodyTransform = null;
-            radius = 0;
-            var body = decal.PqsDecalController != null
-                ? decal.PqsDecalController.CoreCelestialBodyData
-                : null;
-            if (body == null) return false;
-            bodyTransform = body.transform;
-            radius = body.Data?.radius ?? 0;
-            return radius > 0;
-        }
-
-        private void DrawPositionHandle(PQSDecalInstance decal, Vector3 worldPos, float refSize)
-        {
-            EditorGUI.BeginChangeCheck();
-            _ = Handles.FreeMoveHandle(worldPos, refSize, Vector3.zero, Handles.SphereHandleCap);
-            if (!EditorGUI.EndChangeCheck()) return;
-
-            var planet = decal.PqsDecalController != null ? decal.PqsDecalController.Pqs : null;
-            if (planet == null) return;
-            var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-            // includeDecals: false because we're moving a decal, so we want the bare terrain underneath.
-            if (!PlanetSurfaceHit.TryHit(planet, ray, out _, out var hitLatLon, out _, includeDecals: false)) return;
-
-            Undo.RecordObject(decal, "Move Decal");
-            decal.LatLong = hitLatLon;
-            decal.UpdateDecalTransform();
-            _latField?.SetValueWithoutNotify(hitLatLon.x);
-            _lonField?.SetValueWithoutNotify(hitLatLon.y);
-            EditorUtility.SetDirty(decal);
-        }
-
-        private static void DrawYawHandle(PQSDecalInstance decal, Vector3 worldPos, Vector3 surfaceUp, float refSize)
-        {
-            var east = Vector3.Cross(Vector3.up, surfaceUp);
-            if (east.sqrMagnitude < 1e-6f)
-            {
-                east = Vector3.Cross(Vector3.right, surfaceUp);
-            }
-            east.Normalize();
-
-            var frame = Quaternion.LookRotation(east, surfaceUp);
-            var currentYaw = frame * Quaternion.Euler(0, decal.Rotation, 0);
-
-            EditorGUI.BeginChangeCheck();
-            var newRot = Handles.Disc(currentYaw, worldPos, surfaceUp, refSize * 6f, false, 5f);
-            if (!EditorGUI.EndChangeCheck()) return;
-
-            var oldDir = currentYaw * Vector3.forward;
-            var newDir = newRot * Vector3.forward;
-            var deltaDeg = Vector3.SignedAngle(oldDir, newDir, surfaceUp);
-
-            Undo.RecordObject(decal, "Rotate Decal");
-            var newRotation = (decal.Rotation + deltaDeg) % 360f;
-            if (newRotation < 0) newRotation += 360f;
-            decal.Rotation = newRotation;
-            decal.UpdateDecalTransform();
-            EditorUtility.SetDirty(decal);
-        }
-
-        private static void DrawScaleHandle(PQSDecalInstance decal, Vector3 worldPos, Vector3 surfaceUp, float refSize)
-        {
-            EditorGUI.BeginChangeCheck();
-            // ScaleSlider couples the visual cube size and drag sensitivity. refSize * 8 is a moderate cube with reasonable drag delta per pixel.
-            var newScale = Handles.ScaleSlider(decal.Scale, worldPos, surfaceUp, Quaternion.identity, refSize * 8f, 1f);
-            if (!EditorGUI.EndChangeCheck()) return;
-
-            Undo.RecordObject(decal, "Scale Decal");
-            decal.Scale = Mathf.Clamp(newScale, 0.01f, decal.MaxScale);
-            decal.UpdateDecalTransform();
-            EditorUtility.SetDirty(decal);
-        }
     }
 }

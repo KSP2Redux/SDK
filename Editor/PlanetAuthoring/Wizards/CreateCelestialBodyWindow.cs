@@ -487,7 +487,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 decalController.enabled = true;
                 decalController.PqsDecalData = decalData;
                 decalController.Pqs = pqs;
-                decalController.SharedHeightmap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Flat Decal.png");
+                decalController.SharedHeightmap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Full Decal Alpha.png");
                 decalController.SharedAlphaMap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Full Decal Alpha.png");
 
                 string path = folder + "/" + Naming.LocalPrefab(key);

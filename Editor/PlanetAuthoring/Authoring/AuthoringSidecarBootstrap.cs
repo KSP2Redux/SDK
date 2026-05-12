@@ -1,6 +1,7 @@
 using KSP.Game.Science;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Science;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using UnityEditor;
 
@@ -28,6 +29,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
             {
                 ScienceRegionAssetLocator.InvalidateCache();
                 PlanetAuthoringAddressables.InvalidateCaches();
+                AddressableKeyLookup.InvalidateCaches();
             }
 
             var dirty = false;

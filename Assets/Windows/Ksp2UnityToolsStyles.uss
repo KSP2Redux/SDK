@@ -124,6 +124,23 @@
     margin-bottom: 2px;
 }
 
+/* ----- Override rows (toggle + field, horizontal) ---------------------- */
+
+.decal-inspector-override-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.decal-inspector-override-toggle {
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.decal-inspector-override-field {
+    flex-grow: 1;
+}
+
 /* ----- Button rows ------------------------------------------------------ */
 
 .sdk-button-row,

@@ -1,6 +1,8 @@
 using System;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 {
@@ -13,6 +15,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class NewDecalPromptWindow : EditorWindow
     {
+        private const string UxmlPath = "/Assets/Windows/NewDecalPromptWindow.uxml";
+
         /// <summary>
         /// The form payload returned to the caller's create callback.
         /// </summary>
@@ -40,7 +44,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 
         private readonly Result _result = new();
         private Action<Result> _onCreate;
-        private Vector2 _scroll;
+
+        private Foldout _newDecalFoldout;
+        private Button _confirmButton;
+        private TextField _nameField;
 
         /// <summary>
         /// Opens the prompt window and invokes <paramref name="onCreate" /> when the user confirms.
@@ -53,56 +60,93 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             win.titleContent = new GUIContent("New Decal");
             win._result.Name = defaultName;
             win._onCreate = onCreate;
-            win.minSize = new Vector2(380f, 360f);
-            win.maxSize = new Vector2(480f, 600f);
+            win.minSize = new Vector2(420f, 420f);
+            win.maxSize = new Vector2(560f, 720f);
             win.ShowUtility();
         }
 
-        private void OnGUI()
+        private void CreateGUI()
         {
-            _scroll = EditorGUILayout.BeginScrollView(_scroll);
-            GUILayout.Space(6f);
+            var root = rootVisualElement;
 
-            EditorGUILayout.LabelField("Existing", EditorStyles.boldLabel);
-            _result.ExistingTemplate = (PQSDecal)EditorGUILayout.ObjectField("Template", _result.ExistingTemplate, typeof(PQSDecal), false);
-            EditorGUILayout.HelpBox("Drop a PQSDecal here to skip creation and place an instance of it instead.", MessageType.None);
-
-            GUILayout.Space(8f);
-            using (new EditorGUI.DisabledScope(_result.ExistingTemplate != null))
+            var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
+            if (tree == null)
             {
-                EditorGUILayout.LabelField("New decal", EditorStyles.boldLabel);
-                _result.Name = EditorGUILayout.TextField("Name", _result.Name);
-                _result.HeightScale = EditorGUILayout.FloatField("Height Scale", _result.HeightScale);
-                _result.BlendMode = (PQSDecalHeightBlendMode)EditorGUILayout.EnumPopup("Blend Mode", _result.BlendMode);
-
-                GUILayout.Space(6f);
-                EditorGUILayout.LabelField("Per-decal textures (optional)", EditorStyles.boldLabel);
-                EditorGUILayout.HelpBox("Heightmap and Alpha map are shared per body. Edit them on the Simulation prefab's PQS Decal Controller.", MessageType.None);
-                _result.Diffuse = (Texture2D)EditorGUILayout.ObjectField("Diffuse", _result.Diffuse, typeof(Texture2D), false);
-                _result.Normal = (Texture2D)EditorGUILayout.ObjectField("Normal", _result.Normal, typeof(Texture2D), false);
-                _result.AlphaMaskTexture = (Texture2D)EditorGUILayout.ObjectField("Alpha Mask Texture", _result.AlphaMaskTexture, typeof(Texture2D), false);
-                _result.Peak = (Texture2D)EditorGUILayout.ObjectField("Peak", _result.Peak, typeof(Texture2D), false);
-                _result.Slope = (Texture2D)EditorGUILayout.ObjectField("Slope", _result.Slope, typeof(Texture2D), false);
+                root.Add(new Label("Failed to load NewDecalPromptWindow.uxml"));
+                return;
             }
+            tree.CloneTree(root);
 
-            EditorGUILayout.EndScrollView();
+            Ksp2UnityToolsStyles.Apply(root);
 
-            GUILayout.Space(4f);
-            using (new EditorGUILayout.HorizontalScope())
+            // HelpBoxes are added from C# since the project's UI Toolkit version doesn't accept the
+            // HelpBox UXML tag.
+            root.Q<VisualElement>("existing-hint-slot").Add(new HelpBox(
+                "Drop a PQSDecal here to skip creation and place an instance of it instead.",
+                HelpBoxMessageType.None));
+            root.Q<VisualElement>("textures-hint-slot").Add(new HelpBox(
+                "Heightmap and Alpha map are shared per body. Edit them on the Simulation prefab's PQS Decal Controller.",
+                HelpBoxMessageType.None));
+
+            var existing = root.Q<ObjectField>("existing-template-field");
+            existing.SetValueWithoutNotify(_result.ExistingTemplate);
+            existing.RegisterValueChangedCallback(evt =>
             {
-                if (GUILayout.Button("Cancel"))
-                {
-                    Close();
-                }
-                var canCreate = _result.ExistingTemplate != null || !string.IsNullOrWhiteSpace(_result.Name);
-                using (new EditorGUI.DisabledScope(!canCreate))
-                {
-                    if (GUILayout.Button(_result.ExistingTemplate != null ? "Place" : "Create and place"))
-                    {
-                        _onCreate?.Invoke(_result);
-                        Close();
-                    }
-                }
+                _result.ExistingTemplate = evt.newValue as PQSDecal;
+                SyncEnabledState();
+            });
+
+            _nameField = root.Q<TextField>("name-field");
+            _nameField.SetValueWithoutNotify(_result.Name);
+            _nameField.RegisterValueChangedCallback(evt =>
+            {
+                _result.Name = evt.newValue;
+                SyncEnabledState();
+            });
+
+            var heightScale = root.Q<FloatField>("height-scale-field");
+            heightScale.SetValueWithoutNotify(_result.HeightScale);
+            heightScale.RegisterValueChangedCallback(evt => _result.HeightScale = evt.newValue);
+
+            var blendMode = root.Q<EnumField>("blend-mode-field");
+            blendMode.Init(_result.BlendMode);
+            blendMode.RegisterValueChangedCallback(evt => _result.BlendMode = (PQSDecalHeightBlendMode)evt.newValue);
+
+            WireTexture(root, "diffuse-field", v => _result.Diffuse = v, _result.Diffuse);
+            WireTexture(root, "normal-field", v => _result.Normal = v, _result.Normal);
+            WireTexture(root, "alpha-mask-field", v => _result.AlphaMaskTexture = v, _result.AlphaMaskTexture);
+            WireTexture(root, "peak-field", v => _result.Peak = v, _result.Peak);
+            WireTexture(root, "slope-field", v => _result.Slope = v, _result.Slope);
+
+            _newDecalFoldout = root.Q<Foldout>("new-decal-foldout");
+
+            root.Q<Button>("cancel-button").clicked += Close;
+            _confirmButton = root.Q<Button>("confirm-button");
+            _confirmButton.clicked += () =>
+            {
+                _onCreate?.Invoke(_result);
+                Close();
+            };
+
+            SyncEnabledState();
+        }
+
+        private static void WireTexture(VisualElement root, string name, Action<Texture2D> setter, Texture2D initial)
+        {
+            var field = root.Q<ObjectField>(name);
+            field.SetValueWithoutNotify(initial);
+            field.RegisterValueChangedCallback(evt => setter(evt.newValue as Texture2D));
+        }
+
+        private void SyncEnabledState()
+        {
+            var hasExisting = _result.ExistingTemplate != null;
+            _newDecalFoldout?.SetEnabled(!hasExisting);
+            var canConfirm = hasExisting || !string.IsNullOrWhiteSpace(_result.Name);
+            _confirmButton?.SetEnabled(canConfirm);
+            if (_confirmButton != null)
+            {
+                _confirmButton.text = hasExisting ? "Use" : "Create";
             }
         }
     }

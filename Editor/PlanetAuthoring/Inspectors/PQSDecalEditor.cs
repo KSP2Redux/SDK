@@ -1,5 +1,4 @@
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
-using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -10,8 +9,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Custom inspector for <see cref="PQSDecal" />.
     /// </summary>
     /// <remarks>
-    /// Layout lives in <c>PQSDecalInspector.uxml</c>. This editor wires up the place button and
-    /// binds the texture sub-tree to the editor-only <see cref="PQSDecalTemplateAuthoring" /> sidecar.
+    /// Layout lives in <c>PQSDecalInspector.uxml</c>. Binds the texture sub-tree to the editor-only
+    /// <see cref="PQSDecalTemplateAuthoring" /> sidecar so per-decal source textures land on the
+    /// sidecar rather than the runtime asset. Templates are placed via the Surface Landmark flow
+    /// rather than directly from this inspector.
     /// </remarks>
     [CustomEditor(typeof(PQSDecal))]
     public class PQSDecalEditor : UnityEditor.Editor
@@ -30,8 +31,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
             tree.CloneTree(root);
 
-            root.Q<Button>("place-button").clicked += OnPlaceClicked;
-
             // Bind the value-fields subtree to the PQSDecal asset.
             root.Q<VisualElement>("value-fields").Bind(serializedObject);
 
@@ -43,11 +42,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             root.Q<VisualElement>("texture-fields").Bind(new SerializedObject(authoring));
 
             return root;
-        }
-
-        private void OnPlaceClicked()
-        {
-            PlaceDecalTool.Begin((PQSDecal)target);
         }
     }
 }

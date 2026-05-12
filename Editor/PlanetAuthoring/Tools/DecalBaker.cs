@@ -116,7 +116,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             }
         }
 
-        private static void CompletePendingSurfaceJob(PQS planet)
+        /// <summary>
+        /// Force-completes any in-flight <c>PQS._surfaceJob</c> via reflection so its
+        /// <c>NativeArray</c> consumers can be disposed without tripping the safety check.
+        /// </summary>
+        /// <remarks>
+        /// Used both by the bake pass (before swapping the controller's native arrays) and by
+        /// <see cref="PlanetAuthoringSession.End" /> (before <c>PQSDecalController.OnDisable</c>
+        /// disposes its native arrays, which the in-flight subdivision job is still reading).
+        /// </remarks>
+        /// <param name="planet">The PQS whose subdivision job should be completed.</param>
+        public static void CompletePendingSurfaceJob(PQS planet)
         {
             if (planet == null) return;
             var jobField = typeof(PQS).GetField("_surfaceJob", BindingFlags.NonPublic | BindingFlags.Instance);

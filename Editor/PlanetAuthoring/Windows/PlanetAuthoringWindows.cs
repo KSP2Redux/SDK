@@ -38,14 +38,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public const int PriorityBiomePainter = 130;
 
         /// <summary>
-        /// Menu priority for the Decal Manager window.
+        /// Menu priority for the Surface Manager window.
         /// </summary>
-        public const int PriorityDecalManager = 140;
-
-        /// <summary>
-        /// Menu priority for the Discoverable Manager window.
-        /// </summary>
-        public const int PriorityDiscoverableManager = 150;
+        public const int PrioritySurfaceManager = 140;
 
         /// <summary>
         /// Menu priority for the Preset Browser window.
@@ -65,15 +60,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public static void ShowBiomePainterPlaceholder() => ShowNotImplemented("Biome Painter");
 
         /// <summary>
-        /// Opens the Decal Manager window.
+        /// Opens the combined Surface Manager window (decals, prefabs, discoverables, landmarks).
         /// </summary>
-        public static void ShowDecalManager() => DecalManagerWindow.ShowWindow();
-
-        /// <summary>
-        /// Opens the Discoverable Manager window.
-        /// </summary>
-        [MenuItem(MenuRoot + "Discoverable Manager", priority = PriorityDiscoverableManager)]
-        public static void ShowDiscoverableManager() => DiscoverableManagerWindow.ShowWindow();
+        [MenuItem(MenuRoot + "Surface Manager", priority = PrioritySurfaceManager)]
+        public static void ShowSurfaceManager() => SurfaceManagerWindow.ShowWindow();
 
         /// <summary>
         /// Shows the placeholder dialog for the Preset Browser window.

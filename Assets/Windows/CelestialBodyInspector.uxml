@@ -16,8 +16,7 @@
             <engine:Button name="quick-preview-controls" text="Preview Controls" />
             <engine:Button name="quick-validation" text="Validation Report" />
             <engine:Button name="quick-biome-painter" text="Biome Painter" />
-            <engine:Button name="quick-decal-manager" text="Decal Manager" />
-            <engine:Button name="quick-discoverable-manager" text="Discoverable Manager" />
+            <engine:Button name="quick-surface-manager" text="Surface Manager" />
         </engine:Foldout>
 
         <engine:Foldout text="Validation" value="true" class="body-inspector-section">

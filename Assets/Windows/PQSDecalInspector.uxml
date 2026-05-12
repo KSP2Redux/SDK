@@ -5,8 +5,6 @@
 
     <engine:VisualElement>
 
-        <engine:Button name="place-button" text="Place instance on planet" style="margin-bottom: 4px; height: 22px;" />
-
         <engine:VisualElement name="value-fields">
             <editor:PropertyField binding-path="DecalID" label="Decal ID" />
             <editor:PropertyField binding-path="HeightScale" label="Height Scale" />

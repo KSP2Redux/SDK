@@ -1036,7 +1036,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnOpenDiscoverableManagerClicked()
         {
-            DiscoverableManagerWindow.ShowWindow();
+            SurfaceManagerWindow.ShowWindow();
         }
 
         // ----- Scene-view discoverable handles + orbs -----------------------

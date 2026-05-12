@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Redux;
 using UnityEditor;
 using UnityEngine;
@@ -409,6 +410,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             Unsubscribe();
             CameraDriver?.Unbind();
+            // Force-complete the in-flight PQS subdivision job before any path that disables the
+            // decal controller. PQSDecalController.OnDisable disposes its native arrays, and the
+            // subdivision job is still reading them otherwise.
+            if (Pqs != null)
+            {
+                DecalBaker.CompletePendingSurfaceJob(Pqs);
+            }
             if (Pqs != null && Pqs.isActive)
                 Pqs.DeactivateSphere();
             if (Pqs != null && _hasSnapshot)
