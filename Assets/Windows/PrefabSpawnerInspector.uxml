@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="decal-inspector-root">
+
+        <engine:Toggle name="raw-key-toggle" label="Use raw addressable key"
+                       tooltip="When on, author the prefab as a raw addressable key string instead of dropping a typed prefab. Useful for keys whose source asset isn't available in this project."
+                       class="sdk-field unity-base-field__aligned" />
+
+        <engine:VisualElement name="prefab-mode-group">
+            <editor:ObjectField name="prefab-field" label="Prefab"
+                                type="UnityEngine.GameObject, UnityEngine"
+                                allow-scene-objects="false"
+                                tooltip="Prefab spawned at runtime when the active vessel descends below ~radius/3 above this position. Must be addressable."
+                                class="decal-inspector-field unity-base-field__aligned" />
+
+            <engine:VisualElement name="addressable-warning-slot" />
+
+            <engine:Button name="make-addressable-btn" text="Make addressable"
+                           tooltip="Add this prefab to the celestial-bodies addressables group so PrefabSpawner can load it at runtime."
+                           style="display: none;" />
+
+            <engine:Label name="key-label" class="decal-inspector-hint" />
+        </engine:VisualElement>
+
+        <engine:VisualElement name="raw-key-mode-group" style="display: none;">
+            <engine:TextField name="raw-key-field" label="Addressable key"
+                              tooltip="Raw addressable primary key. Used verbatim by Addressables.LoadAssetAsync at runtime."
+                              class="decal-inspector-field unity-base-field__aligned" />
+            <engine:Label name="raw-key-status" class="decal-inspector-hint" />
+        </engine:VisualElement>
+
+        <engine:Foldout text="Location" value="true" class="decal-inspector-section">
+            <editor:FloatField name="lat-field" label="Latitude (°)"
+                               tooltip="Surface point latitude in degrees. -90 = south pole, +90 = north pole."
+                               class="sdk-field unity-base-field__aligned" />
+            <editor:FloatField name="lon-field" label="Longitude (°)"
+                               tooltip="Surface point longitude in degrees. East-positive, range [-180, 180]."
+                               class="sdk-field unity-base-field__aligned" />
+            <editor:FloatField name="alt-field" label="Altitude (m)"
+                               tooltip="Height above the rendered terrain at this lat/lon. 0 snaps to surface. Positive values float the spawner above the surface, negative buries it. Editing lat/lon preserves this altitude."
+                               class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="pick-button" text="Pick on planet"
+                           tooltip="Activate the surface-pick tool. Click on the planet to snap this spawner's lat/lon to the surface hit."
+                           class="sdk-action-button" />
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="copy-button" text="Copy"
+                               tooltip="Copy lat,lon to the clipboard as a comma-separated pair." />
+                <engine:Button name="paste-button" text="Paste"
+                               tooltip="Paste a comma-separated lat,lon pair from the clipboard, replacing this spawner's position." />
+            </engine:VisualElement>
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="frame-above-button" text="Look from above"
+                               tooltip="Frame the SceneView camera looking down at this spawner from the body's framing altitude." />
+                <engine:Button name="frame-surface-button" text="Look from surface"
+                               tooltip="Frame the SceneView camera at this spawner's lat/lon at the configured Surface framing altitude." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

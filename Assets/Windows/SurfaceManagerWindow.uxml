@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="decal-inspector-root">
+
+        <engine:Label name="status-label" class="decal-inspector-hint" />
+
+        <engine:VisualElement class="sdk-button-row" style="margin-top: 4px; margin-bottom: 6px;">
+            <engine:Button name="new-landmark-button" text="+ New Surface Landmark"
+                           tooltip="Open the New Surface Landmark prompt to stage decal/prefab/discoverable settings, then click on the planet to drop the wrapper. New decals are now created from the landmark inspector." />
+            <engine:Button name="bake-decals-button" text="Bake decals"
+                           tooltip="Queue a rebuild of the body's PQSDecalData (texture arrays + shared maps)." />
+        </engine:VisualElement>
+
+        <engine:TextField name="filter-field" label="Filter"
+                          tooltip="Substring match against the item name. Applies to all sections."
+                          class="decal-inspector-field unity-base-field__aligned" />
+
+        <engine:Foldout name="decals-fold" text="Decals" value="true" class="sdk-section">
+            <engine:VisualElement name="decals-list" />
+        </engine:Foldout>
+
+        <engine:Foldout name="prefabs-fold" text="Surface Prefabs" value="true" class="sdk-section">
+            <engine:VisualElement name="prefabs-list" />
+        </engine:Foldout>
+
+        <engine:Foldout name="discoverables-fold" text="Discoverables" value="true" class="sdk-section">
+            <engine:VisualElement name="discoverables-list" />
+        </engine:Foldout>
+
+        <engine:Foldout name="landmarks-fold" text="Surface Landmarks" value="true" class="sdk-section">
+            <engine:VisualElement name="landmarks-list" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>
