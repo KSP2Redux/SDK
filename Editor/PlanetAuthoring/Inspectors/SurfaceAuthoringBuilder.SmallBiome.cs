@@ -28,7 +28,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             PQSData pqsData
         )
         {
-            var foldout = new Foldout { text = "Small biome detail", value = false };
+            var foldout = new Foldout { text = "Small biome detail", value = true };
             foldout.AddToClassList("pqs-inspector-section");
 
             var helpBox = new HelpBox(string.Empty, HelpBoxMessageType.Warning)

@@ -390,6 +390,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         private static Material CreateLocalMaterial(string key, string folder, Shader shader, List<string> createdPaths)
         {
             Material mat = new(shader) { name = $"{key}_Local" };
+            // The shader declares these as (0,0,0,0) / (1,1,1,1) defaults, but the local-body
+            // fragment divides (normDist - fadeNeg) / (fadePos - fadeNeg) using values derived from
+            // _DistanceResampleDistances. All-zero distances produce NaN, which propagates through
+            // every blend in the deferred-base pass and the GPU discards NaN fragments - the body
+            // then renders as completely blank with no error. Stamp the documented sane defaults so
+            // a freshly-created body renders out of the box. UV scales follow the power-of-2
+            // cascade the shader's PARAMS.md recommends.
+            mat.SetVector("_DistanceResampleDistances", new Vector4(50f, 500f, 2000f, 12000f));
+            mat.SetVector("_DistanceResampleUVScales", new Vector4(1f, 2f, 4f, 8f));
             string path = folder + "/" + Naming.LocalMaterial(key);
             AssetDatabase.CreateAsset(mat, path);
             createdPaths.Add(path);

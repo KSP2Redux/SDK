@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="sdk-root">
+
+        <engine:Foldout text="Blender Inputs" value="true" class="sdk-section">
+            <editor:DoubleField name="midlevel-field" label="Mid-Level"
+                                tooltip="Midlevel value from Blender's Displace modifier on the source sphere. The Heightmap Baker reports this as 'Radius (Midlevel)' on a successful bake."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="strength-field" label="Strength"
+                                tooltip="Strength value from Blender's Displace modifier on the source sphere. The Heightmap Baker reports this on a successful bake."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Target" value="true" class="sdk-section">
+            <engine:DropdownField name="target-type-field" label="Target Type"
+                                  choices="Radius,Max Height" index="0"
+                                  tooltip="Which value you want to drive the result by. Radius scales the mesh so its sea-level radius hits the target. Max Height scales it so the peak elevation hits the target."
+                                  class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="target-field" label="Target (m)"
+                                tooltip="Desired body radius (in meters) or desired peak altitude above center (in meters), depending on Target Type."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Result" value="true" class="sdk-section">
+            <editor:DoubleField name="radius-field" label="Radius (m)"
+                                readonly="true"
+                                tooltip="Body radius to assign on CoreCelestialBodyData. This is mesh-midlevel scaled to hit the target."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="terrain-height-field" label="Terrain Height Scale"
+                                readonly="true"
+                                tooltip="Value to assign as the body's TerrainHeightScale. This is mesh-strength scaled by the same factor that produced the radius, so terrain reaches the intended peak relative to the radius."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

@@ -193,7 +193,7 @@ GBufferOutput frag(V2F i)
     // layout maps .xyw into (metallic, smoothness, occlusion) via swizzle:
     // .x = metallic, .y = smoothness, .w = occlusion).
     float  packedResample = normalResample * (1.0 - packedFade);
-    float3 packedScaled   = packedFade * (1.0 - packedResample) * packedSample.xyw;
+    float3 packedScaled   = packedFade * (1.0 - packedResample) * packedSample.xwy;
     float  metallic   = packedScaled.x;
     float  smoothness = packedScaled.y;
     float  occlusion  = packedScaled.z;

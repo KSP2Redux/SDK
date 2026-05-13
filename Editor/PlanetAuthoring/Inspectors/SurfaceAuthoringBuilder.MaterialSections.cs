@@ -164,7 +164,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <returns>The populated Decals foldout.</returns>
         public static Foldout BuildDecalsSection(Material material)
         {
-            var foldout = new Foldout { text = "Decals", value = false };
+            var foldout = new Foldout { text = "Decals", value = true };
             foldout.AddToClassList("pqs-inspector-section");
 
             foldout.Add(MaterialPropertyFields.KeywordReadOnly(
@@ -205,7 +205,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <returns>The populated Distance cascade foldout.</returns>
         public static Foldout BuildDistanceCascadeSection(Material material)
         {
-            var foldout = new Foldout { text = "Distance cascade", value = false };
+            var foldout = new Foldout { text = "Distance cascade", value = true };
             foldout.AddToClassList("pqs-inspector-section");
 
             foldout.Add(MaterialPropertyFields.Vector4Channels(
@@ -275,7 +275,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <returns>The populated Cross-biome blend foldout.</returns>
         public static Foldout BuildCrossBiomeBlendSection(Material material)
         {
-            var foldout = new Foldout { text = "Cross-biome blend", value = false };
+            var foldout = new Foldout { text = "Cross-biome blend", value = true };
             foldout.AddToClassList("pqs-inspector-section");
 
             foldout.Add(MaterialPropertyFields.Vector4Channels(

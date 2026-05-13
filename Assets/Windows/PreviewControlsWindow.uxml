@@ -34,7 +34,7 @@
             </engine:VisualElement>
         </engine:Foldout>
 
-        <engine:Foldout text="Sun" value="false" class="preview-section">
+        <engine:Foldout text="Sun" value="true" class="preview-section">
             <editor:ObjectField name="sun-light-field" label="Sun Light" tooltip="Directional Light treated as the sun. Auto-resolves to the brightest directional light in the scene if left empty." type="UnityEngine.Light, UnityEngine" allow-scene-objects="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="sun-azimuth-slider" label="Azimuth (°)" tooltip="Compass direction the sunlight comes from. 0 = north, 90 = east, 180 = south, 270 = west." low-value="0" high-value="360" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="sun-elevation-slider" label="Elevation (°)" tooltip="Angle of the sun above the horizon. -90 = directly below, 0 = on the horizon, +90 = directly above." low-value="-90" high-value="90" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
@@ -45,7 +45,7 @@
             </engine:VisualElement>
         </engine:Foldout>
 
-        <engine:Foldout text="Time of day" value="false" class="preview-section">
+        <engine:Foldout text="Time of day" value="true" class="preview-section">
             <engine:VisualElement class="preview-button-row">
                 <engine:Button name="tod-play-button" text="Play" tooltip="Animate the body's rotation around its local Y axis at the speed below. Click again to pause." />
                 <engine:Button name="tod-reset-button" text="Reset" tooltip="Stop the rotation animation and restore the body's rotation to the value it had when the preview session began." />
@@ -53,7 +53,7 @@
             <engine:Slider name="tod-speed-slider" label="Speed (°/s)" tooltip="Rotation speed in degrees per second. Higher values cycle day/night faster." low-value="0" high-value="180" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
         </engine:Foldout>
 
-        <engine:Foldout text="Visualization" value="false" class="preview-section">
+        <engine:Foldout text="Visualization" value="true" class="preview-section">
             <engine:Toggle name="overlay-biome-toggle" label="Biome mask" tooltip="Render the body's biome mask (R/G/B/A channels) as colored bands over the surface. Useful for checking biome coverage and boundaries." class="preview-coord-field unity-base-field__aligned" />
             <engine:Toggle name="overlay-subzone-toggle" label="Subzone mask" tooltip="Render the subzone mask (R/G/B/A channels) over the surface. Visible only when SUB_ZONES_ENABLED is on for the body." class="preview-coord-field unity-base-field__aligned" />
             <engine:Toggle name="overlay-slope-toggle" label="Slope" tooltip="Colorize the surface from green (flat) to red (vertical) based on the geometric normal. Useful for spotting steep terrain that small-layer slope windows should cover." class="preview-coord-field unity-base-field__aligned" />

@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <returns>The populated Heightmap stack foldout.</returns>
         public static Foldout BuildHeightmapStackSection(SerializedObject pqsDataSO)
         {
-            var foldout = new Foldout { text = "Heightmap stack", value = false };
+            var foldout = new Foldout { text = "Heightmap stack", value = true };
             foldout.AddToClassList("pqs-inspector-section");
 
             foldout.Add(GroupLabel("Global heightmap"));
@@ -90,7 +90,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <returns>The populated Pole settings foldout.</returns>
         public static Foldout BuildPoleSettingsSection(SerializedObject pqsDataSO)
         {
-            var foldout = new Foldout { text = "Pole settings", value = false };
+            var foldout = new Foldout { text = "Pole settings", value = true };
             foldout.AddToClassList("pqs-inspector-section");
 
             foldout.Add(GroupLabel("Distortion fix"));

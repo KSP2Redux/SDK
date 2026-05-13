@@ -6,7 +6,9 @@
 
 .vec4-channels-field {
     flex-grow: 1;
-    min-width: 40px;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
     margin-left: 0;
     margin-right: 2px;
 }
@@ -14,6 +16,8 @@
 .vec4-channels-field > .unity-base-field__label {
     min-width: 22px;
     flex-basis: 22px;
+    flex-grow: 0;
+    flex-shrink: 0;
     margin-right: 2px;
     margin-top: 0;
     margin-bottom: 0;
@@ -21,6 +25,13 @@
     padding-bottom: 0;
     align-self: center;
     -unity-text-align: middle-center;
+}
+
+.vec4-channels-field > .unity-base-field__input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
 }
 
 /* ===== FadeCurveField (inline preview) ===== */

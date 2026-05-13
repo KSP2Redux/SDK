@@ -6,6 +6,7 @@ using KSP.Rendering.Planets;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.IO;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Windows;
 using Newtonsoft.Json;
@@ -78,6 +79,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             BuildSaveSection(root.Q<VisualElement>("save-section-content"));
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));
             BuildSoiCalculationField(root.Q<VisualElement>("soi-calc-slot"));
+            WireRecalcTerrainHeight(root);
 
             root.Bind(serializedObject);
 
@@ -182,6 +184,54 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             });
 
             slot.Add(color);
+        }
+
+        private void WireRecalcTerrainHeight(VisualElement root)
+        {
+            var button = root.Q<Button>("recalc-terrain-height-button");
+            var status = root.Q<Label>("recalc-terrain-height-status");
+            if (button == null) return;
+            button.clicked += () => OnRecalcTerrainHeightClicked(status);
+        }
+
+        private void OnRecalcTerrainHeightClicked(Label status)
+        {
+            if (status != null) status.text = string.Empty;
+
+            PQS pqs = TargetObject != null ? TargetObject.GetComponentInChildren<PQS>(true) : null;
+            TerrainHeightRangeCalculator.Result result;
+            try
+            {
+                EditorUtility.DisplayCancelableProgressBar("Recalculating terrain range", "Sampling heightmap...", 0f);
+                result = TerrainHeightRangeCalculator.Compute(pqs);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            if (result.Cancelled)
+            {
+                if (status != null) status.text = $"Cancelled after {result.SampleCount:N0} samples.";
+                return;
+            }
+            if (!result.Success)
+            {
+                if (status != null) status.text = result.FailureReason;
+                return;
+            }
+
+            SerializedProperty min = serializedObject.FindProperty("core.data.MinTerrainHeight");
+            SerializedProperty max = serializedObject.FindProperty("core.data.MaxTerrainHeight");
+            if (min == null || max == null)
+            {
+                if (status != null) status.text = "Could not locate MinTerrainHeight / MaxTerrainHeight on this body.";
+                return;
+            }
+            min.doubleValue = result.MinHeight;
+            max.doubleValue = result.MaxHeight;
+            serializedObject.ApplyModifiedProperties();
+            if (status != null) status.text = $"Updated. Min {result.MinHeight:0.0} m, max {result.MaxHeight:0.0} m. Sampled {result.SampleCount:N0} points, accurate within 1 m for features wider than 1 km.";
         }
 
         private void OnPreviewButtonClicked()

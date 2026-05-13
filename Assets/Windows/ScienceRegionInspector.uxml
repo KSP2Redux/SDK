@@ -10,7 +10,7 @@
             <editor:PropertyField name="version-field" binding-path="information.Version" label="Version" tooltip="Free-form version string written into the baked JSON. Bump when shipping breaking science data changes." class="sdk-field unity-base-field__aligned" />
         </engine:Foldout>
 
-        <engine:Foldout text="Situation data" value="false" class="sdk-section">
+        <engine:Foldout text="Situation data" value="true" class="sdk-section">
             <editor:PropertyField binding-path="information.SituationData.HighOrbitMaxAltitude" label="High orbit max (m)" tooltip="Vessels above this altitude classify as 'beyond high orbit'. Default 0 means unset. Fill in based on the body's radius." class="sdk-field unity-base-field__aligned" />
             <editor:PropertyField binding-path="information.SituationData.LowOrbitMaxAltutude" label="Low orbit max (m)" tooltip="Vessels above this altitude classify as 'high orbit'. Below this and above atmosphere top, they classify as 'low orbit'." class="sdk-field unity-base-field__aligned" />
             <editor:PropertyField binding-path="information.SituationData.AtmosphereMaxAltutude" label="Atmosphere max (m)" tooltip="Vessels below this altitude (and above the surface) classify as 'in atmosphere'. Set to 0 for vacuum bodies." class="sdk-field unity-base-field__aligned" />
@@ -38,7 +38,7 @@
             </engine:VisualElement>
         </engine:Foldout>
 
-        <engine:Foldout text="Discoverables" value="false" class="sdk-section">
+        <engine:Foldout text="Discoverables" value="true" class="sdk-section">
             <engine:Label name="discoverables-summary-label" class="sdk-hint" />
             <engine:VisualElement name="discoverables-list" />
             <engine:VisualElement class="sdk-button-row">

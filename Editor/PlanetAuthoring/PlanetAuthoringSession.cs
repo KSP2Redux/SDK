@@ -419,6 +419,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             }
             if (Pqs != null && Pqs.isActive)
                 Pqs.DeactivateSphere();
+            // Reset _computeInitDone so the next preview boot re-runs PQSRenderer.CreateShaders.
+            // Without this, GlobalMapScale and per-layer scales stay pinned to first-boot values
+            // and PQSData edits never reach the GPU until Unity restarts.
+            Pqs?.PQSRenderer?.ShutdownForEditor();
             if (Pqs != null && _hasSnapshot)
             {
                 RevertBootHarnessOverrides(Pqs);
