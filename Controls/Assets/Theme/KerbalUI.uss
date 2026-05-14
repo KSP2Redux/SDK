@@ -500,6 +500,8 @@
 .unity-toggle.switch > .unity-base-field__label.unity-text-element,
 .unity-toggle.switch:focus > .unity-base-field__label.unity-text-element{
     color: #c0c7d5;
+    white-space: normal;
+    margin-left: 4px;
     padding-bottom: 0;
     padding-top: 3px;
 }
