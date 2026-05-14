@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class PlanetCalculatorsWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/PlanetCalculators.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/PlanetCalculators.uxml";
         private const string PrefsPrefix = "Ksp2UnityTools.PlanetCalculators.";
 
         /// <summary>

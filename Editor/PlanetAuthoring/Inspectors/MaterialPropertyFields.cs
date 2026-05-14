@@ -20,10 +20,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     public static class MaterialPropertyFields
     {
         private const string Vector4ChannelsUxmlPath =
-            "/Assets/Windows/PropertyFields/Vector4Channels.uxml";
+            "/Assets/Windows/PlanetAuthoring/PropertyFields/Vector4Channels.uxml";
 
         private const string PropertyFieldsUssPath =
-            "/Assets/Windows/PropertyFields/PropertyFields.uss";
+            "/Assets/Windows/PlanetAuthoring/PropertyFields/PropertyFields.uss";
 
         // Common write path for the single-channel-of-Vector4 helpers (Float/Int/Toggle).
         // Centralizes the undo, dirty, and repaint dance so the three variants don't drift.

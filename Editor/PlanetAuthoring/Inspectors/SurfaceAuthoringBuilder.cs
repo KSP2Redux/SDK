@@ -80,14 +80,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return;
             }
 
-            Texture2DArrayPacker.MigrateFromPackedState(data, material);
-
             var pqsDataSO = new SerializedObject(data);
             // The PQSData's authoring sidecar holds the small-biome and subzone-normal source textures - the runtime PQSData no longer carries them.
-            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(data);
-            // One-shot legacy-to-slot migration: copy textures from the three legacy arrays into smallLayerSlots[].
-            // No-op once any slot already carries SO/override state.
-            PQSDataAuthoring.MigrateLegacyTilesToSlots(authoring);
+            PQSDataAuthoring authoring = AuthoringSidecars.GetOrCreate(data);
             var pqsDataAuthoringSO = authoring != null ? new SerializedObject(authoring) : null;
 
             // Self-referencing closure: refresh recurses through BuildSections, which re-emits

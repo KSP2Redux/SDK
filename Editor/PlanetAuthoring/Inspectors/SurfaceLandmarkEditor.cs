@@ -32,7 +32,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(SurfaceLandmark))]
     public sealed class SurfaceLandmarkEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/SurfaceLandmarkInspector.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/SurfaceLandmarkInspector.uxml";
 
         private FloatField _atmField;
         private FloatField _splField;

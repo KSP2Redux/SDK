@@ -28,8 +28,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(ScienceRegionData))]
     public class ScienceRegionEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/ScienceRegionInspector.uxml";
-        private const string UssPath = "/Assets/Windows/ScienceRegionInspector.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/ScienceRegionInspector.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/ScienceRegionInspector.uss";
 
         // Two regions whose colors are within this normalized distance trigger a color-collision warning.
         private const float ColorCollisionTolerance = ScienceRegionConstants.ColorCollisionTolerance;
@@ -1043,7 +1043,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private VisualElement BuildShowOrbsToggle()
         {
-            var sidecar = PlanetAuthoringRegistry.Instance.GetOrCreateScienceRegion(Target);
+            var sidecar = AuthoringSidecars.GetOrCreate(Target);
             var toggle = new Toggle("Show orbs in scene")
             {
                 value = sidecar == null || sidecar.ShowDiscoverableOrbs,
@@ -1052,7 +1052,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             toggle.AddToClassList("sdk-field");
             toggle.RegisterValueChangedCallback(evt =>
             {
-                var s = PlanetAuthoringRegistry.Instance.GetOrCreateScienceRegion(Target);
+                var s = AuthoringSidecars.GetOrCreate(Target);
                 if (s == null) return;
                 Undo.RecordObject(s, "Toggle discoverable orbs");
                 s.ShowDiscoverableOrbs = evt.newValue;
@@ -1075,7 +1075,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var body = BodyResolver.FindBody(planet);
             if (body == null) return;
 
-            var showOrbs = PlanetAuthoringRegistry.Instance.FindScienceRegion(Target)?.ShowDiscoverableOrbs ?? true;
+            var showOrbs = AuthoringSidecars.Find(Target)?.ShowDiscoverableOrbs ?? true;
 
             for (var i = 0; i < Target.discoverables.Count; i++)
             {

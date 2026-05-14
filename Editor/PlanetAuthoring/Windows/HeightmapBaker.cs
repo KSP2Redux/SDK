@@ -26,7 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class HeightmapBaker : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/HeightmapBaker.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/HeightmapBaker.uxml";
         private const string PrefsPrefix = "Ksp2UnityTools.HeightmapBaker.";
         private const string Title = "Heightmap Baker";
 

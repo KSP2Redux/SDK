@@ -31,8 +31,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// </remarks>
     public class SmallLayerMatrix : VisualElement
     {
-        private const string UxmlPath = "/Assets/Windows/PropertyFields/SmallLayerMatrix.uxml";
-        private const string UssPath = "/Assets/Windows/PropertyFields/PropertyFields.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/PropertyFields/SmallLayerMatrix.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/PropertyFields/PropertyFields.uss";
 
         // SerializedObject of the PQSDataAuthoring sidecar - tile texture fields bind here, not to PQSData.
         private readonly SerializedObject _authoringSO;

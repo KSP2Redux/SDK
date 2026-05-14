@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using KSP;
@@ -25,14 +27,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Custom inspector for <see cref="CoreCelestialBodyData" />.
     /// </summary>
     /// <remarks>
-    /// Adds a readiness checklist, the Enable/Disable preview toggle, quick-launch shortcuts to the
-    /// per-body authoring windows, and a Save Body JSON action that writes alongside the prefab.
+    /// Adds a readiness checklist, a validation chip at the top showing per-body issue counts with
+    /// an "Open report" button, the Enable/Disable preview toggle, quick-launch shortcuts to the
+    /// per-body authoring windows, a Save Body JSON action that writes alongside the prefab, and
+    /// a Scaled Space Baking foldout for generating the body's scaled-space mesh and textures.
     /// </remarks>
     [CustomEditor(typeof(CoreCelestialBodyData))]
     public class CelestialBodyEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/CelestialBodyInspector.uxml";
-        private const string UssPath = "/Assets/Windows/CelestialBodyInspector.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/CelestialBodyInspector.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/CelestialBodyInspector.uss";
 
         private static bool _initialized;
 
@@ -40,7 +44,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private VisualElement _readinessErrors;
         private Button _previewButton;
         private VisualElement _starSection;
-        private ValidationSectionBuilder.Handle _validationHandle;
+        private Label _validationChipLabel;
+        private Button _validationChipOpenButton;
 
         private CoreCelestialBodyData TargetData => (CoreCelestialBodyData)target;
         private GameObject TargetObject => TargetData.gameObject;
@@ -67,12 +72,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _previewButton.clicked += OnPreviewButtonClicked;
             _starSection = root.Q<VisualElement>("star-section");
 
-            var validationSlot = root.Q<VisualElement>("validation-slot");
-            if (validationSlot != null)
-                _validationHandle = ValidationSectionBuilder.Mount(validationSlot);
+            _validationChipLabel = root.Q<Label>("validation-chip-label");
+            _validationChipOpenButton = root.Q<Button>("validation-chip-open");
+            if (_validationChipOpenButton != null)
+                _validationChipOpenButton.clicked += OpenValidationReport;
 
             WireQuickToolButton(root, "quick-preview-controls", PreviewControlsWindow.ShowWindow);
-            WireQuickToolButton(root, "quick-validation", PlanetAuthoringWindows.ShowValidationReportPlaceholder);
+            WireQuickToolButton(root, "quick-validation", OpenValidationReport);
             WireQuickToolButton(root, "quick-biome-painter", PlanetAuthoringWindows.ShowBiomePainterPlaceholder);
             WireQuickToolButton(root, "quick-surface-manager", PlanetAuthoringWindows.ShowSurfaceManager);
 
@@ -375,8 +381,54 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             UpdateReadinessSection(report);
             UpdatePreviewButton(report);
             UpdateStarSection();
-            if (_validationHandle.IsValid)
-                ValidationSectionBuilder.Refresh(_validationHandle, TargetData);
+            UpdateValidationChip();
+        }
+
+        private void UpdateValidationChip()
+        {
+            if (_validationChipLabel == null) return;
+            _validationChipLabel.RemoveFromClassList("validation-chip--clean");
+            _validationChipLabel.RemoveFromClassList("validation-chip--issues");
+
+            if (TargetData == null)
+            {
+                _validationChipLabel.text = string.Empty;
+                _validationChipOpenButton?.SetEnabled(false);
+                return;
+            }
+
+            PlanetValidationReport cheap = PlanetValidationReport.Run(TargetData, ValidatorCost.Cheap);
+            IReadOnlyList<ValidationIssue> expensive = ValidationExpensiveCache.Get(TargetData);
+            int errors = cheap.ErrorCount;
+            int warnings = cheap.WarningCount;
+            int info = cheap.InfoCount;
+            foreach (ValidationIssue issue in expensive)
+            {
+                switch (issue.Severity)
+                {
+                    case ValidationSeverity.Error: errors++; break;
+                    case ValidationSeverity.Warning: warnings++; break;
+                    case ValidationSeverity.Info: info++; break;
+                }
+            }
+
+            int total = errors + warnings + info;
+            if (total == 0)
+            {
+                _validationChipLabel.text = "Validation: clean";
+                _validationChipLabel.AddToClassList("validation-chip--clean");
+            }
+            else
+            {
+                _validationChipLabel.text = $"Validation: {errors} error{(errors == 1 ? string.Empty : "s")}, {warnings} warning{(warnings == 1 ? string.Empty : "s")}, {info} info";
+                _validationChipLabel.AddToClassList("validation-chip--issues");
+            }
+            _validationChipOpenButton?.SetEnabled(true);
+        }
+
+        private void OpenValidationReport()
+        {
+            Windows.ValidationReportWindow.Open(TargetData);
         }
 
         private void UpdateStarSection()
@@ -534,7 +586,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private static void Initialize()
         {
             typeof(IOProvider).GetMethod("Init", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                ?.Invoke(null, new object[] { });
+                ?.Invoke(null, Array.Empty<object>());
             _initialized = true;
         }
     }

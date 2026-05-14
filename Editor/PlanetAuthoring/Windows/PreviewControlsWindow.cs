@@ -19,8 +19,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </summary>
     public class PreviewControlsWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/PreviewControlsWindow.uxml";
-        private const string UssPath = "/Assets/Windows/PreviewControlsWindow.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/PreviewControlsWindow.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Windows/PreviewControlsWindow.uss";
 
         private Label _statusLabel;
         private Label _bodyLabel;

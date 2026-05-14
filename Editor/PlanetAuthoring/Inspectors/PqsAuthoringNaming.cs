@@ -19,21 +19,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         public static readonly string[] BiomeChannels = { "R", "G", "B", "A" };
 
         /// <summary>
-        /// Returns the SerializedProperty path for the small albedo tile at the given slot.
-        /// </summary>
-        public static string SmallAlbedoTilePath(int slot) => $"smallAlbedoTiles.Array.data[{slot}]";
-
-        /// <summary>
-        /// Returns the SerializedProperty path for the small normal tile at the given slot.
-        /// </summary>
-        public static string SmallNormalTilePath(int slot) => $"smallNormalTiles.Array.data[{slot}]";
-
-        /// <summary>
-        /// Returns the SerializedProperty path for the small metal tile at the given slot.
-        /// </summary>
-        public static string SmallMetalTilePath(int slot) => $"smallMetalTiles.Array.data[{slot}]";
-
-        /// <summary>
         /// Returns the SerializedProperty path for the subzone normal at the given tier (3 or 4) and biome index.
         /// </summary>
         public static string SubzoneNormalPath(int tier, int biomeIndex) =>

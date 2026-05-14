@@ -89,7 +89,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Science
 
             // Stash the bake fingerprint so the SR_BAKED_DRIFT validator can detect when any input
             // changes after this bake. Sidecar is editor-only - runtime never reads it.
-            var sidecar = PlanetAuthoringRegistry.Instance.GetOrCreateScienceRegion(data);
+            var sidecar = AuthoringSidecars.GetOrCreate(data);
             if (sidecar != null)
             {
                 sidecar.LastBakeFingerprint = ComputeFingerprint(data);

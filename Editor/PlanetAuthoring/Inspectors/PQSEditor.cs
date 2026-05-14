@@ -1,10 +1,6 @@
-using KSP;
 using KSP.Rendering.Planets;
-using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
-using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
@@ -29,10 +25,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(PQS))]
     public class PQSEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PQSInspector.uxml";
-        private const string UssPath = "/Assets/Windows/PQSInspector.uss";
-
-        private ValidationSectionBuilder.Handle _validationHandle;
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSInspector.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSInspector.uss";
 
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
@@ -49,31 +43,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             Ksp2UnityToolsStyles.Apply(root, UssPath);
 
-            var validationSlot = root.Q<VisualElement>("validation-slot");
-            if (validationSlot != null)
-            {
-                _validationHandle = ValidationSectionBuilder.Mount(validationSlot);
-                RefreshValidation();
-                root.schedule.Execute(RefreshValidation).Every(500);
-            }
-
             var surfaceSlot = root.Q<VisualElement>("surface-authoring-slot");
             if (surfaceSlot != null)
                 SurfaceAuthoringBuilder.Populate(surfaceSlot, target as PQS);
 
             root.Bind(serializedObject);
             return root;
-        }
-
-        private void RefreshValidation()
-        {
-            if (!_validationHandle.IsValid || target == null)
-                return;
-            var pqs = target as PQS;
-            if (pqs == null)
-                return;
-            CoreCelestialBodyData body = BodyResolver.FindBody(pqs);
-            ValidationSectionBuilder.Refresh(_validationHandle, body);
         }
     }
 }

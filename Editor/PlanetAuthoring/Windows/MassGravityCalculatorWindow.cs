@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class MassGravityCalculatorWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/MassGravityCalculator.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/MassGravityCalculator.uxml";
         private const string PrefsPrefix = "Ksp2UnityTools.MassGravityCalculator.";
 
         // Standard gravity, Earth surface. Mirrors PhysicsSettings.STANDARD_GRAVITY_EARTH.

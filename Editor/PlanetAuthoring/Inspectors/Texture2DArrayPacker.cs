@@ -11,8 +11,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Packs per-biome and per-(biome, layer) source <see cref="Texture2D" /> assets from <see cref="PQSData" /> into <see cref="Texture2DArray" /> subassets and writes the resulting slice indices to the surface material.
     /// </summary>
     /// <remarks>
-    /// The Texture2DArray slice-index abstraction stays hidden from the inspector. Authors drag
-    /// a <see cref="Texture2D" /> into a regular field and the packer keeps the array in sync.
+    /// The Texture2DArray slice-index abstraction stays out of the inspector for the artist's day-to-day flow:
+    /// authors drag a <see cref="Texture2D" /> into a regular field and the packer keeps the array in sync.
+    /// The packed arrays land as visible sub-assets on the PQSData so the artist can see what was baked.
     /// </remarks>
     public static class Texture2DArrayPacker
     {
@@ -42,8 +43,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private const int ArrayAnisoLevel = 8;
         private const FilterMode ArrayFilterMode = FilterMode.Trilinear;
         private const TextureWrapMode ArrayWrapMode = TextureWrapMode.Repeat;
-
-        private delegate int CellSliceIndex(int cellIndex);
 
         /// <summary>
         /// Result of a pack pass.
@@ -93,9 +92,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// Repacks the 8 per-biome subzone normal textures into a Texture2DArray subasset on <paramref name="pqsData" /> and pushes the array reference and slice indices to <paramref name="surfaceMaterial" />.
         /// </summary>
         /// <remarks>
-        /// The 8 sources cover tier 3 (4 textures) and tier 4 (4 textures). Compact-packs only
-        /// the assigned slots. Unassigned slots map to slice index -1, which the shader treats
-        /// as "no tier-3/4 normal for this biome".
+        /// The 8 sources cover tier 3 (4 textures) and tier 4 (4 textures). Both tiers share a
+        /// single <c>_SubZonesNormalTextureArray</c> on the material, with per-tier slice indices
+        /// written into separate <c>_Subzone3NormalIndices</c> and <c>_Subzone4NormalIndices</c>
+        /// vectors. Compact-packs only the assigned slots. Unassigned slots map to slice index -1,
+        /// which the shader treats as "no tier-3/4 normal for this biome".
         /// </remarks>
         /// <param name="pqsData">The <see cref="PQSData" /> hosting the source textures and the array subasset.</param>
         /// <param name="surfaceMaterial">The surface material that receives the packed array reference and slice indices.</param>
@@ -105,7 +106,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (pqsData == null || surfaceMaterial == null)
                 return PackResult.Fail("PQSData or surface material is null.");
 
-            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
+            PQSDataAuthoring authoring = AuthoringSidecars.GetOrCreate(pqsData);
             if (authoring == null)
                 return PackResult.Fail("Could not resolve PQSData authoring sidecar.");
 
@@ -159,7 +160,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (pqsData == null || surfaceMaterial == null)
                 return PackResult.Fail("PQSData or surface material is null.");
 
-            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
+            PQSDataAuthoring authoring = AuthoringSidecars.GetOrCreate(pqsData);
             if (authoring == null)
                 return PackResult.Fail("Could not resolve PQSData authoring sidecar.");
 
@@ -346,7 +347,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 wrapMode = ArrayWrapMode,
                 filterMode = ArrayFilterMode,
                 anisoLevel = ArrayAnisoLevel,
-                hideFlags = HideFlags.HideInHierarchy,
             };
             AssetDatabase.AddObjectToAsset(array, pqsData);
             return array;
@@ -358,10 +358,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             int[] indices
         )
         {
+            int mipCount = array.mipmapCount;
             for (var i = 0; i < assigned.Count; i++)
             {
                 var (slot, tex) = assigned[i];
-                Graphics.CopyTexture(tex, 0, array, i);
+                for (var m = 0; m < mipCount; m++)
+                    Graphics.CopyTexture(tex, 0, m, array, i, m);
                 indices[slot] = i;
             }
         }
@@ -377,129 +379,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             return null;
         }
 
-        /// <summary>
-        /// Populates the per-(biome, layer) and per-tier source Texture2D arrays on <paramref name="pqsData" /> from the surface material's already-packed Texture2DArrays and slice-index vectors.
-        /// </summary>
-        /// <remarks>
-        /// Only runs for an abstraction array that's still all-null, and is idempotent past the
-        /// first call. Called automatically from the inspector on open so existing planets show
-        /// their tiles in the matrix view without the artist having to re-drag every texture.
-        /// </remarks>
-        /// <param name="pqsData">The <see cref="PQSData" /> whose source-tile arrays will be populated.</param>
-        /// <param name="surfaceMaterial">The surface material providing the already-packed Texture2DArrays and slice-index vectors.</param>
-        public static void MigrateFromPackedState(PQSData pqsData, Material surfaceMaterial)
-        {
-            if (pqsData == null || surfaceMaterial == null) return;
-            PQSDataAuthoring authoring = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
-            if (authoring == null) return;
-
-            MigrateSubzoneNormals(pqsData, surfaceMaterial, authoring);
-            MigrateSmallTiles(pqsData, surfaceMaterial, authoring);
-        }
-
-        private static void MigrateSubzoneNormals(PQSData pqsData, Material material, PQSDataAuthoring authoring)
-        {
-            if (!AllNull(authoring.subzone3Normals) || !AllNull(authoring.subzone4Normals)) return;
-
-            var sz3 = material.GetVector("_Subzone3NormalIndices");
-            var sz4 = material.GetVector("_Subzone4NormalIndices");
-
-            var any3 = MigrateArrayFromMaterial(pqsData, material, SubzoneNormalsArrayName, authoring.subzone3Normals, i => (int)sz3[i]);
-            var any4 = MigrateArrayFromMaterial(pqsData, material, SubzoneNormalsArrayName, authoring.subzone4Normals, i => (int)sz4[i]);
-
-            if (any3 || any4)
-                EditorUtility.SetDirty(authoring);
-        }
-
-        private static void MigrateSmallTiles(PQSData pqsData, Material material, PQSDataAuthoring authoring)
-        {
-            if (!AllNull(authoring.smallAlbedoTiles) ||
-                !AllNull(authoring.smallNormalTiles) ||
-                !AllNull(authoring.smallMetalTiles))
-                return;
-
-            var albedo = material.GetTexture(SmallAlbedoArrayName) as Texture2DArray;
-            var normal = material.GetTexture(SmallNormalArrayName) as Texture2DArray;
-            var metal = material.GetTexture(SmallMetalArrayName) as Texture2DArray;
-            if (albedo == null && normal == null && metal == null) return;
-
-            // 16-cell layout: cell = b*4 + l. Look up slice index in _SmallBiome{R/G/B/A}[l].
-            var perBiomeIndices = new Vector4[4];
-            for (var b = 0; b < 4; b++)
-                perBiomeIndices[b] = material.GetVector("_SmallBiome" + PqsAuthoringNaming.BiomeChannels[b]);
-
-            int IndexFor(int cell) => (int)perBiomeIndices[cell / 4][cell % 4];
-
-            var any = false;
-            if (albedo != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallAlbedoArrayName, authoring.smallAlbedoTiles, IndexFor);
-            if (normal != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallNormalArrayName, authoring.smallNormalTiles, IndexFor);
-            if (metal != null) any |= MigrateArrayFromMaterial(pqsData, material, SmallMetalArrayName, authoring.smallMetalTiles, IndexFor);
-
-            if (any)
-                EditorUtility.SetDirty(authoring);
-        }
-
-        // Walks destArray and fills each cell from the corresponding slice of the material's
-        // packed Texture2DArray. Returns true if any cell was filled.
-        private static bool MigrateArrayFromMaterial(
-            PQSData pqsData,
-            Material material,
-            string materialArrayName,
-            Texture2D[] destArray,
-            CellSliceIndex indexFor
-        )
-        {
-            var packed = material.GetTexture(materialArrayName) as Texture2DArray;
-            if (packed == null) return false;
-
-            var any = false;
-            for (var i = 0; i < destArray.Length; i++)
-            {
-                var slice = indexFor(i);
-                if (slice < 0 || slice >= packed.depth) continue;
-                destArray[i] = ExtractSlice(pqsData, packed, slice);
-                any = true;
-            }
-            return any;
-        }
-
         private static bool AllNull(Texture2D[] sources)
         {
             if (sources == null) return true;
-            for (var i = 0; i < sources.Length; i++)
-                if (sources[i] != null) return false;
+            foreach (var t in sources)
+                if (t != null) return false;
             return true;
-        }
-
-        private static Texture2D ExtractSlice(PQSData pqsData, Texture2DArray array, int sliceIndex)
-        {
-            var subassetName = $"{array.name}_Slice{sliceIndex}";
-            var path = AssetDatabase.GetAssetPath(pqsData);
-            if (!string.IsNullOrEmpty(path))
-            {
-                foreach (var sub in AssetDatabase.LoadAllAssetsAtPath(path))
-                {
-                    if (sub is Texture2D t && t.name == subassetName) return t;
-                }
-            }
-
-            var mipCount = array.mipmapCount;
-            var flags = mipCount > 1 ? TextureCreationFlags.MipChain : TextureCreationFlags.None;
-
-            var tex = new Texture2D(array.width, array.height, array.graphicsFormat, mipCount, flags)
-            {
-                name = subassetName,
-                wrapMode = array.wrapMode,
-                filterMode = array.filterMode,
-                anisoLevel = array.anisoLevel,
-                hideFlags = HideFlags.HideInHierarchy,
-            };
-
-            for (var m = 0; m < mipCount; m++)
-                Graphics.CopyTexture(array, sliceIndex, m, tex, 0, m);
-
-            AssetDatabase.AddObjectToAsset(tex, pqsData);
-            return tex;
         }
     }
 }

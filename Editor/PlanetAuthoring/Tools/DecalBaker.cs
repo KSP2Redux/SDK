@@ -64,14 +64,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         {
             if (controller == null || controller.PqsDecalData == null) return;
 
-            var registry = PlanetAuthoringRegistry.Instance;
             var templates = CollectTemplates(controller);
             var data = controller.PqsDecalData;
             data.BakedPqsDecalList = templates;
             data.BakedPqsDecalIDList = templates.Select(t => t.DecalID).ToList();
             data.Count = templates.Count;
             var templateAuthorings = templates
-                .Select(t => registry.GetOrCreateDecalTemplate(t.DecalID))
+                .Select(AuthoringSidecars.GetOrCreate)
                 .ToList();
             // Empty-template case: leave existing texture-array sub-assets in place but null the
             // references on the PQSDecalData so the runtime treats it as "nothing baked". Without
@@ -107,7 +106,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             controller.RefreshDecalInstances();
 
             // Snapshot the input hash on the editor-only sidecar so the validator can detect when a re-bake is needed.
-            var bakeAuthoring = registry.GetOrCreateDecalController(data);
+            var bakeAuthoring = AuthoringSidecars.GetOrCreate(data);
             if (bakeAuthoring != null)
             {
                 bakeAuthoring.LastBakeHash = PQSDecalBakeHash.Compute(controller);
@@ -219,6 +218,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var format = reference.format;
             var mipCount = reference.mipmapCount;
             var array = new Texture2DArray(width, height, templates.Count, format, mipCount > 1, linear);
+            int arrayMipCount = array.mipmapCount;
             for (var i = 0; i < templates.Count; i++)
             {
                 var tex = sources[i];
@@ -228,7 +228,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     Debug.LogWarning($"[DecalBaker] {label} for decal '{templates[i].name}' has different format/size than reference; skipping slice {i}.");
                     continue;
                 }
-                Graphics.CopyTexture(tex, 0, array, i);
+                for (var m = 0; m < arrayMipCount; m++)
+                    Graphics.CopyTexture(tex, 0, m, array, i, m);
             }
             array.Apply(updateMipmaps: false, makeNoLongerReadable: false);
             return array;

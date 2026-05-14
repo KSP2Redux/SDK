@@ -15,7 +15,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class NewDecalPromptWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/NewDecalPromptWindow.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Prompts/NewDecalPromptWindow.uxml";
 
         /// <summary>
         /// The form payload returned to the caller's create callback.

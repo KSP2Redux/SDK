@@ -27,8 +27,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(PQSDecalInstance))]
     public class PQSDecalInstanceEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PQSDecalInstanceInspector.uxml";
-        private const string UssPath = "/Assets/Windows/PQSDecalInstanceInspector.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSDecalInstanceInspector.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSDecalInstanceInspector.uss";
 
         /// <summary>
         /// Per-instance override field pairs on <see cref="PQSDecalInstance" /> exposed to the

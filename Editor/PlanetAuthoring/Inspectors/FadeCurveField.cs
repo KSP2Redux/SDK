@@ -18,8 +18,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// </remarks>
     public class FadeCurveField : VisualElement
     {
-        private const string UxmlPath = "/Assets/Windows/PropertyFields/FadeCurveField.uxml";
-        private const string UssPath = "/Assets/Windows/PropertyFields/PropertyFields.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/PropertyFields/FadeCurveField.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/PropertyFields/PropertyFields.uss";
         private const float ThumbnailLineWidth = 1.5f;
         private const float XMin = 0f;
 

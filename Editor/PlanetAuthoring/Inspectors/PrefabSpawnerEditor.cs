@@ -27,7 +27,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(PrefabSpawner))]
     public sealed class PrefabSpawnerEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PrefabSpawnerInspector.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PrefabSpawnerInspector.uxml";
 
         private Toggle _rawKeyToggle;
         private VisualElement _prefabModeGroup;

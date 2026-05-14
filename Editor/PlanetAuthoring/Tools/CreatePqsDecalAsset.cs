@@ -59,7 +59,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             decal.HeightBlendMode = config.BlendMode;
             EditorUtility.SetDirty(decal);
             // Redux-only per-decal source textures live on the editor-only sidecar.
-            var authoring = PlanetAuthoringRegistry.Instance.GetOrCreateDecalTemplate(decal.DecalID);
+            var authoring = AuthoringSidecars.GetOrCreate(decal);
             authoring.Diffuse = config.Diffuse;
             authoring.Normal = config.Normal;
             authoring.AlphaMaskTexture = config.AlphaMaskTexture;

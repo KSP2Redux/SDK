@@ -9,11 +9,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     /// Recompiles every body whose <see cref="PQSDataAuthoring" /> references a <see cref="SmallLayerMaterial" /> asset when that asset is saved.
     /// </summary>
     /// <remarks>
-    /// Catches edits that happen outside any one body's inspector (the SO is opened on its own,
-    /// edited, and saved). Walks <see cref="PlanetAuthoringRegistry" /> to find every PQSData
-    /// sidecar that references the changed SO, then runs
-    /// <see cref="SmallLayerMaterialCompiler.Compile" /> and
-    /// <see cref="Texture2DArrayPacker.RepackSmallTiles" /> against each one's surface material.
+    /// Catches edits that happen outside any one body's inspector, where the SO is opened on its own, edited, and saved. Walks <see cref="AuthoringSidecars.AllPQSDataAuthorings" /> to find every PQSData sidecar that references the changed SO, then runs <see cref="SmallLayerMaterialCompiler.Compile" /> and <see cref="Texture2DArrayPacker.RepackSmallTiles" /> against each one's surface material.
     /// </remarks>
     internal class SmallLayerMaterialPostProcessor : AssetPostprocessor
     {
@@ -31,10 +27,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
             foreach (var changed in changedMaterials)
                 SmallLayerMaterialPreview.Invalidate(changed);
 
-            var registry = PlanetAuthoringRegistry.Instance;
-            if (registry == null) return;
-
-            foreach (var authoring in registry.EnumeratePQSDataAuthorings())
+            foreach (var authoring in AuthoringSidecars.AllPQSDataAuthorings())
             {
                 if (authoring?.smallLayerSlots == null) continue;
                 if (!ReferencesAny(authoring, changedMaterials)) continue;
@@ -61,9 +54,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
 
         private static bool ReferencesAny(PQSDataAuthoring authoring, HashSet<SmallLayerMaterial> changed)
         {
-            for (var i = 0; i < authoring.smallLayerSlots.Length; i++)
+            foreach (var slot in authoring.smallLayerSlots)
             {
-                var slot = authoring.smallLayerSlots[i];
                 if (slot?.Material != null && changed.Contains(slot.Material))
                     return true;
             }
@@ -72,9 +64,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
 
         private static PQSData ResolvePQSData(PQSDataAuthoring authoring)
         {
-            if (authoring == null || string.IsNullOrEmpty(authoring.PQSDataGuid)) return null;
-            var path = AssetDatabase.GUIDToAssetPath(authoring.PQSDataGuid);
-            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<PQSData>(path);
+            return AuthoringSidecars.GetRuntimeAsset<PQSData>(authoring);
         }
     }
 }

@@ -69,11 +69,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
             var issues = new List<ValidationIssue>();
             int info = 0, warn = 0, err = 0;
 
+            BodyClassFlags bodyClass = BodyClassClassifier.Classify(body);
+
             // Pre-filter so the progress fraction reflects the validators that will actually run.
             var matched = new List<IPlanetValidator>();
             foreach (IPlanetValidator v in PlanetValidatorRegistry.Validators)
-                if (!costFilter.HasValue || v.Cost == costFilter.Value)
-                    matched.Add(v);
+            {
+                if (costFilter.HasValue && v.Cost != costFilter.Value)
+                    continue;
+                if ((v.AppliesTo & bodyClass) == 0)
+                    continue;
+                matched.Add(v);
+            }
 
             for (int i = 0; i < matched.Count; i++)
             {

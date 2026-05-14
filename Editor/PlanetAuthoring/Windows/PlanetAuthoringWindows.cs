@@ -48,12 +48,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public const int PriorityPresetBrowser = 160;
 
         /// <summary>
-        /// Shows the placeholder dialog for the Validation Report window.
-        /// </summary>
-        [MenuItem(MenuRoot + "Validation Report", priority = PriorityValidationReport)]
-        public static void ShowValidationReportPlaceholder() => ShowNotImplemented("Validation Report");
-
-        /// <summary>
         /// Shows the placeholder dialog for the Biome Painter window.
         /// </summary>
         [MenuItem(MenuRoot + "Biome Painter", priority = PriorityBiomePainter)]

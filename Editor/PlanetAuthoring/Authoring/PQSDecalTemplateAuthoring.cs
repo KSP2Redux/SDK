@@ -7,18 +7,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     /// textures the Redux baker reads but the runtime never samples directly.
     /// </summary>
     /// <remarks>
-    /// Stored as a sub-asset of <see cref="PlanetAuthoringRegistry" />, keyed by
-    /// <see cref="PQSDecal.DecalID" />. Runtime PQSDecal fields (HeightScale, BlendMode, opacity,
-    /// flags, MaterialScaleFactor, ...) are base-game data and stay on the asset. Only the
-    /// Redux-added textures live here so they don't pull source bytes into addressables bundles.
+    /// Lives as a standalone <c>.asset</c> in the owning decal's <c>Data/</c> folder, resolved
+    /// by <see cref="AuthoringSidecars" />. Runtime PQSDecal fields (HeightScale, BlendMode,
+    /// opacity, flags, MaterialScaleFactor, ...) are base-game data and stay on the asset. Only
+    /// the Redux-added textures live here so they don't pull source bytes into addressables bundles.
     /// </remarks>
     public class PQSDecalTemplateAuthoring : ScriptableObject
     {
-        /// <summary>
-        /// <see cref="PQSDecal.DecalID" /> of the owning template, used as the sidecar key.
-        /// </summary>
-        public string DecalID;
-
         /// <summary>
         /// Source diffuse texture for the decal, packed into the body's PQSDecalData diffuse array by the baker.
         /// </summary>

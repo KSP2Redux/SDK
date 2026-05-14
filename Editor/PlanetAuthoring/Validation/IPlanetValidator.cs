@@ -7,7 +7,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
     /// Contract for a single planet-authoring validator.
     /// </summary>
     /// <remarks>
-    /// Implementations are auto-discovered by <see cref="PlanetValidatorRegistry" />. Concrete types must live in this assembly and have a public parameterless constructor.
+    /// Implementations are auto-discovered by <see cref="PlanetValidatorRegistry" />. Concrete types must live in
+    /// this assembly and have a public parameterless constructor. The runner filters validators per body by
+    /// matching <see cref="AppliesTo" /> against <see cref="BodyClassClassifier.Classify" />.
     /// </remarks>
     public interface IPlanetValidator
     {
@@ -18,6 +20,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
         /// Defaults to <see cref="ValidatorCost.Cheap" />. Expensive validators must override.
         /// </remarks>
         ValidatorCost Cost => ValidatorCost.Cheap;
+
+        /// <summary>
+        /// Body classes the validator applies to.
+        /// </summary>
+        /// <remarks>
+        /// The runner classifies each body via <see cref="BodyClassClassifier" /> and skips validators
+        /// whose mask does not include the body's class. Defaults to <see cref="BodyClassFlags.All" />
+        /// for validators that work on any body. PQS / biome / decal / science-region validators
+        /// should narrow to <see cref="BodyClassFlags.SolidSurface" />. Star-specific checks should narrow
+        /// to <see cref="BodyClassFlags.Star" />, and so on.
+        /// </remarks>
+        BodyClassFlags AppliesTo => BodyClassFlags.All;
 
         /// <summary>
         /// Runs the check against <paramref name="body" /> and returns any issues found.

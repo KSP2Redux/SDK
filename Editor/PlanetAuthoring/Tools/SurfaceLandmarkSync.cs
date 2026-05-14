@@ -40,40 +40,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var pqs = landmark.GetComponentInParent<PQS>();
             if (pqs == null) return;
 
-            MigrateLegacyTransformPlacement(landmark, pqs);
             WriteWrapperTransform(landmark, pqs);
             SyncDecal(landmark, pqs);
             SyncSpawner(landmark, pqs);
             SyncDiscoverable(landmark, pqs);
-        }
-
-        /// <summary>
-        /// One-shot migration for scenes authored before lat/lon/altitude became the source of truth.
-        /// When the doubles are all zero but the wrapper sits off-origin, derives them from the
-        /// existing transform position so the artist doesn't have to re-place every landmark.
-        /// </summary>
-        private static void MigrateLegacyTransformPlacement(SurfaceLandmark landmark, PQS pqs)
-        {
-            if (landmark.Latitude != 0.0 || landmark.Longitude != 0.0 || landmark.Altitude != 0.0)
-            {
-                return;
-            }
-            var bodyTransform = BodyResolver.FindBody(landmark)?.transform ?? pqs.transform;
-            Vector3 localPos = bodyTransform.InverseTransformPoint(landmark.transform.position);
-            if (localPos.sqrMagnitude < 1e-6f)
-            {
-                return;
-            }
-            double r = Math.Sqrt(localPos.x * (double)localPos.x + localPos.y * (double)localPos.y + localPos.z * (double)localPos.z);
-            double lat = Math.Asin(localPos.y / r) * 180.0 / Math.PI;
-            double lon = Math.Atan2(localPos.z, localPos.x) * 180.0 / Math.PI;
-            var localDir = LatLon.GetRelSurfaceNVector(lat, lon);
-            double alt = TrySurfaceHeight(pqs, localDir, out double terrainR) ? r - terrainR : 0.0;
-            Undo.RecordObject(landmark, "Migrate SurfaceLandmark to lat/lon doubles");
-            landmark.Latitude = lat;
-            landmark.Longitude = lon;
-            landmark.Altitude = alt;
-            EditorUtility.SetDirty(landmark);
         }
 
         /// <summary>

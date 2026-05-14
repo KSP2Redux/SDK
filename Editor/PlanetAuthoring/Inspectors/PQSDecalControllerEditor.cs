@@ -13,8 +13,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(PQSDecalController))]
     public class PQSDecalControllerEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PQSDecalControllerInspector.uxml";
-        private const string UssPath = "/Assets/Windows/PQSDecalControllerInspector.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSDecalControllerInspector.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSDecalControllerInspector.uss";
 
         private Button _bakeButton;
 

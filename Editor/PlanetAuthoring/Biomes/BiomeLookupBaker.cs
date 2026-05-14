@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using KSP.Rendering.Planets;
-using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors;
 using UnityEditor;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
@@ -94,27 +92,24 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
                 if (!subzoneMask.isReadable) return Fail($"Subzone mask '{subzoneMask.name}' is not Read/Write enabled.");
             }
 
-            var sidecar = PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(data);
+            var sidecar = AuthoringSidecars.GetOrCreate(data);
             if (sidecar == null) return Fail("Could not resolve the PQSDataAuthoring sidecar for this PQSData.");
 
             var mappedChannels = 0;
-            for (var i = 0; i < 4; i++)
+            foreach (var mapping in sidecar.biomeChannelMapping)
             {
-                if (sidecar.biomeChannelMapping[i] != PQSData.KSP2BiomeType.NONE)
-                {
+                if (mapping != PQSData.KSP2BiomeType.NONE)
                     mappedChannels++;
-                }
             }
             if (mappedChannels == 0) return Fail("No biome channels are mapped to a KSP2BiomeType. Bake would emit an empty hash table.");
 
             var bodyKey = ResolveBodyKey(data);
-            var folder = ResolveFolder(data);
 
             var hashTable = BuildHashTable(biomeMask, subzones ? subzoneMask : null, sidecar, subzones);
 
             var pqsDataPath = AssetDatabase.GetAssetPath(data);
-            var savedHashTable = WriteHashTableAsSubAsset(hashTable, data, folder, bodyKey);
-            var savedColorLut = WriteStubColorLutAsSubAsset(data, folder, bodyKey);
+            var savedHashTable = WriteHashTableAsSubAsset(hashTable, data, bodyKey);
+            var savedColorLut = WriteStubColorLutAsSubAsset(data, bodyKey);
 
             data.PlanetBiomeHashTable = savedHashTable;
             if (data.BiomeColorLookupTable == null)
@@ -161,13 +156,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
                 assetName = assetName.Substring(0, assetName.Length - "_PQS".Length);
             }
             return assetName.ToLowerInvariant();
-        }
-
-        private static string ResolveFolder(PQSData data)
-        {
-            var path = AssetDatabase.GetAssetPath(data);
-            if (string.IsNullOrEmpty(path)) return "Assets";
-            return Path.GetDirectoryName(path)?.Replace('\\', '/') ?? "Assets";
         }
 
         private static BiomeLookupHashTable BuildHashTable(Texture2D biomeMask, Texture2D subzoneMask, PQSDataAuthoring sidecar, bool subzones)
@@ -275,12 +263,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
 
         // Stored as a sub-asset of PQSData so the bundle includes it automatically through PQSData's
         // PlanetBiomeHashTable field. Nothing in the runtime loads it by addressables label or key,
-        // so it doesn't need a standalone GUID. Older bakes wrote a separate file; migration deletes
-        // that file and its addressables entry on the next bake.
-        private static BiomeLookupHashTable WriteHashTableAsSubAsset(BiomeLookupHashTable hashTable, PQSData host, string folder, string bodyKey)
+        // so it doesn't need a standalone GUID.
+        private static BiomeLookupHashTable WriteHashTableAsSubAsset(BiomeLookupHashTable hashTable, PQSData host, string bodyKey)
         {
             var fileStem = bodyKey + HashTableSuffix;
-            MigrateLegacyFile($"{folder}/{fileStem}.asset");
             hashTable.name = fileStem;
             RemoveExistingSubAssets<BiomeLookupHashTable>(host);
             AssetDatabase.AddObjectToAsset(hashTable, host);
@@ -291,10 +277,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
         // reference is null. Ship a 1-entry stub so the field is satisfied and the error stays
         // silent. The single entry uses Color.black, matching the fallback path inside
         // BiomeLookupHashTable.GetBiomeDataAtUV when colorTable is null.
-        private static BiomeTextureColorLookupTable WriteStubColorLutAsSubAsset(PQSData host, string folder, string bodyKey)
+        private static BiomeTextureColorLookupTable WriteStubColorLutAsSubAsset(PQSData host, string bodyKey)
         {
             var fileStem = bodyKey + ColorLutSuffix;
-            MigrateLegacyFile($"{folder}/{fileStem}.asset");
             RemoveExistingSubAssets<BiomeTextureColorLookupTable>(host);
             var lut = ScriptableObject.CreateInstance<BiomeTextureColorLookupTable>();
             lut.name = fileStem;
@@ -304,13 +289,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
             };
             AssetDatabase.AddObjectToAsset(lut, host);
             return lut;
-        }
-
-        private static void MigrateLegacyFile(string legacyPath)
-        {
-            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(legacyPath) == null) return;
-            Ksp2UnityTools.Editor.API.AddressablesTools.RemoveAddressable(legacyPath);
-            AssetDatabase.DeleteAsset(legacyPath);
         }
 
         private static void RemoveExistingSubAssets<T>(PQSData host) where T : UnityEngine.Object

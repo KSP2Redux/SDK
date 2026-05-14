@@ -27,7 +27,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class SurfaceManagerWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/SurfaceManagerWindow.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/SurfaceManagerWindow.uxml";
 
         private Label _statusLabel;
         private Button _newLandmarkButton;

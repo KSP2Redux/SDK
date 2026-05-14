@@ -17,7 +17,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(PQSDecal))]
     public class PQSDecalEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PQSDecalInspector.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSDecalInspector.uxml";
 
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             // Bind the texture-fields subtree to the editor-only sidecar so its property paths resolve against the sidecar SO instead of PQSDecal.
             var decal = (PQSDecal)target;
             if (string.IsNullOrEmpty(decal.DecalID)) return root;
-            var authoring = PlanetAuthoringRegistry.Instance.GetOrCreateDecalTemplate(decal.DecalID);
+            var authoring = AuthoringSidecars.GetOrCreate(decal);
             if (authoring == null) return root;
             root.Q<VisualElement>("texture-fields").Bind(new SerializedObject(authoring));
 

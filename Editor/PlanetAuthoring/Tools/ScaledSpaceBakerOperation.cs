@@ -217,28 +217,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
         private static Mesh BakeLodMesh(BakeContext ctx)
         {
-            // Strip stale per-LOD asset files from the old baker version that wrote them separately.
-            foreach (var legacy in new[] { "_lod0", "_lod1", "_lod2" })
-            {
-                var legacyPath = $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_mesh{legacy}.asset";
-                if (AssetDatabase.LoadAssetAtPath<Mesh>(legacyPath) != null)
-                    AssetDatabase.DeleteAsset(legacyPath);
-            }
-
             var path = $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_mesh.asset";
-
-            // Migrate any sub-asset Meshes from the previous baker version into a single main mesh.
-            // Keeps the file GUID and the main object's fileID, so prefab references resolve.
-            var existingAssets = AssetDatabase.LoadAllAssetsAtPath(path);
-            Mesh mainMesh = null;
-            foreach (var o in existingAssets)
-            {
-                if (o is Mesh m)
-                {
-                    if (AssetDatabase.IsMainAsset(m)) mainMesh = m;
-                    else AssetDatabase.RemoveObjectFromAsset(m);
-                }
-            }
+            var mainMesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            bool created = mainMesh == null;
 
             var baseLon = 64 << ctx.MeshResolutionIndex;
             var baseLatBuild = baseLon / 2;
@@ -299,7 +280,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             mainMesh.RecalculateBounds();
             mainMesh.RecalculateTangents();
 
-            if (existingAssets.Length == 0)
+            if (created)
                 AssetDatabase.CreateAsset(mainMesh, path);
             else
                 EditorUtility.SetDirty(mainMesh);

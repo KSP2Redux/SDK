@@ -7,17 +7,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     /// the bake fingerprint used to detect when the baked artifacts are stale.
     /// </summary>
     /// <remarks>
-    /// Stored as a sub-asset of <see cref="PlanetAuthoringRegistry" />, keyed by the ScienceRegionData
-    /// asset's AssetDatabase GUID. The fingerprint hashes the source map + region rows at bake time,
-    /// and the SR_BAKED_DRIFT validator recomputes the same hash from current state and compares.
+    /// Lives as a standalone <c>.asset</c> in the owning body's <c>Data/</c> folder, resolved by
+    /// <see cref="AuthoringSidecars" />. The fingerprint hashes the source map + region rows at
+    /// bake time, and the SR_BAKED_DRIFT validator recomputes the same hash from current state
+    /// and compares.
     /// </remarks>
     public class ScienceRegionAuthoring : ScriptableObject
     {
-        /// <summary>
-        /// AssetDatabase GUID of the owning <see cref="KSP.Game.Science.ScienceRegionData" /> asset, used as the sidecar key.
-        /// </summary>
-        public string ScienceRegionGuid;
-
         /// <summary>
         /// Hash of the bake inputs (source map GUID, source map importer version, and each region row's Id, MapId, and color), or the empty string when the region has never been baked.
         /// </summary>

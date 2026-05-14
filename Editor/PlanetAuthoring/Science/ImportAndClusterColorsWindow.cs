@@ -18,7 +18,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Science
     /// </remarks>
     internal sealed class ImportAndClusterColorsWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/ImportAndClusterColorsWindow.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/ImportAndClusterColorsWindow.uxml";
         private const float DefaultMergeTolerance = 0.06f;
 
         private ScienceRegionData _data;

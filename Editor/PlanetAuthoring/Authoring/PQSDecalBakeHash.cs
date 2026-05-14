@@ -67,7 +67,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
             hash.Append(t.MaterialScaleFactor);
 
             // Per-template source textures live on the editor-only sidecar.
-            var auth = PlanetAuthoringRegistry.Instance.FindDecalTemplate(t.DecalID);
+            var auth = AuthoringSidecars.Find(t);
             if (auth == null)
             {
                 hash.Append("tex:null");

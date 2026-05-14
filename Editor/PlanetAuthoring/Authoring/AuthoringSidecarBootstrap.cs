@@ -8,15 +8,10 @@ using UnityEditor;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
 {
     /// <summary>
-    /// Auto-creates authoring sidecar entries when assets that need them are imported, removes
-    /// them when the source assets are deleted, and invalidates the science-region locator cache
-    /// so the user never has to think about "did the sidecar get made?".
+    /// Auto-creates authoring sidecars when assets that need them are imported and invalidates the science-region locator cache so artists never have to think about whether the sidecar got made.
     /// </summary>
     /// <remarks>
-    /// Single hook: an <see cref="AssetPostprocessor" /> that creates the matching sidecar entry
-    /// when a PQSDecal, PQSData, or ScienceRegionData asset lands, and prunes orphans on delete.
-    /// GetOrCreate is idempotent so re-imports don't duplicate entries. A single batched
-    /// SaveAssets at the end of the pass avoids per-entry save-thrash during bulk imports.
+    /// Imports route through <see cref="AuthoringSidecars.GetOrCreate(PQSData)" /> (and its sibling overloads), which is idempotent so re-imports don't duplicate sidecars. Deletes leave the sidecar in the body's <c>Data/</c> folder for explicit cleanup, since there is no registry index to keep in sync. A single batched SaveAssets at the end of the pass avoids per-entry save-thrash during bulk imports.
     /// </remarks>
     internal class AuthoringSidecarBootstrap : AssetPostprocessor
     {
@@ -39,33 +34,28 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
                 var decal = AssetDatabase.LoadAssetAtPath<PQSDecal>(path);
                 if (decal != null && !string.IsNullOrEmpty(decal.DecalID))
                 {
-                    PlanetAuthoringRegistry.Instance.GetOrCreateDecalTemplate(decal.DecalID);
+                    AuthoringSidecars.GetOrCreate(decal);
                     dirty = true;
                     continue;
                 }
                 var pqsData = AssetDatabase.LoadAssetAtPath<PQSData>(path);
                 if (pqsData != null)
                 {
-                    PlanetAuthoringRegistry.Instance.GetOrCreatePQSData(pqsData);
+                    AuthoringSidecars.GetOrCreate(pqsData);
                     dirty = true;
                     continue;
                 }
                 var scienceRegion = AssetDatabase.LoadAssetAtPath<ScienceRegionData>(path);
                 if (scienceRegion != null)
                 {
-                    PlanetAuthoringRegistry.Instance.GetOrCreateScienceRegion(scienceRegion);
+                    AuthoringSidecars.GetOrCreate(scienceRegion);
                     dirty = true;
                 }
             }
 
-            // Deleted GUIDs no longer resolve to a path, so the registry walks its entries and
-            // removes any whose stored GUID is now orphaned. DecalTemplateAuthoring is keyed by
-            // DecalID (not GUID) and is intentionally left for explicit cleanup.
-            if (deletedAssets.Length > 0)
-            {
-                PlanetAuthoringRegistry.Instance.RemoveOrphanedSidecars();
-                dirty = true;
-            }
+            // Sidecars are standalone .asset files now, so an orphan cleanup pass on delete is no
+            // longer needed - the artist deletes the runtime asset, the sidecar in Data/ stays
+            // until they delete it directly. (No registry index to keep in sync.)
 
             if (dirty)
             {

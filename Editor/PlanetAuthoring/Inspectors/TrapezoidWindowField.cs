@@ -34,8 +34,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             Slope,
         }
 
-        private const string UxmlPath = "/Assets/Windows/PropertyFields/TrapezoidWindowField.uxml";
-        private const string UssPath = "/Assets/Windows/PropertyFields/PropertyFields.uss";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/PropertyFields/TrapezoidWindowField.uxml";
+        private const string UssPath = "/Assets/Windows/PlanetAuthoring/PropertyFields/PropertyFields.uss";
         private const float ThumbnailLineWidth = 1.5f;
         private const float XMin = 0f;
 

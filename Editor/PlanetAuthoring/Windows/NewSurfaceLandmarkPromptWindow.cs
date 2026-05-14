@@ -20,7 +20,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// </remarks>
     public class NewSurfaceLandmarkPromptWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/NewSurfaceLandmarkPromptWindow.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Prompts/NewSurfaceLandmarkPromptWindow.uxml";
 
         /// <summary>
         /// The form payload returned to the caller's place callback.
