@@ -737,24 +737,6 @@
 
 /* region ============ Dialog ============ */
 
-.uitk-dialog-layer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0);
-}
-
-.uitk-dialog-curtain {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.45);
-}
-
 .uitk-dialog.root {
     width: 720px;
     min-height: 190px;
