@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="sdk-root">
+
+        <engine:Foldout text="Input" value="true" class="sdk-section">
+            <editor:DoubleField name="radius-field" label="Radius (m)"
+                                tooltip="Body radius in meters. The same value you would assign to CoreCelestialBodyData.radius."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Recommended" value="true" class="sdk-section">
+            <editor:DoubleField name="gravity-asl-field" label="Gravity ASL (g)"
+                                readonly="true"
+                                tooltip="Recommended gravityASL (in Earth gravities, where 1.0 = 9.80665 m/s²) interpolated from stock-game bodies sorted by radius. Below the smallest stock body, lerps from zero at radius zero. Above the largest, clamps to that body's gravity."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="gravity-ms2-field" label="Gravity (m/s²)"
+                                readonly="true"
+                                tooltip="Same recommendation expressed in m/s². Equals Gravity ASL × 9.80665."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Stock bracket" value="true" class="sdk-section">
+            <engine:Label name="bracket-below-label" class="sdk-hint"
+                          text="Below: -" />
+            <engine:Label name="bracket-above-label" class="sdk-hint"
+                          text="Above: -" />
+            <engine:Label class="sdk-hint"
+                          text="Stock data is non-monotonic (similar radii can have very different g). Treat the recommendation as a starting point and tweak by judgment." />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

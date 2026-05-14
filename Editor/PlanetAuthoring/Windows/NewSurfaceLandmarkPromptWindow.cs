@@ -77,6 +77,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             win.ShowUtility();
         }
 
+        /// <inheritdoc />
         private void CreateGUI()
         {
             var root = rootVisualElement;
@@ -196,9 +197,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private void OnCreateDecalClicked(ObjectField decalTemplateField)
         {
             var session = PlanetAuthoringSession.Active;
-            var body = session?.Pqs != null
-                ? session.Pqs.GetComponentInParent<CoreCelestialBodyData>()
-                : null;
+            var body = BodyResolver.FindBody(session?.Pqs);
             var folder = ResolveBodyFolder(body);
             var defaultName = (body?.name ?? "Body") + "_Landmark_Decal";
             NewDecalPromptWindow.Show(defaultName, decalResult =>

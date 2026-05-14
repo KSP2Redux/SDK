@@ -80,6 +80,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));
             BuildSoiCalculationField(root.Q<VisualElement>("soi-calc-slot"));
             WireRecalcTerrainHeight(root);
+            WireScaledSpaceBake(root);
 
             root.Bind(serializedObject);
 
@@ -93,6 +94,69 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var button = root.Q<Button>(name);
             if (button != null)
                 button.clicked += handler;
+        }
+
+        private const string ScaledBakePrefsPrefix = "Ksp2UnityTools.ScaledSpaceBake.";
+        private static readonly Color DefaultOceanColor = new(0.05f, 0.15f, 0.4f, 1f);
+        private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+        private void WireScaledSpaceBake(VisualElement root)
+        {
+            var resolution = root.Q<DropdownField>("scaled-bake-resolution");
+            var includeOcean = root.Q<Toggle>("scaled-bake-include-ocean");
+            var oceanColor = root.Q<ColorField>("scaled-bake-ocean-color");
+            var bake = root.Q<Button>("scaled-bake-button");
+            var status = root.Q<Label>("scaled-bake-status");
+            if (bake == null) return;
+
+            int resIndex = EditorPrefs.GetInt(ScaledBakePrefsPrefix + "MeshResIndex", 1);
+            if (resolution != null && resIndex >= 0 && resIndex < resolution.choices.Count)
+                resolution.SetValueWithoutNotify(resolution.choices[resIndex]);
+            includeOcean?.SetValueWithoutNotify(EditorPrefs.GetBool(ScaledBakePrefsPrefix + "IncludeOcean", false));
+            oceanColor?.SetValueWithoutNotify(LoadOceanColor());
+
+            bake.clicked += () =>
+            {
+                int currentResIndex = resolution?.index ?? 1;
+                bool currentIncludeOcean = includeOcean?.value ?? false;
+                Color currentOceanColor = oceanColor?.value ?? DefaultOceanColor;
+
+                EditorPrefs.SetInt(ScaledBakePrefsPrefix + "MeshResIndex", currentResIndex);
+                EditorPrefs.SetBool(ScaledBakePrefsPrefix + "IncludeOcean", currentIncludeOcean);
+                StoreOceanColor(currentOceanColor);
+
+                var settings = new ScaledSpaceBakerOperation.Settings
+                {
+                    MeshResolutionIndex = currentResIndex,
+                    IncludeOcean = currentIncludeOcean,
+                    OceanColor = currentOceanColor,
+                };
+                var result = ScaledSpaceBakerOperation.Bake(TargetData, settings);
+                if (status != null)
+                    status.text = result.Success ? $"Baked to {result.ScaledFolder}." : $"Bake failed: {result.Error}";
+            };
+        }
+
+        private static Color LoadOceanColor()
+        {
+            var packed = EditorPrefs.GetString(ScaledBakePrefsPrefix + "OceanColor", null);
+            if (string.IsNullOrEmpty(packed)) return DefaultOceanColor;
+            var parts = packed.Split(',');
+            if (parts.Length == 4
+                && float.TryParse(parts[0], System.Globalization.NumberStyles.Float, Invariant, out var r)
+                && float.TryParse(parts[1], System.Globalization.NumberStyles.Float, Invariant, out var g)
+                && float.TryParse(parts[2], System.Globalization.NumberStyles.Float, Invariant, out var b)
+                && float.TryParse(parts[3], System.Globalization.NumberStyles.Float, Invariant, out var a))
+            {
+                return new Color(r, g, b, a);
+            }
+            return DefaultOceanColor;
+        }
+
+        private static void StoreOceanColor(Color c)
+        {
+            var packed = string.Format(Invariant, "{0},{1},{2},{3}", c.r, c.g, c.b, c.a);
+            EditorPrefs.SetString(ScaledBakePrefsPrefix + "OceanColor", packed);
         }
 
         private void BuildSaveSection(VisualElement container)
@@ -198,7 +262,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             if (status != null) status.text = string.Empty;
 
-            PQS pqs = TargetObject != null ? TargetObject.GetComponentInChildren<PQS>(true) : null;
+            PQS pqs = BodyResolver.FindPqs(TargetData);
             TerrainHeightRangeCalculator.Result result;
             try
             {
@@ -370,7 +434,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void CreateEmptyPqsData()
         {
-            PQS pqs = TargetObject.GetComponentInChildren<PQS>(true);
+            PQS pqs = BodyResolver.FindPqs(TargetData);
             if (pqs == null)
                 return;
 

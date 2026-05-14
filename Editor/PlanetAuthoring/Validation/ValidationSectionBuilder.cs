@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
     /// Call <see cref="Mount" /> once to attach a header label, the issues container, and the
     /// "Run full validation" footer to the slot. Call <see cref="Refresh" /> on the inspector's
     /// repaint tick to rebuild the cheap-validator issues. Expensive validators only run when
-    /// the user clicks the footer button; their last result persists alongside cheap output.
+    /// the user clicks the footer button. Their last result persists alongside cheap output.
     /// </remarks>
     public static class ValidationSectionBuilder
     {

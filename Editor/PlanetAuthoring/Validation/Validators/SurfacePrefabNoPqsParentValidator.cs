@@ -5,32 +5,38 @@ using KSP.Rendering.Planets;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
 {
     /// <summary>
-    /// Flags a <see cref="PrefabSpawner" /> on the body whose hierarchy has no <see cref="PQS" /> in
-    /// its parent chain.
+    /// Flags a <see cref="PrefabSpawner" /> in the authoring scene whose hierarchy has no
+    /// <see cref="PQS" /> in its parent chain.
     /// </summary>
     /// <remarks>
     /// PrefabSpawner's <c>Awake</c> dereferences <c>GetComponentInParent&lt;PQS&gt;().CoreCelestialBodyData.Data.radius</c>
     /// to compute its altitude threshold. Without a PQS ancestor that throws on entering preview
-    /// or game start. The validator walks every spawner in the body's hierarchy regardless of where
-    /// it lives so misplaced spawners surface here.
+    /// or game start. Walks every spawner across every scene root because the Local prefab holding
+    /// PQS is a sibling scene root of the body, not a child.
     /// </remarks>
     public sealed class SurfacePrefabNoPqsParentValidator : IPlanetValidator
     {
+        /// <summary>Stable code identifying issues emitted by this validator.</summary>
         public const string Code = "SURFACE_PREFAB_NO_PQS_PARENT";
 
+        /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
         {
             if (body == null) yield break;
-            var spawners = body.GetComponentsInChildren<PrefabSpawner>(true);
+            var scene = body.gameObject.scene;
+            if (!scene.IsValid()) yield break;
             var bodyName = body.Data?.bodyName ?? "(unnamed)";
-            foreach (var spawner in spawners)
+            foreach (var root in scene.GetRootGameObjects())
             {
-                if (spawner == null) continue;
-                if (spawner.GetComponentInParent<PQS>() != null) continue;
-                yield return new ValidationIssue(
-                    Code,
-                    ValidationSeverity.Error,
-                    $"Surface prefab spawner '{spawner.gameObject.name}' on '{bodyName}' has no PQS in its parent chain. PrefabSpawner.Awake will throw on entering preview. Move the spawner under the PQS GameObject.");
+                foreach (var spawner in root.GetComponentsInChildren<PrefabSpawner>(true))
+                {
+                    if (spawner == null) continue;
+                    if (spawner.GetComponentInParent<PQS>() != null) continue;
+                    yield return new ValidationIssue(
+                        Code,
+                        ValidationSeverity.Error,
+                        $"Surface prefab spawner '{spawner.gameObject.name}' on '{bodyName}' has no PQS in its parent chain. PrefabSpawner.Awake will throw on entering preview. Move the spawner under the PQS GameObject on the Local prefab.");
+                }
             }
         }
     }

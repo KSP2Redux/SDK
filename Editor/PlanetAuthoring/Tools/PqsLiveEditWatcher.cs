@@ -80,6 +80,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             try
             {
                 session.Pqs.UpdateSurfaceMaterial();
+                // Re-push per-tier height-scale uniforms so live edits update the sphere displacement.
+                session.Pqs.PQSRenderer?.RefreshHeightScalesForEditor();
                 session.Pqs.UpdateSphere();
                 SceneView.RepaintAll();
             }

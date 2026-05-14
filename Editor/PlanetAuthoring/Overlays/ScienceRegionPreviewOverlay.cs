@@ -2,6 +2,7 @@ using KSP;
 using KSP.Game.Science;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Science;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using UnityEngine;
 
@@ -15,8 +16,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
     /// <remarks>
     /// Resolves the active body's <see cref="ScienceRegionData" /> via
     /// <see cref="ScienceRegionAssetLocator" />. The baked-palette texture is built and cached on
-    /// demand; switching mode or session swaps it. Same shader the runtime overlay uses
-    /// (<c>KSP2/Environment/CelestialBody/CelestialBody_Local_Overlay</c>); no new shader needed.
+    /// demand. Switching mode or session swaps it. Same shader the runtime overlay uses
+    /// (<c>KSP2/Environment/CelestialBody/CelestialBody_Local_Overlay</c>), no new shader needed.
     /// </remarks>
     internal sealed class ScienceRegionPreviewOverlay : PreviewOverlay
     {
@@ -36,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             SourceTexture,
         }
 
-        private const string ShaderName = "KSP2/Environment/CelestialBody/CelestialBody_Local_Overlay";
+        private const string ShaderName = "Redux/PlanetAuthoring/Overlays/ScienceRegionOverlay";
 
         private static readonly int OverlayTextureId = Shader.PropertyToID("_OverlayTexture");
         private static readonly int StrengthId = Shader.PropertyToID("_Strength");
@@ -104,7 +105,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         {
             OverlayMaterial.SetFloat(StrengthId, _strength);
 
-            var body = pqs != null ? pqs.GetComponentInParent<CoreCelestialBodyData>() : null;
+            var body = BodyResolver.FindBody(pqs);
             var bodyName = body?.Data?.bodyName;
             var data = ScienceRegionAssetLocator.FindForBody(bodyName);
             HasScienceData = data != null;

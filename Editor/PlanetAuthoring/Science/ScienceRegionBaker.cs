@@ -88,7 +88,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Science
             var bakedAssetPath = WriteBakedMapAsset(data, folder, bakedMapName, group);
 
             // Stash the bake fingerprint so the SR_BAKED_DRIFT validator can detect when any input
-            // changes after this bake. Sidecar is editor-only; runtime never reads it.
+            // changes after this bake. Sidecar is editor-only - runtime never reads it.
             var sidecar = PlanetAuthoringRegistry.Instance.GetOrCreateScienceRegion(data);
             if (sidecar != null)
             {

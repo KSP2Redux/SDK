@@ -168,9 +168,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var metalSources = new Texture2D[16];
             for (var i = 0; i < 16; i++)
             {
-                albedoSources[i] = (authoring.smallAlbedoTiles != null && i < authoring.smallAlbedoTiles.Length) ? authoring.smallAlbedoTiles[i] : null;
-                normalSources[i] = (authoring.smallNormalTiles != null && i < authoring.smallNormalTiles.Length) ? authoring.smallNormalTiles[i] : null;
-                metalSources[i] = (authoring.smallMetalTiles != null && i < authoring.smallMetalTiles.Length) ? authoring.smallMetalTiles[i] : null;
+                var slot = (authoring.smallLayerSlots != null && i < authoring.smallLayerSlots.Length) ? authoring.smallLayerSlots[i] : null;
+                albedoSources[i] = slot?.EffectiveAlbedoTexture;
+                normalSources[i] = slot?.EffectiveNormalTexture;
+                metalSources[i] = slot?.EffectiveMetallicTexture;
             }
 
             for (var cell = 0; cell < 16; cell++)

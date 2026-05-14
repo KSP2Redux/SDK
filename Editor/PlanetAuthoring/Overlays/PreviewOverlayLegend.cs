@@ -197,7 +197,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
 
         private static float DrawSlopeGradient(Rect r, float y)
         {
-            // Gradient bar fills the row width; labels sit beside it (not overlaid)
+            // Gradient bar fills the row width. Labels sit beside it (not overlaid)
             // so neither end's label fights the underlying color.
             const float labelW = 36f;
             const float gap = 4f;

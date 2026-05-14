@@ -136,6 +136,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         // --- Bulk operations ---
 
         /// <summary>
+        /// Enumerates every <see cref="PQSDataAuthoring" /> sidecar currently registered.
+        /// </summary>
+        /// <remarks>
+        /// Used by cross-body refresh paths that need to walk every body's sidecar to find ones
+        /// referencing a shared asset (for example, <c>SmallLayerMaterialPostProcessor</c>
+        /// recompiles bodies whose <see cref="SmallLayerMaterial" /> changed).
+        /// </remarks>
+        public IEnumerable<PQSDataAuthoring> EnumeratePQSDataAuthorings()
+        {
+            foreach (var entry in _entries)
+            {
+                if (entry is PQSDataAuthoring d)
+                    yield return d;
+            }
+        }
+
+        /// <summary>
         /// Removes every sidecar whose stored GUID no longer maps to an asset on disk. Called by
         /// <see cref="AuthoringSidecarBootstrap" /> after a postprocess pass that includes deletes.
         /// </summary>

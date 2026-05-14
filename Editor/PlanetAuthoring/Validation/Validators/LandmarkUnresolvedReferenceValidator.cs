@@ -4,6 +4,7 @@ using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Science;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
@@ -21,12 +22,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
     /// </remarks>
     public sealed class LandmarkUnresolvedReferenceValidator : IPlanetValidator
     {
+        /// <summary>Stable code identifying issues emitted by this validator.</summary>
         public const string Code = "LANDMARK_UNRESOLVED_REFERENCE";
 
+        /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
         {
             if (body == null) yield break;
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = BodyResolver.FindPqsIncludingAsset(body);
             if (pqs == null) yield break;
             var landmarks = pqs.GetComponentsInChildren<SurfaceLandmark>(true);
             var bodyName = body.Data?.bodyName ?? "(unnamed)";

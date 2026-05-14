@@ -58,7 +58,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             {
                 return;
             }
-            var bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            var bodyTransform = BodyResolver.FindBody(landmark)?.transform ?? pqs.transform;
             Vector3 localPos = bodyTransform.InverseTransformPoint(landmark.transform.position);
             if (localPos.sqrMagnitude < 1e-6f)
             {
@@ -82,7 +82,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// </summary>
         private static void WriteWrapperTransform(SurfaceLandmark landmark, PQS pqs)
         {
-            var bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            var bodyTransform = BodyResolver.FindBody(landmark)?.transform ?? pqs.transform;
             var localDir = LatLon.GetRelSurfaceNVector(landmark.Latitude, landmark.Longitude);
             double radius;
             if (TrySurfaceHeight(pqs, localDir, out double terrainR))
@@ -175,7 +175,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             Undo.RecordObject(decal, "Sync SurfaceLandmark decal");
             // Use the artist's chosen template if one is assigned, otherwise fall back to the
             // SDK's default smoothing pad. The smoothing-mode overrides below only run when
-            // EnableSmoothing is on; in pure-cosmetic mode the decal sources height from its own
+            // EnableSmoothing is on. In pure-cosmetic mode the decal sources height from its own
             // template defaults (which for a flat shared heightmap means no height modification).
             decal.PQSDecal = landmark.SmoothingDecal != null ? landmark.SmoothingDecal : SmoothingPadAsset.Get();
             decal.PqsDecalController = controller;
@@ -198,7 +198,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             {
                 // Cosmetic mode: hand control of every height-and-fade override over to the
                 // landmark inspector's per-instance override rows. Clearing the flags here means
-                // the artist's toggles are authoritative; not clearing would leave the smoothing-
+                // the artist's toggles are authoritative - not clearing would leave the smoothing-
                 // mode values frozen in place.
                 decal.OverrideHeightBlendMode = false;
                 decal.OverrideHeightOffset = false;
@@ -283,7 +283,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var legacy = landmark.transform.Find(LegacySpawnerChildName);
             if (legacy == null) return;
             // Only destroy if it actually carries a legacy PrefabSpawner. Otherwise it might be a
-            // user-authored sibling that happens to share the name; leave it alone.
+            // user-authored sibling that happens to share the name - leave it alone.
             if (legacy.GetComponent<PrefabSpawner>() == null) return;
             Undo.DestroyObjectImmediate(legacy.gameObject);
         }

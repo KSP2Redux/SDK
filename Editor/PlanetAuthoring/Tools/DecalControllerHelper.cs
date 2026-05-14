@@ -58,13 +58,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             if (planet != _cachedPqs || _cachedController == null)
             {
                 _cachedPqs = planet;
-                _cachedController = planet.GetComponent<PQSDecalController>()
-                    ?? planet.GetComponentInChildren<PQSDecalController>();
+                // Explicit == null instead of ?? so Unity's fake-null sentinel is handled correctly.
+                var controller = planet.GetComponent<PQSDecalController>();
+                if (controller == null) controller = planet.GetComponentInChildren<PQSDecalController>();
+                _cachedController = controller;
                 if (_cachedController == null) return null;
                 if (_cachedController.CoreCelestialBodyData == null)
                 {
-                    // The wizard places root, scaled, and local as sibling root GameObjects in the authoring scene, so a parent walk does not find the body. Look across the active scene's roots instead.
-                    var body = FindBodyInScene(planet);
+                    // The Scaled prefab carries CoreCelestialBodyData and the Local prefab carrying
+                    // this controller is a sibling scene root, so a parent walk doesn't find it.
+                    // Scan the active scene's roots instead. Authoring scenes hold exactly one body.
+                    var body = BodyResolver.FindBodyInScene(planet.gameObject);
                     if (body != null)
                     {
                         _cachedController.CoreCelestialBodyData = body;
@@ -77,19 +81,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             // it even when the list is empty, so leave this outside the cache gate.
             _cachedController.RefreshDecalInstances();
             return _cachedController;
-        }
-
-        private static CoreCelestialBodyData FindBodyInScene(PQS planet)
-        {
-            // Authoring scenes contain exactly one body per scene, so first match wins.
-            var scene = planet.gameObject.scene;
-            if (!scene.IsValid()) return null;
-            foreach (var go in scene.GetRootGameObjects())
-            {
-                var body = go.GetComponentInChildren<CoreCelestialBodyData>(true);
-                if (body != null) return body;
-            }
-            return null;
         }
     }
 }

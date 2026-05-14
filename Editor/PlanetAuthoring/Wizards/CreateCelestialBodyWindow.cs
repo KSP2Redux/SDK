@@ -8,6 +8,7 @@ using KSP.Rendering.Planets;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Modding;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using Redux.CelestialBody;
 using Uber.Scatter;
@@ -25,14 +26,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
     /// Wizard for creating a new celestial body.
     /// </summary>
     /// <remarks>
-    /// Generates a Celestial.&lt;Key&gt;.prefab root carrying CoreCelestialBodyData with the addressable
-    /// keys for Scaled and, when solid, Local. Scaled and Local are separate addressable prefab assets.
-    /// An editor-only authoring scene with all three prefab instances plus a directional light is also
-    /// created so live preview runs against a real Unity scene rather than a nested-prefab graph.
+    /// Generates a Celestial.&lt;Key&gt;.Scaled.prefab carrying CoreCelestialBodyData and, when solid,
+    /// a sibling Celestial.&lt;Key&gt;.Local.prefab. Both are separate addressable prefab assets.
+    /// An editor-only authoring scene with the Scaled and Local prefabs as sibling scene roots is
+    /// also created so live preview runs against a real Unity scene rather than a nested-prefab graph.
+    /// Keeping them as siblings (not parent/child) avoids accidentally nesting Local under Scaled
+    /// and dirtying the Scaled prefab asset with a transform-child override.
     /// </remarks>
     public class CreateCelestialBodyWindow : EditorWindow
     {
-        private const string CelestialBodiesLabel = "celestial_bodies";
         private static string ProjectLevelGroupName => PlanetAuthoringAddressables.CelestialBodiesGroupName;
 
         // Default sun direction for new authoring scenes. Tuned to cast visible shadows across a
@@ -41,7 +43,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         private static readonly Quaternion SunRotation = Quaternion.Euler(50f, -30f, 0f);
 
         private const string LocalShaderName = "Redux/Environment/CelestialBody_Local";
-        private const string ScaledShaderName = "KSP2/Planets/Scaled";
 
         private static readonly Color OkColor = new(0.4f, 0.8f, 0.4f);
         private static readonly Color ErrorColor = new(0.85f, 0.45f, 0.3f);
@@ -55,23 +56,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             (BodyType.Star, "Star"),
         };
 
-        /// <summary>
-        /// Centralized naming convention for celestial body assets. Keeping every "Celestial.{key}"
-        /// and "_Local.mat" string in one place so a future rename is a single edit.
-        /// </summary>
-        private static class Naming
-        {
-            public static string RootPrefab(string key) => $"Celestial.{key}.prefab";
-            public static string ScaledPrefab(string key) => $"Celestial.{key}.Scaled.prefab";
-            public static string LocalPrefab(string key) => $"Celestial.{key}.Local.prefab";
-            public static string Scene(string key) => $"Celestial.{key}.unity";
-            public static string ScaledMaterial(string key) => $"{key}_Scaled.mat";
-            public static string LocalMaterial(string key) => $"{key}_Local.mat";
-            public static string PqsData(string key) => $"{key}_PQS.asset";
-            public static string PqsDecalData(string key) => $"{key}_PQSDecalData.asset";
-            public static string ScienceRegions(string key) => $"{key}_ScienceRegions.asset";
-            public static string RootGameObject(string key) => $"Celestial.{key}";
-        }
+        // Naming conventions for celestial body assets live in PlanetAuthoringNaming.
 
         /// <summary>
         /// Opens the Create Celestial Body wizard window.
@@ -85,10 +70,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         }
 
         /// <summary>
-        /// Generates an authoring scene next to a selected celestial body root prefab.
+        /// Generates an authoring scene next to a selected Scaled celestial body prefab.
         /// </summary>
         /// <remarks>
-        /// Migrates bodies without an existing authoring scene to the scene-based authoring flow.
+        /// Use for bodies that have prefabs but no authoring scene yet. Select the Celestial.&lt;Key&gt;.Scaled.prefab.
         /// </remarks>
         [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Create Authoring Scene For Selected Celestial Body", priority = KSP2UnityTools.MenuPriority + 1)]
         public static void CreateAuthoringSceneForSelected()
@@ -97,20 +82,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             string prefabPath = selected != null ? AssetDatabase.GetAssetPath(selected) : null;
             if (string.IsNullOrEmpty(prefabPath) || !prefabPath.EndsWith(".prefab"))
             {
-                EditorUtility.DisplayDialog("Selection invalid", "Select the celestial body root prefab (Celestial.<Key>.prefab) in the Project window.", "OK");
+                EditorUtility.DisplayDialog("Selection invalid", "Select the Scaled celestial body prefab (Celestial.<Key>.Scaled.prefab) in the Project window.", "OK");
                 return;
             }
 
-            GameObject rootPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            if (rootPrefab == null || rootPrefab.GetComponent<CoreCelestialBodyData>() == null)
+            GameObject scaledPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (scaledPrefab == null || scaledPrefab.GetComponent<CoreCelestialBodyData>() == null)
             {
-                EditorUtility.DisplayDialog("Not a celestial body root", prefabPath + " has no CoreCelestialBodyData component. Select the root body prefab.", "OK");
+                EditorUtility.DisplayDialog("Not a celestial body prefab", prefabPath + " has no CoreCelestialBodyData component. Select the Scaled body prefab.", "OK");
                 return;
             }
 
             string folder = Path.GetDirectoryName(prefabPath)?.Replace('\\', '/');
             string fileName = Path.GetFileNameWithoutExtension(prefabPath);
-            string scenePath = folder + "/" + fileName + ".unity";
+            // Strip ".Scaled" suffix to get the body's base name for the scene file.
+            string sceneStem = fileName.EndsWith(".Scaled") ? fileName.Substring(0, fileName.Length - ".Scaled".Length) : fileName;
+            string scenePath = folder + "/" + sceneStem + ".unity";
 
             if (File.Exists(scenePath))
             {
@@ -124,18 +111,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                     return;
             }
 
-            CelestialBodyData data = rootPrefab.GetComponent<CoreCelestialBodyData>().Core?.data;
-            string scaledKey = data?.assetKeyScaled;
+            CelestialBodyData data = scaledPrefab.GetComponent<CoreCelestialBodyData>().Core?.data;
             string simulationKey = data?.assetKeySimulation;
 
-            GameObject scaledPrefab = !string.IsNullOrEmpty(scaledKey)
-                ? AssetDatabase.LoadAssetAtPath<GameObject>(folder + "/" + scaledKey)
-                : null;
             GameObject localPrefab = !string.IsNullOrEmpty(simulationKey)
                 ? AssetDatabase.LoadAssetAtPath<GameObject>(folder + "/" + simulationKey)
                 : null;
 
-            CreateAuthoringScene(scenePath, rootPrefab, scaledPrefab, localPrefab);
+            CreateAuthoringScene(scenePath, scaledPrefab, localPrefab);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -263,9 +246,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             }
 
             bool solid = CurrentBodyType() == BodyType.SolidSurface;
-            string preview = $"Will create folder {folder} with:\n  {Naming.RootPrefab(key)}\n  {Naming.ScaledPrefab(key)}\n  {Naming.ScaledMaterial(key)}";
+            string preview = $"Will create folder {folder} with:\n  {PlanetAuthoringNaming.ScaledPrefab(key)}\n  {PlanetAuthoringNaming.ScaledMaterial(key)}";
             if (solid)
-                preview += $"\n  {Naming.LocalPrefab(key)}\n  {Naming.LocalMaterial(key)}\n  {Naming.PqsData(key)}\n  {Naming.ScienceRegions(key)}";
+                preview += $"\n  {PlanetAuthoringNaming.LocalPrefab(key)}\n  {PlanetAuthoringNaming.LocalMaterial(key)}\n  {PlanetAuthoringNaming.PqsData(key)}\n  {PlanetAuthoringNaming.ScienceRegions(key)}";
             _statusLabel.text = preview;
             _statusLabel.style.color = OkColor;
             _createButton.SetEnabled(true);
@@ -313,20 +296,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 if (solid)
                     CreateScienceRegionData(key, folder, createdPaths);
 
-                GameObject scaledPrefab = CreateScaledPrefab(key, folder, scaledMaterial, createdPaths);
+                GameObject scaledPrefab = CreateScaledPrefab(key, folder, type, scaledMaterial, createdPaths);
                 GameObject localPrefab = solid ? CreateLocalPrefab(key, folder, pqsData, decalData, createdPaths) : null;
-                GameObject rootPrefab = CreateRootPrefab(key, folder, type, createdPaths);
 
                 RegisterAddressables(scaledPrefab, localPrefab, key);
 
-                string scenePath = folder + "/" + Naming.Scene(key);
-                CreateAuthoringScene(scenePath, rootPrefab, scaledPrefab, localPrefab);
+                string scenePath = folder + "/" + PlanetAuthoringNaming.Scene(key);
+                CreateAuthoringScene(scenePath, scaledPrefab, localPrefab);
                 createdPaths.Add(scenePath);
 
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                Selection.activeObject = rootPrefab;
-                EditorGUIUtility.PingObject(rootPrefab);
+                Selection.activeObject = scaledPrefab;
+                EditorGUIUtility.PingObject(scaledPrefab);
                 succeeded = true;
                 return true;
             }
@@ -339,14 +321,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 
         private static bool TryResolveShaders(BodyType type, out Shader localShader, out Shader scaledShader)
         {
-            scaledShader = Shader.Find(ScaledShaderName);
+            scaledShader = Shader.Find(PlanetAuthoringShaders.Scaled);
             localShader = type == BodyType.SolidSurface ? Shader.Find(LocalShaderName) : null;
 
             if (scaledShader == null)
             {
                 EditorUtility.DisplayDialog(
                     "Shader missing",
-                    $"Could not find shader '{ScaledShaderName}'. Ensure the SDK shader package is imported before creating a celestial body.",
+                    $"Could not find shader '{PlanetAuthoringShaders.Scaled}'. Ensure the SDK shader package is imported before creating a celestial body.",
                     "OK"
                 );
                 return false;
@@ -381,7 +363,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         private static Material CreateScaledMaterial(string key, string folder, Shader shader, List<string> createdPaths)
         {
             Material mat = new(shader) { name = $"{key}_Scaled" };
-            string path = folder + "/" + Naming.ScaledMaterial(key);
+            string path = folder + "/" + PlanetAuthoringNaming.ScaledMaterial(key);
             AssetDatabase.CreateAsset(mat, path);
             createdPaths.Add(path);
             return mat;
@@ -399,7 +381,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             // cascade the shader's PARAMS.md recommends.
             mat.SetVector("_DistanceResampleDistances", new Vector4(50f, 500f, 2000f, 12000f));
             mat.SetVector("_DistanceResampleUVScales", new Vector4(1f, 2f, 4f, 8f));
-            string path = folder + "/" + Naming.LocalMaterial(key);
+            string path = folder + "/" + PlanetAuthoringNaming.LocalMaterial(key);
             AssetDatabase.CreateAsset(mat, path);
             createdPaths.Add(path);
             return mat;
@@ -409,7 +391,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         {
             PQSData data = ScriptableObject.CreateInstance<PQSData>();
             data.materialSettings.surfaceMaterial = localMaterial;
-            string path = folder + "/" + Naming.PqsData(key);
+            string path = folder + "/" + PlanetAuthoringNaming.PqsData(key);
             AssetDatabase.CreateAsset(data, path);
             createdPaths.Add(path);
             return data;
@@ -418,7 +400,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         private static PQSDecalData CreatePqsDecalData(string key, string folder, List<string> createdPaths)
         {
             PQSDecalData data = ScriptableObject.CreateInstance<PQSDecalData>();
-            string path = folder + "/" + Naming.PqsDecalData(key);
+            string path = folder + "/" + PlanetAuthoringNaming.PqsDecalData(key);
             AssetDatabase.CreateAsset(data, path);
             createdPaths.Add(path);
             return data;
@@ -447,25 +429,40 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 SplashedScalar = 1f,
                 LandedScalar = 1f,
             };
-            string path = folder + "/" + Naming.ScienceRegions(key);
+            string path = folder + "/" + PlanetAuthoringNaming.ScienceRegions(key);
             AssetDatabase.CreateAsset(data, path);
             createdPaths.Add(path);
             return data;
         }
 
-        private static GameObject CreateScaledPrefab(string key, string folder, Material scaledMaterial, List<string> createdPaths)
+        private static GameObject CreateScaledPrefab(string key, string folder, BodyType type, Material scaledMaterial, List<string> createdPaths)
         {
-            GameObject temp = new("Scaled");
+            GameObject temp = new(PlanetAuthoringNaming.ScaledGameObject(key));
             try
             {
+                CoreCelestialBodyData coreData = temp.AddComponent<CoreCelestialBodyData>();
+                bool solid = type == BodyType.SolidSurface;
+                coreData.Core.data = new CelestialBodyData
+                {
+                    bodyName = key,
+                    isStar = type == BodyType.Star,
+                    hasSolidSurface = solid,
+                    assetKeyScaled = PlanetAuthoringNaming.ScaledPrefab(key),
+                    assetKeySimulation = solid ? PlanetAuthoringNaming.LocalPrefab(key) : null,
+                };
+
                 temp.AddComponent<MeshFilter>();
                 MeshRenderer renderer = temp.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial = scaledMaterial;
+                // Sized to the baker's authored mesh radius so ScaledPlanetaryBodyView's
+                // invBaseSizeFactor cancels the authored size out and world-space rendering lands
+                // at the body's actual radius.
+                SphereCollider scaledCollider = temp.AddComponent<SphereCollider>();
+                scaledCollider.radius = ScaledSpaceBakerOperation.AuthoredRadius;
                 temp.AddComponent<CelestialBodyLighting>();
                 temp.AddComponent<CelestialBodyPostProcess>();
-                temp.AddComponent<CelestialScaledMaterialReplacer>();
 
-                string path = folder + "/" + Naming.ScaledPrefab(key);
+                string path = folder + "/" + PlanetAuthoringNaming.ScaledPrefab(key);
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
                 createdPaths.Add(path);
                 return prefab;
@@ -488,7 +485,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 pqsRenderer.Pqs = pqs;
                 pqs.data = pqsData;
                 pqs.isActive = true;
-                temp.AddComponent<CelestialSimulationMaterialReplacer>();
                 temp.AddComponent<PqsTerrain>();
                 PQSDecalController decalController = temp.AddComponent<PQSDecalController>();
                 // AddComponent leaves enabled=true by default, but make this explicit so a future
@@ -499,7 +495,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 decalController.SharedHeightmap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Full Decal Alpha.png");
                 decalController.SharedAlphaMap = AssetDatabase.LoadAssetAtPath<Texture2D>(SDKConfiguration.BasePath + "/Assets/DecalMaps/Full Decal Alpha.png");
 
-                string path = folder + "/" + Naming.LocalPrefab(key);
+                string path = folder + "/" + PlanetAuthoringNaming.LocalPrefab(key);
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
                 createdPaths.Add(path);
                 return prefab;
@@ -511,36 +507,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             }
         }
 
-        private static GameObject CreateRootPrefab(string key, string folder, BodyType type, List<string> createdPaths)
-        {
-            GameObject temp = new(Naming.RootGameObject(key));
-            try
-            {
-                CoreCelestialBodyData coreData = temp.AddComponent<CoreCelestialBodyData>();
-                coreData.Core.data = new CelestialBodyData
-                {
-                    bodyName = key,
-                    isStar = type == BodyType.Star,
-                    hasSolidSurface = type == BodyType.SolidSurface,
-                    assetKeyScaled = Naming.ScaledPrefab(key),
-                    assetKeySimulation = Naming.LocalPrefab(key),
-                };
-
-                string path = folder + "/" + Naming.RootPrefab(key);
-                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(temp, path);
-                createdPaths.Add(path);
-                return prefab;
-            }
-            finally
-            {
-                if (temp != null)
-                    DestroyImmediate(temp);
-            }
-        }
-
-        // Editor-only authoring scene with root, Scaled, and Local prefab instances plus a sun light.
-        // The runtime never loads it. CelestialBodyAuthoringSceneGuard blocks play-mode entry against it.
-        private static void CreateAuthoringScene(string scenePath, GameObject rootPrefab, GameObject scaledPrefab, GameObject localPrefab)
+        // Editor-only authoring scene with Scaled and Local prefabs as sibling scene roots, plus a
+        // sun light. The runtime never loads it. CelestialBodyAuthoringSceneGuard blocks play-mode
+        // entry against it. Sibling layout prevents accidentally nesting Local under Scaled and
+        // dirtying the Scaled prefab asset with a transform-child override.
+        private static void CreateAuthoringScene(string scenePath, GameObject scaledPrefab, GameObject localPrefab)
         {
             // Open additively so the user's currently-loaded scenes are not disturbed.
             Scene authoringScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
@@ -552,20 +523,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             sun.transform.rotation = SunRotation;
             SceneManager.MoveGameObjectToScene(sun, authoringScene);
 
-            GameObject rootInstance = (GameObject)PrefabUtility.InstantiatePrefab(rootPrefab, authoringScene);
-            if (scaledPrefab != null)
-            {
-                GameObject scaledInstance = (GameObject)PrefabUtility.InstantiatePrefab(scaledPrefab, authoringScene);
-                scaledInstance.transform.SetParent(rootInstance.transform);
-            }
+            GameObject scaledInstance = (GameObject)PrefabUtility.InstantiatePrefab(scaledPrefab, authoringScene);
             if (localPrefab != null)
             {
                 GameObject localInstance = (GameObject)PrefabUtility.InstantiatePrefab(localPrefab, authoringScene);
-                localInstance.transform.SetParent(rootInstance.transform);
                 // Pre-wire the controller's body reference so DecalControllerHelper doesn't need
-                // its scene-walk fallback for newly-authored bodies. Without this, the controller's
-                // CoreCelestialBodyData stays null until something calls Resolve.
-                var bodyData = rootInstance.GetComponentInChildren<CoreCelestialBodyData>(true);
+                // its scene-walk fallback for newly-authored bodies.
+                var bodyData = scaledInstance.GetComponent<CoreCelestialBodyData>();
                 var decalController = localInstance.GetComponentInChildren<PQSDecalController>(true);
                 if (decalController != null && bodyData != null && decalController.CoreCelestialBodyData == null)
                 {
@@ -593,7 +557,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             {
                 bool ok = EditorUtility.DisplayDialog(
                     "Register addressables",
-                    $"Register the new Scaled and Local prefabs in the '{ProjectLevelGroupName}' addressables group? Declining means you'll need to wire them in manually.",
+                    $"Add the new Scaled and Local prefabs to the '{ProjectLevelGroupName}' addressables group? Decline and you'll have to wire them up manually.",
                     "Yes",
                     "No"
                 );
@@ -611,9 +575,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
 
         private static void AddToGroup(AddressableAssetGroup group, GameObject scaled, GameObject local, string key)
         {
-            AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(scaled), Naming.ScaledPrefab(key), CelestialBodiesLabel);
+            AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(scaled), PlanetAuthoringNaming.ScaledPrefab(key));
             if (local != null)
-                AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(local), Naming.LocalPrefab(key), CelestialBodiesLabel);
+                AddressablesTools.MakeAddressable(group, AssetDatabase.GetAssetPath(local), PlanetAuthoringNaming.LocalPrefab(key));
         }
     }
 }

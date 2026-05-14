@@ -440,7 +440,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 
                 var inverseDir = 1 / rd;
 
-                // 256 is the BVH traversal depth cap. Pathological inputs could exceed it; sphere-like meshes don't.
+                // 256 is the BVH traversal depth cap. Pathological inputs could exceed it - sphere-like meshes don't.
                 Span<int> stack = stackalloc int[256];
                 var sp = 0;
                 stack[sp++] = 0;

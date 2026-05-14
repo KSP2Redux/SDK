@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor
                 }
             }
 
-            // RuntimeInitializeOnLoadMethod requires the method to be static; AutoRegisters are usually private static.
+            // RuntimeInitializeOnLoadMethod requires the method to be static. AutoRegisters are usually private static.
             // Default GetMethods() returns only Public|Instance, which silently misses every candidate.
             const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
             return mainAssembly.GetTypes()

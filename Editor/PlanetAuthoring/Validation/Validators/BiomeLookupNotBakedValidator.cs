@@ -3,6 +3,7 @@ using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Biomes;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
 {
@@ -24,7 +25,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
         {
             if (body == null) yield break;
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = BodyResolver.FindPqsIncludingAsset(body);
             PQSData pqsData = pqs?.data;
             if (pqsData?.heightMapInfo?.mask == null) yield break;
             if (pqsData.PlanetBiomeHashTable != null) yield break;

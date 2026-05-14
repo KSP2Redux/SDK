@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
         private const int PreviewResolution = 1024;
 
         // 17 entries matching KSP2BiomeType. Picked to be visually distinct rather than
-        // physically realistic; this is a debug visualization, not a final color treatment.
+        // physically realistic - this is a debug visualization, not a final color treatment.
         private static readonly Color[] BiomeColors =
         {
             new(0.10f, 0.10f, 0.10f, 1f), // NONE

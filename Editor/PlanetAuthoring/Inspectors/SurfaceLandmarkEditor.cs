@@ -17,14 +17,14 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Custom inspector for <see cref="SurfaceLandmark" />. Three foldable sections (Decal /
-    /// Prefab / Discoverable), each with an Enabled toggle and the subset of fields that drive its
-    /// managed child, plus the standard keyable lat/lon/altitude location block with pick / copy /
-    /// paste / framing buttons.
+    /// Custom inspector for <see cref="SurfaceLandmark" />.
     /// </summary>
     /// <remarks>
-    /// The lat/lon/altitude doubles on <see cref="SurfaceLandmark" /> are the source of truth for
-    /// placement. PropertyField bindings push edits through the SerializedObject; the per-field
+    /// Renders three foldable sections (Decal / Prefab / Discoverable), each with an Enabled toggle
+    /// and the subset of fields that drive its managed child, plus the standard keyable
+    /// lat/lon/altitude location block with pick / copy / paste / framing buttons. The
+    /// lat/lon/altitude doubles on <see cref="SurfaceLandmark" /> are the source of truth for
+    /// placement. PropertyField bindings push edits through the SerializedObject, and the per-field
     /// change callback runs <see cref="SurfaceLandmarkSync.Sync" />, which derives the wrapper
     /// transform and updates the managed children. The terrain readout polls every 500ms to stay
     /// current with handle drags.
@@ -410,7 +410,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var landmark = (SurfaceLandmark)target;
             if (landmark == null) return;
             var pqs = landmark.GetComponentInParent<PQS>();
-            var body = pqs?.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(landmark);
             var folder = ResolveBodyFolder(body);
             var defaultName = (body?.name ?? "Body") + "_Landmark_Decal";
             NewDecalPromptWindow.Show(defaultName, result =>
@@ -449,7 +449,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             radius = 0;
             pqs = landmark != null ? landmark.GetComponentInParent<PQS>() : null;
             if (pqs == null) return false;
-            bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            bodyTransform = BodyResolver.FindBody(landmark)?.transform ?? pqs.transform;
             radius = (float)(pqs.CoreCelestialBodyData?.Data?.radius ?? 0.0);
             return radius > 0;
         }

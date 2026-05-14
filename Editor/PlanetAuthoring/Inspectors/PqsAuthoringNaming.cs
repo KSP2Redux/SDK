@@ -40,6 +40,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             $"subzone{tier}Normals.Array.data[{biomeIndex}]";
 
         /// <summary>
+        /// Returns the SerializedProperty path for the <c>SmallLayerSlot</c> at the given slot index.
+        /// </summary>
+        public static string SmallLayerSlotPath(int slot) => $"smallLayerSlots.Array.data[{slot}]";
+
+        /// <summary>
+        /// Returns the SerializedProperty path for the named field on the <c>SmallLayerSlot</c> at the given slot index.
+        /// </summary>
+        public static string SmallLayerSlotFieldPath(int slot, string field) => $"smallLayerSlots.Array.data[{slot}].{field}";
+
+        /// <summary>
         /// Maps a (biomeChannel, secondaryChannel) pair to the flat index used by the 16-slot
         /// (biome, subzone) and (biome, small-layer) arrays.
         /// </summary>

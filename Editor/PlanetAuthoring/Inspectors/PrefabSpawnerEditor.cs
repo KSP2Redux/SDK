@@ -73,7 +73,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (spawner == null) return;
             var pqs = spawner.GetComponentInParent<PQS>();
             if (pqs == null) return;
-            var bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            var bodyTransform = BodyResolver.FindBody(spawner)?.transform ?? pqs.transform;
 
             if (SurfaceTransformHandles.DrawSurfaceMoveHandle(spawner.transform, pqs, bodyTransform, _altField?.value ?? 0f, "Move PrefabSpawner", out var newLatLon))
             {
@@ -380,7 +380,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var pqs = spawner.GetComponentInParent<PQS>();
             if (pqs == null) return (0, 0, 0, false);
-            var bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            var bodyTransform = BodyResolver.FindBody(spawner)?.transform ?? pqs.transform;
             Vector3d p = bodyTransform.InverseTransformPoint(spawner.transform.position);
             var r = System.Math.Sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
             if (r < 1e-3) return (0, 0, 0, false);
@@ -423,7 +423,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             radius = 0;
             pqs = spawner != null ? spawner.GetComponentInParent<PQS>() : null;
             if (pqs == null) return false;
-            bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            bodyTransform = BodyResolver.FindBody(spawner)?.transform ?? pqs.transform;
             radius = (float)(pqs.CoreCelestialBodyData?.Data?.radius ?? 0.0);
             return radius > 0;
         }

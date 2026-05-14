@@ -118,7 +118,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             }
 
             // Body-name sanity check so we don't accidentally place a Mun discoverable on Kerbin.
-            var body = planet.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(planet);
             var bodyName = body?.Data?.bodyName;
             var targetBody = TargetData.information?.BodyName;
             if (!string.IsNullOrEmpty(targetBody)
@@ -181,7 +181,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var data = TargetData;
             if (data == null) return;
 
-            var bodyTransform = planet.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? planet.transform;
+            var bodyTransform = BodyResolver.FindBody(planet)?.transform ?? planet.transform;
             Vector3 bodyLocal = bodyTransform.InverseTransformPoint(hitWorld);
 
             Undo.RecordObject(data, "Place Discoverable");

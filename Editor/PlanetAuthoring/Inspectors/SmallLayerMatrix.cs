@@ -1,4 +1,5 @@
 using System;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -111,24 +112,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var cell = new VisualElement();
             cell.AddToClassList("small-layer-matrix-cell");
 
-            var albedoField = new ObjectField
-            {
-                objectType = typeof(Texture2D),
-                allowSceneObjects = false,
-            };
-            albedoField.AddToClassList("small-layer-matrix-cell-tex");
-            var prop = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallAlbedoTilePath(slot));
-            if (prop != null)
-            {
-                albedoField.BindProperty(prop);
-                albedoField.TrackPropertyValue(prop, _ =>
-                {
-                    OnTextureChanged?.Invoke(slot);
-                    UpdateCellState(biome, layer);
-                });
-            }
+            var preview = new VisualElement();
+            preview.AddToClassList("small-layer-matrix-cell-preview");
+            cell.Add(preview);
 
-            cell.Add(albedoField);
+            // SmallLayerMaterial drop slot - the matrix's primary write target. Drag an SO in to
+            // assign the slot's shared material. Clear it to fall back to slot-local override values.
+            var materialField = new ObjectField
+            {
+                objectType = typeof(SmallLayerMaterial),
+                allowSceneObjects = false,
+                tooltip = "Drop a SmallLayerMaterial asset to share visual-identity defaults across bodies. Per-cell overrides remain accessible in the detail panel below.",
+            };
+            materialField.AddToClassList("small-layer-matrix-cell-material");
+            var materialProp = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Material"));
+            if (materialProp != null) materialField.BindProperty(materialProp);
+            cell.Add(materialField);
+
+            // contentHash-guarded so post-Bind spurious fires don't trigger the heavy Repack().
+            var ovProp = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "OverrideAlbedoTexture"));
+            var localProp = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "AlbedoTexture"));
+            void OnRelevantChange()
+            {
+                OnTextureChanged?.Invoke(slot);
+                UpdateCellState(biome, layer);
+            }
+            SmallBiomeDetailEditor.TrackChangedOnly(materialField, materialProp, OnRelevantChange);
+            SmallBiomeDetailEditor.TrackChangedOnly(materialField, ovProp, OnRelevantChange);
+            SmallBiomeDetailEditor.TrackChangedOnly(materialField, localProp, OnRelevantChange);
+            SmallBiomeDetailEditor.ResetSlotOnMaterialCleared(materialField, _authoringSO, slot);
 
             var summary = new Label();
             summary.AddToClassList("small-layer-matrix-cell-summary");
@@ -144,6 +156,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 Select(biome, layer);
             });
 
+            // Register the cell in _cells BEFORE the first UpdateCellState so its null-guards
+            // don't bail and skip the initial preview / summary paint.
+            _cells[slot] = cell;
             UpdateCellState(biome, layer);
             return cell;
         }
@@ -156,11 +171,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (cell == null || summary == null)
                 return;
 
-            var hasAlbedo = false;
-            if (_authoringSO != null)
+            var effectiveAlbedo = GetEffectiveAlbedo(slot);
+            var hasAlbedo = effectiveAlbedo != null;
+
+            // Preview: prefer the cached SmallLayerMaterial sphere thumbnail when this cell has
+            // an SO assigned, falling back to the effective albedo otherwise. The cached preview
+            // may be null on first display - render it lazily via delayCall so we don't stall
+            // the inspector's layout pass, and re-enter UpdateCellState once it's ready.
+            var preview = cell.Q<VisualElement>(className: "small-layer-matrix-cell-preview");
+            if (preview != null)
             {
-                var prop = _authoringSO.FindProperty(PqsAuthoringNaming.SmallAlbedoTilePath(slot));
-                hasAlbedo = prop != null && prop.objectReferenceValue != null;
+                var slotMaterial = GetSlotMaterial(slot);
+                Texture2D bg = null;
+                if (slotMaterial != null)
+                {
+                    bg = SmallLayerMaterialPreview.GetCached(slotMaterial);
+                    if (bg == null)
+                    {
+                        var capturedBiome = biome;
+                        var capturedLayer = layer;
+                        var capturedMaterial = slotMaterial;
+                        EditorApplication.delayCall += () =>
+                        {
+                            SmallLayerMaterialPreview.Render(capturedMaterial);
+                            UpdateCellState(capturedBiome, capturedLayer);
+                        };
+                    }
+                }
+                bg ??= effectiveAlbedo;
+                preview.style.backgroundImage = bg != null ? new StyleBackground(bg) : new StyleBackground();
             }
 
             cell.EnableInClassList("small-layer-matrix-cell--empty", !hasAlbedo);
@@ -218,6 +257,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             for (var b = 0; b < 4; b++)
                 for (var l = 0; l < 4; l++)
                     UpdateCellState(b, l);
+        }
+
+        private Texture2D GetEffectiveAlbedo(int slot)
+        {
+            var authoring = _authoringSO?.targetObject as PQSDataAuthoring;
+            if (authoring?.smallLayerSlots == null || slot < 0 || slot >= authoring.smallLayerSlots.Length)
+                return null;
+            return authoring.smallLayerSlots[slot]?.EffectiveAlbedoTexture;
+        }
+
+        private SmallLayerMaterial GetSlotMaterial(int slot)
+        {
+            var authoring = _authoringSO?.targetObject as PQSDataAuthoring;
+            if (authoring?.smallLayerSlots == null || slot < 0 || slot >= authoring.smallLayerSlots.Length)
+                return null;
+            return authoring.smallLayerSlots[slot]?.Material;
         }
     }
 }

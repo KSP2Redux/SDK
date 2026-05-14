@@ -760,7 +760,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (planet == null) return 0;
             var t = planet.GetSurfaceHeight(localRadial.normalized, true);
             if (t > 0) return t;
-            return planet.GetComponentInParent<CoreCelestialBodyData>()?.Data?.radius ?? 0;
+            return BodyResolver.FindBody(planet)?.Data?.radius ?? 0;
         }
 
         private static double DecomposeAltitude(CelestialBodyDiscoverablePosition pos)
@@ -1072,7 +1072,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var session = PlanetAuthoringSession.Active;
             var planet = session?.Pqs;
             if (planet == null) return;
-            var body = planet.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(planet);
             if (body == null) return;
 
             var showOrbs = PlanetAuthoringRegistry.Instance.FindScienceRegion(Target)?.ShowDiscoverableOrbs ?? true;

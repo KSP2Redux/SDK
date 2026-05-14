@@ -90,6 +90,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             window.minSize = new Vector2(280f, 220f);
         }
 
+        /// <inheritdoc />
         private void CreateGUI()
         {
             var root = rootVisualElement;
@@ -376,7 +377,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             if (session?.Pqs == null)
                 return null;
-            var body = session.Pqs.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(session.Pqs);
             return body != null ? body.transform : null;
         }
 
@@ -419,7 +420,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             var speed = _todSpeedSlider != null ? _todSpeedSlider.value : 30f;
             // Rotate the sun around the body's polar axis (local +Y projected to world). Visually
             // this is the same day/night sweep as rotating the body around its own +Y, but the
-            // framing rework wants the body to stay put; only the sun moves.
+            // framing rework wants the body to stay put. Only the sun moves.
             var polarAxisWorld = bodyRoot.rotation * Vector3.up;
             sun.transform.rotation = Quaternion.AngleAxis(speed * dt, polarAxisWorld) * sun.transform.rotation;
             RefreshSunFromLight();
@@ -659,7 +660,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             PQS planet = session?.Pqs;
             if (planet == null)
                 return;
-            var body = planet.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(planet);
             double radius = body?.Data?.radius ?? 0;
             if (radius <= 0)
                 return;
@@ -701,7 +702,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         {
             if (planet == null)
                 return;
-            var body = planet.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(planet);
             double radius = body?.Data?.radius ?? 0;
 
             var entries = new (Button btn, double alt)[]

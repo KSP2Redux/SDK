@@ -51,6 +51,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             window.minSize = new Vector2(380f, 360f);
         }
 
+        /// <inheritdoc />
         private void CreateGUI()
         {
             var root = rootVisualElement;
@@ -205,7 +206,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private void RebuildSpawners(PQS pqs, List<PrefabSpawner> spawners, string filter)
         {
             _prefabsList.Clear();
-            var bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            var bodyTransform = BodyResolver.FindBody(pqs)?.transform ?? pqs.transform;
             var visible = 0;
             foreach (var spawner in spawners)
             {
@@ -277,7 +278,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private void RebuildLandmarks(PQS pqs, SurfaceLandmark[] landmarks, string filter)
         {
             _landmarksList.Clear();
-            var bodyTransform = pqs.GetComponentInParent<CoreCelestialBodyData>()?.transform ?? pqs.transform;
+            var bodyTransform = BodyResolver.FindBody(pqs)?.transform ?? pqs.transform;
             var visible = 0;
             foreach (var landmark in landmarks)
             {
@@ -445,7 +446,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 statusHint = "Active session has no PQS bound.";
                 return null;
             }
-            var body = session.Pqs.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(session.Pqs);
             bodyName = body?.Data?.bodyName ?? session.Body?.name ?? "(unknown)";
             statusHint = null;
             return session.Pqs;

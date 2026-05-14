@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEngine;
 
@@ -36,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     {
         // Body entity ID -> last (lat, lon) framed by a lat/lon-bearing call. SessionInitialFraming
         // reads this on session start so re-entering preview returns to the artist's last view
-        // instead of snapping back to (0, 0). In-memory; lost on domain reload, which is acceptable.
+        // instead of snapping back to (0, 0). In-memory only - lost on domain reload, which is acceptable.
         private static readonly Dictionary<EntityId, (double lat, double lon)> LastLatLon = new();
 
         /// <summary>
@@ -125,7 +126,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             if (!Resolve(planet, out var ctx)) return;
             var fromBodyToCam = ctx.Sv.camera.transform.position - ctx.Body.transform.position;
-            // Camera-at-body-center degenerates the lookup; fall back to the body's current forward
+            // Camera-at-body-center degenerates the lookup. Fall back to the body's current forward
             // axis (Vector3.forward in local space) so the call becomes a no-op rotation instead of
             // corrupting orientation with an arbitrary axis.
             var localFocusDir = fromBodyToCam.sqrMagnitude > 1e-6f
@@ -168,7 +169,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             ctx = default;
             if (planet == null) return false;
-            var body = planet.GetComponentInParent<CoreCelestialBodyData>();
+            var body = BodyResolver.FindBody(planet);
             var radius = body?.Data?.radius ?? 0;
             if (radius <= 0) return false;
             var sv = SceneView.lastActiveSceneView;
@@ -208,7 +209,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         // Builds a rotation that aligns body-local localDir with targetWorldDir AND projects body-
         // local +Y (north pole axis in LatLon convention) onto worldUpHint. Quaternion.LookRotation
-        // composition handles the orthogonal-basis math; the inverse takes the local "look" to
+        // composition handles the orthogonal-basis math. The inverse takes the local "look" to
         // identity, then the world LookRotation re-aims it at the desired world axes.
         private static Quaternion ComputeBodyRotation(Vector3 localDir, Vector3 targetWorldDir, Vector3 worldUpHint)
         {
@@ -216,7 +217,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             var localNorthTangent = localNorth - Vector3.Dot(localNorth, localDir) * localDir;
             if (localNorthTangent.sqrMagnitude < 1e-6f)
             {
-                // At a pole; pick any tangent so LookRotation has a valid second axis.
+                // At a pole - pick any tangent so LookRotation has a valid second axis.
                 localNorthTangent = Vector3.Cross(localDir, Vector3.right);
                 if (localNorthTangent.sqrMagnitude < 1e-6f)
                     localNorthTangent = Vector3.Cross(localDir, Vector3.forward);

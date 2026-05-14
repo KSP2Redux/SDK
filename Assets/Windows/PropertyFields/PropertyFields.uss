@@ -8,14 +8,14 @@
     flex-grow: 1;
     flex-shrink: 1;
     flex-basis: 0;
-    min-width: 0;
+    min-width: 50px;
     margin-left: 0;
     margin-right: 2px;
 }
 
 .vec4-channels-field > .unity-base-field__label {
-    min-width: 22px;
-    flex-basis: 22px;
+    min-width: 28px;
+    flex-basis: 28px;
     flex-grow: 0;
     flex-shrink: 0;
     margin-right: 2px;
@@ -160,6 +160,22 @@
 
 .small-layer-matrix-cell-tex {
     margin-bottom: 2px;
+}
+
+.small-layer-matrix-cell-preview {
+    width: 100%;
+    height: 64px;
+    margin-bottom: 4px;
+    background-color: rgba(20, 22, 28, 0.6);
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.small-layer-matrix-cell-material {
+    margin-bottom: 4px;
 }
 
 .small-layer-matrix-cell-summary {

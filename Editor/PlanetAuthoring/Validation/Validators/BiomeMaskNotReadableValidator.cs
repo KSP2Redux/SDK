@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,7 +24,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
         {
             if (body == null) yield break;
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = BodyResolver.FindPqsIncludingAsset(body);
             Texture2D mask = pqs?.data?.heightMapInfo?.mask;
             if (mask == null || mask.isReadable) yield break;
 

@@ -134,7 +134,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Science
             var centroids = InitializeCentroidsKMeansPlusPlus(sample, k, opts.RandomSeed);
             var assignments = new int[sample.Length];
 
-            // Lloyd iterations on the sample only; reports progress per iteration.
+            // Lloyd iterations on the sample only. Reports progress per iteration.
             const float iterStart = 0.30f;
             const float iterEnd = 0.85f;
             for (var iter = 0; iter < MaxIterations; iter++)

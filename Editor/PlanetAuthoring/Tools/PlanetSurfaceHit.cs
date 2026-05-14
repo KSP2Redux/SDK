@@ -40,7 +40,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             if (planet == null) return false;
 
             var center = planet.transform.position;
-            var radius = planet.GetComponentInParent<CoreCelestialBodyData>()?.Data?.radius ?? 0;
+            var radius = BodyResolver.FindBody(planet)?.Data?.radius ?? 0;
             if (radius <= 0) return false;
 
             Vector3d localRayPos = (Vector3d)(ray.origin - center);

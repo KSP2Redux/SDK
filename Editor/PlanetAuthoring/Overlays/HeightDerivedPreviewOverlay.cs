@@ -1,5 +1,6 @@
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
@@ -81,7 +82,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             OverlayMaterial.SetFloat(BandHeightId, _bandHeight);
 
             var radius = 0f;
-            var body = pqs != null ? pqs.GetComponentInParent<CoreCelestialBodyData>() : null;
+            var body = BodyResolver.FindBody(pqs);
             if (body?.Data != null)
             {
                 radius = (float)body.Data.radius;

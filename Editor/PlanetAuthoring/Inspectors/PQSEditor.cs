@@ -1,5 +1,6 @@
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -71,7 +72,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var pqs = target as PQS;
             if (pqs == null)
                 return;
-            CoreCelestialBodyData body = pqs.GetComponentInParent<CoreCelestialBodyData>();
+            CoreCelestialBodyData body = BodyResolver.FindBody(pqs);
             ValidationSectionBuilder.Refresh(_validationHandle, body);
         }
     }

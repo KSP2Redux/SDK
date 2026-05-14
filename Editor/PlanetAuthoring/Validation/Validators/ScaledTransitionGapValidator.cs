@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
@@ -21,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
         {
             if (body?.Core?.data == null || !body.Core.data.hasSolidSurface)
                 yield break;
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = BodyResolver.FindPqsIncludingAsset(body);
             if (pqs == null || pqs.data == null || pqs.data.heightMapInfo == null)
                 yield break;
             var info = pqs.data.heightMapInfo;

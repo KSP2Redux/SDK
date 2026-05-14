@@ -3,6 +3,7 @@ using KSP;
 using KSP.Game.Science;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Science;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
@@ -26,7 +27,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
             if (body == null) yield break;
             // Solid surface gate via the PQS reference. Non-solid bodies (stars, gas giants) don't
             // ship a PQS, so only bodies that have one but no science region asset are flagged.
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = BodyResolver.FindPqsIncludingAsset(body);
             if (pqs == null) yield break;
             string bodyName = body.Data?.bodyName;
             if (string.IsNullOrEmpty(bodyName)) yield break;

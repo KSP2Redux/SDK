@@ -109,23 +109,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
 
             var bodyKey = ResolveBodyKey(data);
             var folder = ResolveFolder(data);
-            var group = PlanetAuthoringAddressables.ResolveCelestialBodiesGroup(data);
 
             var hashTable = BuildHashTable(biomeMask, subzones ? subzoneMask : null, sidecar, subzones);
 
-            var hashTablePath = WriteHashTable(hashTable, folder, bodyKey, group);
-            var colorLutPath = WriteStubColorLut(folder, bodyKey, group);
+            var pqsDataPath = AssetDatabase.GetAssetPath(data);
+            var savedHashTable = WriteHashTableAsSubAsset(hashTable, data, folder, bodyKey);
+            var savedColorLut = WriteStubColorLutAsSubAsset(data, folder, bodyKey);
 
-            data.PlanetBiomeHashTable = AssetDatabase.LoadAssetAtPath<BiomeLookupHashTable>(hashTablePath);
+            data.PlanetBiomeHashTable = savedHashTable;
             if (data.BiomeColorLookupTable == null)
             {
-                data.BiomeColorLookupTable = AssetDatabase.LoadAssetAtPath<BiomeTextureColorLookupTable>(colorLutPath);
+                data.BiomeColorLookupTable = savedColorLut;
             }
             EditorUtility.SetDirty(data);
             AssetDatabase.SaveAssetIfDirty(data);
             AssetDatabase.Refresh();
 
-            return new BakeResult(true, hashTablePath, $"Baked {hashTablePath}");
+            return new BakeResult(true, pqsDataPath, $"Baked biome lookup into {pqsDataPath}");
         }
 
         private static BakeResult Fail(string message)
@@ -176,7 +176,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
             var total = HashTableDimension * HashTableDimension;
 
             // Scratch buffers reused across cells. The 16x16 type grid stays alive for the whole
-            // bake; the chunk-pack buffer collects packed ints per cell and gets copied (sized to
+            // bake. The chunk-pack buffer collects packed ints per cell and gets copied (sized to
             // fit) into a fresh per-cell List<int> at the end. Avoids ~5 List-growth reallocations
             // per cell (the List doubles its capacity per resize: 4, 8, 16, 32, ...).
             var subCellTypes = new PQSData.KSP2BiomeType[CellDimension, CellDimension];
@@ -273,45 +273,58 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
             return true;
         }
 
-        private static string WriteHashTable(BiomeLookupHashTable hashTable, string folder, string bodyKey, AddressableAssetGroup group)
+        // Stored as a sub-asset of PQSData so the bundle includes it automatically through PQSData's
+        // PlanetBiomeHashTable field. Nothing in the runtime loads it by addressables label or key,
+        // so it doesn't need a standalone GUID. Older bakes wrote a separate file; migration deletes
+        // that file and its addressables entry on the next bake.
+        private static BiomeLookupHashTable WriteHashTableAsSubAsset(BiomeLookupHashTable hashTable, PQSData host, string folder, string bodyKey)
         {
             var fileStem = bodyKey + HashTableSuffix;
-            var assetPath = $"{folder}/{fileStem}.asset";
-            if (File.Exists(assetPath))
-            {
-                AssetDatabase.DeleteAsset(assetPath);
-            }
-            AssetDatabase.CreateAsset(hashTable, assetPath);
-            if (group != null)
-            {
-                AddressablesTools.MakeAddressable(group, assetPath, fileStem, "biome_lookup");
-            }
-            return assetPath;
+            MigrateLegacyFile($"{folder}/{fileStem}.asset");
+            hashTable.name = fileStem;
+            RemoveExistingSubAssets<BiomeLookupHashTable>(host);
+            AssetDatabase.AddObjectToAsset(hashTable, host);
+            return hashTable;
         }
 
         // Gameplay never reads BiomeSurfaceData.color, but PQS logs a one-time error when the LUT
         // reference is null. Ship a 1-entry stub so the field is satisfied and the error stays
         // silent. The single entry uses Color.black, matching the fallback path inside
         // BiomeLookupHashTable.GetBiomeDataAtUV when colorTable is null.
-        private static string WriteStubColorLut(string folder, string bodyKey, AddressableAssetGroup group)
+        private static BiomeTextureColorLookupTable WriteStubColorLutAsSubAsset(PQSData host, string folder, string bodyKey)
         {
             var fileStem = bodyKey + ColorLutSuffix;
-            var assetPath = $"{folder}/{fileStem}.asset";
-            if (File.Exists(assetPath))
-            {
-                AssetDatabase.DeleteAsset(assetPath);
-            }
+            MigrateLegacyFile($"{folder}/{fileStem}.asset");
+            RemoveExistingSubAssets<BiomeTextureColorLookupTable>(host);
             var lut = ScriptableObject.CreateInstance<BiomeTextureColorLookupTable>();
+            lut.name = fileStem;
             lut.BiomeLookupPairs = new List<BiomeLookupEditorPair>
             {
                 new() { name = "stub", color = Color.black },
             };
-            AssetDatabase.CreateAsset(lut, assetPath);
-            if (group != null)
+            AssetDatabase.AddObjectToAsset(lut, host);
+            return lut;
+        }
+
+        private static void MigrateLegacyFile(string legacyPath)
+        {
+            if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(legacyPath) == null) return;
+            Ksp2UnityTools.Editor.API.AddressablesTools.RemoveAddressable(legacyPath);
+            AssetDatabase.DeleteAsset(legacyPath);
+        }
+
+        private static void RemoveExistingSubAssets<T>(PQSData host) where T : UnityEngine.Object
+        {
+            var hostPath = AssetDatabase.GetAssetPath(host);
+            if (string.IsNullOrEmpty(hostPath)) return;
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(hostPath))
             {
-                AddressablesTools.MakeAddressable(group, assetPath, fileStem, "biome_lookup_color_lut");
+                if (o is T t && !AssetDatabase.IsMainAsset(t))
+                {
+                    AssetDatabase.RemoveObjectFromAsset(t);
+                    UnityEngine.Object.DestroyImmediate(t, allowDestroyingAssets: true);
+                }
             }
-            return assetPath;
         }
     }
 }

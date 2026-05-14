@@ -58,6 +58,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             NoBiomeMask,
             /// <summary>The shipped PQSGlobalSettings asset is unavailable.</summary>
             PqsGlobalSettingsUnavailable,
+            /// <summary>The scene contains more than one celestial body.</summary>
+            MultipleBodiesInScene,
         }
 
         /// <summary>
@@ -233,12 +235,20 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             var bodyClass = ClassifyBody(body);
 
+            // Sibling-scene-root authoring layout: exactly one body per authoring scene. Reject
+            // scenes that contain more than one so the session doesn't silently pick the wrong one.
+            var bodyNames = ListBodyNamesInScene(body);
+            if (bodyNames.Count > 1)
+            {
+                errors.Add(new ReadinessError(ReadinessErrorCode.MultipleBodiesInScene, $"Authoring scene contains {bodyNames.Count} celestial bodies ({string.Join(", ", bodyNames)}). Authoring requires exactly one body per scene."));
+            }
+
             if (bodyClass == BodyClass.SolidSurface)
             {
-                var pqs = body.GetComponentInChildren<PQS>(true);
+                var pqs = BodyResolver.FindPqs(body);
                 if (pqs == null)
                 {
-                    errors.Add(new ReadinessError(ReadinessErrorCode.NoPqsComponent, "No PQS component found in the body hierarchy."));
+                    errors.Add(new ReadinessError(ReadinessErrorCode.NoPqsComponent, "No PQS component found in the authoring scene."));
                 }
                 else
                 {
@@ -263,6 +273,27 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // Gas giants and stars use the scaled-space prefab path, no PQS to validate.
 
             return new ReadinessReport(bodyClass, errors);
+        }
+
+        private static List<string> ListBodyNamesInScene(CoreCelestialBodyData body)
+        {
+            var names = new List<string>();
+            var scene = body.gameObject.scene;
+            // Asset-context bodies (no valid scene) report a single name so the multi-body check
+            // never fails on them.
+            if (!scene.IsValid())
+            {
+                names.Add(body.name);
+                return names;
+            }
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var found in root.GetComponentsInChildren<CoreCelestialBodyData>(true))
+                {
+                    names.Add(found.name);
+                }
+            }
+            return names;
         }
 
         /// <summary>
@@ -294,7 +325,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             }
 
             var pqs = report.Class == BodyClass.SolidSurface
-                ? body.GetComponentInChildren<PQS>(true)
+                ? BodyResolver.FindPqs(body)
                 : null;
 
             var session = new PlanetAuthoringSession(body, pqs, report.Class);

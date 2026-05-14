@@ -27,7 +27,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators
         {
             if (body == null || body.Core?.data == null)
                 yield break;
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = BodyResolver.FindPqsIncludingAsset(body);
             if (pqs == null)
                 yield break;
             if (body.Core.data.MinTerrainHeight != 0.0 || body.Core.data.MaxTerrainHeight != 0.0)
