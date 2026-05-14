@@ -735,6 +735,142 @@
 /* endregion */
 
 
+/* region ============ Dialog ============ */
+
+.uitk-dialog-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.uitk-dialog-curtain {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+.uitk-dialog.root {
+    width: 720px;
+    min-height: 190px;
+    padding: 0;
+    border-radius: 4px;
+    border-color: rgb(64, 67, 149);
+    background-color: rgb(40, 45, 55);
+}
+
+.uitk-dialog__header {
+    flex-direction: row;
+    align-items: center;
+    height: 32px;
+    padding-left: 17px;
+    padding-right: 8px;
+    background-color: rgba(0, 0, 0, 0);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.uitk-dialog__title {
+    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
+    -unity-font-style: normal;
+    -unity-text-align: middle-left;
+    color: rgb(205, 211, 225);
+    font-size: 11px;
+    letter-spacing: 3px;
+    margin-right: 8px;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.uitk-dialog__header-dashes {
+    flex-direction: row;
+    align-items: center;
+    margin-top: -2px;
+    padding: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.uitk-dialog__header-dashes-run {
+    -unity-text-align: middle-left;
+    color: rgba(255, 255, 255, 0.18);
+    font-size: 11px;
+    padding: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.uitk-dialog__header-dashes-slash {
+    -unity-text-align: middle-left;
+    color: rgba(255, 255, 255, 0.18);
+    font-size: 11px;
+    padding: 0;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.uitk-dialog__close-button.unity-button.unity-text-element {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin-left: 8px;
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+    color: rgb(127, 133, 152);
+    font-size: 20px;
+}
+
+.uitk-dialog__close-button.unity-button.unity-text-element:hover {
+    color: rgb(220, 225, 240);
+}
+
+.uitk-dialog__message {
+    flex-grow: 1;
+    white-space: normal;
+    color: rgb(205, 211, 225);
+    font-size: 18px;
+    padding: 13px 17px 10px 17px;
+    -unity-text-align: upper-left;
+}
+
+.uitk-dialog__actions {
+    flex-direction: row;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-bottom: 14px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.uitk-dialog__button.unity-button.unity-text-element {
+    flex-grow: 1;
+    height: 31px;
+    margin-left: 4px;
+    margin-right: 4px;
+    border-radius: 5px;
+    background-color: rgb(20, 25, 31) !important;
+    border-color: rgb(104, 112, 130);
+    color: rgb(231, 234, 242);
+}
+
+.uitk-dialog__button.unity-button.unity-text-element:hover {
+    background-color: rgb(43, 54, 70) !important;
+    border-color: rgb(148, 157, 176);
+}
+
+.uitk-dialog__button.unity-button.unity-text-element:active {
+    background-color: rgb(65, 80, 104) !important;
+}
+
+/* endregion */
+
+
 /* region ============ Title bar ============ */
 
 #title-bar {
