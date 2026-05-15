@@ -72,11 +72,5 @@
 }
 
 .body-inspector-save {
-    margin-top: 6px;
-}
-
-.body-inspector-save-header {
-    -unity-font-style: bold;
-    margin-top: 6px;
-    margin-bottom: 4px;
+    margin-top: 0;
 }

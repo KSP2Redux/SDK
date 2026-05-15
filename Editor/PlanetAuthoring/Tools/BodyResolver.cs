@@ -18,7 +18,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     public static class BodyResolver
     {
         /// <summary>
-        /// Returns the body for the authoring scene that <paramref name="hint"/> belongs to.
+        /// Returns the body for the authoring scene that <paramref name="hint" /> belongs to.
         /// </summary>
         /// <param name="hint">Any component or scene object in the authoring scene.</param>
         /// <returns>The body, or null if none was found.</returns>
@@ -31,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         }
 
         /// <summary>
-        /// Returns the PQS for the authoring scene that <paramref name="body"/> belongs to.
+        /// Returns the PQS for the authoring scene that <paramref name="body" /> belongs to.
         /// </summary>
         /// <param name="body">The body whose scene to search.</param>
         /// <returns>The PQS, or null if none was found.</returns>
@@ -43,7 +43,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         }
 
         /// <summary>
-        /// Returns the PQS for <paramref name="body"/>, searching the scene first and falling back
+        /// Returns the PQS for <paramref name="body" />, searching the scene first and falling back
         /// to loading the Local prefab from disk via <c>body.Data.assetKeySimulation</c>. Useful
         /// when the body is selected as a prefab asset (no scene open) or for editor operations
         /// that should work without an active authoring scene.
@@ -65,14 +65,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         }
 
         /// <summary>
-        /// Returns the body in the same scene as <paramref name="hint"/>, scanning every scene root.
+        /// Returns the body for <paramref name="pqs" />, searching the scene first and falling back
+        /// to loading the sibling Scaled prefab from disk by naming convention. Symmetric to
+        /// <see cref="FindPqsIncludingAsset" />.
+        /// </summary>
+        /// <param name="pqs">The PQS to resolve a body for.</param>
+        /// <returns>The body, or null if none was found.</returns>
+        public static CoreCelestialBodyData FindBodyIncludingAsset(PQS pqs)
+        {
+            if (pqs == null) return null;
+            var body = FindBody(pqs);
+            if (body != null) return body;
+            var pqsAssetPath = AssetDatabase.GetAssetPath(pqs);
+            if (string.IsNullOrEmpty(pqsAssetPath)) return null;
+            if (!pqsAssetPath.EndsWith(PlanetAuthoringNaming.LocalPrefabSuffix)) return null;
+            var scaledPath = pqsAssetPath.Substring(0, pqsAssetPath.Length - PlanetAuthoringNaming.LocalPrefabSuffix.Length)
+                + PlanetAuthoringNaming.ScaledPrefabSuffix;
+            var scaledPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(scaledPath);
+            return scaledPrefab != null ? scaledPrefab.GetComponentInChildren<CoreCelestialBodyData>(true) : null;
+        }
+
+        /// <summary>
+        /// Returns the body in the same scene as <paramref name="hint" />, scanning every scene root.
         /// </summary>
         /// <param name="hint">Any object in the scene to search.</param>
         /// <returns>The body, or null if none was found.</returns>
         public static CoreCelestialBodyData FindBodyInScene(GameObject hint) => FindInSceneRoots<CoreCelestialBodyData>(hint);
 
         /// <summary>
-        /// Returns the PQS in the same scene as <paramref name="hint"/>, scanning every scene root.
+        /// Returns the PQS in the same scene as <paramref name="hint" />, scanning every scene root.
         /// </summary>
         /// <param name="hint">Any object in the scene to search.</param>
         /// <returns>The PQS, or null if none was found.</returns>

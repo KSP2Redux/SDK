@@ -13,7 +13,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// button on the right shows a thumbnail of the trapezoid plus the current value summary. Clicking the preview opens
     /// <see cref="TrapezoidWindowPopup" /> for full editing. One widget covers both height windows (X axis in meters,
     /// range <c>[0, planetMaxAltitude]</c>) and slope windows (X axis in degrees, range <c>[0, 90]</c>). Layout lives in
-    /// <c>Assets/Windows/PropertyFields/TrapezoidWindowField.uxml</c> with styling shared in <c>PropertyFields.uss</c>.
+    /// <c>Assets/Windows/PlanetAuthoring/PropertyFields/TrapezoidWindowField.uxml</c> with styling shared in <c>PropertyFields.uss</c>.
     /// Drawing math, palette, and axis tuning live on <see cref="TrapezoidWindowGeometry" /> so they stay in sync with
     /// the popup.
     /// </remarks>
@@ -137,10 +137,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (_summaryLabel == null)
                 return;
             var unit = _axisMode == AxisMode.Slope ? "°" : "m";
-            var leftShoulder = _value.x - _value.z;
-            var rightShoulder = _value.x + _value.y;
+            // The shader's ComputeFadeTri produces a quadratic fade-in across [center-down, center],
+            // a flat plateau across [center, center+up], and a quadratic fade-out across
+            // [center+up, center+up+fadeOut]. The summary names match the popup's field labels:
+            // Start..End is the plateau, In/Out are the quadratic ramp widths on either side.
+            // Clamping mirrors the popup so a stale out-of-domain material value still displays sanely.
+            var (start, end, fadeIn, fadeOut) =
+                TrapezoidWindowGeometry.ClampToDomain(_axisMode, _value.x, _value.x + _value.y, _value.z, _value.w);
             _summaryLabel.text =
-                $"{leftShoulder:0.#}..{rightShoulder:0.#}{unit}   fade {_value.w:0.#}";
+                $"{start:0.#}..{end:0.#}{unit}   in {fadeIn:0.#}   out {fadeOut:0.#}";
         }
 
         private void OnPreviewClicked(PointerDownEvent evt)

@@ -16,3 +16,19 @@
     margin-bottom: 4px;
     color: rgb(140, 178, 217);
 }
+
+.pqs-inspector-readout {
+    color: rgb(160, 160, 160);
+    margin-left: 4px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.pqs-inspector-readout--warn {
+    color: rgb(220, 180, 80);
+}
+
+.pqs-inspector-readout--error {
+    color: rgb(220, 80, 80);
+}
+

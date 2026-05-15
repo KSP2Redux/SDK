@@ -224,9 +224,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var hp = _material.GetVector($"_SmallBiome{c}HeightParams{i}");
             var sp = _material.GetVector($"_SmallBiome{c}SlopeParams{i}");
             var weight = _material.GetVector($"_SmallHeightWeight{c}")[layer];
+            // Trapezoid params are (center, upRange, downRange, fadeOut). The plateau
+            // (full strength) lives at [center, center + upRange]. We show only the
+            // plateau range here because the matrix cell is narrow; fade-in / fade-out
+            // widths are visible in the popup editor.
+            var altStart   = hp.x;
+            var altEnd     = hp.x + Mathf.Max(0f, hp.y);
+            var slopeStart = sp.x;
+            var slopeEnd   = sp.x + Mathf.Max(0f, sp.y);
+            // Dropped "alt" / "slope" prefixes - the m / ° units disambiguate, and the cell
+            // is too narrow to fit the prefix without mid-word wrapping.
             summary.text =
-                $"alt {hp.x - hp.z:0}..{hp.x + hp.y:0} m\n" +
-                $"slope {sp.x - sp.z:0}..{sp.x + sp.y:0}°\n" +
+                $"{altStart:0}-{altEnd:0}m\n" +
+                $"{slopeStart:0}-{slopeEnd:0}°\n" +
                 $"wt {weight:0.##}";
         }
 

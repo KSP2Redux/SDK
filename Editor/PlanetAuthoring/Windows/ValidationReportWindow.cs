@@ -419,15 +419,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             bool showWarnings = _showWarningsToggle.value;
             bool showInfo = _showInfoToggle.value;
 
+            // After any fix button runs, re-run cheap validators and re-render so the row
+            // disappears (or its message updates) without the user having to click Run Quick.
+            // Expensive issues are intentionally left as-is - re-running them on every fix would
+            // be too slow.
+            Action onFixApplied = () => Run(ValidatorCost.Cheap);
+
             if (showErrors && errors > 0)
-                AddGroup(ValidationSeverity.Error, $"Errors ({errors})", _cheapIssues, expensive);
+                AddGroup(ValidationSeverity.Error, $"Errors ({errors})", _cheapIssues, expensive, onFixApplied);
             if (showWarnings && warnings > 0)
-                AddGroup(ValidationSeverity.Warning, $"Warnings ({warnings})", _cheapIssues, expensive);
+                AddGroup(ValidationSeverity.Warning, $"Warnings ({warnings})", _cheapIssues, expensive, onFixApplied);
             if (showInfo && info > 0)
-                AddGroup(ValidationSeverity.Info, $"Info ({info})", _cheapIssues, expensive);
+                AddGroup(ValidationSeverity.Info, $"Info ({info})", _cheapIssues, expensive, onFixApplied);
         }
 
-        private void AddGroup(ValidationSeverity severity, string header, IReadOnlyList<ValidationIssue> cheap, IReadOnlyList<ValidationIssue> expensive)
+        private void AddGroup(ValidationSeverity severity, string header, IReadOnlyList<ValidationIssue> cheap, IReadOnlyList<ValidationIssue> expensive, Action onFixApplied)
         {
             var group = new VisualElement();
             group.AddToClassList("validation-report-group");
@@ -437,21 +443,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             headerLabel.AddToClassList("validation-report-group-header");
             group.Add(headerLabel);
 
-            AddIssuesOfSeverity(group, cheap, severity);
-            AddIssuesOfSeverity(group, expensive, severity);
+            AddIssuesOfSeverity(group, cheap, severity, onFixApplied);
+            AddIssuesOfSeverity(group, expensive, severity, onFixApplied);
             _issuesContainer.Add(group);
         }
 
-        private static void AddIssuesOfSeverity(VisualElement parent, IReadOnlyList<ValidationIssue> issues, ValidationSeverity severity)
+        private static void AddIssuesOfSeverity(VisualElement parent, IReadOnlyList<ValidationIssue> issues, ValidationSeverity severity, Action onFixApplied)
         {
             foreach (ValidationIssue issue in issues)
             {
                 if (issue.Severity != severity) continue;
-                parent.Add(BuildIssueRow(issue));
+                parent.Add(BuildIssueRow(issue, onFixApplied));
             }
         }
 
-        private static VisualElement BuildIssueRow(ValidationIssue issue)
+        private static VisualElement BuildIssueRow(ValidationIssue issue, Action onFixApplied)
         {
             var row = new VisualElement();
             row.AddToClassList("validation-issue-row");
@@ -471,7 +477,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 fixes.AddToClassList("validation-issue-fixes");
                 foreach (ValidationFix fix in issue.Fixes)
                 {
-                    var button = new Button(fix.Apply) { text = fix.Label };
+                    ValidationFix captured = fix;
+                    var button = new Button(() =>
+                    {
+                        captured.Apply?.Invoke();
+                        onFixApplied?.Invoke();
+                    }) { text = fix.Label };
                     button.AddToClassList("validation-issue-fix");
                     fixes.Add(button);
                 }

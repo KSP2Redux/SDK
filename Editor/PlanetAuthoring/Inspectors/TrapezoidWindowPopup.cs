@@ -10,14 +10,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Popout editor window for a shader trapezoidal-window vector property stored as <c>(center, upRange, downRange, fadeOut)</c> on the material.
     /// </summary>
     /// <remarks>
-    /// Exposes the window through a simpler <c>(start, end, fade)</c> model in both numeric fields and drag handles, where
-    /// <c>start = center - downRange</c>, <c>end = center + upRange</c>, and <c>fade = fadeOut</c>. Edits keep the
-    /// underlying trapezoid symmetric so <c>upRange == downRange</c>. Asymmetric authoring is not supported through this widget.
-    /// Drag interactions are split by handle. Shoulders adjust start (left) or end (right). Feet adjust fade symmetrically
-    /// because the shader has a single shared <c>fadeOut</c>. The body of the trapezoid (the flat top) translates the whole
-    /// window. When the window is fully collapsed (<c>start == end == 0</c> and <c>fade == 0</c>), a click-and-drag anywhere
-    /// on the graph creates a new window between the click anchor and the current pointer position. Hold Shift for
-    /// fine-grained drag. Hold Ctrl to snap to 100 m or 5 deg depending on axis mode.
+    /// The shader's <c>ComputeFadeTri</c> produces a quadratic fade-in across
+    /// <c>[center - downRange, center]</c>, a flat plateau across <c>[center, center + upRange]</c>,
+    /// and a quadratic fade-out across <c>[center + upRange, center + upRange + fadeOut]</c>.
+    /// This popup exposes the four edges of that shape via artist-facing names:
+    /// <list type="bullet">
+    ///   <item><c>Fade In</c> = <c>downRange</c> (width of the quadratic fade-in below Start)</item>
+    ///   <item><c>Start</c> = <c>center</c> (where the layer first reaches full strength)</item>
+    ///   <item><c>End</c> = <c>center + upRange</c> (where the plateau ends and fade-out begins)</item>
+    ///   <item><c>Fade Out</c> = <c>fadeOut</c> (width of the quadratic fade-out above End)</item>
+    /// </list>
+    /// Each of the four corner handles is independent. The body of the plateau translates the
+    /// whole window. Shift = fine drag, Ctrl = snap to 100 m or 5 deg.
     /// </remarks>
     public class TrapezoidWindowPopup : EditorWindow
     {
@@ -27,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private const float XMin = 0f;
         private const float GraphLineWidth = 2f;
 
-        private static readonly Vector2 WindowSize = new(380f, 320f);
+        private static readonly Vector2 WindowSize = new(380f, 360f);
 
         private Material _material;
         private string _propertyName;
@@ -38,7 +42,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private VisualElement _graph;
         private FloatField _startField;
         private FloatField _endField;
-        private FloatField _fadeField;
+        private FloatField _fadeInField;
+        private FloatField _fadeOutField;
 
         private Vector4 _value;
         private float _xAxisMax = GraphWidgetCommon.MinAxisMax;
@@ -47,17 +52,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private Vector4 _dragStartValue;
         private float _newWindowAnchorX;
 
-        private enum Handle { None, LeftShoulder, RightShoulder, LeftFoot, RightFoot, Body, NewWindow }
+        private enum Handle { None, LeftFoot, LeftShoulder, RightShoulder, RightFoot, Body, NewWindow }
 
         /// <summary>
         /// Opens the trapezoid-window popup anchored below the supplied trigger rect.
         /// </summary>
-        /// <param name="anchorWorldRect">World-space rect of the inline preview that triggered the popup. The window opens flush against its bottom edge.</param>
+        /// <param name="anchorWorldRect">World-space rect of the trigger element. The popup opens just below its bottom edge.</param>
         /// <param name="material">Material whose vector property is being edited.</param>
         /// <param name="propertyName">Shader property name on <paramref name="material" />.</param>
         /// <param name="axisMode">Whether the X axis represents height or slope.</param>
         /// <param name="xMaxOverride">Explicit X-axis upper bound for height mode. Pass <c>0</c> to use the default.</param>
-        /// <param name="onChanged">Callback invoked after each edit writes a new value back to <paramref name="material" />.</param>
+        /// <param name="onChanged">Callback invoked after the popup writes a new value back to <paramref name="material" />.</param>
         public static void Show(
             Rect anchorWorldRect,
             Material material,
@@ -68,8 +73,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         )
         {
             var window = CreateInstance<TrapezoidWindowPopup>();
-            var unitLabel = axisMode == TrapezoidWindowField.AxisMode.Slope ? "slope" : "height";
-            window.titleContent = new GUIContent($"Trapezoid {unitLabel} window - {GraphWidgetCommon.PrettifyPropertyName(propertyName)}");
+            var unitLabel = axisMode == TrapezoidWindowField.AxisMode.Slope ? "Slope" : "Height";
+            window.titleContent = new GUIContent($"{unitLabel} Window - {GraphWidgetCommon.PrettifyPropertyName(propertyName)}");
             window.minSize = WindowSize;
             window._material = material;
             window._propertyName = propertyName;
@@ -112,19 +117,24 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             PlanetPreviewState.ActiveChanged += OnPreviewStateChanged;
 
-            _startField = WireField("start", GetStart(), v =>
+            _fadeInField = WireField("fadeIn", FadeIn, v =>
             {
-                SetStartEnd(v, GetEnd());
+                SetEdges(Start, End, Mathf.Max(0f, v), FadeOut);
                 ApplyEdit();
             });
-            _endField = WireField("end", GetEnd(), v =>
+            _startField = WireField("start", Start, v =>
             {
-                SetStartEnd(GetStart(), v);
+                SetEdges(v, Mathf.Max(v, End), FadeIn, FadeOut);
                 ApplyEdit();
             });
-            _fadeField = WireField("fadeOut", _value.w, v =>
+            _endField = WireField("end", End, v =>
             {
-                _value.w = Mathf.Max(0f, v);
+                SetEdges(Mathf.Min(Start, v), v, FadeIn, FadeOut);
+                ApplyEdit();
+            });
+            _fadeOutField = WireField("fadeOut", FadeOut, v =>
+            {
+                SetEdges(Start, End, FadeIn, Mathf.Max(0f, v));
                 ApplyEdit();
             });
         }
@@ -135,18 +145,29 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             rootVisualElement.Add(GraphWidgetCommon.BuildModifierHint(unit));
         }
 
-        private float GetStart() => _value.x - _value.z;
-        private float GetEnd() => _value.x + _value.y;
-        private bool IsDegenerate() => Mathf.Approximately(_value.y, 0f) && Mathf.Approximately(_value.z, 0f) && Mathf.Approximately(_value.w, 0f);
+        // The four edge accessors map (center, upRange, downRange, fadeOut) onto an artist-
+        // friendly (Fade In, Start, End, Fade Out) model that matches the shape the shader
+        // actually produces. "Start" and "End" bracket the plateau (where the layer is at
+        // full strength); "Fade In" and "Fade Out" are the widths of the quadratic ramps
+        // below Start and above End.
+        private float Start   => _value.x;
+        private float End     => _value.x + _value.y;
+        private float FadeIn  => _value.z;
+        private float FadeOut => _value.w;
 
-        private void SetStartEnd(float start, float end)
+        private bool IsDegenerate() =>
+            Mathf.Approximately(_value.y, 0f)
+            && Mathf.Approximately(_value.z, 0f)
+            && Mathf.Approximately(_value.w, 0f);
+
+        private void SetEdges(float start, float end, float fadeIn, float fadeOut)
         {
-            if (end < start) end = start;
-            var center = (start + end) * 0.5f;
-            var half = (end - start) * 0.5f;
-            _value.x = center;
-            _value.y = half;
-            _value.z = half;
+            (start, end, fadeIn, fadeOut) =
+                TrapezoidWindowGeometry.ClampToDomain(_axisMode, start, end, fadeIn, fadeOut);
+            _value.x = start;                                          // center
+            _value.y = end - start;                                    // upRange
+            _value.z = fadeIn;                                         // downRange
+            _value.w = fadeOut;                                        // fadeOut
         }
 
         private FloatField WireField(string name, float initial, Action<float> onChange)
@@ -175,9 +196,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void SyncFieldsFromValue()
         {
-            _startField?.SetValueWithoutNotify(GetStart());
-            _endField?.SetValueWithoutNotify(GetEnd());
-            _fadeField?.SetValueWithoutNotify(_value.w);
+            _fadeInField?.SetValueWithoutNotify(FadeIn);
+            _startField?.SetValueWithoutNotify(Start);
+            _endField?.SetValueWithoutNotify(End);
+            _fadeOutField?.SetValueWithoutNotify(FadeOut);
         }
 
         private void UpdateAxisRange()
@@ -198,20 +220,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var (leftFoot, leftShoulder, rightShoulder, rightFoot) =
                 TrapezoidWindowGeometry.DrawTrapezoid(painter, _value, XMin, _xAxisMax, rect, GraphLineWidth);
 
-            GraphWidgetCommon.DrawHandle(painter, leftShoulder, _activeHandle == Handle.LeftShoulder);
+            GraphWidgetCommon.DrawHandle(painter, leftFoot,      _activeHandle == Handle.LeftFoot);
+            GraphWidgetCommon.DrawHandle(painter, leftShoulder,  _activeHandle == Handle.LeftShoulder);
             GraphWidgetCommon.DrawHandle(painter, rightShoulder, _activeHandle == Handle.RightShoulder);
-            GraphWidgetCommon.DrawHandle(painter, leftFoot, _activeHandle == Handle.LeftFoot || _activeHandle == Handle.RightFoot);
-            GraphWidgetCommon.DrawHandle(painter, rightFoot, _activeHandle == Handle.LeftFoot || _activeHandle == Handle.RightFoot);
-
-            if (_activeHandle == Handle.LeftFoot || _activeHandle == Handle.RightFoot)
-            {
-                painter.strokeColor = TrapezoidWindowGeometry.FootIndicatorColor;
-                painter.lineWidth = 1f;
-                painter.BeginPath();
-                painter.MoveTo(leftFoot);
-                painter.LineTo(rightFoot);
-                painter.Stroke();
-            }
+            GraphWidgetCommon.DrawHandle(painter, rightFoot,     _activeHandle == Handle.RightFoot);
 
             if (_axisMode != TrapezoidWindowField.AxisMode.Slope)
             {
@@ -259,22 +271,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private bool TryHitHandles(Vector2 local, Rect rect)
         {
-            var center = _value.x;
-            var up = Mathf.Max(0f, _value.y);
-            var down = Mathf.Max(0f, _value.z);
-            var fade = Mathf.Max(0f, _value.w);
-
-            var pLeftShoulder = GraphWidgetCommon.WorldToPixel(center - down, 1f, XMin, _xAxisMax, rect);
-            var pRightShoulder = GraphWidgetCommon.WorldToPixel(center + up, 1f, XMin, _xAxisMax, rect);
-            var pLeftFoot = GraphWidgetCommon.WorldToPixel(center - down - fade, 0f, XMin, _xAxisMax, rect);
-            var pRightFoot = GraphWidgetCommon.WorldToPixel(center + up + fade, 0f, XMin, _xAxisMax, rect);
+            var pLeftFoot      = GraphWidgetCommon.WorldToPixel(Start - FadeIn, 0f, XMin, _xAxisMax, rect);
+            var pLeftShoulder  = GraphWidgetCommon.WorldToPixel(Start,          1f, XMin, _xAxisMax, rect);
+            var pRightShoulder = GraphWidgetCommon.WorldToPixel(End,            1f, XMin, _xAxisMax, rect);
+            var pRightFoot     = GraphWidgetCommon.WorldToPixel(End + FadeOut,  0f, XMin, _xAxisMax, rect);
 
             var hits = new (Handle h, float d)[]
             {
-                (Handle.LeftShoulder, Vector2.Distance(local, pLeftShoulder)),
+                (Handle.LeftFoot,      Vector2.Distance(local, pLeftFoot)),
+                (Handle.LeftShoulder,  Vector2.Distance(local, pLeftShoulder)),
                 (Handle.RightShoulder, Vector2.Distance(local, pRightShoulder)),
-                (Handle.LeftFoot, Vector2.Distance(local, pLeftFoot)),
-                (Handle.RightFoot, Vector2.Distance(local, pRightFoot)),
+                (Handle.RightFoot,     Vector2.Distance(local, pRightFoot)),
             };
             var nearest = Handle.None;
             var nearestDist = float.MaxValue;
@@ -296,12 +303,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private bool TryHitBody(Vector2 local, Rect rect)
         {
-            var center = _value.x;
-            var up = Mathf.Max(0f, _value.y);
-            var down = Mathf.Max(0f, _value.z);
-
-            var pLeftShoulder = GraphWidgetCommon.WorldToPixel(center - down, 1f, XMin, _xAxisMax, rect);
-            var pRightShoulder = GraphWidgetCommon.WorldToPixel(center + up, 1f, XMin, _xAxisMax, rect);
+            // The body is the flat plateau between Start and End.
+            var pLeftShoulder  = GraphWidgetCommon.WorldToPixel(Start, 1f, XMin, _xAxisMax, rect);
+            var pRightShoulder = GraphWidgetCommon.WorldToPixel(End,   1f, XMin, _xAxisMax, rect);
 
             var topY = Mathf.Min(pLeftShoulder.y, pRightShoulder.y) - 4f;
             var bodyY = pLeftShoulder.y;
@@ -333,69 +337,68 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var deltaWorldX = (currentWorldX - startWorldX) * fineScale;
 
             var v = _dragStartValue;
+            // Edge values captured at the start of the drag.
+            var origStart     = v.x;
+            var origEnd       = v.x + v.y;
+            var origFadeIn    = v.z;
+            var origFadeOut   = v.w;
+            var origLeftFoot  = origStart - origFadeIn;
+            var origRightFoot = origEnd + origFadeOut;
 
             switch (_activeHandle)
             {
+                case Handle.LeftFoot:
+                {
+                    // Move LeftFoot, keep Start fixed -> Fade In changes.
+                    var newLeftFoot = GraphWidgetCommon.SnapIfNeeded(origLeftFoot + deltaWorldX, snap, snapStep);
+                    if (newLeftFoot > origStart) newLeftFoot = origStart;
+                    SetEdges(origStart, origEnd, origStart - newLeftFoot, origFadeOut);
+                    break;
+                }
                 case Handle.LeftShoulder:
                 {
-                    var oldStart = v.x - v.z;
-                    var oldEnd = v.x + v.y;
-                    var newStart = GraphWidgetCommon.SnapIfNeeded(oldStart + deltaWorldX, snap, snapStep);
-                    if (newStart > oldEnd) newStart = oldEnd;
-                    SetValueFromStartEnd(ref v, newStart, oldEnd);
+                    // Move Start, keep LeftFoot and End fixed -> Fade In width adjusts.
+                    var newStart = GraphWidgetCommon.SnapIfNeeded(origStart + deltaWorldX, snap, snapStep);
+                    if (newStart > origEnd) newStart = origEnd;
+                    if (newStart < origLeftFoot) newStart = origLeftFoot;
+                    SetEdges(newStart, origEnd, newStart - origLeftFoot, origFadeOut);
                     break;
                 }
                 case Handle.RightShoulder:
                 {
-                    var oldStart = v.x - v.z;
-                    var oldEnd = v.x + v.y;
-                    var newEnd = GraphWidgetCommon.SnapIfNeeded(oldEnd + deltaWorldX, snap, snapStep);
-                    if (newEnd < oldStart) newEnd = oldStart;
-                    SetValueFromStartEnd(ref v, oldStart, newEnd);
-                    break;
-                }
-                case Handle.LeftFoot:
-                {
-                    var newFade = Mathf.Max(0f, v.w - deltaWorldX);
-                    v.w = GraphWidgetCommon.SnapIfNeeded(newFade, snap, snapStep);
+                    // Move End, keep Start and RightFoot fixed -> Fade Out width adjusts.
+                    var newEnd = GraphWidgetCommon.SnapIfNeeded(origEnd + deltaWorldX, snap, snapStep);
+                    if (newEnd < origStart) newEnd = origStart;
+                    if (newEnd > origRightFoot) newEnd = origRightFoot;
+                    SetEdges(origStart, newEnd, origFadeIn, origRightFoot - newEnd);
                     break;
                 }
                 case Handle.RightFoot:
                 {
-                    var newFade = Mathf.Max(0f, v.w + deltaWorldX);
-                    v.w = GraphWidgetCommon.SnapIfNeeded(newFade, snap, snapStep);
+                    // Move RightFoot, keep End fixed -> Fade Out changes.
+                    var newRightFoot = GraphWidgetCommon.SnapIfNeeded(origRightFoot + deltaWorldX, snap, snapStep);
+                    if (newRightFoot < origEnd) newRightFoot = origEnd;
+                    SetEdges(origStart, origEnd, origFadeIn, newRightFoot - origEnd);
                     break;
                 }
                 case Handle.Body:
                 {
-                    v.x += deltaWorldX;
-                    v.x = GraphWidgetCommon.SnapIfNeeded(v.x, snap, snapStep);
+                    // Translate the whole window - shift everything by the same delta.
+                    var shift = GraphWidgetCommon.SnapIfNeeded(deltaWorldX, snap, snapStep);
+                    SetEdges(origStart + shift, origEnd + shift, origFadeIn, origFadeOut);
                     break;
                 }
                 case Handle.NewWindow:
                 {
                     var anchor = _newWindowAnchorX;
-                    var newStart = Mathf.Min(anchor, currentWorldX);
-                    var newEnd = Mathf.Max(anchor, currentWorldX);
-                    newStart = GraphWidgetCommon.SnapIfNeeded(newStart, snap, snapStep);
-                    newEnd = GraphWidgetCommon.SnapIfNeeded(newEnd, snap, snapStep);
-                    SetValueFromStartEnd(ref v, newStart, newEnd);
+                    var newStart = GraphWidgetCommon.SnapIfNeeded(Mathf.Min(anchor, currentWorldX), snap, snapStep);
+                    var newEnd   = GraphWidgetCommon.SnapIfNeeded(Mathf.Max(anchor, currentWorldX), snap, snapStep);
+                    SetEdges(newStart, newEnd, 0f, 0f);
                     break;
                 }
             }
 
-            _value = v;
             ApplyEdit();
-        }
-
-        private static void SetValueFromStartEnd(ref Vector4 v, float start, float end)
-        {
-            if (end < start) end = start;
-            var center = (start + end) * 0.5f;
-            var half = (end - start) * 0.5f;
-            v.x = center;
-            v.y = half;
-            v.z = half;
         }
 
         private void OnPointerUp(PointerUpEvent evt)

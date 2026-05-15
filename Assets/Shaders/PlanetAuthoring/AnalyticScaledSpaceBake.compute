@@ -1,0 +1,539 @@
+#pragma kernel CSMain
+
+// ============================================================================
+// AnalyticScaledSpaceBake
+//
+// Bakes a body's scaled-space albedo / normal / packed (metallic, AO, emission,
+// smoothness) / emission textures by analytically sampling the same authored
+// data the local PQS shader uses, projected onto an equirectangular grid.
+//
+// Per-pixel chain (run N x N times within each output pixel and averaged):
+//   1. Sample the global heightmap to get composed altitude in meters.
+//   2. Macro normal: gradient of composed altitude over neighbor offsets at
+//      sub-pixel spacing. Aliasing-free at the per-pixel scale even on small
+//      bodies where the heightmap effective frequency approaches one pixel.
+//   3. Macro AO: horizon-mapping the composed altitude in K compass directions.
+//      Step distances stay at output-pixel scale because that is the scale of
+//      crater rims and valleys we want to capture.
+//   4. Sample biome mask + slope (from macro normal) at the subsample.
+//   5. Run the small-tile cascade for all 16 (biome, layer) slots: trapezoid
+//      windows over height + slope select per-layer weights; per-layer color
+//      grade (tint, brightness, contrast, saturation) is applied to each
+//      slice's *mean* color (sampled at the array's max mip - the per-tile
+//      pattern phase is sub-pixel at scaled distance and would only contribute
+//      noise).
+//
+// Outputs (no decals, no per-tile normals, no subzone normals - all of those
+// collapse below the scaled-space pixel and are intentionally excluded):
+//   _OutAlbedo   RGB
+//   _OutNormal   DXT5nm pack: (1, n.y, 1, n.x)
+//   _OutPacked   R = metallic, G = AO (macro), B = emission strength, A = smoothness
+//   _OutEmission RGB
+// ============================================================================
+
+#include "UnityCG.cginc"
+
+// === Outputs ============================================================================
+RWTexture2D<float4> _OutAlbedo;
+RWTexture2D<float4> _OutNormal;
+RWTexture2D<float4> _OutPacked;
+RWTexture2D<float4> _OutEmission;
+
+// === Inputs =============================================================================
+Texture2D<float4> _BiomeMaskTex;
+Texture2D<float4> _GlobalHeightMap;
+
+// Per-biome large + mid gradience textures. The runtime PQS shader weights these by the
+// biome mask and uses them to drive slope-gating; we additionally fold their composed
+// gradient into the macro normal and AO so the bake captures the macro features the
+// artist authored into the per-biome stack rather than into the global heightmap. Without
+// these the orbit bake would look smoother than the runtime view at the same distance,
+// causing pop-in detail at the scaled-to-local crossfade.
+Texture2D<float4> _LargeGradienceR, _LargeGradienceG, _LargeGradienceB, _LargeGradienceA;
+Texture2D<float4> _MidGradienceR,   _MidGradienceG,   _MidGradienceB,   _MidGradienceA;
+float4 _LargeHeightMapUVScales;     // per-biome scalar UV scales
+float4 _MediumHeightMapUVScales;
+// Per-biome AUTHORED heightScales (the .heightScale field on each PQSData.HeightRegion).
+// Match the runtime - PQSJobUtil.HeightSample composes height as
+//   height = global * globalScale + sum_c(largeC * largeHeightScaleC * mask.c)
+//                                 + sum_c(mediumC * mediumHeightScaleC * mask.c)
+// (no -0.5 anywhere; gradience contributions are unsigned amplitudes weighted by mask).
+float4 _LargeHeightScales;       // (largeR.heightScale, .G, .B, .A)
+float4 _MidHeightScales;         // (mediumR.heightScale, .G, .B, .A)
+
+// Macro variation strength: scales how much the noise-driven UV deviates from the
+// slice center. 0 = always sample center submean (no variation), 1 = full grid range.
+float _VariationStrength;
+// Frequency (cycles per planet) of the value-noise field that drives variation UV.
+// Lower = larger continuous patches, higher = more frequent breakup.
+float _VariationFrequency;
+
+SamplerState sampler_LinearRepeat;
+
+// Per-slice 4x4 SUBMEAN grids precomputed in C# via Graphics.Blit reduction. Instead of
+// one mean per slice (which makes every patch of a single material look identical at
+// scaled distance), we store 16 colors per slice - the mean of each quadrant of a 4x4
+// split of the tile. A low-frequency value-noise UV picks where to bilinear-blend
+// inside the 4x4 grid, so identical materials get smoothly-varying coloring across the
+// planet without high-frequency tile-pattern aliasing.
+//
+// Stored as StructuredBuffers (NOT float4[N] constant arrays). The original constant-array
+// version silently truncated past slice 0 - 1024 float4 entries per array * 3 arrays blew
+// past D3D11's 64KB constant-buffer cap, so only biome R baked correctly and G/B/A read
+// uninitialised GPU memory (gray / black). StructuredBuffers live in a different binding
+// slot with no comparable size limit.
+#define SUBMEAN_GRID_SIZE 4
+#define SUBMEANS_PER_SLICE (SUBMEAN_GRID_SIZE * SUBMEAN_GRID_SIZE)
+StructuredBuffer<float4> _SliceAlbedoSubmeans;
+// Per-tile normals are intentionally not baked at scaled distance, so only .x (gloss /
+// smoothness source) is consumed. The .y/.z/.w channels are unused; the C# side may write
+// zeros for them and the bake doesn't change.
+StructuredBuffer<float4> _SliceNormalSubmeans;
+StructuredBuffer<float4> _SliceMetalSubmeans;      // .x = metallic
+
+// === Per-layer flat arrays, addressed by [biome*4 + layer] ==============================
+// Bound from the surface material's per-biome Vector4 properties + per-(biome, layer)
+// scalar / Color properties, flattened to 16-entry arrays in C# for a single uniform shape.
+//
+// Scalar arrays are packed 4 scalars per float4 (one biome's worth per Vector4) because
+// ComputeShader.SetFloats only sets the FIRST element of an HLSL `float arr[16]` cbuffer
+// declaration (verified empirically - HLSL's default scalar-array layout takes one vec4
+// per element and SetFloats appears to fill only the .x of the first slot). Packing
+// avoids that quirk and keeps the binding compact.
+//
+// Layout per packed Vector4: per-biome Vector4 read straight from the surface material's
+// _SmallEnable<C> / _SmallHeightWeight<C> / etc. So _SmallEnablePack[0] = _SmallEnableR,
+// [1] = _SmallEnableG, [2] = _SmallEnableB, [3] = _SmallEnableA. Index for slot
+// (biome b, layer l): float v = _SmallEnablePack[b][l].
+float4 _SmallBiomeIdxPack[4];
+float4 _SmallEnablePack[4];
+float4 _SmallHeightWeightPack[4];
+float4 _SmallHeightEnablePack[4];
+float4 _SmallSlopeEnablePack[4];
+float4 _SmallBrightnessPack[4];
+float4 _SmallContrastPack[4];
+float4 _SmallSaturationPack[4];
+float4 _SmallGlossStrengthPack[4];
+float4 _SmallMetallicStrengthPack[4];
+float4 _SmallAOStrengthPack[4];
+float4 _SmallEmissionStrengthPack[4];
+
+// float4-per-slot arrays (per (biome, layer)) - work fine with SetVectorArray since each
+// HLSL vec4 element gets a full Vector4 from C#.
+float4 _SmallHeightParams[16];
+float4 _SmallSlopeParams[16];
+float4 _SmallTint[16];
+float4 _SmallEmissionColor[16];
+
+// Selects component .x/.y/.z/.w of a float4 by integer index. HLSL's `v[i]` syntax
+// for selecting a component by index doesn't work reliably when `i` is a dynamic loop
+// variable - some SM versions only support it under [unroll], otherwise the compiler
+// can return zero. Explicit conditional is portable.
+float ScalarFromPack(float4 v, int l)
+{
+    if (l == 0) return v.x;
+    if (l == 1) return v.y;
+    if (l == 2) return v.z;
+    return v.w;
+}
+#define SMALL_SCALAR(packed, b, l) ScalarFromPack((packed)[b], (l))
+
+// === Globals ============================================================================
+uint  _OutWidth;
+uint  _OutHeight;
+uint  _SubsampleN;       // N x N supersamples per output pixel (default 4)
+uint  _AORingCount;      // rays per AO horizon march (default 8)
+float _Radius;
+float _HeightScale;
+
+// 0.21763764 is the gamma-corrected mid-gray used by the local shader's color grade
+// (matches DeferredBiome.cginc gradedNear formula).
+#define MID_GRAY 0.21763764
+
+// === Helpers ============================================================================
+
+// MIRROR: Prepass.cginc ComputeFadeTri. Any change to the runtime version must also
+// land here or the bake silently desyncs from the live shader. Trapezoidal window:
+//   p = (center, upRange, downRange, fadeOut)
+//   axis < center - downRange : 0
+//   center - downRange .. center : fadeIn^2 ramp
+//   center .. center + upRange : 1
+//   center + upRange .. center + upRange + fadeOut : fadeOut^2 ramp
+//   axis > center + upRange + fadeOut : 0
+float ComputeFadeTri(float axis, float4 p)
+{
+    float hi = p.x + p.y;
+    float lo = p.x - p.z;
+    float fi = saturate((axis - lo) / max(p.x - lo, 0.001));
+    float fo = 1.0 - saturate((axis - hi) / max(p.w, 0.001));
+    return step(axis, hi + p.w) * step(hi, axis) * fo * fo
+         + step(p.x, axis) * step(axis, hi)
+         + fi * fi * step(lo, axis) * step(axis, p.x);
+}
+
+// Per-pixel biome weights, normalised so they sum to 1 (matches the runtime shader's
+// `biomeWeightNorm`). Used both to weight the per-biome height-stack composition and to
+// drive the small-tile cascade.
+float4 SampleBiomeNorm(float2 uv)
+{
+    float4 m = _BiomeMaskTex.SampleLevel(sampler_LinearRepeat, uv, 0);
+    return m / max(m.x + m.y + m.z + m.w, 0.001);
+}
+
+// HeightSample carries multiple altitude views from one composed-stack call so the
+// caller can use the right one without re-sampling: `global` for the trapezoid window
+// height axis (matches runtime, which feeds mesh-vertex altitude from globalHeightMap),
+// `composed` for macro normal + AO (macro shape including per-biome gradience).
+struct HeightSample
+{
+    float global;
+    float composed;
+};
+
+// Altitude in meters above the body radius. Matches PQSJobUtil.HeightSample:
+//   altitude = global * globalScale + sum_c(largeC * largeHeightScaleC * mask.c)
+//                                   + sum_c(mediumC * mediumHeightScaleC * mask.c)
+// Heightmaps are 0..1, scales are positive amplitudes, no -0.5 anywhere.
+HeightSample ComposedHeightAt(float2 uv, float4 biomeNorm)
+{
+    HeightSample h;
+    h.global = _GlobalHeightMap.SampleLevel(sampler_LinearRepeat, uv, 0).x * _HeightScale;
+
+    float lr = _LargeGradienceR.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.x, 0).x * _LargeHeightScales.x;
+    float lg = _LargeGradienceG.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.y, 0).x * _LargeHeightScales.y;
+    float lb = _LargeGradienceB.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.z, 0).x * _LargeHeightScales.z;
+    float la = _LargeGradienceA.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.w, 0).x * _LargeHeightScales.w;
+
+    float mr = _MidGradienceR.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.x, 0).x * _MidHeightScales.x;
+    float mg = _MidGradienceG.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.y, 0).x * _MidHeightScales.y;
+    float mb = _MidGradienceB.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.z, 0).x * _MidHeightScales.z;
+    float ma = _MidGradienceA.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.w, 0).x * _MidHeightScales.w;
+
+    float gradienceContrib = biomeNorm.x * (lr + mr)
+                           + biomeNorm.y * (lg + mg)
+                           + biomeNorm.z * (lb + mb)
+                           + biomeNorm.w * (la + ma);
+    h.composed = h.global + gradienceContrib;
+    return h;
+}
+
+// 3D value-noise hash (Inigo Quilez style). Sampling at the sphere position rather than
+// at the equirect UV makes the noise field continuous across the U=0/U=1 wrap (no
+// vertical seam) AND well-defined at the poles (no radial pinch where every U value at
+// V=0/V=1 maps to one 3D point but the 2D noise produces wildly different values per U).
+// Two independent channels for use as a 2D noise UV.
+float Hash3DSingle(float3 i, float3 seed)
+{
+    return frac(sin(dot(i, seed)) * 43758.5453);
+}
+
+float Sample3DValueNoise(float3 p, float3 seed)
+{
+    float3 i = floor(p);
+    float3 f = frac(p);
+    float3 u = f * f * (3.0 - 2.0 * f);
+    float v000 = Hash3DSingle(i + float3(0, 0, 0), seed);
+    float v100 = Hash3DSingle(i + float3(1, 0, 0), seed);
+    float v010 = Hash3DSingle(i + float3(0, 1, 0), seed);
+    float v110 = Hash3DSingle(i + float3(1, 1, 0), seed);
+    float v001 = Hash3DSingle(i + float3(0, 0, 1), seed);
+    float v101 = Hash3DSingle(i + float3(1, 0, 1), seed);
+    float v011 = Hash3DSingle(i + float3(0, 1, 1), seed);
+    float v111 = Hash3DSingle(i + float3(1, 1, 1), seed);
+    float vXY0 = lerp(lerp(v000, v100, u.x), lerp(v010, v110, u.x), u.y);
+    float vXY1 = lerp(lerp(v001, v101, u.x), lerp(v011, v111, u.x), u.y);
+    return lerp(vXY0, vXY1, u.z);
+}
+
+// Returns two noise channels in [0, 1], sampled in sphere-position space.
+float2 ValueNoise2OnSphere(float3 spherePos, float frequency)
+{
+    float3 p = spherePos * frequency;
+    float n1 = Sample3DValueNoise(p, float3(127.1, 311.7,  74.7));
+    float n2 = Sample3DValueNoise(p, float3(269.5, 183.3, 246.1));
+    return float2(n1, n2);
+}
+
+// Latitude/longitude in radians to a unit-sphere 3D position.
+float3 LatLonToSpherePos(float lat, float lon)
+{
+    float cl = cos(lat);
+    return float3(cl * cos(lon), sin(lat), cl * sin(lon));
+}
+
+// Bilinear-blend the 4x4 submeans of a slice using a UV in [0, 1]. The submeans are
+// arranged as (col, row) -> idx = row * 4 + col with (0, 0) = top-left of the tile.
+// Macro expansion (rather than a function) because HLSL constant-buffer arrays aren't
+// passable as function parameters - we'd otherwise need three near-identical functions
+// for albedo / normal / metal submeans.
+#define SAMPLE_SUBMEAN_GRID(submeans, sliceIdxF, cellUv, outColor) \
+{ \
+    int _baseIdx = (int)(sliceIdxF) * SUBMEANS_PER_SLICE; \
+    float _gx = saturate((cellUv).x) * (SUBMEAN_GRID_SIZE - 1); \
+    float _gy = saturate((cellUv).y) * (SUBMEAN_GRID_SIZE - 1); \
+    int _x0 = (int)_gx, _y0 = (int)_gy; \
+    int _x1 = min(_x0 + 1, SUBMEAN_GRID_SIZE - 1); \
+    int _y1 = min(_y0 + 1, SUBMEAN_GRID_SIZE - 1); \
+    float _fx = _gx - _x0, _fy = _gy - _y0; \
+    float4 _c00 = submeans[_baseIdx + _y0 * SUBMEAN_GRID_SIZE + _x0]; \
+    float4 _c10 = submeans[_baseIdx + _y0 * SUBMEAN_GRID_SIZE + _x1]; \
+    float4 _c01 = submeans[_baseIdx + _y1 * SUBMEAN_GRID_SIZE + _x0]; \
+    float4 _c11 = submeans[_baseIdx + _y1 * SUBMEAN_GRID_SIZE + _x1]; \
+    outColor = lerp(lerp(_c00, _c10, _fx), lerp(_c01, _c11, _fx), _fy); \
+}
+
+// === Main kernel ========================================================================
+[numthreads(8, 8, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _OutWidth || id.y >= _OutHeight) return;
+
+    uint2 pixel = id.xy;
+    int   N = (int)_SubsampleN;
+    int   K = (int)_AORingCount;
+
+    float2 pixelStep    = float2(1.0 / _OutWidth, 1.0 / _OutHeight);
+    float2 subPixelStep = pixelStep / N;
+
+    // Output pixel center (latitude is constant across subsamples since they're within the pixel).
+    float2 pixelCenterUv = (float2(pixel) + 0.5) * pixelStep;
+    float  lat           = (pixelCenterUv.y - 0.5) * UNITY_PI;          // radians, +pi/2 = north pole
+    // Clamp cos(lat) to avoid arc-length collapsing to 0 right at the poles, which would
+    // otherwise blow up the macro-normal gradient division. ~0.5 deg from the pole is about
+    // the smallest cosLat we let through; closer than that and the equirect U-direction is
+    // basically a single point anyway, so any normal we compute there is meaningless and the
+    // polar blend pass below covers it.
+    float  cosLat        = max(cos(lat), 0.01);
+
+    // Per-pixel arc-length per cardinal step at the output pixel scale - used by the macro AO.
+    // U and V differ when the output is square (equirect 2:1 squeezed): each U pixel covers more
+    // arc than each V pixel at the equator. Diagonal AO rays use both.
+    float arcUMacro = (2.0 * UNITY_PI * _Radius * cosLat) / _OutWidth;
+    float arcVMacro = (UNITY_PI * _Radius)                / _OutHeight;
+
+    // Per-subsample arc-length per cardinal step at the subsample scale - used by the macro normal.
+    float arcUSub = arcUMacro / N;
+    float arcVSub = arcVMacro / N;
+
+    float3 accumNormal     = float3(0, 0, 0);
+    float  accumAO         = 0.0;
+    float3 accumAlbedo     = float3(0, 0, 0);
+    float  accumMetallic   = 0.0;
+    float  accumSmoothness = 0.0;
+    float3 accumEmission   = float3(0, 0, 0);
+
+    // Step distances densified at the small end so AO can resolve mid-frequency gradience
+    // features (mid texels are well below one output pixel on most bodies). Large end still
+    // reaches ~32 output pixels to catch crater rims and big valleys.
+    static const int STEP_COUNT = 8;
+    float steps[STEP_COUNT] = { 0.25, 0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 32.0 };
+
+    [loop] for (int sy = 0; sy < N; sy++)
+    {
+        [loop] for (int sx = 0; sx < N; sx++)
+        {
+            // Subsample center inside the output pixel.
+            float2 subOffset = (float2(sx + 0.5, sy + 0.5) / N - 0.5);
+            float2 subUv     = pixelCenterUv + subOffset * pixelStep;
+
+            // Sample the biome mask once per subsample. Used to weight the per-biome height
+            // stack composition for the macro normal neighborhood (biome mask varies slowly
+            // enough across one output pixel that re-sampling per neighbor is wasted) and as
+            // input to the small-tile cascade. AO ray endpoints below re-sample biome at
+            // each step because rays can travel into different biomes.
+            float4 biomeNorm  = SampleBiomeNorm(subUv);
+            float4 biomeRGBA  = biomeNorm;
+
+            // -----------------------------------------------------------------------------
+            // Macro normal from the gradient of the composed height stack at sub-pixel spacing.
+            // -----------------------------------------------------------------------------
+            HeightSample hC  = ComposedHeightAt(subUv, biomeNorm);
+            HeightSample hUp = ComposedHeightAt(subUv + float2(subPixelStep.x, 0), biomeNorm);
+            HeightSample hUm = ComposedHeightAt(subUv - float2(subPixelStep.x, 0), biomeNorm);
+            HeightSample hVp = ComposedHeightAt(subUv + float2(0, subPixelStep.y), biomeNorm);
+            HeightSample hVm = ComposedHeightAt(subUv - float2(0, subPixelStep.y), biomeNorm);
+
+            float dhdu = (hUp.composed - hUm.composed) * 0.5;
+            float dhdv = (hVp.composed - hVm.composed) * 0.5;
+
+            float3 subNormal = normalize(float3(-dhdu / max(arcUSub, 0.001),
+                                                -dhdv / max(arcVSub, 0.001),
+                                                1.0));
+            accumNormal += subNormal;
+
+            // -----------------------------------------------------------------------------
+            // Macro AO via horizon-mapping the composed height stack. Each ray endpoint
+            // re-samples biome so the per-biome contribution is correct at the endpoint
+            // (rays can cross biome boundaries on small bodies).
+            // -----------------------------------------------------------------------------
+            float subAO = 0.0;
+            [loop] for (int k = 0; k < K; k++)
+            {
+                float  theta = (2.0 * UNITY_PI) * (k / (float)K);
+                float2 dir   = float2(cos(theta), sin(theta));
+                float  maxAng = 0.0;
+
+                [unroll] for (int s = 0; s < STEP_COUNT; s++)
+                {
+                    float  d   = steps[s];
+                    float2 sUv = subUv + dir * d * pixelStep;
+                    float4 sBn = SampleBiomeNorm(sUv);
+                    HeightSample sH = ComposedHeightAt(sUv, sBn);
+                    float  rise = sH.composed - hC.composed;
+                    // True surface distance along the ray (handles diagonal correctly even when
+                    // the output is square and U / V arcs differ).
+                    float  dx   = d * dir.x * arcUMacro;
+                    float  dy   = d * dir.y * arcVMacro;
+                    float  run  = sqrt(dx * dx + dy * dy);
+                    float  ang  = atan2(rise, max(run, 0.001));
+                    maxAng = max(maxAng, ang);
+                }
+                subAO += 1.0 - sin(max(maxAng, 0.0));
+            }
+            subAO /= (float)K;
+            accumAO += subAO;
+
+            // Slope reuses the macro normal we already computed. Trapezoid HEIGHT axis
+            // uses the GLOBAL altitude (matches runtime: PQS feeds mesh-vertex altitude
+            // from globalHeightMap, not the composed stack, into the height window).
+            float subSlopeDeg = degrees(acos(saturate(subNormal.z)));
+            float subTrapezoidHeight = hC.global;
+
+            // Variation-noise UV: low-frequency value noise sampled at the unit-sphere
+            // position so the noise field is continuous across the U=0/U=1 wrap (no vertical
+            // seam) and well-defined at the poles (no radial pinch). Adjacent output pixels
+            // pick nearby submeans -> smooth coloring patches across the planet.
+            float subLat = (subUv.y - 0.5) * UNITY_PI;
+            float subLon = (subUv.x - 0.5) * 2.0 * UNITY_PI;
+            float3 spherePos = LatLonToSpherePos(subLat, subLon);
+            float2 variationCellUv = lerp(float2(0.5, 0.5),
+                                          ValueNoise2OnSphere(spherePos, _VariationFrequency),
+                                          _VariationStrength);
+
+            // -----------------------------------------------------------------------------
+            // Small-tile cascade: per-(biome, layer) trapezoid windows weight per-slice means
+            // (per-tile pattern phase is sub-pixel at scaled distance and is intentionally
+            // omitted - SampleLevel at max mip returns the slice mean).
+            // -----------------------------------------------------------------------------
+            float3 subAlbedo     = float3(0, 0, 0);
+            float  subMetallic   = 0.0;
+            float  subSmoothness = 0.0;
+            float3 subEmission   = float3(0, 0, 0);
+            float  subWeight     = 0.0;
+
+            [loop] for (int b = 0; b < 4; b++)
+            {
+                float biomeChan = biomeRGBA[b];
+                if (biomeChan < 0.001) continue;
+
+                [loop] for (int l = 0; l < 4; l++)
+                {
+                    int   idx       = b * 4 + l;
+                    float sliceIdx  = SMALL_SCALAR(_SmallBiomeIdxPack, b, l);
+                    if (sliceIdx < 0.0) continue;
+
+                    float enable     = SMALL_SCALAR(_SmallEnablePack, b, l);
+                    float baseWeight = SMALL_SCALAR(_SmallHeightWeightPack, b, l);
+                    float gate       = enable * baseWeight;
+                    if (gate <= 0.0) continue;
+
+                    float heightFalloff = lerp(1.0 - SMALL_SCALAR(_SmallHeightEnablePack, b, l), 1.0,
+                                               ComputeFadeTri(subTrapezoidHeight, _SmallHeightParams[idx]));
+                    // slopeDegenerate matches the runtime shader: when slope params are
+                    // (0, 0, *, *) AND slope-enable is on, the layer is killed outright
+                    // instead of evaluating the trapezoid (which would otherwise produce
+                    // overshoot at slope=0 and arbitrary falloff elsewhere).
+                    float4 sParams = _SmallSlopeParams[idx];
+                    float  sEnable = SMALL_SCALAR(_SmallSlopeEnablePack, b, l);
+                    bool   slopeDegenerate = sParams.x == 0.0 && sParams.y == 0.0 && sEnable != 0.0;
+                    float  slopeFalloff = slopeDegenerate
+                        ? 0.0
+                        : lerp(1.0 - sEnable, 1.0, ComputeFadeTri(subSlopeDeg, sParams));
+                    float layerWeight = biomeChan * gate * heightFalloff * slopeFalloff;
+                    if (layerWeight <= 0.0) continue;
+
+                    // Per-slice color from the 4x4 submean grid, bilinear-blended by the
+                    // low-frequency noise UV so identical materials still vary across the
+                    // surface (each output pixel lands at a different point in the 4x4
+                    // grid based on the noise field).
+                    float4 albedoSample, normalSample, metalSample;
+                    SAMPLE_SUBMEAN_GRID(_SliceAlbedoSubmeans, sliceIdx, variationCellUv, albedoSample);
+                    SAMPLE_SUBMEAN_GRID(_SliceNormalSubmeans, sliceIdx, variationCellUv, normalSample);
+                    SAMPLE_SUBMEAN_GRID(_SliceMetalSubmeans,  sliceIdx, variationCellUv, metalSample);
+
+                    // Per-layer color grade (matches DeferredBiome.cginc gradedNear formula).
+                    float4 tint       = _SmallTint[idx];
+                    float  brightness = SMALL_SCALAR(_SmallBrightnessPack, b, l);
+                    float  contrast   = SMALL_SCALAR(_SmallContrastPack, b, l);
+                    float  saturation = SMALL_SCALAR(_SmallSaturationPack, b, l);
+
+                    float3 graded = (albedoSample.rgb * tint.rgb + brightness - MID_GRAY) * contrast + MID_GRAY;
+                    float  lum    = dot(graded, float3(0.2126729, 0.7151522, 0.072175));
+                    float3 color  = lum + saturation * (graded - lum);
+
+                    // Metallic (>= 15 = override mode, matches shader convention).
+                    float metStrength = SMALL_SCALAR(_SmallMetallicStrengthPack, b, l);
+                    bool  metOver     = metStrength >= 15.0;
+                    float metFlag     = metOver ? 1.0 : 0.0;
+                    float metScale    = metFlag + (metOver ? 0.0 : metStrength);
+                    float metOffset   = metFlag * (metStrength - 15.0) * 0.2;
+                    float metallic    = metalSample.x * metScale + metOffset;
+
+                    // Smoothness: gloss source is _SmallNormalArray.x per shader (.x slot of the packed normal map).
+                    float glsStrength = SMALL_SCALAR(_SmallGlossStrengthPack, b, l);
+                    bool  glsOver     = glsStrength >= 15.0;
+                    float glsFlag     = glsOver ? 1.0 : 0.0;
+                    float glsScale    = glsFlag + (glsOver ? 0.0 : glsStrength);
+                    float glsOffset   = glsFlag * (glsStrength - 15.0) * 0.2;
+                    float smoothness  = normalSample.x * glsScale + glsOffset;
+
+                    // Emission color * strength.
+                    float  emStrength = SMALL_SCALAR(_SmallEmissionStrengthPack, b, l);
+                    float3 emColor    = _SmallEmissionColor[idx].rgb * emStrength;
+
+                    subAlbedo     += layerWeight * color;
+                    subMetallic   += layerWeight * metallic;
+                    subSmoothness += layerWeight * smoothness;
+                    subEmission   += layerWeight * emColor;
+                    subWeight     += layerWeight;
+                }
+            }
+
+            // Clamp the divisor at 1 instead of always normalising. Where multiple layers
+            // overlap and total weight is > 1, dividing prevents oversaturation (the result is
+            // still the weighted average). Where total weight is < 1 - i.e. the layers are
+            // partially fading out (low altitudes inside a height-trapezoid fade-in, or slope
+            // gating, or biome mask edges) - the unnormalised sum carries through. This is
+            // intentional bake behavior: trapezoid-fade boundaries visibly darken in the scaled
+            // view to make under-covered regions read as cracks rather than blending across.
+            float invW = 1.0 / max(subWeight, 1.0);
+            accumAlbedo     += subAlbedo     * invW;
+            accumMetallic   += subMetallic   * invW;
+            accumSmoothness += subSmoothness * invW;
+            accumEmission   += subEmission   * invW;
+        }
+    }
+
+    float invSubs = 1.0 / (float)(N * N);
+    accumNormal     = normalize(accumNormal * invSubs);
+    accumAO        *= invSubs;
+    accumAlbedo    *= invSubs;
+    accumMetallic  *= invSubs;
+    accumSmoothness *= invSubs;
+    accumEmission  *= invSubs;
+
+    // DXT5nm pack: (1, n.y, 1, n.x). normal.xy in [-1, 1] - encode to [0, 1].
+    float2 nXY = saturate(accumNormal.xy * 0.5 + 0.5);
+
+    // Gamma-encode the sRGB outputs so the bytes stored in the 8-bit RT match what the
+    // sRGB-imported texture decodes back to at sample time. Packed and Normal are linear
+    // and stay raw. Emission is clamped to [0, 1] for the 8-bit pipeline (HDR emission is
+    // out of scope for V1 - see the plan).
+    float3 albedoSrgb   = pow(saturate(accumAlbedo),   1.0 / 2.2);
+    float3 emissionSrgb = pow(saturate(accumEmission), 1.0 / 2.2);
+
+    _OutAlbedo[pixel]   = float4(albedoSrgb, 1.0);
+    _OutNormal[pixel]   = float4(1.0, nXY.y, 1.0, nXY.x);
+    _OutPacked[pixel]   = float4(saturate(accumMetallic), saturate(accumAO), 0.0, saturate(accumSmoothness));
+    _OutEmission[pixel] = float4(emissionSrgb, 1.0);
+}

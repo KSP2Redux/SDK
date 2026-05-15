@@ -19,41 +19,67 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     public static class ScaledSpaceBakerOperation
     {
         /// <summary>
-        /// Authored radius (in mesh units) of the scaled-space mesh. Drives the SphereCollider
-        /// sized by the wizard so <c>ScaledPlanetaryBodyView.invBaseSizeFactor</c> cancels the
-        /// authored size out and world-space scaling lands at the body's actual radius. Map-view
-        /// scaling reads this too via the rendered mesh size.
+        /// Authored radius (in mesh units) of the scaled-space mesh.
         /// </summary>
-        public const float AuthoredRadius = 1500f;
+        /// <remarks>
+        /// The wizard sizes the SphereCollider to this value, and
+        /// <c>ScaledPlanetaryBodyView.CalculateNormalizationFactorFromCollider</c> uses the
+        /// collider's bounds as <c>baseSizeFactor</c>, so the runtime scales the mesh by
+        /// <c>body.radius * 2 / (2 * AuthoredRadius) = body.radius / AuthoredRadius</c>. The mesh
+        /// baker writes vertex distances of
+        /// <c>AuthoredRadius + h * heightScale * (AuthoredRadius / body.radius)</c>, so a vertex at
+        /// the body's nominal radius (h = 0) lands at world radius <c>body.radius</c> after scaling.
+        /// </remarks>
+        public const float AuthoredRadius = 1000f;
 
-        /// <summary>Per-bake settings.</summary>
+        /// <summary>
+        /// Per-bake settings.
+        /// </summary>
         public struct Settings
         {
-            /// <summary>0=64x32, 1=128x64, 2=256x128, 3=512x256.</summary>
+            /// <summary>
+            /// Mesh resolution index where 0=64x32, 1=128x64, 2=256x128, 3=512x256.
+            /// </summary>
             public int MeshResolutionIndex;
-            /// <summary>When true, ocean color is composited into the scaled albedo and terrain is clamped to sea level.</summary>
+            /// <summary>
+            /// When true, ocean color is composited into the scaled albedo and terrain is clamped to sea level.
+            /// </summary>
             public bool IncludeOcean;
-            /// <summary>Color written over ocean pixels in the scaled albedo when <see cref="IncludeOcean"/> is true.</summary>
+            /// <summary>
+            /// Color written over ocean pixels in the scaled albedo when <see cref="IncludeOcean" /> is true.
+            /// </summary>
             public Color OceanColor;
         }
 
-        /// <summary>Result of a bake attempt.</summary>
+        /// <summary>
+        /// Result of a bake attempt.
+        /// </summary>
         public struct Result
         {
-            /// <summary>True when the bake completed end to end.</summary>
+            /// <summary>
+            /// True when the bake completed end to end.
+            /// </summary>
             public bool Success;
-            /// <summary>Error message when <see cref="Success"/> is false.</summary>
+            /// <summary>
+            /// Error message when <see cref="Success" /> is false.
+            /// </summary>
             public string Error;
-            /// <summary>Asset path of the wired Scaled prefab on success.</summary>
+            /// <summary>
+            /// Asset path of the wired Scaled prefab on success.
+            /// </summary>
             public string PrefabPath;
-            /// <summary>Folder the bake outputs were written into on success.</summary>
+            /// <summary>
+            /// Folder the bake outputs were written into on success.
+            /// </summary>
             public string ScaledFolder;
         }
 
-        /// <summary>Executes the bake pipeline against <paramref name="body"/> with <paramref name="settings"/>.</summary>
+        /// <summary>
+        /// Executes the bake pipeline against <paramref name="body" /> with <paramref name="settings" />.
+        /// </summary>
         /// <param name="body">The body whose scaled view to bake. Must have a non-empty bodyName and positive radius.</param>
         /// <param name="settings">Per-bake settings.</param>
-        /// <returns>A <see cref="Result"/> describing success or failure.</returns>
+        /// <returns>A <see cref="Result" /> describing success or failure.</returns>
         public static Result Bake(CoreCelestialBodyData body, Settings settings)
         {
             if (!TryPrepareContext(body, settings, out var ctx, out var error))
@@ -61,24 +87,48 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             try
             {
-                ProgressBar("Baking mesh...", 0.25f);
-                var meshAsset = BakeLodMesh(ctx);
+                ProgressBar("Baking textures (analytic)...", 0.15f);
+                var textures = AnalyticScaledSpaceSampler.Sample(ctx.PqsData, ctx.Radius, AnalyticScaledSpaceSampler.DefaultSettings());
+                try
+                {
+                    ProgressBar("Compositing ocean / polar blend...", 0.45f);
+                    ApplyOptionalOceanInPlace(ctx, textures.Albedo);
+                    AnalyticScaledSpaceSampler.BlendPolarNormals(textures.Normal, totalLines: 32, blendLines: 24);
 
-                ProgressBar("Resolving material...", 0.55f);
-                var matAsset = ResolveOrCreateMaterial(ctx);
+                    ProgressBar("Writing scaled-space textures...", 0.6f);
+                    var albedoAsset = WriteAndImportPng(textures.Albedo,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_d.png",  ConfigureSrgbImporter);
+                    var normalAsset = WriteAndImportPng(textures.Normal,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_n.png",  ConfigureNormalImporter);
+                    var packedAsset = WriteAndImportPng(textures.Packed,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_pk.png", ConfigureLinearImporter);
+                    var emissionAsset = WriteAndImportPng(textures.Emission, $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_e.png",  ConfigureSrgbImporter);
 
-                var finalAlbedo = ApplyOptionalOcean(ctx);
-                BindAlbedoToMaterial(matAsset, finalAlbedo);
+                    ProgressBar("Resolving material...", 0.7f);
+                    var matAsset = ResolveOrCreateMaterial(ctx);
+                    BindBakedTexturesToMaterial(matAsset, albedoAsset, normalAsset, packedAsset, emissionAsset);
 
-                FlushBeforePrefabWiring(ref meshAsset, ref matAsset);
+                    // Same outputs also feed the PQS surface material's scaled-tex slots so the
+                    // local-view distance crossfade samples the baked maps.
+                    BindBakedTexturesToSurfaceMaterial(ctx.PqsData, albedoAsset, normalAsset, packedAsset, emissionAsset);
 
-                ProgressBar("Wiring prefab...", 0.85f);
-                var prefabPath = WirePrefab(ctx.BodyFolder, ctx.BodyName, meshAsset, matAsset);
+                    ProgressBar("Baking mesh...", 0.8f);
+                    var meshAsset = BakeLodMesh(ctx);
 
-                FinalizeImports(meshAsset, prefabPath);
+                    FlushBeforePrefabWiring(ref meshAsset, ref matAsset);
 
-                Debug.Log($"[ScaledSpaceBaker] Wrote mesh+material to '{ctx.ScaledFolder}/' and wired prefab '{prefabPath}'.");
-                return Succeed(prefabPath, ctx.ScaledFolder);
+                    ProgressBar("Wiring prefab...", 0.9f);
+                    var prefabPath = WirePrefab(ctx.BodyFolder, ctx.BodyName, meshAsset, matAsset);
+
+                    FinalizeImports(meshAsset, prefabPath);
+
+                    Debug.Log($"[ScaledSpaceBaker] Wrote mesh+material+textures to '{ctx.ScaledFolder}/' and wired prefab '{prefabPath}'.");
+                    return Succeed(prefabPath, ctx.ScaledFolder);
+                }
+                finally
+                {
+                    if (textures.Albedo != null)   UnityEngine.Object.DestroyImmediate(textures.Albedo);
+                    if (textures.Normal != null)   UnityEngine.Object.DestroyImmediate(textures.Normal);
+                    if (textures.Packed != null)   UnityEngine.Object.DestroyImmediate(textures.Packed);
+                    if (textures.Emission != null) UnityEngine.Object.DestroyImmediate(textures.Emission);
+                }
             }
             catch (Exception ex)
             {
@@ -99,13 +149,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             public PQSData PqsData;
             public string BodyFolder;
             public string ScaledFolder;
-            public Texture2D SourceAlbedo;
             public Texture2D GlobalHeightMap;
             public float HeightScale;
             public bool HasOcean;
             public float OceanNormalized;
             public Color OceanColor;
             public int MeshResolutionIndex;
+            public Texture2D BiomeMask;
+            public PQSData.HeightRegion[] LargeRegions;
+            public PQSData.HeightRegion[] MidRegions;
         }
 
         private static bool TryPrepareContext(CoreCelestialBodyData body, Settings settings, out BakeContext ctx, out string error)
@@ -130,15 +182,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             if (!AssetDatabase.IsValidFolder(scaledFolder))
                 AssetDatabase.CreateFolder(bodyFolder, "Scaled");
 
-            var surfaceMaterial = pqsData.materialSettings?.surfaceMaterial;
-            var sourceAlbedo = surfaceMaterial != null ? surfaceMaterial.GetTexture("_AlbedoScaledTex") as Texture2D : null;
-            var heightScale = pqsData.heightMapInfo?.heightMapScale ?? 0f;
+            var hmInfoCheck = pqsData.heightMapInfo;
+            if (hmInfoCheck == null) { error = "PQSData has no heightMapInfo. Open the PQS inspector and assign a global heightmap before baking."; return false; }
+
+            var heightScale = hmInfoCheck.heightMapScale;
             var hasOcean = (body.Data?.hasOcean ?? false) && settings.IncludeOcean;
             var oceanAltitude = (float)(body.Data?.oceanAltitude ?? 0);
-            // Heightmap is normalized [0,1] over [-heightScale/2, +heightScale/2] around the body
-            // radius. Ocean sits at radius - oceanAltitude, so normalized = 0.5 - oceanAltitude / heightScale.
-            var oceanNormalized = hasOcean && heightScale > 0 ? 0.5f - oceanAltitude / heightScale : -1f;
+            // Heightmap is normalized [0,1] mapped to altitudes [0, heightScale] above the body
+            // radius (h * heightScale - matches PQSJobUtil.HeightSample). Ocean sits at altitude
+            // oceanAltitude, so normalized = oceanAltitude / heightScale.
+            var oceanNormalized = hasOcean && heightScale > 0 ? oceanAltitude / heightScale : -1f;
 
+            var hmInfo = hmInfoCheck;
             ctx = new BakeContext
             {
                 BodyName = bodyName,
@@ -146,33 +201,123 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 PqsData = pqsData,
                 BodyFolder = bodyFolder,
                 ScaledFolder = scaledFolder,
-                SourceAlbedo = sourceAlbedo,
-                GlobalHeightMap = pqsData.heightMapInfo?.globalHeightMap,
+                GlobalHeightMap = hmInfo?.globalHeightMap,
                 HeightScale = heightScale,
                 HasOcean = hasOcean,
                 OceanNormalized = oceanNormalized,
                 OceanColor = settings.OceanColor,
                 MeshResolutionIndex = settings.MeshResolutionIndex,
+                BiomeMask = hmInfo?.mask,
+                LargeRegions = new[] { hmInfo?.largeR, hmInfo?.largeG, hmInfo?.largeB, hmInfo?.largeA },
+                MidRegions   = new[] { hmInfo?.mediumR, hmInfo?.mediumG, hmInfo?.mediumB, hmInfo?.mediumA },
             };
             error = null;
             return true;
         }
 
-        private static Texture2D ApplyOptionalOcean(BakeContext ctx)
+        // Composites ocean color over the analytic-baked albedo where the global heightmap is below
+        // sea level. Mutates the in-memory texture before it is written to disk; no PNG round-trip.
+        private static void ApplyOptionalOceanInPlace(BakeContext ctx, Texture2D albedo)
         {
-            if (!ctx.HasOcean || ctx.SourceAlbedo == null) return ctx.SourceAlbedo;
-            ProgressBar("Compositing ocean...", 0.7f);
-            var albedoPath = CompositeOceanAlbedo(ctx.SourceAlbedo, ctx.GlobalHeightMap, ctx.OceanNormalized, ctx.OceanColor, ctx.ScaledFolder, ctx.BodyName);
-            if (albedoPath == null) return ctx.SourceAlbedo;
-            AssetDatabase.ImportAsset(albedoPath, ImportAssetOptions.ForceUpdate);
-            ConfigureAlbedoImporter(albedoPath);
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(albedoPath);
+            if (!ctx.HasOcean || albedo == null) return;
+            if (ctx.GlobalHeightMap == null || !ctx.GlobalHeightMap.isReadable)
+            {
+                Debug.LogWarning("[ScaledSpaceBaker] Ocean composite skipped: globalHeightMap is missing or not Read/Write enabled.");
+                return;
+            }
+
+            var albedoPixels = albedo.GetPixels();
+            var hmPixels = ctx.GlobalHeightMap.GetPixels();
+            int w = albedo.width, h = albedo.height;
+            int hmW = ctx.GlobalHeightMap.width, hmH = ctx.GlobalHeightMap.height;
+            float threshold = ctx.OceanNormalized;
+            var oceanColor = ctx.OceanColor;
+
+            for (int y = 0; y < h; y++)
+            {
+                var v = y / (float)(h - 1);
+                var hy = Mathf.Min(hmH - 1, Mathf.FloorToInt(v * (hmH - 1)));
+                for (int x = 0; x < w; x++)
+                {
+                    var u = x / (float)(w - 1);
+                    var hx = Mathf.Min(hmW - 1, Mathf.FloorToInt(u * (hmW - 1)));
+                    if (hmPixels[hy * hmW + hx].r <= threshold)
+                        albedoPixels[y * w + x] = oceanColor;
+                }
+            }
+
+            albedo.SetPixels(albedoPixels);
+            albedo.Apply();
         }
 
-        private static void BindAlbedoToMaterial(Material matAsset, Texture2D finalAlbedo)
+        private static void BindBakedTexturesToMaterial(Material matAsset, Texture2D albedo, Texture2D normal, Texture2D packed, Texture2D emission)
         {
-            matAsset.SetTexture(Shader.PropertyToID("_MainTex"), finalAlbedo);
+            matAsset.SetTexture(Shader.PropertyToID("_MainTex"), albedo);
+            matAsset.SetTexture(Shader.PropertyToID("_NormalMap"), normal);
+            matAsset.SetTexture(Shader.PropertyToID("_PackedMap"), packed);
+            matAsset.SetTexture(Shader.PropertyToID("_EmissionTex"), emission);
             EditorUtility.SetDirty(matAsset);
+        }
+
+        // Wires the same baked outputs into the PQS surface material's _AlbedoScaledTex /
+        // _NormalScaledTex / _PackedScaledTex / _EmissionScaledTex slots so the local-view
+        // distance crossfade samples them at orbit-equivalent ranges.
+        private static void BindBakedTexturesToSurfaceMaterial(PQSData pqsData, Texture2D albedo, Texture2D normal, Texture2D packed, Texture2D emission)
+        {
+            var surfaceMat = pqsData?.materialSettings?.surfaceMaterial;
+            if (surfaceMat == null) return;
+            surfaceMat.SetTexture(Shader.PropertyToID("_AlbedoScaledTex"),  albedo);
+            surfaceMat.SetTexture(Shader.PropertyToID("_NormalScaledTex"), normal);
+            surfaceMat.SetTexture(Shader.PropertyToID("_PackedScaledTex"), packed);
+            surfaceMat.SetTexture(Shader.PropertyToID("_EmissionScaledTex"), emission);
+            EditorUtility.SetDirty(surfaceMat);
+        }
+
+        // Encodes a Texture2D to PNG, writes to the project, imports with the supplied importer
+        // configuration, and returns the imported asset.
+        private static Texture2D WriteAndImportPng(Texture2D source, string projectPath, Action<TextureImporter> configureImporter)
+        {
+            var bytes = source.EncodeToPNG();
+            File.WriteAllBytes(projectPath, bytes);
+            AssetDatabase.ImportAsset(projectPath, ImportAssetOptions.ForceUpdate);
+            if (AssetImporter.GetAtPath(projectPath) is TextureImporter importer)
+            {
+                configureImporter(importer);
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(projectPath);
+        }
+
+        private static void ConfigureSrgbImporter(TextureImporter importer)
+        {
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = true;
+            importer.maxTextureSize = 4096;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = true;
+            importer.wrapMode = TextureWrapMode.Repeat;
+            importer.filterMode = FilterMode.Trilinear;
+        }
+
+        private static void ConfigureLinearImporter(TextureImporter importer)
+        {
+            importer.textureType = TextureImporterType.Default;
+            importer.sRGBTexture = false;
+            importer.maxTextureSize = 4096;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = true;
+            importer.wrapMode = TextureWrapMode.Repeat;
+            importer.filterMode = FilterMode.Trilinear;
+        }
+
+        private static void ConfigureNormalImporter(TextureImporter importer)
+        {
+            importer.textureType = TextureImporterType.NormalMap;
+            importer.maxTextureSize = 4096;
+            importer.mipmapEnabled = true;
+            importer.streamingMipmaps = true;
+            importer.wrapMode = TextureWrapMode.Repeat;
+            importer.filterMode = FilterMode.Trilinear;
         }
 
         // Flushes both newly-created assets before the prefab references them. Skipping this leaves
@@ -223,8 +368,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             var baseLon = 64 << ctx.MeshResolutionIndex;
             var baseLatBuild = baseLon / 2;
-            BuildSphereVertices(baseLon, baseLatBuild, ctx.GlobalHeightMap, ctx.Radius, ctx.HeightScale, ctx.OceanNormalized,
-                out var verts, out var normals, out var uvs);
+            BuildSphereVertices(baseLon, baseLatBuild, ctx, out var verts, out var normals, out var uvs);
 
             // Halve resolution per LOD until the coarsest level hits MinLodLon. Higher base
             // resolutions get more LODs so the renderer always has a sparse-enough level for
@@ -287,19 +431,20 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return mainMesh;
         }
 
-        private static void BuildSphereVertices(int lonDivisions, int latDivisions, Texture2D globalHeightMap, float radius, float heightScale, float oceanNormalized,
+        private static void BuildSphereVertices(int lonDivisions, int latDivisions, BakeContext ctx,
             out Vector3[] verts, out Vector3[] normals, out Vector2[] uvs)
         {
-            Color[] heightPixels = null;
-            int hmW = 0, hmH = 0;
-            float dispScale = 0f;
-            if (globalHeightMap != null && heightScale > 0f && radius > 0f && globalHeightMap.isReadable)
+            var globalPixels = TryReadPixels(ctx.GlobalHeightMap, out var hmGW, out var hmGH);
+            var biomePixels  = TryReadPixels(ctx.BiomeMask, out var bmW, out var bmH);
+            var largePixels  = new Color[4][]; var largeW = new int[4]; var largeH = new int[4];
+            var midPixels    = new Color[4][]; var midW   = new int[4]; var midH   = new int[4];
+            for (int c = 0; c < 4; c++)
             {
-                heightPixels = globalHeightMap.GetPixels();
-                hmW = globalHeightMap.width;
-                hmH = globalHeightMap.height;
-                dispScale = (heightScale / radius) * AuthoredRadius;
+                largePixels[c] = TryReadPixels(ctx.LargeRegions?[c]?.heightMap, out largeW[c], out largeH[c]);
+                midPixels[c]   = TryReadPixels(ctx.MidRegions?[c]?.heightMap,   out midW[c],   out midH[c]);
             }
+
+            float metersToMesh = ctx.Radius > 0f ? AuthoredRadius / ctx.Radius : 0f;
 
             var vertCount = (lonDivisions + 1) * (latDivisions + 1);
             verts = new Vector3[vertCount];
@@ -318,12 +463,41 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     var phi = u * Mathf.PI * 2f;
                     var dir = new Vector3(sinTheta * Mathf.Cos(phi), cosTheta, sinTheta * Mathf.Sin(phi));
                     var displacement = 0f;
-                    if (heightPixels != null)
+                    if (globalPixels != null && metersToMesh > 0f)
                     {
-                        var h = SampleBilinear(heightPixels, hmW, hmH, u, 1f - v);
-                        if (oceanNormalized >= 0f && h < oceanNormalized)
-                            h = oceanNormalized;
-                        displacement = (h - 0.5f) * dispScale;
+                        var sampleU = u;
+                        var sampleV = 1f - v;
+                        var globalH = SampleBilinear(globalPixels, hmGW, hmGH, sampleU, sampleV);
+                        if (ctx.OceanNormalized >= 0f && globalH < ctx.OceanNormalized)
+                            globalH = ctx.OceanNormalized;
+
+                        float altitudeMeters = globalH * ctx.HeightScale;
+                        if (biomePixels != null && bmW > 0 && bmH > 0)
+                        {
+                            var biome = SampleBilinearRGBA(biomePixels, bmW, bmH, sampleU, sampleV);
+                            for (int c = 0; c < 4; c++)
+                            {
+                                float weight = biome[c];
+                                if (weight <= 0.001f) continue;
+
+                                var largeR = ctx.LargeRegions?[c];
+                                if (largeR != null && largePixels[c] != null && largeR.heightScale > 0f)
+                                {
+                                    var lh = SampleBilinear(largePixels[c], largeW[c], largeH[c],
+                                        sampleU * largeR.uvScale, sampleV * largeR.uvScale);
+                                    altitudeMeters += weight * lh * largeR.heightScale;
+                                }
+                                var midR = ctx.MidRegions?[c];
+                                if (midR != null && midPixels[c] != null && midR.heightScale > 0f)
+                                {
+                                    var mh = SampleBilinear(midPixels[c], midW[c], midH[c],
+                                        sampleU * midR.uvScale, sampleV * midR.uvScale);
+                                    altitudeMeters += weight * mh * midR.heightScale;
+                                }
+                            }
+                        }
+
+                        displacement = altitudeMeters * metersToMesh;
                     }
                     var i = y * (lonDivisions + 1) + x;
                     verts[i] = dir * (AuthoredRadius + displacement);
@@ -331,6 +505,40 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     uvs[i] = new Vector2(u, 1f - v);
                 }
             }
+        }
+
+        private static Color[] TryReadPixels(Texture2D tex, out int w, out int h)
+        {
+            if (tex == null || !tex.isReadable)
+            {
+                w = 0; h = 0;
+                return null;
+            }
+            w = tex.width;
+            h = tex.height;
+            return tex.GetPixels();
+        }
+
+        private static Vector4 SampleBilinearRGBA(Color[] pixels, int w, int h, float u, float v)
+        {
+            u -= Mathf.Floor(u);
+            v = Mathf.Clamp01(v);
+            var fx = u * (w - 1);
+            var fy = v * (h - 1);
+            var x0 = Mathf.FloorToInt(fx);
+            var y0 = Mathf.FloorToInt(fy);
+            var x1 = (x0 + 1) % w;
+            var y1 = Mathf.Min(y0 + 1, h - 1);
+            var tx = fx - x0;
+            var ty = fy - y0;
+            var c00 = pixels[y0 * w + x0];
+            var c10 = pixels[y0 * w + x1];
+            var c01 = pixels[y1 * w + x0];
+            var c11 = pixels[y1 * w + x1];
+            var a = Color.Lerp(c00, c10, tx);
+            var b = Color.Lerp(c01, c11, tx);
+            var c = Color.Lerp(a, b, ty);
+            return new Vector4(c.r, c.g, c.b, c.a);
         }
 
         // Index buffer that references every `stride`-th vertex along both axes of the LOD0 grid.
@@ -444,6 +652,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 var renderer = contents.GetOrAddComponent<MeshRenderer>();
                 renderer.sharedMaterial = mat;
 
+                // Force the SphereCollider radius to AuthoredRadius. ScaledPlanetaryBodyView's
+                // baseSizeFactor reads the collider's bounds, so any drift between what's saved
+                // in the prefab and AuthoredRadius mis-scales the body at runtime.
+                var sphereCollider = contents.GetOrAddComponent<SphereCollider>();
+                if (!Mathf.Approximately(sphereCollider.radius, AuthoredRadius))
+                    sphereCollider.radius = AuthoredRadius;
+
                 PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
             }
             finally
@@ -466,58 +681,5 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             }
         }
 
-        private static string CompositeOceanAlbedo(Texture2D source, Texture2D heightMap, float threshold, Color oceanColor, string scaledFolder, string bodyName)
-        {
-            if (heightMap == null || !heightMap.isReadable)
-            {
-                Debug.LogWarning("[ScaledSpaceBaker] Ocean composite skipped: globalHeightMap is missing or not Read/Write enabled.");
-                return null;
-            }
-            var srcPixels = TextureReadback.BlitReadPixels(source, out var w, out var h);
-            var hmPixels = heightMap.GetPixels();
-            var hmW = heightMap.width;
-            var hmH = heightMap.height;
-
-            for (int y = 0; y < h; y++)
-            {
-                var v = y / (float)(h - 1);
-                var hy = Mathf.Min(hmH - 1, Mathf.FloorToInt(v * (hmH - 1)));
-                for (int x = 0; x < w; x++)
-                {
-                    var u = x / (float)(w - 1);
-                    var hx = Mathf.Min(hmW - 1, Mathf.FloorToInt(u * (hmW - 1)));
-                    if (hmPixels[hy * hmW + hx].r <= threshold)
-                        srcPixels[y * w + x] = oceanColor;
-                }
-            }
-
-            var output = new Texture2D(w, h, TextureFormat.RGBA32, mipChain: false, linear: false);
-            try
-            {
-                output.SetPixels(srcPixels);
-                output.Apply();
-                var path = $"{scaledFolder}/{bodyName}_scaled_d.png";
-                File.WriteAllBytes(path, output.EncodeToPNG());
-                return path;
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(output);
-            }
-        }
-
-        private static void ConfigureAlbedoImporter(string projectPath)
-        {
-            var importer = AssetImporter.GetAtPath(projectPath) as TextureImporter;
-            if (importer == null) return;
-            importer.textureType = TextureImporterType.Default;
-            importer.sRGBTexture = true;
-            importer.maxTextureSize = 4096;
-            importer.mipmapEnabled = true;
-            importer.streamingMipmaps = true;
-            importer.wrapMode = TextureWrapMode.Repeat;
-            importer.filterMode = FilterMode.Trilinear;
-            importer.SaveAndReimport();
-        }
     }
 }

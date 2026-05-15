@@ -121,11 +121,10 @@
                 <engine:Label name="scaled-bake-status" class="body-inspector-error-label" />
             </engine:Foldout>
 
-        </engine:VisualElement>
+            <engine:Foldout name="save-section" text="Body Saving" value="true" class="body-inspector-section body-inspector-save">
+                <engine:VisualElement name="save-section-content" />
+            </engine:Foldout>
 
-        <engine:VisualElement name="save-section" class="body-inspector-save">
-            <engine:Label text="Body Saving" class="body-inspector-save-header" />
-            <engine:VisualElement name="save-section-content" />
         </engine:VisualElement>
 
     </engine:VisualElement>
