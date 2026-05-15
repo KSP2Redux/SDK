@@ -35,8 +35,8 @@ Shader "KSP2/Parts/Paintable"
         _TimeOfDayDotMax ("Sun Fade End", Range(-1, 1)) = 0.005
 
         [Header(Paint)]
-        _PaintA ("Base Paint", Color) = (1,1,1,0)
-        _PaintB ("Accent Paint", Color) = (1,1,1,0)
+        _PaintA ("Accent Paint", Color) = (0.4418,0.4431,0.5176,1)
+        _PaintB ("Base Paint", Color) = (0.6549,0.6667,0.6863,1)
         [NoScaleOffset] _PaintMaskGlossMap ("Paint Mask / Paint Smoothness", 2D) = "white" {}
         _PaintGlossMapScale ("Paint Smoothness Strength", Range(0, 1)) = 1
         _PaintSmoothnessDamping ("Paint Matte Damping", Range(0, 1)) = 0.85

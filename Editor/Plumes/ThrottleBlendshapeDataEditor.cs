@@ -153,6 +153,7 @@ namespace KSP.Editor
         private SerializedProperty _upperAtmoToVacuumBlendCurve;
         private SerializedProperty _vacuumFromUpperAtmoBlendCurve;
         private SerializedProperty _bendRotationOffset;
+        private SerializedProperty _engineFXModeHint;
         private SerializedProperty _atmoVacFloatParams;
         private SerializedProperty _atmoVacColorParams;
         private SerializedProperty _throttleFloatMultipliers;
@@ -170,6 +171,7 @@ namespace KSP.Editor
             _upperAtmoToVacuumBlendCurve = serializedObject.FindProperty("UpperAtmoToVacuumBlendCurve");
             _vacuumFromUpperAtmoBlendCurve = serializedObject.FindProperty("VacuumFromUpperAtmoBlendCurve");
             _bendRotationOffset = serializedObject.FindProperty("bendRotationOffset");
+            _engineFXModeHint = serializedObject.FindProperty("_engineFXModeHint");
             _atmoVacFloatParams = serializedObject.FindProperty("AtmoVac_Float_ShaderParameters");
             _atmoVacColorParams = serializedObject.FindProperty("AtmoVac_Color_ShaderParameters");
             _throttleFloatMultipliers = serializedObject.FindProperty("Throttle_Float_ShaderMultipliers");
@@ -180,6 +182,7 @@ namespace KSP.Editor
         {
             serializedObject.Update();
             DrawModeToolbar();
+            DrawEngineFXBindingSection();
             DrawPreviewSection();
             EditorGUILayout.Space();
             if (_mode == InspectorMode.Basic)
@@ -209,6 +212,12 @@ namespace KSP.Editor
 
             _mode = newMode;
             EditorPrefs.SetInt(GetPrefKey("Mode"), (int)_mode);
+        }
+
+        private void DrawEngineFXBindingSection()
+        {
+            EditorGUILayout.PropertyField(_engineFXModeHint, includeChildren: true);
+            EditorGUILayout.Space();
         }
 
         private void DrawPreviewSection()

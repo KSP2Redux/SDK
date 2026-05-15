@@ -42,6 +42,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private PartIconRenderSettings _iconPreviewSettings;
         private Texture2D _iconPreviewTexture;
         private bool _iconPreviewRefreshQueued;
+        
         private bool _reentryMeshFoldout = true;
         private bool _reentryMeshPreviewFoldout = true;
         private string _reentryMeshStatus;
@@ -68,8 +69,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private CorePartData TargetData => target as CorePartData;
         private PartCore TargetCore => TargetData.Core;
 
-        private PartIconRenderSettings IconPreviewSettings =>
-            _iconPreviewSettings ??= PartIconRenderSettings.CreateDefault();
+        private PartIconRenderSettings IconPreviewSettings => _iconPreviewSettings ??= PartIconRenderSettings.CreateDefault(TargetCore);
 
         private void OnDisable()
         {
@@ -329,6 +329,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             }
 
             PartIconRenderSettings settings = IconPreviewSettings;
+            _iconPreviewPreset = settings.CameraPreset;
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
                 if (_iconPreviewTexture == null)
@@ -362,8 +363,8 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                     if (GUILayout.Button("Reset"))
                     {
                         DestroyIconPreview();
-                        _iconPreviewSettings = PartIconRenderSettings.CreateDefault();
-                        _iconPreviewPreset = PartIconCameraPreset.Diagonal;
+                        _iconPreviewSettings = PartIconRenderSettings.CreateDefault(TargetCore);
+                        _iconPreviewPreset = _iconPreviewSettings.CameraPreset;
                         QueueIconPreviewRefresh();
                     }
                 }
@@ -384,12 +385,13 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             if (EditorGUI.EndChangeCheck())
             {
                 _iconPreviewPreset = preset;
-                settings.ApplyPreset(preset);
+                settings.CameraPreset = preset;
                 changed = true;
             }
 
             EditorGUI.BeginChangeCheck();
-            settings.cameraPadding = EditorGUILayout.Slider("Padding", settings.cameraPadding, 0.6f, 3f);
+            settings.cameraPadding = EditorGUILayout.Slider("Padding", settings.cameraPadding, 0.1f, 3f);
+            settings.partTransformRotation =  EditorGUILayout.Vector3Field("Part Rotation", settings.partTransformRotation);
             changed |= EditorGUI.EndChangeCheck();
 
             _iconPreviewCameraFoldout = DrawIconPreviewSectionFoldout(_iconPreviewCameraFoldout, "Camera");
@@ -411,6 +413,8 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                         -180f,
                         180f
                     );
+                    settings.overrideOrthographicSize = EditorGUILayout.Toggle("Override Camera Size", settings.overrideOrthographicSize);
+                    settings.cameraOrthographicSize = EditorGUILayout.Slider("Orthographic Size", settings.cameraOrthographicSize, 0.1f, 40f);
                     changed |= EditorGUI.EndChangeCheck();
                 }
             }
