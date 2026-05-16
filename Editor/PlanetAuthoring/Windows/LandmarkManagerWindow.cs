@@ -18,16 +18,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
     /// decals, standalone prefab spawners, standalone discoverables, and surface landmarks.
     /// </summary>
     /// <remarks>
-    /// Two creation paths only: New Decal (opens the existing decal prompt) and New Surface
-    /// Landmark (opens the existing landmark prompt). Standalone prefabs and discoverables aren't
-    /// directly creatable from here because the surface-landmark flow supersedes them. Every row
-    /// gets a Surface and Above framing button plus a Delete. The above-frame altitude scales with
-    /// the item's radius so the camera lands at a useful inspection distance, matching how the
-    /// Discoverable Manager already framed.
+    /// One creation path: New Surface Landmark (opens the existing landmark prompt). Decals,
+    /// standalone prefabs and discoverables aren't directly creatable from here because the
+    /// surface-landmark flow supersedes them; legacy entries still surface in the list when they
+    /// exist on the body. Every row gets a Surface and Above framing button plus a Delete. The
+    /// above-frame altitude scales with the item's radius so the camera lands at a useful
+    /// inspection distance, matching how the Discoverable Manager already framed.
     /// </remarks>
-    public class SurfaceManagerWindow : EditorWindow
+    public class LandmarkManagerWindow : EditorWindow
     {
-        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/SurfaceManagerWindow.uxml";
+        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Windows/LandmarkManagerWindow.uxml";
 
         private Label _statusLabel;
         private Button _newLandmarkButton;
@@ -43,11 +43,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private VisualElement _landmarksList;
         private string _lastFingerprint;
 
-        /// <summary>Opens the Surface Manager window.</summary>
+        /// <summary>Opens the Landmark Manager window.</summary>
         public static void ShowWindow()
         {
-            var window = GetWindow<SurfaceManagerWindow>();
-            window.titleContent = new GUIContent("Surface Manager");
+            var window = GetWindow<LandmarkManagerWindow>();
+            window.titleContent = new GUIContent("Landmark Manager");
             window.minSize = new Vector2(380f, 360f);
         }
 
@@ -63,7 +63,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
             if (tree == null)
             {
-                root.Add(new Label("Failed to load SurfaceManagerWindow.uxml"));
+                root.Add(new Label("Failed to load LandmarkManagerWindow.uxml"));
                 return;
             }
             tree.CloneTree(root);
@@ -188,7 +188,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 }
             }
             SetFoldoutCount(_decalsFold, "Decals", visible);
-            EnsureEmpty(_decalsList, visible, "No decals yet. Click '+ New Decal' to add one.");
+            EnsureEmpty(_decalsList, visible, "No decals. Use Surface Landmark for new placements.");
         }
 
         private void DeleteDecal(PQSDecalInstance inst)

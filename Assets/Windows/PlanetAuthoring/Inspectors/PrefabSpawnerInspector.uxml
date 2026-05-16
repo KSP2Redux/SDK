@@ -42,9 +42,6 @@
             <editor:FloatField name="alt-field" label="Altitude (m)"
                                tooltip="Height above the rendered terrain at this lat/lon. 0 snaps to surface. Positive values float the spawner above the surface, negative buries it. Editing lat/lon preserves this altitude."
                                class="sdk-field unity-base-field__aligned" />
-            <engine:Button name="pick-button" text="Pick on planet"
-                           tooltip="Activate the surface-pick tool. Click on the planet to snap this spawner's lat/lon to the surface hit."
-                           class="sdk-action-button" />
             <engine:VisualElement class="sdk-button-row">
                 <engine:Button name="copy-button" text="Copy"
                                tooltip="Copy lat,lon to the clipboard as a comma-separated pair." />

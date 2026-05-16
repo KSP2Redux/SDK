@@ -38,12 +38,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return foldout;
             }
 
-            foldout.Add(new HelpBox(
-                "Maps each biome mask channel to a KSP2BiomeType. The Bake button writes a " +
-                "BiomeLookupHashTable next to the PQSData and assigns it. Gameplay reads only the " +
-                "type field, so no color picking is required.",
-                HelpBoxMessageType.None));
-
             bool subzonesOn = material.IsKeywordEnabled("SUB_ZONES_ENABLED");
             foldout.Add(BuildChannelMappingGrid(pqsDataAuthoringSO));
             if (subzonesOn)

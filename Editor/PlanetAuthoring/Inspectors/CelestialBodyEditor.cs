@@ -78,9 +78,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 _validationChipOpenButton.clicked += OpenValidationReport;
 
             WireQuickToolButton(root, "quick-preview-controls", PreviewControlsWindow.ShowWindow);
-            WireQuickToolButton(root, "quick-validation", OpenValidationReport);
-            WireQuickToolButton(root, "quick-biome-painter", PlanetAuthoringWindows.ShowBiomePainterPlaceholder);
-            WireQuickToolButton(root, "quick-surface-manager", PlanetAuthoringWindows.ShowSurfaceManager);
+            WireQuickToolButton(root, "quick-landmark-manager", PlanetAuthoringWindows.ShowLandmarkManager);
 
             BuildSaveSection(root.Q<VisualElement>("save-section-content"));
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));

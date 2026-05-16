@@ -10,6 +10,7 @@
             <engine:Label name="body-label" class="preview-body" />
             <engine:Label name="altitude-label" class="preview-altitude" />
             <engine:Button name="preview-button" text="Stop Preview" tooltip="Start or stop the planet authoring session. While active, PQS streaming, jump-to-altitude, decal handles, and validation refresh in real time." class="preview-stop-button" />
+            <engine:Button name="refresh-preview-button" text="Refresh Preview" tooltip="Stop and immediately restart the active preview to pick up edits to the body, PQS data, materials, or textures. SceneView camera is not moved." class="preview-stop-button" />
         </engine:Foldout>
 
         <engine:Foldout text="Surface point" value="true" class="preview-section">

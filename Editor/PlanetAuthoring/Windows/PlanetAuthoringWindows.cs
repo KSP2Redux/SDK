@@ -33,14 +33,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public const int PriorityValidationReport = 110;
 
         /// <summary>
-        /// Menu priority for the Biome Painter window.
+        /// Menu priority for the Landmark Manager window.
         /// </summary>
-        public const int PriorityBiomePainter = 130;
-
-        /// <summary>
-        /// Menu priority for the Surface Manager window.
-        /// </summary>
-        public const int PrioritySurfaceManager = 140;
+        public const int PriorityLandmarkManager = 140;
 
         /// <summary>
         /// Menu priority for the Preset Browser window.
@@ -48,16 +43,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public const int PriorityPresetBrowser = 160;
 
         /// <summary>
-        /// Shows the placeholder dialog for the Biome Painter window.
+        /// Opens the combined Landmark Manager window (decals, prefabs, discoverables, landmarks).
         /// </summary>
-        [MenuItem(MenuRoot + "Biome Painter", priority = PriorityBiomePainter)]
-        public static void ShowBiomePainterPlaceholder() => ShowNotImplemented("Biome Painter");
-
-        /// <summary>
-        /// Opens the combined Surface Manager window (decals, prefabs, discoverables, landmarks).
-        /// </summary>
-        [MenuItem(MenuRoot + "Surface Manager", priority = PrioritySurfaceManager)]
-        public static void ShowSurfaceManager() => SurfaceManagerWindow.ShowWindow();
+        [MenuItem(MenuRoot + "Landmark Manager", priority = PriorityLandmarkManager)]
+        public static void ShowLandmarkManager() => LandmarkManagerWindow.ShowWindow();
 
         /// <summary>
         /// Shows the placeholder dialog for the Preset Browser window.

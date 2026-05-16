@@ -14,8 +14,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// <c>Assets/Windows/PQSInspector.uxml</c> with styling in <c>PQSInspector.uss</c>. Field
     /// routing:
     /// <list type="bullet">
-    ///   <item>Authoring: data, generatePhysics, UseFixedLevel/FixedLevel, scaled-space tex
-    ///         generator settings, maxRaycastDistance.</item>
+    ///   <item>Authoring: data, generatePhysics, UseFixedLevel/FixedLevel, maxRaycastDistance.</item>
     ///   <item>Hidden: settings, PQSRenderer, isAlive, isActive, isStarted,
     ///         primaryTargetDistance, primaryTargetAltitude, isSubdivisionEnabled, trackStats.
     ///         These are runtime or auto-managed and belong in the Preview Controls or debug

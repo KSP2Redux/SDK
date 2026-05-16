@@ -80,6 +80,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void SyncToolsHidden()
         {
+            if (PlanetAuthoringTools.IsExclusiveToolActive())
+            {
+                UnityEditor.Tools.hidden = false;
+                return;
+            }
             UnityEditor.Tools.hidden = PlanetAuthoringSession.Active != null;
         }
 
@@ -106,7 +111,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _latField.RegisterValueChangedCallback(_ => ApplyLatLonFromFields());
             _lonField.RegisterValueChangedCallback(_ => ApplyLatLonFromFields());
 
-            root.Q<Button>("pick-button").clicked += OnPickClicked;
             root.Q<Button>("copy-button").clicked += OnCopyClicked;
             root.Q<Button>("paste-button").clicked += OnPasteClicked;
 
@@ -199,21 +203,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             decal.LatLong = next;
             decal.UpdateDecalTransform();
             EditorUtility.SetDirty(decal);
-        }
-
-        private void OnPickClicked()
-        {
-            var decal = (PQSDecalInstance)target;
-            if (decal == null) return;
-            PlanetSurfacePickTool.Begin(latLon =>
-            {
-                Undo.RecordObject(decal, "Pick decal location");
-                decal.LatLong = latLon;
-                decal.UpdateDecalTransform();
-                _latField.SetValueWithoutNotify(latLon.x);
-                _lonField.SetValueWithoutNotify(latLon.y);
-                EditorUtility.SetDirty(decal);
-            });
         }
 
         private void OnCopyClicked()

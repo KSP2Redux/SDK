@@ -9,7 +9,6 @@
             <editor:FloatField name="lat-field" label="Latitude (°)" tooltip="Decal center latitude in degrees. -90 = south pole, +90 = north pole." class="decal-inspector-field unity-base-field__aligned" />
             <editor:FloatField name="lon-field" label="Longitude (°)" tooltip="Decal center longitude in degrees. East-positive, range [-180, 180]." class="decal-inspector-field unity-base-field__aligned" />
             <engine:VisualElement class="decal-inspector-button-row">
-                <engine:Button name="pick-button" text="Pick on planet" tooltip="Click a point on the body in SceneView to set lat/lon from the surface hit." />
                 <engine:Button name="copy-button" text="Copy" tooltip="Copy lat,lon to the clipboard as a comma-separated pair." />
                 <engine:Button name="paste-button" text="Paste" tooltip="Paste a comma-separated lat,lon pair from the clipboard into the fields above." />
             </engine:VisualElement>

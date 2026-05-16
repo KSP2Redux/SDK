@@ -54,7 +54,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         public override void OnActivated()
         {
             _current = this;
-            SceneView.lastActiveSceneView?.Focus();
+            SceneViewFocus.FocusNextFrame();
         }
 
         /// <inheritdoc />

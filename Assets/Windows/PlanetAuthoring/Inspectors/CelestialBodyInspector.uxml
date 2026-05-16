@@ -20,9 +20,7 @@
 
         <engine:Foldout text="Quick Tools" value="true" class="body-inspector-section body-inspector-quick-tools">
             <engine:Button name="quick-preview-controls" text="Preview Controls" />
-            <engine:Button name="quick-validation" text="Validation Report" />
-            <engine:Button name="quick-biome-painter" text="Biome Painter" />
-            <engine:Button name="quick-surface-manager" text="Surface Manager" />
+            <engine:Button name="quick-landmark-manager" text="Landmark Manager" />
         </engine:Foldout>
 
         <engine:VisualElement class="body-inspector-body-data">

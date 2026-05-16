@@ -42,8 +42,7 @@
             <engine:Label name="discoverables-summary-label" class="sdk-hint" />
             <engine:VisualElement name="discoverables-list" />
             <engine:VisualElement class="sdk-button-row">
-                <engine:Button name="place-discoverable-button" text="+ Place new on planet" tooltip="Activate the Place Discoverable scene-view tool. Click on the planet to drop a discoverable at that surface point. The region Id auto-fills from the baked map." />
-                <engine:Button name="open-discoverable-manager-button" text="Open Discoverable Manager" tooltip="Open the dedicated window with filter / region / sort for this body's discoverables. Each row has Go (frame the camera at its lat/lon) and Delete." />
+                <engine:Button name="open-discoverable-manager-button" text="Open Discoverable Manager" tooltip="Open the dedicated window with filter / region / sort for this body's discoverables. Each row has Go (frame the camera at its lat/lon) and Delete. New discoverables are placed via the Surface Landmark tool in discoverable mode." />
             </engine:VisualElement>
         </engine:Foldout>
 

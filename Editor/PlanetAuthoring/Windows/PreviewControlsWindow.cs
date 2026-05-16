@@ -26,6 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Label _bodyLabel;
         private Label _altitudeLabel;
         private Button _previewButton;
+        private Button _refreshPreviewButton;
         private FloatField _latField;
         private FloatField _lonField;
         private Button _pickButton;
@@ -109,6 +110,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _bodyLabel = root.Q<Label>("body-label");
             _altitudeLabel = root.Q<Label>("altitude-label");
             _previewButton = root.Q<Button>("preview-button");
+            _refreshPreviewButton = root.Q<Button>("refresh-preview-button");
             _latField = root.Q<FloatField>("lat-field");
             _lonField = root.Q<FloatField>("lon-field");
             _pickButton = root.Q<Button>("pick-button");
@@ -128,6 +130,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _jumpFarButton = root.Q<Button>("jump-far-button");
 
             _previewButton.clicked += OnPreviewButtonClicked;
+            if (_refreshPreviewButton != null)
+                _refreshPreviewButton.clicked += OnRefreshPreviewClicked;
             _pickButton.clicked += OnPickButtonClicked;
             _lookAtButton.clicked += OnLookAtClicked;
             _copyButton.clicked += OnCopyClicked;
@@ -451,6 +455,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 _previewButton.SetEnabled(false);
             }
 
+            _refreshPreviewButton?.SetEnabled(active);
+
             _pickButton.SetEnabled(active);
             _lookAtButton.SetEnabled(active);
             _copyButton.SetEnabled(true);
@@ -513,6 +519,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 
             var body = FindBodyInActiveScene();
             if (body == null) return;
+            PlanetAuthoringSession.Begin(body);
+            RefreshUI();
+        }
+
+        private void OnRefreshPreviewClicked()
+        {
+            var session = PlanetAuthoringSession.Active;
+            if (session == null) return;
+
+            var body = session.Body;
+            session.End();
             PlanetAuthoringSession.Begin(body);
             RefreshUI();
         }

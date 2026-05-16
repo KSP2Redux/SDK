@@ -39,13 +39,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             altitudeAboveMean = 0;
             if (planet == null) return false;
 
-            var center = planet.transform.position;
-            var radius = BodyResolver.FindBody(planet)?.Data?.radius ?? 0;
+            // Anchor on the body, not the PQS. PQS is a scene sibling so its transform doesn't track the body's framing rotation, but every lat/lon consumer applies body.transform.rotation.
+            var body = BodyResolver.FindBody(planet);
+            if (body == null) return false;
+            var bodyTransform = body.transform;
+            var radius = body.Data?.radius ?? 0;
             if (radius <= 0) return false;
 
+            var center = bodyTransform.position;
             Vector3d localRayPos = (Vector3d)(ray.origin - center);
             Vector3d rayDir = (Vector3d)ray.direction;
-            var invRot = Quaternion.Inverse(planet.transform.rotation);
+            var invRot = Quaternion.Inverse(bodyTransform.rotation);
             var tolerance = radius * RefinementToleranceFraction;
 
             if (!PositionUtils.RaycastParametricSphere(radius, localRayPos, rayDir, out var t1, out var t2)) return false;

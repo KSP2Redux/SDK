@@ -63,31 +63,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static void SyncToolsHidden()
         {
+            if (PlanetAuthoringTools.IsExclusiveToolActive())
+            {
+                UnityEditor.Tools.hidden = false;
+                return;
+            }
             UnityEditor.Tools.hidden = PlanetAuthoringSession.Active != null;
         }
 
-        private void OnSceneGUI()
-        {
-            if (PlanetAuthoringSession.Active == null) return;
-            var spawner = (PrefabSpawner)target;
-            if (spawner == null) return;
-            var pqs = spawner.GetComponentInParent<PQS>();
-            if (pqs == null) return;
-            var bodyTransform = BodyResolver.FindBody(spawner)?.transform ?? pqs.transform;
-
-            if (SurfaceTransformHandles.DrawSurfaceMoveHandle(spawner.transform, pqs, bodyTransform, _altField?.value ?? 0f, "Move PrefabSpawner", out var newLatLon))
-            {
-                // Write the dropped lat/lon back to the fields so they remain the source of truth.
-                // Altitude is unchanged by the drag (it stays at the typed value).
-                _latField?.SetValueWithoutNotify(newLatLon.x);
-                _lonField?.SetValueWithoutNotify(newLatLon.y);
-                EditorUtility.SetDirty(spawner);
-            }
-            if (SurfaceTransformHandles.DrawSurfaceYawHandle(spawner.transform, "Rotate PrefabSpawner"))
-            {
-                EditorUtility.SetDirty(spawner);
-            }
-        }
 
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
@@ -141,7 +124,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _lonField.RegisterValueChangedCallback(_ => ApplyLatLonAltFromFields());
             _altField.RegisterValueChangedCallback(_ => ApplyLatLonAltFromFields());
 
-            root.Q<Button>("pick-button").clicked += OnPickClicked;
             root.Q<Button>("copy-button").clicked += OnCopyClicked;
             root.Q<Button>("paste-button").clicked += OnPasteClicked;
             root.Q<Button>("frame-above-button").clicked += OnFrameAboveClicked;
@@ -249,24 +231,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             Undo.RecordObject(spawner.transform, "Edit PrefabSpawner lat/lon");
             ApplyLatLonAltToTransform(spawner.transform, pqs, bodyTransform, _latField.value, _lonField.value, _altField.value);
             EditorUtility.SetDirty(spawner);
-        }
-
-        private void OnPickClicked()
-        {
-            var spawner = (PrefabSpawner)target;
-            if (spawner == null) return;
-            PlanetSurfacePickTool.Begin(latLon =>
-            {
-                if (!TryGetBody(spawner, out var pqs, out var bodyTransform, out _)) return;
-                Undo.RecordObject(spawner.transform, "Pick PrefabSpawner location");
-                // Pick snaps to surface (altitude 0). Preserves the ergonomic that the place tool
-                // and Pick on planet behave identically.
-                _latField.SetValueWithoutNotify(latLon.x);
-                _lonField.SetValueWithoutNotify(latLon.y);
-                _altField.SetValueWithoutNotify(0f);
-                ApplyLatLonAltToTransform(spawner.transform, pqs, bodyTransform, latLon.x, latLon.y, 0f);
-                EditorUtility.SetDirty(spawner);
-            });
         }
 
         private void OnCopyClicked()

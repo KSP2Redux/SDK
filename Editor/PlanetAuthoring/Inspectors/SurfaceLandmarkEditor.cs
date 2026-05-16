@@ -70,12 +70,20 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static void SyncToolsHidden()
         {
+            // Letting hidden=true while a pick/place EditorTool is active stops the tool from drawing or receiving input - Tools.hidden suppresses the entire tool layer, not just the built-in transform gizmos.
+            if (PlanetAuthoringTools.IsExclusiveToolActive())
+            {
+                UnityEditor.Tools.hidden = false;
+                return;
+            }
             UnityEditor.Tools.hidden = PlanetAuthoringSession.Active != null;
         }
 
         private void OnSceneGUI()
         {
             if (PlanetAuthoringSession.Active == null) return;
+            // Suppress when a pick/place EditorTool is active so its clicks aren't stolen by this handle.
+            if (PlanetAuthoringTools.IsExclusiveToolActive()) return;
             var landmark = (SurfaceLandmark)target;
             if (landmark == null) return;
             if (!TryGetBody(landmark, out var pqs, out var bodyTransform, out _)) return;

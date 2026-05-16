@@ -87,7 +87,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _root.Q<Button>("import-and-cluster-button").clicked += OnImportAndClusterClicked;
             _root.Q<Button>("add-region-button").clicked += OnAddRegionClicked;
             _root.Q<Button>("recluster-button").clicked += OnImportAndClusterClicked;
-            _root.Q<Button>("place-discoverable-button").clicked += OnPlaceDiscoverableClicked;
             _root.Q<Button>("open-discoverable-manager-button").clicked += OnOpenDiscoverableManagerClicked;
             _root.Q<Button>("bake-button").clicked += OnBakeClicked;
 
@@ -613,14 +612,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 altField.RegisterValueChangedCallback(evt => OnDiscoverableAltitudeEdited(capturedPosIndex, evt.newValue));
                 positionSection.Add(altField);
 
-                var pickBtn = new Button(() => OnDiscoverablePickClicked(capturedPosIndex))
-                {
-                    text = "Pick on planet",
-                    tooltip = "Activate the surface-pick tool. Click on the planet to set this discoverable's lat/lon from the surface hit.",
-                };
-                pickBtn.AddToClassList("sdk-action-button");
-                positionSection.Add(pickBtn);
-
                 var copyPasteRow = new VisualElement();
                 copyPasteRow.AddToClassList("sdk-button-row");
                 var copyBtn = new Button(() => OnDiscoverableCopyClicked(capturedPosIndex))
@@ -770,22 +761,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var terrainDistance = SampleTerrainDistance(localRadial);
             if (terrainDistance <= 0) return 0;
             return pos.Position.magnitude - terrainDistance;
-        }
-
-        private void OnDiscoverablePickClicked(int posIndex)
-        {
-            if (PlanetAuthoringSession.Active?.Pqs == null)
-            {
-                EditorUtility.DisplayDialog(
-                    "Pick on planet",
-                    "Start a planet preview session first. Surface picking needs an active body.",
-                    "OK");
-                return;
-            }
-            var captured = posIndex;
-            // Pick resets altitude to 0 because the surface hit IS the artist's intent ("place
-            // here"). To preserve a floating altitude, edit lat/lon via the FloatFields instead.
-            PlanetSurfacePickTool.Begin(latLon => SetDiscoverablePosition(captured, latLon.x, latLon.y, 0));
         }
 
         private void OnDiscoverableCopyClicked(int posIndex)
@@ -1020,23 +995,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             ImportAndClusterColorsWindow.Open(Target);
         }
 
-        private void OnPlaceDiscoverableClicked()
-        {
-            if (Target == null) return;
-            if (PlanetAuthoringSession.Active?.Pqs == null)
-            {
-                EditorUtility.DisplayDialog(
-                    "Place Discoverable",
-                    "Start a planet preview session first. The Place Discoverable tool needs an active body to click on.",
-                    "OK");
-                return;
-            }
-            PlaceDiscoverableTool.Begin(Target);
-        }
-
         private void OnOpenDiscoverableManagerClicked()
         {
-            SurfaceManagerWindow.ShowWindow();
+            LandmarkManagerWindow.ShowWindow();
         }
 
         // ----- Scene-view discoverable handles + orbs -----------------------
@@ -1088,7 +1049,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                     DrawDiscoverableOrb(worldPos, (float)pos.Radius);
                 }
                 DrawDiscoverableLabel(worldPos, pos.ScienceRegionId);
-                HandleDiscoverableMove(i, pos, worldPos, planet);
             }
         }
 
@@ -1126,21 +1086,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             Handles.EndGUI();
         }
 
-        private void HandleDiscoverableMove(int index, CelestialBodyDiscoverablePosition pos, Vector3 worldPos, PQS planet)
-        {
-            var refSize = HandleUtility.GetHandleSize(worldPos) * 0.08f;
-            Handles.color = OrbColor;
-            EditorGUI.BeginChangeCheck();
-            _ = Handles.FreeMoveHandle(worldPos, refSize, Vector3.zero, Handles.SphereHandleCap);
-            if (!EditorGUI.EndChangeCheck()) return;
-
-            var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-            if (!PlanetSurfaceHit.TryHit(planet, ray, out _, out var hitLatLon, out _)) return;
-            // Preserve the discoverable's current altitude so a deliberately-floated one stays
-            // floating as it drags across the surface.
-            var altitude = DecomposeAltitude(pos);
-            SetDiscoverablePosition(index, hitLatLon.x, hitLatLon.y, altitude);
-        }
     }
 
     /// <summary>

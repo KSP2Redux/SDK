@@ -65,7 +65,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             PlanetPreviewState.ActiveChanged += OnSessionChanged;
             SceneView.duringSceneGui += OnDuringSceneGui;
             // Focus the SceneView so Esc reaches our key handler instead of the originating window.
-            SceneView.lastActiveSceneView?.Focus();
+            // Deferred to the next editor frame so the click in the originating window has
+            // finished processing - calling Focus() synchronously often loses to the still-active
+            // click event.
+            SceneViewFocus.FocusNextFrame();
         }
 
         /// <inheritdoc />

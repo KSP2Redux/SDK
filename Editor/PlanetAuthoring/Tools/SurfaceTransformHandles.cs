@@ -31,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         {
             newLatLon = default;
             if (t == null || pqs == null || bodyTransform == null) return false;
-            var refSize = HandleUtility.GetHandleSize(t.position) * 0.04f;
+            var refSize = HandleUtility.GetHandleSize(t.position) * 0.06f;
             EditorGUI.BeginChangeCheck();
             _ = Handles.FreeMoveHandle(t.position, refSize, Vector3.zero, Handles.SphereHandleCap);
             if (!EditorGUI.EndChangeCheck()) return false;
@@ -65,7 +65,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         {
             if (t == null) return false;
             var surfaceUp = t.up;
-            var refSize = HandleUtility.GetHandleSize(t.position) * 0.04f;
+            var refSize = HandleUtility.GetHandleSize(t.position) * 0.06f;
             EditorGUI.BeginChangeCheck();
             var startRot = t.rotation;
             var newRot = Handles.Disc(startRot, t.position, surfaceUp, refSize * 6f, false, 5f);
