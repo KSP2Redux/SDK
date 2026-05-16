@@ -55,5 +55,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         /// NONE means "inherit the row's <see cref="biomeChannelMapping" /> entry" so artists only fill the cells where a subzone genuinely changes the type.
         /// </remarks>
         public PQSData.KSP2BiomeType[] biomeSubzoneMapping = new PQSData.KSP2BiomeType[16];
+
+        /// <summary>
+        /// Stamped by Texture2DArrayPacker.RepackSmallTiles after a successful pack, read by the bake-drift validator.
+        /// </summary>
+        public string LastSmallTilesPackFingerprint = string.Empty;
     }
 }

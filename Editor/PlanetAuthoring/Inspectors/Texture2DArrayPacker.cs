@@ -224,7 +224,45 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
 
             EditorUtility.SetDirty(surfaceMaterial);
+
+            authoring.LastSmallTilesPackFingerprint = ComputeSmallTilesFingerprint(authoring);
+            EditorUtility.SetDirty(authoring);
+
             return PackResult.Ok();
+        }
+
+        /// <summary>
+        /// Hashes the inputs that <see cref="RepackSmallTiles" /> consumes so the bake-drift validator can detect drift without re-running the pack.
+        /// </summary>
+        /// <param name="authoring">The PQSData authoring sidecar whose small-tile slots are hashed.</param>
+        /// <returns>The hex form of the <see cref="Hash128" /> over the slot inputs.</returns>
+        public static string ComputeSmallTilesFingerprint(PQSDataAuthoring authoring)
+        {
+            var hash = new Hash128();
+            if (authoring?.smallLayerSlots == null)
+                return hash.ToString();
+            for (var i = 0; i < authoring.smallLayerSlots.Length; i++)
+            {
+                hash.Append(i);
+                AppendTextureHash(ref hash, authoring.smallLayerSlots[i]?.EffectiveAlbedoTexture);
+                AppendTextureHash(ref hash, authoring.smallLayerSlots[i]?.EffectiveNormalTexture);
+                AppendTextureHash(ref hash, authoring.smallLayerSlots[i]?.EffectiveMetallicTexture);
+            }
+            return hash.ToString();
+        }
+
+        private static void AppendTextureHash(ref Hash128 hash, Texture2D tex)
+        {
+            if (tex == null)
+            {
+                hash.Append("none");
+                return;
+            }
+            var path = AssetDatabase.GetAssetPath(tex);
+            hash.Append(AssetDatabase.AssetPathToGUID(path));
+            var importer = !string.IsNullOrEmpty(path) ? AssetImporter.GetAtPath(path) : null;
+            if (importer != null)
+                hash.Append((float)importer.assetTimeStamp);
         }
 
         // Packs sources into the named Texture2DArray subasset of pqsData, compact-packing only

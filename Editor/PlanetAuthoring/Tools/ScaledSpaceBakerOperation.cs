@@ -155,9 +155,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             public float OceanNormalized;
             public Color OceanColor;
             public int MeshResolutionIndex;
-            public Texture2D BiomeMask;
-            public PQSData.HeightRegion[] LargeRegions;
-            public PQSData.HeightRegion[] MidRegions;
         }
 
         private static bool TryPrepareContext(CoreCelestialBodyData body, Settings settings, out BakeContext ctx, out string error)
@@ -207,9 +204,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 OceanNormalized = oceanNormalized,
                 OceanColor = settings.OceanColor,
                 MeshResolutionIndex = settings.MeshResolutionIndex,
-                BiomeMask = hmInfo?.mask,
-                LargeRegions = new[] { hmInfo?.largeR, hmInfo?.largeG, hmInfo?.largeB, hmInfo?.largeA },
-                MidRegions   = new[] { hmInfo?.mediumR, hmInfo?.mediumG, hmInfo?.mediumB, hmInfo?.mediumA },
             };
             error = null;
             return true;
@@ -434,15 +428,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         private static void BuildSphereVertices(int lonDivisions, int latDivisions, BakeContext ctx,
             out Vector3[] verts, out Vector3[] normals, out Vector2[] uvs)
         {
+            // Mesh displacement uses the global heightmap only - per-biome large + mid gradience
+            // sit below the scaled mesh's vertex spacing on most bodies and would only contribute
+            // sub-vertex noise to the silhouette. The analytic albedo bake still folds them into
+            // the macro normal and AO so artist-authored gradience features stay visible at
+            // distance through shading rather than geometry.
             var globalPixels = TryReadPixels(ctx.GlobalHeightMap, out var hmGW, out var hmGH);
-            var biomePixels  = TryReadPixels(ctx.BiomeMask, out var bmW, out var bmH);
-            var largePixels  = new Color[4][]; var largeW = new int[4]; var largeH = new int[4];
-            var midPixels    = new Color[4][]; var midW   = new int[4]; var midH   = new int[4];
-            for (int c = 0; c < 4; c++)
-            {
-                largePixels[c] = TryReadPixels(ctx.LargeRegions?[c]?.heightMap, out largeW[c], out largeH[c]);
-                midPixels[c]   = TryReadPixels(ctx.MidRegions?[c]?.heightMap,   out midW[c],   out midH[c]);
-            }
 
             float metersToMesh = ctx.Radius > 0f ? AuthoredRadius / ctx.Radius : 0f;
 
@@ -471,33 +462,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                         if (ctx.OceanNormalized >= 0f && globalH < ctx.OceanNormalized)
                             globalH = ctx.OceanNormalized;
 
-                        float altitudeMeters = globalH * ctx.HeightScale;
-                        if (biomePixels != null && bmW > 0 && bmH > 0)
-                        {
-                            var biome = SampleBilinearRGBA(biomePixels, bmW, bmH, sampleU, sampleV);
-                            for (int c = 0; c < 4; c++)
-                            {
-                                float weight = biome[c];
-                                if (weight <= 0.001f) continue;
-
-                                var largeR = ctx.LargeRegions?[c];
-                                if (largeR != null && largePixels[c] != null && largeR.heightScale > 0f)
-                                {
-                                    var lh = SampleBilinear(largePixels[c], largeW[c], largeH[c],
-                                        sampleU * largeR.uvScale, sampleV * largeR.uvScale);
-                                    altitudeMeters += weight * lh * largeR.heightScale;
-                                }
-                                var midR = ctx.MidRegions?[c];
-                                if (midR != null && midPixels[c] != null && midR.heightScale > 0f)
-                                {
-                                    var mh = SampleBilinear(midPixels[c], midW[c], midH[c],
-                                        sampleU * midR.uvScale, sampleV * midR.uvScale);
-                                    altitudeMeters += weight * mh * midR.heightScale;
-                                }
-                            }
-                        }
-
-                        displacement = altitudeMeters * metersToMesh;
+                        displacement = globalH * ctx.HeightScale * metersToMesh;
                     }
                     var i = y * (lonDivisions + 1) + x;
                     verts[i] = dir * (AuthoredRadius + displacement);
@@ -517,28 +482,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             w = tex.width;
             h = tex.height;
             return tex.GetPixels();
-        }
-
-        private static Vector4 SampleBilinearRGBA(Color[] pixels, int w, int h, float u, float v)
-        {
-            u -= Mathf.Floor(u);
-            v = Mathf.Clamp01(v);
-            var fx = u * (w - 1);
-            var fy = v * (h - 1);
-            var x0 = Mathf.FloorToInt(fx);
-            var y0 = Mathf.FloorToInt(fy);
-            var x1 = (x0 + 1) % w;
-            var y1 = Mathf.Min(y0 + 1, h - 1);
-            var tx = fx - x0;
-            var ty = fy - y0;
-            var c00 = pixels[y0 * w + x0];
-            var c10 = pixels[y0 * w + x1];
-            var c01 = pixels[y1 * w + x0];
-            var c11 = pixels[y1 * w + x1];
-            var a = Color.Lerp(c00, c10, tx);
-            var b = Color.Lerp(c01, c11, tx);
-            var c = Color.Lerp(a, b, ty);
-            return new Vector4(c.r, c.g, c.b, c.a);
         }
 
         // Index buffer that references every `stride`-th vertex along both axes of the LOD0 grid.

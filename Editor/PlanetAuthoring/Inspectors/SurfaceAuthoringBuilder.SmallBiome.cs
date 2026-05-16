@@ -40,6 +40,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var matrix = new SmallLayerMatrix(pqsDataAuthoringSO, material);
             foldout.Add(matrix);
 
+            var forceRepack = new Button(() => Repack()) { text = "Force Repack" };
+            forceRepack.tooltip = "Rebuild the small-tile texture array from scratch and recompile the per-(biome, layer) numeric properties. Use when a biome bakes as flat gray after editing slots or materials.";
+            forceRepack.style.marginTop = 4;
+            foldout.Add(forceRepack);
+
             var detailSlot = new VisualElement();
             detailSlot.style.marginTop = 6;
             foldout.Add(detailSlot);
