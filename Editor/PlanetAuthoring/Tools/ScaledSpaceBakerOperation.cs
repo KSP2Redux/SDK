@@ -94,6 +94,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     ProgressBar("Compositing ocean / polar blend...", 0.45f);
                     ApplyOptionalOceanInPlace(ctx, textures.Albedo);
                     AnalyticScaledSpaceSampler.BlendPolarNormals(textures.Normal, totalLines: 32, blendLines: 24);
+                    AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Albedo,   totalLines: 32, blendLines: 24);
+                    AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Packed,   totalLines: 32, blendLines: 24);
+                    AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Emission, totalLines: 32, blendLines: 24);
+                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Albedo);
+                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Normal);
+                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Packed);
+                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Emission);
 
                     ProgressBar("Writing scaled-space textures...", 0.6f);
                     var albedoAsset = WriteAndImportPng(textures.Albedo,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_d.png",  ConfigureSrgbImporter);
@@ -362,7 +369,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             var baseLon = 64 << ctx.MeshResolutionIndex;
             var baseLatBuild = baseLon / 2;
-            BuildSphereVertices(baseLon, baseLatBuild, ctx, out var verts, out var normals, out var uvs);
+            BuildSphereVertices(baseLon, baseLatBuild, ctx, out var verts, out var normals, out var uvs, out var tangents);
 
             // Halve resolution per LOD until the coarsest level hits MinLodLon. Higher base
             // resolutions get more LODs so the renderer always has a sparse-enough level for
@@ -397,6 +404,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             mainMesh.SetVertices(verts);
             mainMesh.SetNormals(normals);
             mainMesh.SetUVs(0, uvs);
+            mainMesh.SetTangents(tangents);
             mainMesh.SetIndexBufferParams(totalIndexCount, indexFormat);
             if (indexFormat == UnityEngine.Rendering.IndexFormat.UInt16)
             {
@@ -416,7 +424,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             mainMesh.lodSelectionCurve = new Mesh.LodSelectionCurve(4f, 0.9f);
             mainMesh.RecalculateBounds();
-            mainMesh.RecalculateTangents();
 
             if (created)
                 AssetDatabase.CreateAsset(mainMesh, path);
@@ -426,7 +433,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         }
 
         private static void BuildSphereVertices(int lonDivisions, int latDivisions, BakeContext ctx,
-            out Vector3[] verts, out Vector3[] normals, out Vector2[] uvs)
+            out Vector3[] verts, out Vector3[] normals, out Vector2[] uvs, out Vector4[] tangents)
         {
             // Mesh displacement uses the global heightmap only - per-biome large + mid gradience
             // sit below the scaled mesh's vertex spacing on most bodies and would only contribute
@@ -441,6 +448,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             verts = new Vector3[vertCount];
             normals = new Vector3[vertCount];
             uvs = new Vector2[vertCount];
+            tangents = new Vector4[vertCount];
 
             for (int y = 0; y <= latDivisions; y++)
             {
@@ -452,7 +460,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 {
                     var u = x / (float)lonDivisions;
                     var phi = u * Mathf.PI * 2f;
-                    var dir = new Vector3(sinTheta * Mathf.Cos(phi), cosTheta, sinTheta * Mathf.Sin(phi));
+                    var sinPhi = Mathf.Sin(phi);
+                    var cosPhi = Mathf.Cos(phi);
+                    var dir = new Vector3(sinTheta * cosPhi, cosTheta, sinTheta * sinPhi);
                     var displacement = 0f;
                     if (globalPixels != null && metersToMesh > 0f)
                     {
@@ -468,6 +478,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     verts[i] = dir * (AuthoredRadius + displacement);
                     normals[i] = dir;
                     uvs[i] = new Vector2(u, 1f - v);
+                    // Analytic +U tangent. For phi = u * 2pi the unit east vector is (-sin(phi), 0, cos(phi))
+                    // at every theta. Continuous across u=0 / u=1, so the seam doesn't drop a tangent
+                    // discontinuity that Mesh.RecalculateTangents would otherwise produce from the UV jump.
+                    tangents[i] = new Vector4(-sinPhi, 0f, cosPhi, 1f);
                 }
             }
         }

@@ -293,7 +293,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// </summary>
         /// <remarks>
         /// Equirectangular projections collapse the +Y / -Y poles to single points along the top and bottom rows.
-        /// Albedo, packed, and emission handle that fine (the value is replicated across the row). Normals do not.
+        /// Without polar blending, a UV sphere mesh sampling those rows produces a visible pinwheel where many
+        /// vertices at the same world-space pole position pick up different texture columns.
         /// </remarks>
         /// <param name="normal">The DXT5nm-packed normal texture to blend in place. Null is a no-op.</param>
         /// <param name="totalLines">Number of rows from each pole to touch.</param>
@@ -329,6 +330,78 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             }
 
             normal.Apply();
+        }
+
+        /// <summary>
+        /// Polar-blends the top and bottom <paramref name="totalLines" /> rows of <paramref name="texture" /> toward each row's mean color so the equirectangular pole pinwheel collapses to a smooth disc.
+        /// </summary>
+        /// <param name="texture">The texture to blend in place. Null is a no-op.</param>
+        /// <param name="totalLines">Number of rows from each pole to touch.</param>
+        /// <param name="blendLines">Of the <paramref name="totalLines" /> rows, how many to soft-blend toward the per-row pixels. The remainder are hard-set to the row's mean color.</param>
+        public static void BlendPolarRowsTowardRowMean(Texture2D texture, int totalLines, int blendLines)
+        {
+            if (texture == null) return;
+            int w = texture.width;
+            int h = texture.height;
+
+            for (int y = 0; y < totalLines; y++)
+            {
+                Color topMean = RowMean(texture, y, w);
+                Color botMean = RowMean(texture, h - 1 - y, w);
+                bool inFade = y > totalLines - blendLines - 1;
+                float t = inFade ? (y - (totalLines - blendLines)) / (float)blendLines : 0f;
+                for (int x = 0; x < w; x++)
+                {
+                    if (inFade)
+                    {
+                        texture.SetPixel(x, y,         Color.Lerp(topMean, texture.GetPixel(x, y),         t));
+                        texture.SetPixel(x, h - 1 - y, Color.Lerp(botMean, texture.GetPixel(x, h - 1 - y), t));
+                    }
+                    else
+                    {
+                        texture.SetPixel(x, y,         topMean);
+                        texture.SetPixel(x, h - 1 - y, botMean);
+                    }
+                }
+            }
+            texture.Apply();
+        }
+
+        private static Color RowMean(Texture2D texture, int y, int w)
+        {
+            float r = 0f, g = 0f, b = 0f, a = 0f;
+            for (int x = 0; x < w; x++)
+            {
+                var c = texture.GetPixel(x, y);
+                r += c.r; g += c.g; b += c.b; a += c.a;
+            }
+            float inv = 1f / w;
+            return new Color(r * inv, g * inv, b * inv, a * inv);
+        }
+
+        /// <summary>
+        /// Averages the leftmost and rightmost columns of <paramref name="texture" /> and writes the average back to both, so the bilinear-filtered Repeat wrap at u=0/u=1 returns the same value as either side and the seam reads identical to any interior pixel transition.
+        /// </summary>
+        /// <param name="texture">The texture to make wrap-tileable in place. Null is a no-op.</param>
+        public static void EnforceSeamTileability(Texture2D texture)
+        {
+            if (texture == null) return;
+            int w = texture.width;
+            int h = texture.height;
+            int xR = w - 1;
+            for (int y = 0; y < h; y++)
+            {
+                Color l = texture.GetPixel(0, y);
+                Color r = texture.GetPixel(xR, y);
+                Color avg = new(
+                    (l.r + r.r) * 0.5f,
+                    (l.g + r.g) * 0.5f,
+                    (l.b + r.b) * 0.5f,
+                    (l.a + r.a) * 0.5f);
+                texture.SetPixel(0, y, avg);
+                texture.SetPixel(xR, y, avg);
+            }
+            texture.Apply();
         }
 
         // 1x1 black texture used as a "no contribution" fallback for unassigned gradience slots.
