@@ -8,11 +8,11 @@ namespace Ksp2UnityTools.Editor
 {
     public class KSP2UnityToolsWindow : EditorWindow
     {
-        [MenuItem("Modding/KSP2 Unity Tools")]
+        [MenuItem("Modding/Redux SDK")]
         public static void ShowWindow()
         {
             EditorWindow window = GetWindow<KSP2UnityToolsWindow>();
-            window.titleContent = new GUIContent("KSP2 Unity Tools");
+            window.titleContent = new GUIContent("Redux SDK");
         }
 
         private List<Mod> _allMods = new();

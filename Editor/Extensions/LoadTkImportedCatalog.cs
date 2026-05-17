@@ -44,7 +44,7 @@ namespace Ksp2UnityTools.Editor.Extensions
                 loadKspCatalogTask.WaitForCompletion();
             }
 
-            // Load the Redux asset catalog too, if and only if this is the package version of KSP2 Unity Tools and there is no locator already registerd
+            // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is no locator already registerd
             if (Assembly.GetExecutingAssembly().FullName == "ksp2community.ksp2unitytools.editor" && !Addressables
                 .ResourceLocators
                 .Select(rl => rl.LocatorId)

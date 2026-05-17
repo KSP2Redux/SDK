@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.Missions
 {
     public class Mission : TextAssetGenerator
     {
-        [MenuItem("Assets/KSP2 Unity Tools/Mission", priority = KSP2UnityTools.MenuPriority)]
+        [MenuItem("Assets/Redux SDK/Mission", priority = KSP2UnityTools.MenuPriority)]
         public static void CreateMission()
         {
             KSP2UnityTools.CreateKsp2UnityToolsAssetAtSelectedPath<Mission>("New Mission");
