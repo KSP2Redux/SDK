@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 namespace Ksp2UnityTools.Editor.API
 {
     /// <summary>
-    /// This is a global API for interfacing with KSP2 Unity Tools
+    /// This is a global API for interfacing with Redux SDK
     /// </summary>
     [PublicAPI]
     public static class KSP2UnityTools
