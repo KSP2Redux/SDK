@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UIElements;
+using UnityObject = UnityEngine.Object;
 
 namespace UitkForKsp2.Controls
 {

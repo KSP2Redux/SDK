@@ -23,14 +23,39 @@ namespace Ksp2UnityTools.Editor.Modding
 {
     public class Mod : TextAssetGenerator
     {
+        private static readonly string[] _sdkAssemblyReferences =
+        {
+            "UitkForKsp2",
+            "uitkforksp2.controls.Runtime"
+        };
+
+        private static readonly string[] _sdkOwnedDllsToExclude =
+        {
+            "Redux.SDK.dll",
+            "UitkForKsp2.dll",
+            "uitkforksp2.controls.Runtime.dll"
+        };
+
         private static string[] _precompiledReferences;
 
         static Mod()
         {
-            _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly)
+            string[] gameAssemblyReferences = Directory.Exists("Packages/KSP2_x64")
+                ? Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly)
+                : System.Array.Empty<string>();
+
+            _precompiledReferences = gameAssemblyReferences
                 .Select(Path.GetFileName)
+                .Where(IsAllowedPrecompiledReference)
                 .Append("Newtonsoft.Json.dll")
+                .Distinct(System.StringComparer.OrdinalIgnoreCase)
                 .ToArray();
+        }
+
+        private static bool IsAllowedPrecompiledReference(string filename)
+        {
+            return !_sdkOwnedDllsToExclude.Contains(filename, System.StringComparer.OrdinalIgnoreCase)
+                   && !filename.StartsWith("ksp2community.ksp2unitytools", System.StringComparison.OrdinalIgnoreCase);
         }
 
         // The basic information needed for a mod
@@ -356,7 +381,7 @@ namespace %MOD%
             {
                 ["name"] = id,
                 ["rootNamespace"] = id,
-                ["references"] = { },
+                ["references"] = new JArray(_sdkAssemblyReferences),
                 ["allowUnsafeCode"] = true,
                 ["overrideReferences"] = true,
                 ["precompiledReferences"] = new JArray(_precompiledReferences),
