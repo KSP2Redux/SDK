@@ -1,8 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <UitkForKsp2.Controls.AppShell name="root" class="uitk-dialog" title-name="dialog-title" icon-name="dialog-header-icon" dashes-name="dialog-header-dashes" close-container-name="dialog-close-container" close-button-name="dialog-close-button" uppercase-title="true">
-        <UitkForKsp2.Controls.InvertedCornerBox name="dialog-body" class="uitk-dialog__body oab-window-body" border-thickness="1" notch-size="5" border-color="#747680" background-color="#1b1e24">
-            <ui:Label name="dialog-message" class="uitk-dialog__message"/>
-        </UitkForKsp2.Controls.InvertedCornerBox>
-        <ui:VisualElement name="dialog-actions" class="uitk-dialog__actions oab-window-actions"/>
-    </UitkForKsp2.Controls.AppShell>
-</ui:UXML>
