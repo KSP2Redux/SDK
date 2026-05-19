@@ -44,7 +44,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
 
             for (int biome = 0; biome < 4; biome++)
             {
-                string c = PqsAuthoringNaming.BiomeChannels[biome];
+                string c = PlanetAuthoringNaming.BiomeChannels[biome];
                 if (!mat.HasVector($"_SmallBiome{c}")) continue;
                 Vector4 sliceIndices = mat.GetVector($"_SmallBiome{c}");
                 Vector4 enables = mat.HasVector($"_SmallHeightWeight{c}") ? mat.GetVector($"_SmallHeightWeight{c}") : Vector4.zero;

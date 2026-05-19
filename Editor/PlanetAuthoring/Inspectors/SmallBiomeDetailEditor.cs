@@ -53,7 +53,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return root;
             }
 
-            var c = PqsAuthoringNaming.BiomeChannels[biome];
+            var c = PlanetAuthoringNaming.BiomeChannels[biome];
             var i = layer + 1;
             var slot = biome * 4 + layer;
             var authoring = pqsDataAuthoringSO?.targetObject as PQSDataAuthoring;
@@ -104,7 +104,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var section = new VisualElement();
             section.Add(GroupLabel("Material"));
 
-            var materialProp = pqsDataAuthoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Material"));
+            var materialProp = pqsDataAuthoringSO?.FindProperty(PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "Material"));
             var materialField = new ObjectField("Shared material")
             {
                 objectType = typeof(SmallLayerMaterial),
@@ -243,7 +243,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideAlbedoTexture", "AlbedoTexture",
                 "Albedo",
                 "Albedo (color) tile for this layer. Override the SO's default by ticking the box and dragging a Texture2D in.",
-                seedFromSO: s => SerializedAssign(pqsDataAuthoringSO, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "AlbedoTexture"), s?.Material?.AlbedoTexture),
+                seedFromSO: s => SerializedAssign(pqsDataAuthoringSO, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "AlbedoTexture"), s?.Material?.AlbedoTexture),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -251,7 +251,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideNormalTexture", "NormalTexture",
                 "Normal+SAO",
                 "Normal+packed tile. RGBA encodes (metallic-influence, normalY, AO, normalX) DXT5nm-style.",
-                seedFromSO: s => SerializedAssign(pqsDataAuthoringSO, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "NormalTexture"), s?.Material?.NormalTexture),
+                seedFromSO: s => SerializedAssign(pqsDataAuthoringSO, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "NormalTexture"), s?.Material?.NormalTexture),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -259,7 +259,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideMetallicTexture", "MetallicTexture",
                 "Metallic",
                 "Metallic mask tile. Sampled R channel is the per-tile metallic value.",
-                seedFromSO: s => SerializedAssign(pqsDataAuthoringSO, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "MetallicTexture"), s?.Material?.MetallicTexture),
+                seedFromSO: s => SerializedAssign(pqsDataAuthoringSO, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "MetallicTexture"), s?.Material?.MetallicTexture),
                 onChanged: onChanged
             ));
             return section;
@@ -382,7 +382,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideUVScale", "UVScale",
                 "Scale",
                 "Per-layer UV scale. Larger value prints the tile smaller on the surface.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "UVScale"), s?.Material != null ? s.Material.UVScale : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "UVScale"), s?.Material != null ? s.Material.UVScale : 1f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -390,7 +390,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideUVOffset", "UVOffset",
                 "Offset",
                 "Per-layer UV offset. Use to break alignment between layers sharing the same tile.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "UVOffset"), s?.Material != null ? s.Material.UVOffset : 0f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "UVOffset"), s?.Material != null ? s.Material.UVOffset : 0f),
                 onChanged: onChanged
             ));
             return section;
@@ -405,7 +405,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideTint", "Tint",
                 "Tint",
                 "Per-layer tint color (RGBA). RGB multiplies the layer's albedo. Alpha multiplies the height-blend alpha.",
-                seedFromSO: s => SerializedAssignColor(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Tint"), s?.Material != null ? s.Material.Tint : Color.white),
+                seedFromSO: s => SerializedAssignColor(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "Tint"), s?.Material != null ? s.Material.Tint : Color.white),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -413,7 +413,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideBrightness", "Brightness",
                 "Brightness",
                 "Additive brightness applied before contrast and saturation. Positive pushes brighter, negative darker.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Brightness"), s?.Material != null ? s.Material.Brightness : 0f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "Brightness"), s?.Material != null ? s.Material.Brightness : 0f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -421,7 +421,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideContrast", "Contrast",
                 "Contrast",
                 "Contrast multiplier around mid-gray. 1 = neutral, >1 = punchier, <1 = washed out.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Contrast"), s?.Material != null ? s.Material.Contrast : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "Contrast"), s?.Material != null ? s.Material.Contrast : 1f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -429,7 +429,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideSaturation", "Saturation",
                 "Saturation",
                 "Saturation multiplier. 0 = grayscale, 1 = neutral, >1 = oversaturated.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Saturation"), s?.Material != null ? s.Material.Saturation : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "Saturation"), s?.Material != null ? s.Material.Saturation : 1f),
                 onChanged: onChanged
             ));
             return section;
@@ -444,7 +444,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideNormalStrength", "NormalStrength",
                 "Normal",
                 "Multiplier on the layer's normal map. 0 = flat, 1 = neutral, >1 = exaggerated.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "NormalStrength"), s?.Material != null ? s.Material.NormalStrength : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "NormalStrength"), s?.Material != null ? s.Material.NormalStrength : 1f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -452,7 +452,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideGlossStrength", "GlossStrength",
                 "Gloss",
                 "Smoothness multiplier. Set ≥ 15 to switch the shader to override mode.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "GlossStrength"), s?.Material != null ? s.Material.GlossStrength : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "GlossStrength"), s?.Material != null ? s.Material.GlossStrength : 1f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -460,7 +460,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideMetallicStrength", "MetallicStrength",
                 "Metallic",
                 "Metallic multiplier. Same ≥ 15 override convention as gloss.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "MetallicStrength"), s?.Material != null ? s.Material.MetallicStrength : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "MetallicStrength"), s?.Material != null ? s.Material.MetallicStrength : 1f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -468,7 +468,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideAOStrength", "AOStrength",
                 "AO",
                 "Ambient-occlusion power. Higher values give a more aggressive AO contribution from this layer.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "AOStrength"), s?.Material != null ? s.Material.AOStrength : 1f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "AOStrength"), s?.Material != null ? s.Material.AOStrength : 1f),
                 onChanged: onChanged
             ));
             return section;
@@ -483,7 +483,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideEmissionStrength", "EmissionStrength",
                 "Strength",
                 "Self-illumination multiplier. 0 disables emission.",
-                seedFromSO: s => SerializedAssignFloat(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "EmissionStrength"), s?.Material != null ? s.Material.EmissionStrength : 0f),
+                seedFromSO: s => SerializedAssignFloat(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "EmissionStrength"), s?.Material != null ? s.Material.EmissionStrength : 0f),
                 onChanged: onChanged
             ));
             section.Add(BuildOverrideRow(
@@ -491,7 +491,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "OverrideEmissionColor", "EmissionColor",
                 "Color",
                 "Per-layer emission color (HDR).",
-                seedFromSO: s => SerializedAssignColor(so, PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "EmissionColor"), s?.Material != null ? s.Material.EmissionColor : Color.black),
+                seedFromSO: s => SerializedAssignColor(so, PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "EmissionColor"), s?.Material != null ? s.Material.EmissionColor : Color.black),
                 onChanged: onChanged
             ));
             return section;
@@ -578,8 +578,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var row = new VisualElement();
             row.AddToClassList("decal-inspector-override-row");
 
-            var overrideProp = so?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, overrideFieldName));
-            var valueProp = so?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, valueFieldName));
+            var overrideProp = so?.FindProperty(PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, overrideFieldName));
+            var valueProp = so?.FindProperty(PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, valueFieldName));
 
             var toggle = new Toggle { tooltip = "Override the shared material's default for this field on this body." };
             toggle.AddToClassList("decal-inspector-override-toggle");

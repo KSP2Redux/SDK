@@ -167,7 +167,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
                 if (!_seen.Add(src.GetInstanceID())) continue;
                 int biome = i / 4;
                 int layer = i % 4 + 1;
-                string detail = $"Biome {PqsAuthoringNaming.BiomeChannels[biome]} Layer {layer}";
+                string detail = $"Biome {PlanetAuthoringNaming.BiomeChannels[biome]} Layer {layer}";
                 AddEntry(src, category, perSlice, detail);
             }
         }
@@ -183,7 +183,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
                 if (!_seen.Add(src.GetInstanceID())) continue;
                 int tier = i < 4 ? 3 : 4;
                 int biome = i % 4;
-                string detail = $"Subzone {tier} Biome {PqsAuthoringNaming.BiomeChannels[biome]}";
+                string detail = $"Subzone {tier} Biome {PlanetAuthoringNaming.BiomeChannels[biome]}";
                 AddEntry(src, category, perSlice, detail);
             }
         }

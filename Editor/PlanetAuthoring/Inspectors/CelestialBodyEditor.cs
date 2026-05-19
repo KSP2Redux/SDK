@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using KSP;
@@ -30,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Adds a readiness checklist, a validation chip at the top showing per-body issue counts with
     /// an "Open report" button, the Enable/Disable preview toggle, quick-launch shortcuts to the
     /// per-body authoring windows, a Save Body JSON action that writes alongside the prefab, and
-    /// a Scaled Space Baking foldout for generating the body's scaled-space mesh and textures.
+    /// a Body Surface Baking foldout for generating the per-biome Mid/Large normals, the body's scaled-space mesh, and the composite scaled textures.
     /// </remarks>
     [CustomEditor(typeof(CoreCelestialBodyData))]
     public class CelestialBodyEditor : UnityEditor.Editor
@@ -84,7 +85,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));
             BuildSoiCalculationField(root.Q<VisualElement>("soi-calc-slot"));
             WireRecalcTerrainHeight(root);
-            WireScaledSpaceBake(root);
+            WireBodySurfaceBake(root);
 
             root.Bind(serializedObject);
 
@@ -100,23 +101,25 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 button.clicked += handler;
         }
 
-        private const string ScaledBakePrefsPrefix = "Ksp2UnityTools.ScaledSpaceBake.";
+        // Prefs key prefix kept as the legacy "ScaledSpaceBake." string so users' saved settings
+        // survive the C# rename to BodySurfaceBakerOperation.
+        private const string BodySurfaceBakePrefsPrefix = "Ksp2UnityTools.ScaledSpaceBake.";
         private static readonly Color DefaultOceanColor = new(0.05f, 0.15f, 0.4f, 1f);
-        private static readonly System.Globalization.CultureInfo Invariant = System.Globalization.CultureInfo.InvariantCulture;
+        private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
-        private void WireScaledSpaceBake(VisualElement root)
+        private void WireBodySurfaceBake(VisualElement root)
         {
-            var resolution = root.Q<DropdownField>("scaled-bake-resolution");
-            var includeOcean = root.Q<Toggle>("scaled-bake-include-ocean");
-            var oceanColor = root.Q<ColorField>("scaled-bake-ocean-color");
-            var bake = root.Q<Button>("scaled-bake-button");
-            var status = root.Q<Label>("scaled-bake-status");
+            var resolution = root.Q<DropdownField>("body-surface-bake-resolution");
+            var includeOcean = root.Q<Toggle>("body-surface-bake-include-ocean");
+            var oceanColor = root.Q<ColorField>("body-surface-bake-ocean-color");
+            var bake = root.Q<Button>("body-surface-bake-button");
+            var status = root.Q<Label>("body-surface-bake-status");
             if (bake == null) return;
 
-            int resIndex = EditorPrefs.GetInt(ScaledBakePrefsPrefix + "MeshResIndex", 1);
+            int resIndex = EditorPrefs.GetInt(BodySurfaceBakePrefsPrefix + "MeshResIndex", 1);
             if (resolution != null && resIndex >= 0 && resIndex < resolution.choices.Count)
                 resolution.SetValueWithoutNotify(resolution.choices[resIndex]);
-            includeOcean?.SetValueWithoutNotify(EditorPrefs.GetBool(ScaledBakePrefsPrefix + "IncludeOcean", false));
+            includeOcean?.SetValueWithoutNotify(EditorPrefs.GetBool(BodySurfaceBakePrefsPrefix + "IncludeOcean", false));
             oceanColor?.SetValueWithoutNotify(LoadOceanColor());
 
             bake.clicked += () =>
@@ -125,17 +128,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 bool currentIncludeOcean = includeOcean?.value ?? false;
                 Color currentOceanColor = oceanColor?.value ?? DefaultOceanColor;
 
-                EditorPrefs.SetInt(ScaledBakePrefsPrefix + "MeshResIndex", currentResIndex);
-                EditorPrefs.SetBool(ScaledBakePrefsPrefix + "IncludeOcean", currentIncludeOcean);
+                EditorPrefs.SetInt(BodySurfaceBakePrefsPrefix + "MeshResIndex", currentResIndex);
+                EditorPrefs.SetBool(BodySurfaceBakePrefsPrefix + "IncludeOcean", currentIncludeOcean);
                 StoreOceanColor(currentOceanColor);
 
-                var settings = new ScaledSpaceBakerOperation.Settings
+                var settings = new BodySurfaceBakerOperation.Settings
                 {
                     MeshResolutionIndex = currentResIndex,
                     IncludeOcean = currentIncludeOcean,
                     OceanColor = currentOceanColor,
                 };
-                var result = ScaledSpaceBakerOperation.Bake(TargetData, settings);
+                var result = BodySurfaceBakerOperation.Bake(TargetData, settings);
                 if (status != null)
                     status.text = result.Success ? $"Baked to {result.ScaledFolder}." : $"Bake failed: {result.Error}";
             };
@@ -143,14 +146,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static Color LoadOceanColor()
         {
-            var packed = EditorPrefs.GetString(ScaledBakePrefsPrefix + "OceanColor", null);
+            var packed = EditorPrefs.GetString(BodySurfaceBakePrefsPrefix + "OceanColor", null);
             if (string.IsNullOrEmpty(packed)) return DefaultOceanColor;
             var parts = packed.Split(',');
             if (parts.Length == 4
-                && float.TryParse(parts[0], System.Globalization.NumberStyles.Float, Invariant, out var r)
-                && float.TryParse(parts[1], System.Globalization.NumberStyles.Float, Invariant, out var g)
-                && float.TryParse(parts[2], System.Globalization.NumberStyles.Float, Invariant, out var b)
-                && float.TryParse(parts[3], System.Globalization.NumberStyles.Float, Invariant, out var a))
+                && float.TryParse(parts[0], NumberStyles.Float, Invariant, out var r)
+                && float.TryParse(parts[1], NumberStyles.Float, Invariant, out var g)
+                && float.TryParse(parts[2], NumberStyles.Float, Invariant, out var b)
+                && float.TryParse(parts[3], NumberStyles.Float, Invariant, out var a))
             {
                 return new Color(r, g, b, a);
             }
@@ -160,7 +163,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private static void StoreOceanColor(Color c)
         {
             var packed = string.Format(Invariant, "{0},{1},{2},{3}", c.r, c.g, c.b, c.a);
-            EditorPrefs.SetString(ScaledBakePrefsPrefix + "OceanColor", packed);
+            EditorPrefs.SetString(BodySurfaceBakePrefsPrefix + "OceanColor", packed);
         }
 
         private void BuildSaveSection(VisualElement container)

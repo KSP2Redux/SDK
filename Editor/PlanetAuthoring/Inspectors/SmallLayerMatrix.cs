@@ -90,10 +90,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             for (var b = 0; b < 4; b++)
             {
-                var row = this.Q<VisualElement>("row-" + PqsAuthoringNaming.BiomeChannels[b]);
+                var row = this.Q<VisualElement>("row-" + PlanetAuthoringNaming.BiomeChannels[b]);
                 if (row == null) continue;
 
-                var rowHeader = new Label("Biome " + PqsAuthoringNaming.BiomeChannels[b]);
+                var rowHeader = new Label("Biome " + PlanetAuthoringNaming.BiomeChannels[b]);
                 rowHeader.AddToClassList("small-layer-matrix-row-header");
                 row.Add(rowHeader);
 
@@ -125,13 +125,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 tooltip = "Drop a SmallLayerMaterial asset to share visual-identity defaults across bodies. Per-cell overrides remain accessible in the detail panel below.",
             };
             materialField.AddToClassList("small-layer-matrix-cell-material");
-            var materialProp = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "Material"));
+            var materialProp = _authoringSO?.FindProperty(PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "Material"));
             if (materialProp != null) materialField.BindProperty(materialProp);
             cell.Add(materialField);
 
             // contentHash-guarded so post-Bind spurious fires don't trigger the heavy Repack().
-            var ovProp = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "OverrideAlbedoTexture"));
-            var localProp = _authoringSO?.FindProperty(PqsAuthoringNaming.SmallLayerSlotFieldPath(slot, "AlbedoTexture"));
+            var ovProp = _authoringSO?.FindProperty(PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "OverrideAlbedoTexture"));
+            var localProp = _authoringSO?.FindProperty(PlanetAuthoringNaming.SmallLayerSlotFieldPath(slot, "AlbedoTexture"));
             void OnRelevantChange()
             {
                 OnTextureChanged?.Invoke(slot);
@@ -219,7 +219,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return;
             }
 
-            var c = PqsAuthoringNaming.BiomeChannels[biome];
+            var c = PlanetAuthoringNaming.BiomeChannels[biome];
             var i = layer + 1;
             var hp = _material.GetVector($"_SmallBiome{c}HeightParams{i}");
             var sp = _material.GetVector($"_SmallBiome{c}SlopeParams{i}");

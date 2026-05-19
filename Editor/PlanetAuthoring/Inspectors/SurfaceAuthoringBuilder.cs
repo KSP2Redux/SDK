@@ -118,17 +118,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             slot.Add(BuildTriplanarSection(material));
 
             var subzonesOn = material.IsKeywordEnabled("SUB_ZONES_ENABLED");
-            for (var i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
-                slot.Add(BuildLargeBiomeSection(material, pqsDataSO, PqsAuthoringNaming.BiomeChannels[i], i, subzonesOn));
-            for (var i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
-                slot.Add(BuildMidBiomeSection(material, pqsDataSO, PqsAuthoringNaming.BiomeChannels[i], i, subzonesOn));
+            for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
+                slot.Add(BuildLargeBiomeSection(material, pqsDataSO, PlanetAuthoringNaming.BiomeChannels[i], i, subzonesOn));
+            for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
+                slot.Add(BuildMidBiomeSection(material, pqsDataSO, PlanetAuthoringNaming.BiomeChannels[i], i, subzonesOn));
 
             if (subzonesOn)
             {
-                for (var i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
-                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 3, PqsAuthoringNaming.BiomeChannels[i], i));
-                for (var i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
-                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 4, PqsAuthoringNaming.BiomeChannels[i], i));
+                for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
+                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 3, PlanetAuthoringNaming.BiomeChannels[i], i));
+                for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
+                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 4, PlanetAuthoringNaming.BiomeChannels[i], i));
             }
 
             slot.Add(BuildSmallBiomeDetailSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData));

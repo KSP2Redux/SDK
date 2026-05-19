@@ -183,7 +183,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 var assignedCount = (hasAlbedo ? 1 : 0) + (hasNormal ? 1 : 0) + (hasMetal ? 1 : 0);
                 if (assignedCount > 0 && assignedCount < 3)
                 {
-                    var biome = PqsAuthoringNaming.BiomeChannels[cell / 4];
+                    var biome = PlanetAuthoringNaming.BiomeChannels[cell / 4];
                     var layer = (cell % 4) + 1;
                     var missing = new List<string>();
                     if (!hasAlbedo) missing.Add("albedo");
@@ -218,7 +218,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             for (var b = 0; b < 4; b++)
             {
                 surfaceMaterial.SetVector(
-                    "_SmallBiome" + PqsAuthoringNaming.BiomeChannels[b],
+                    "_SmallBiome" + PlanetAuthoringNaming.BiomeChannels[b],
                     new Vector4(albedoIndices[b * 4], albedoIndices[b * 4 + 1], albedoIndices[b * 4 + 2], albedoIndices[b * 4 + 3])
                 );
             }

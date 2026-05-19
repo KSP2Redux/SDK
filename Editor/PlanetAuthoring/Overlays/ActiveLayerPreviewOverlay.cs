@@ -104,10 +104,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private Vector4 BiomeVector(int biome)
         {
             return new Vector4(
-                (_layerEnableMask & (1 << PqsAuthoringNaming.CellIndex(biome, 0))) != 0 ? 1f : 0f,
-                (_layerEnableMask & (1 << PqsAuthoringNaming.CellIndex(biome, 1))) != 0 ? 1f : 0f,
-                (_layerEnableMask & (1 << PqsAuthoringNaming.CellIndex(biome, 2))) != 0 ? 1f : 0f,
-                (_layerEnableMask & (1 << PqsAuthoringNaming.CellIndex(biome, 3))) != 0 ? 1f : 0f);
+                (_layerEnableMask & (1 << PlanetAuthoringNaming.CellIndex(biome, 0))) != 0 ? 1f : 0f,
+                (_layerEnableMask & (1 << PlanetAuthoringNaming.CellIndex(biome, 1))) != 0 ? 1f : 0f,
+                (_layerEnableMask & (1 << PlanetAuthoringNaming.CellIndex(biome, 2))) != 0 ? 1f : 0f,
+                (_layerEnableMask & (1 << PlanetAuthoringNaming.CellIndex(biome, 3))) != 0 ? 1f : 0f);
         }
 
         private static void CopyTexture(Material from, Material to, int propertyId)

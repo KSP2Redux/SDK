@@ -7,10 +7,10 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 {
     /// <summary>
-    /// Bakes the four scaled-space textures (albedo, normal, packed metallic/AO/emission/smoothness, emission) for a body by analytically sampling the same authored data the local PQS shader uses, dispatched as a GPU compute pass.
+    /// GPU compute baker that produces a body's scaled-space albedo, normal, packed, and emission textures by analytically sampling the local PQS shader's inputs.
     /// </summary>
     /// <remarks>
-    /// Replaces the camera-driven <c>ScaledSpaceTextureGenerator</c>. The compute pass walks every output pixel of an equirectangular projection, supersamples N x N times, and per-subsample evaluates the macro normal (height gradient), macro AO (horizon-mapping the heightmap), biome mask, and the per-(biome, layer) trapezoid windows that drive the small-tile cascade. Per-tile pattern phase is intentionally dropped - it is sub-pixel at scaled distance and would only contribute noise.
+    /// Replaces the camera-driven <c>ScaledSpaceTextureGenerator</c>. The compute pass walks every output pixel of an equirectangular projection, supersamples N x N times, and per-subsample evaluates the macro normal (height gradient), macro AO (horizon-mapping the heightmap), biome mask, and the per-(biome, layer) trapezoid windows that drive the small-tile cascade. Per-tile pattern phase is intentionally dropped: it is sub-pixel at scaled distance and would only contribute noise.
     /// </remarks>
     public static class AnalyticScaledSpaceSampler
     {
@@ -21,38 +21,81 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         private const int SubmeanGridSize = 4;
         private const int SubmeansPerSlice = SubmeanGridSize * SubmeanGridSize;
 
-        private static readonly string[] BiomeChannels = { "R", "G", "B", "A" };
-
-        /// <summary>Per-bake settings for the analytic scaled-space sampler.</summary>
+        /// <summary>
+        /// Per-bake settings for the analytic scaled-space sampler.
+        /// </summary>
         public struct Settings
         {
-            /// <summary>Output side length. Outputs are always square so they can also be assigned back onto the PQS surface material's scaled-tex slots.</summary>
+            /// <summary>
+            /// Output side length in pixels.
+            /// </summary>
+            /// <remarks>
+            /// Outputs are always square so they can also be assigned back onto the PQS surface material's scaled-tex slots.
+            /// </remarks>
             public int Resolution;
-            /// <summary>N x N supersamples per output pixel. 4 is a good default. Higher trades cost for cleaner biome / window transitions.</summary>
+            /// <summary>
+            /// N x N supersamples per output pixel.
+            /// </summary>
+            /// <remarks>
+            /// 4 is a good default. Higher trades cost for cleaner biome and window transitions.
+            /// </remarks>
             public int SubsampleN;
-            /// <summary>Number of horizon rays for the macro AO march. 8 is a good default.</summary>
+            /// <summary>
+            /// Number of horizon rays for the macro AO march.
+            /// </summary>
+            /// <remarks>
+            /// 8 is a good default.
+            /// </remarks>
             public int AORingCount;
-            /// <summary>0..1 strength of the macro variation. 0 = always sample the central submean (uniform), 1 = full noise-driven travel across the 4x4 submean grid.</summary>
+            /// <summary>
+            /// Strength of the macro variation in the 0..1 range.
+            /// </summary>
+            /// <remarks>
+            /// 0 always samples the central submean (uniform), 1 is full noise-driven travel across the 4x4 submean grid.
+            /// </remarks>
             public float VariationStrength;
-            /// <summary>Cycles per planet of the noise field that drives variation UV. Lower = larger continuous color patches.</summary>
+            /// <summary>
+            /// Cycles per planet of the noise field that drives variation UV.
+            /// </summary>
+            /// <remarks>
+            /// Lower values give larger continuous color patches.
+            /// </remarks>
             public float VariationFrequency;
         }
 
-        /// <summary>The four baked textures. Caller owns disposal.</summary>
+        /// <summary>
+        /// The four baked textures.
+        /// </summary>
+        /// <remarks>
+        /// Caller owns disposal of every non-null entry.
+        /// </remarks>
         public struct Result
         {
-            /// <summary>Linear RGBA, intended to import as sRGB.</summary>
+            /// <summary>
+            /// Albedo texture, linear RGBA intended to import as sRGB.
+            /// </summary>
             public Texture2D Albedo;
-            /// <summary>DXT5nm-packed normal, intended to import as a normal map.</summary>
+            /// <summary>
+            /// DXT5nm-packed normal texture intended to import as a normal map.
+            /// </summary>
             public Texture2D Normal;
-            /// <summary>R = metallic, G = AO (macro), B = emission strength, A = smoothness. Linear.</summary>
+            /// <summary>
+            /// Packed PBR channels with R = metallic, G = macro AO, B = emission strength, A = smoothness.
+            /// </summary>
+            /// <remarks>
+            /// Linear color space.
+            /// </remarks>
             public Texture2D Packed;
-            /// <summary>Emission color RGB. Intended to import as sRGB.</summary>
+            /// <summary>
+            /// Emission color RGB intended to import as sRGB.
+            /// </summary>
             public Texture2D Emission;
         }
 
-        /// <summary>Returns sensible defaults for a 4096-square bake at N = 4 supersamples, 8 AO rings, and moderate noise-driven variation.</summary>
-        /// <returns>Default per-bake settings.</returns>
+        /// <summary>
+        /// Returns sensible defaults for a 4096-square bake at four supersamples, eight AO rings, and moderate noise-driven variation.
+        /// </summary>
+        /// <returns>The default per-bake settings.</returns>
         public static Settings DefaultSettings() => new()
         {
             Resolution = 4096,
@@ -62,11 +105,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             VariationFrequency = 12f,
         };
 
-        /// <summary>Runs the analytic bake.</summary>
+        /// <summary>
+        /// Runs the analytic bake against the given body and returns the four scaled-space textures.
+        /// </summary>
         /// <param name="pqsData">The body's PQSData. Must have a globalHeightMap and a surfaceMaterial with the small-tile arrays bound.</param>
         /// <param name="radius">Body radius in meters.</param>
         /// <param name="settings">Per-bake settings. See <see cref="DefaultSettings" />.</param>
-        /// <returns>Four <see cref="Texture2D" /> outputs - the caller owns disposal.</returns>
+        /// <returns>The four baked textures wrapped in a <see cref="Result" />, owned by the caller.</returns>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="pqsData" /> is null.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="radius" /> or any <paramref name="settings" /> field is non-positive.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the PQSData is missing a required input (heightMapInfo, globalHeightMap, biome mask, surfaceMaterial, or any of the small-tile arrays).</exception>
@@ -431,7 +476,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return tex != null ? tex : GetFlatBlackFallback();
         }
 
-        private static RenderTexture CreateRwRT(int w, int h, RenderTextureFormat format)
+        /// <summary>
+        /// Creates a linear random-write <see cref="RenderTexture" /> sized for a compute dispatch.
+        /// </summary>
+        /// <param name="w">Width in pixels.</param>
+        /// <param name="h">Height in pixels.</param>
+        /// <param name="format">Render texture format for the backing storage.</param>
+        /// <returns>A created, random-write enabled <see cref="RenderTexture" /> in linear color space.</returns>
+        /// <remarks>
+        /// Caller is responsible for releasing the result via <see cref="ReleaseRT" />.
+        /// </remarks>
+        internal static RenderTexture CreateRwRT(int w, int h, RenderTextureFormat format)
         {
             var rt = new RenderTexture(w, h, 0, format, RenderTextureReadWrite.Linear)
             {
@@ -441,14 +496,25 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return rt;
         }
 
-        private static void ReleaseRT(RenderTexture rt)
+        /// <summary>
+        /// Releases a <see cref="RenderTexture" /> created via <see cref="CreateRwRT" /> and destroys its native handle.
+        /// </summary>
+        /// <param name="rt">The render texture to release. Null is a no-op.</param>
+        internal static void ReleaseRT(RenderTexture rt)
         {
             if (rt == null) return;
             rt.Release();
             UnityEngine.Object.DestroyImmediate(rt);
         }
 
-        private static Texture2D ReadbackToTexture(RenderTexture rt, TextureFormat format, bool linear)
+        /// <summary>
+        /// Reads back a <see cref="RenderTexture" /> into a CPU-side <see cref="Texture2D" /> of the requested format and color space.
+        /// </summary>
+        /// <param name="rt">The source render texture. Must be the active target during read.</param>
+        /// <param name="format">Pixel format for the destination <see cref="Texture2D" />.</param>
+        /// <param name="linear">True to mark the destination texture as linear, false to mark it as sRGB.</param>
+        /// <returns>A newly allocated <see cref="Texture2D" /> holding the readback pixels, owned by the caller.</returns>
+        internal static Texture2D ReadbackToTexture(RenderTexture rt, TextureFormat format, bool linear)
         {
             var prev = RenderTexture.active;
             RenderTexture.active = rt;
@@ -465,20 +531,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return tex;
         }
 
-        // Binds the surface material's per-biome / per-layer shader properties to the compute.
-        //
-        // Scalar arrays (one float per (biome, layer) slot) are packed as Vector4[4] - one
-        // Vector4 per biome, 4 layers per Vector4 - because ComputeShader.SetFloats only
-        // populates the FIRST element of an HLSL `float arr[N]` cbuffer declaration (verified
-        // empirically: probing _SmallBiomeIdx after SetFloats showed only idx=0 had data,
-        // all others read as zero). The packed layout matches the surface material's per-biome
-        // Vector4 shader properties exactly, so we can pass mat.GetVector(...) results
-        // straight through with no flattening.
-        //
-        // float4-per-slot arrays (HeightParams, SlopeParams, Tint, EmissionColor) flatten to
-        // Vector4[16] - SetVectorArray works fine for those because each HLSL element already
-        // occupies a full vec4 slot.
-        private static void BindPerLayerArrays(ComputeShader compute, Material mat)
+        /// <summary>
+        /// Binds the surface material's per-biome and per-layer shader properties onto the analytic-bake compute shader.
+        /// </summary>
+        /// <param name="compute">The compute shader to bind the per-layer arrays onto.</param>
+        /// <param name="mat">The surface material whose per-biome <c>Vector4</c> properties supply the packed values.</param>
+        /// <remarks>
+        /// Scalar arrays (one float per (biome, layer) slot) are packed as <c>Vector4[4]</c>, one Vector4 per biome
+        /// and four layers per Vector4, because <c>ComputeShader.SetFloats</c> only populates the first element of an
+        /// HLSL <c>float arr[N]</c> cbuffer declaration. The packed layout matches the surface material's per-biome
+        /// Vector4 shader properties exactly, so <c>mat.GetVector(...)</c> results pass through with no flattening.
+        /// Float4-per-slot arrays (<c>HeightParams</c>, <c>SlopeParams</c>, <c>Tint</c>, <c>EmissionColor</c>) flatten to
+        /// <c>Vector4[16]</c> via <c>SetVectorArray</c>, which works because each HLSL element already occupies a full
+        /// vec4 slot.
+        /// </remarks>
+        internal static void BindPerLayerArrays(ComputeShader compute, Material mat)
         {
             var biomeIdxPack         = new Vector4[4];
             var enablePack           = new Vector4[4];
@@ -500,7 +567,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             for (int b = 0; b < 4; b++)
             {
-                var c = BiomeChannels[b];
+                var c = PlanetAuthoringNaming.BiomeChannels[b];
 
                 biomeIdxPack[b]         = mat.GetVector($"_SmallBiome{c}");
                 enablePack[b]           = mat.GetVector($"_SmallEnable{c}");

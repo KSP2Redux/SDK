@@ -68,7 +68,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             for (int b = 0; b < 4; b++)
             {
-                string c = PqsAuthoringNaming.BiomeChannels[b];
+                string c = PlanetAuthoringNaming.BiomeChannels[b];
 
                 Vector4 uvScale = default, uvOffset = default;
                 Vector4 brightness = default, contrast = default, saturation = default;
@@ -77,7 +77,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
                 for (int l = 0; l < 4; l++)
                 {
-                    var slot = authoring.smallLayerSlots[PqsAuthoringNaming.CellIndex(b, l)];
+                    var slot = authoring.smallLayerSlots[PlanetAuthoringNaming.CellIndex(b, l)];
                     if (slot == null) continue;
 
                     uvScale[l] = slot.EffectiveUVScale;

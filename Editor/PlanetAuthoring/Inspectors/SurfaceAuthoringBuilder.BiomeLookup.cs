@@ -65,9 +65,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var container = new VisualElement();
             container.Add(GroupLabel("Channel mapping"));
-            for (int i = 0; i < PqsAuthoringNaming.BiomeChannels.Length; i++)
+            for (int i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
             {
-                string channel = PqsAuthoringNaming.BiomeChannels[i];
+                string channel = PlanetAuthoringNaming.BiomeChannels[i];
                 string path = $"biomeChannelMapping.Array.data[{i}]";
                 var prop = pqsDataAuthoringSO.FindProperty(path);
                 var field = new PropertyField(prop, $"Biome {channel}")
@@ -89,13 +89,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var container = new VisualElement();
             container.Add(GroupLabel("Subzone overrides (NONE = inherit row)"));
-            for (int biome = 0; biome < PqsAuthoringNaming.BiomeChannels.Length; biome++)
+            for (int biome = 0; biome < PlanetAuthoringNaming.BiomeChannels.Length; biome++)
             {
-                string biomeChannel = PqsAuthoringNaming.BiomeChannels[biome];
-                for (int subzone = 0; subzone < PqsAuthoringNaming.BiomeChannels.Length; subzone++)
+                string biomeChannel = PlanetAuthoringNaming.BiomeChannels[biome];
+                for (int subzone = 0; subzone < PlanetAuthoringNaming.BiomeChannels.Length; subzone++)
                 {
-                    string subzoneChannel = PqsAuthoringNaming.BiomeChannels[subzone];
-                    var index = PqsAuthoringNaming.CellIndex(biome, subzone);
+                    string subzoneChannel = PlanetAuthoringNaming.BiomeChannels[subzone];
+                    var index = PlanetAuthoringNaming.CellIndex(biome, subzone);
                     var path = $"biomeSubzoneMapping.Array.data[{index}]";
                     var prop = pqsDataAuthoringSO.FindProperty(path);
                     var field = new PropertyField(prop, $"Biome {biomeChannel} (Subzone {subzoneChannel})")

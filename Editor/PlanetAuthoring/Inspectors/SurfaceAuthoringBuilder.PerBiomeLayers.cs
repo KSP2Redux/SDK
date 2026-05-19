@@ -201,7 +201,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var prefix = $"_Subzone{tier}";
             var dataPrefix = $"subzone{tier}{c}";
             // The normal slice source lives on the PQSDataAuthoring sidecar, not on PQSData itself.
-            var normalsArrayPath = PqsAuthoringNaming.SubzoneNormalPath(tier, idx);
+            var normalsArrayPath = PlanetAuthoringNaming.SubzoneNormalPath(tier, idx);
 
             var foldout = new Foldout { text = $"Subzone{tier} Biome {c}", value = false };
             foldout.AddToClassList("pqs-inspector-section");

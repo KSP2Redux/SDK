@@ -8,7 +8,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     /// </summary>
     /// <remarks>
     /// Stored as <c>smallLayerSlots[16]</c> on <see cref="PQSDataAuthoring" />, indexed by
-    /// <c>PqsAuthoringNaming.CellIndex(biome, layer)</c>. For each SO field, the slot carries an
+    /// <c>PlanetAuthoringNaming.CellIndex(biome, layer)</c>. For each SO field, the slot carries an
     /// <c>OverrideX</c> bool plus a local <c>X</c> value. When the override flag is on (or
     /// <see cref="Material" /> is null), the slot's local value wins. Otherwise the SO's value applies.
     /// The <c>EffectiveX</c> accessors do that resolution.

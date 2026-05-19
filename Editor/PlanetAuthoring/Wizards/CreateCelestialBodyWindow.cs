@@ -499,7 +499,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
                 MeshRenderer renderer = temp.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial = scaledMaterial;
                 SphereCollider scaledCollider = temp.AddComponent<SphereCollider>();
-                scaledCollider.radius = ScaledSpaceBakerOperation.AuthoredRadius;
+                scaledCollider.radius = BodySurfaceBakerOperation.AuthoredRadius;
                 temp.AddComponent<CelestialScaledMaterialReplacer>();
 
                 string path = folder + "/" + PlanetAuthoringNaming.ScaledPrefab(key);

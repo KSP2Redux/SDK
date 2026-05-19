@@ -8,15 +8,16 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 {
     /// <summary>
-    /// Bakes a low-poly displaced sphere mesh for a body's scaled-space view, optionally composites
-    /// ocean color into the scaled albedo, and wires the body's <c>Celestial.&lt;Body&gt;.Scaled.prefab</c>
-    /// to point at the resulting mesh + material.
+    /// Orchestrator that bakes a body's full scaled-space surface cascade and wires the resulting prefab.
     /// </summary>
     /// <remarks>
-    /// Operates purely against asset references on the body and its PQS. Does not require a live
-    /// authoring session or any open scene.
+    /// Produces per-biome Mid and Large normal maps from the small-tile stack and the equirect gradience
+    /// heightmaps, an analytic equirect albedo / normal / packed / emission set, and a low-poly displaced
+    /// sphere mesh, then points <c>Celestial.&lt;Body&gt;.Scaled.prefab</c> at the resulting mesh and material.
+    /// Operates purely against asset references on the body and its PQS, so no live authoring session or
+    /// open scene is required.
     /// </remarks>
-    public static class ScaledSpaceBakerOperation
+    public static class BodySurfaceBakerOperation
     {
         /// <summary>
         /// Authored radius (in mesh units) of the scaled-space mesh.
@@ -87,6 +88,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             try
             {
+                // Per-biome Mid and Large normals bake first. Their outputs feed the surface
+                // material's _MidNormal*/_LargeNormal* slots; the existing scaled bake below is
+                // unchanged in scope and runs independently.
+                ProgressBar("Baking per-biome mid/large normals...", 0.05f);
+                var biomeBake = BiomeNormalBaker.Bake(ctx.PqsData, ctx.Radius);
+                if (!biomeBake.Skipped)
+                {
+                    ProgressBar("Writing per-biome normals...", 0.10f);
+                    WriteAndBindBiomeNormals(ctx, biomeBake);
+                }
+                else
+                {
+                    Debug.Log($"[BodySurfaceBaker] Per-biome normal bake skipped: {biomeBake.SkipReason}");
+                }
+
                 ProgressBar("Baking textures (analytic)...", 0.15f);
                 var textures = AnalyticScaledSpaceSampler.Sample(ctx.PqsData, ctx.Radius, AnalyticScaledSpaceSampler.DefaultSettings());
                 try
@@ -126,7 +142,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
                     FinalizeImports(meshAsset, prefabPath);
 
-                    Debug.Log($"[ScaledSpaceBaker] Wrote mesh+material+textures to '{ctx.ScaledFolder}/' and wired prefab '{prefabPath}'.");
+                    Debug.Log($"[BodySurfaceBaker] Wrote mesh+material+textures to '{ctx.ScaledFolder}/' and wired prefab '{prefabPath}'.");
                     return Succeed(prefabPath, ctx.ScaledFolder);
                 }
                 finally
@@ -223,7 +239,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             if (!ctx.HasOcean || albedo == null) return;
             if (ctx.GlobalHeightMap == null || !ctx.GlobalHeightMap.isReadable)
             {
-                Debug.LogWarning("[ScaledSpaceBaker] Ocean composite skipped: globalHeightMap is missing or not Read/Write enabled.");
+                Debug.LogWarning("[BodySurfaceBaker] Ocean composite skipped: globalHeightMap is missing or not Read/Write enabled.");
                 return;
             }
 
@@ -272,6 +288,73 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             surfaceMat.SetTexture(Shader.PropertyToID("_PackedScaledTex"), packed);
             surfaceMat.SetTexture(Shader.PropertyToID("_EmissionScaledTex"), emission);
             EditorUtility.SetDirty(surfaceMat);
+        }
+
+        // Writes the 8 per-biome normal PNGs (4 mid + 4 large) into BiomeNormals/ next to the
+        // body and binds them onto the surface material's _MidNormal*/_LargeNormal* slots. Null
+        // entries in the result (empty biomes) are skipped - their slots keep whatever artist-
+        // authored binding was there. The temp in-memory textures get disposed after writing.
+        private static void WriteAndBindBiomeNormals(BakeContext ctx, BiomeNormalBaker.Result biomeBake)
+        {
+            string biomeFolder = ctx.BodyFolder + "/BiomeNormals";
+            if (!AssetDatabase.IsValidFolder(biomeFolder))
+                AssetDatabase.CreateFolder(ctx.BodyFolder, "BiomeNormals");
+
+            var surfaceMat = ctx.PqsData?.materialSettings?.surfaceMaterial;
+            var biomeNames = PlanetAuthoringNaming.BiomeChannels;
+
+            try
+            {
+                if (biomeBake.MidPerBiome != null)
+                {
+                    for (int b = 0; b < 4; b++)
+                    {
+                        if (biomeBake.MidPerBiome[b] == null) continue;
+                        string path = $"{biomeFolder}/{ctx.BodyName}_MidNormal{biomeNames[b]}.png";
+                        var asset = WriteAndImportPng(biomeBake.MidPerBiome[b], path, ConfigureNormalImporter);
+                        if (surfaceMat != null && asset != null)
+                            surfaceMat.SetTexture(Shader.PropertyToID($"_MidNormal{biomeNames[b]}"), asset);
+                    }
+                }
+                if (biomeBake.LargePerBiome != null)
+                {
+                    // Match the runtime tile rate to the bake's authoring rate. The bake produces
+                    // one heightmap-tile's worth of content per output tile, so the runtime needs
+                    // (heightmapUvScale/2, heightmapUvScale, 0, 0) to make the face-UV sampler
+                    // repeat at the same equirect rate. The /2 accounts for faceUV = (2*uv.x, uv.y).
+                    var hmi = ctx.PqsData?.heightMapInfo;
+                    for (int b = 0; b < 4; b++)
+                    {
+                        if (biomeBake.LargePerBiome[b] == null) continue;
+                        string path = $"{biomeFolder}/{ctx.BodyName}_LargeNormal{biomeNames[b]}.png";
+                        var asset = WriteAndImportPng(biomeBake.LargePerBiome[b], path, ConfigureNormalImporter);
+                        if (surfaceMat != null && asset != null)
+                        {
+                            surfaceMat.SetTexture(Shader.PropertyToID($"_LargeNormal{biomeNames[b]}"), asset);
+
+                            float uvScale = BiomeNormalBaker.LargeUvScaleForBiome(hmi, b);
+                            surfaceMat.SetVector(
+                                Shader.PropertyToID($"_LargeNormal{biomeNames[b]}UVParams"),
+                                new Vector4(uvScale * 0.5f, uvScale, 0f, 0f));
+                        }
+                    }
+                }
+                if (surfaceMat != null)
+                    EditorUtility.SetDirty(surfaceMat);
+            }
+            finally
+            {
+                if (biomeBake.MidPerBiome != null)
+                {
+                    foreach (var t in biomeBake.MidPerBiome)
+                        if (t != null) UnityEngine.Object.DestroyImmediate(t);
+                }
+                if (biomeBake.LargePerBiome != null)
+                {
+                    foreach (var t in biomeBake.LargePerBiome)
+                        if (t != null) UnityEngine.Object.DestroyImmediate(t);
+                }
+            }
         }
 
         // Encodes a Texture2D to PNG, writes to the project, imports with the supplied importer
@@ -345,7 +428,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             AssetDatabase.ImportAsset(prefabPath, ImportAssetOptions.ForceSynchronousImport);
         }
 
-        private static void ProgressBar(string step, float progress) => EditorUtility.DisplayProgressBar("Scaled Space Bake", step, progress);
+        private static void ProgressBar(string step, float progress) => EditorUtility.DisplayProgressBar("Body Surface Bake", step, progress);
         private static Result Fail(string error) => new() { Success = false, Error = error };
         private static Result Succeed(string prefabPath, string scaledFolder) => new() { Success = true, PrefabPath = prefabPath, ScaledFolder = scaledFolder };
 
@@ -559,7 +642,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 {
                     var moveError = AssetDatabase.MoveAsset(existingPath, scaledMatPath);
                     if (!string.IsNullOrEmpty(moveError))
-                        Debug.LogWarning($"[ScaledSpaceBaker] Could not move scaledSpaceMaterial into Scaled/: {moveError}");
+                        Debug.LogWarning($"[BodySurfaceBaker] Could not move scaledSpaceMaterial into Scaled/: {moveError}");
                 }
                 return AssetDatabase.LoadAssetAtPath<Material>(scaledMatPath) ?? existing;
             }

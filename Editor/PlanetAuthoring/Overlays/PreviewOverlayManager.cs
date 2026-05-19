@@ -136,7 +136,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         public static bool IsLayerEnabled(int biome, int layer)
         {
             if (biome < 0 || biome > 3 || layer < 0 || layer > 3) return false;
-            return (_activeLayerMask & (1 << Inspectors.PqsAuthoringNaming.CellIndex(biome, layer))) != 0;
+            return (_activeLayerMask & (1 << PlanetAuthoringNaming.CellIndex(biome, layer))) != 0;
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         public static void SetLayerEnabled(int biome, int layer, bool enabled)
         {
             if (biome < 0 || biome > 3 || layer < 0 || layer > 3) return;
-            var bit = 1 << Inspectors.PqsAuthoringNaming.CellIndex(biome, layer);
+            var bit = 1 << PlanetAuthoringNaming.CellIndex(biome, layer);
             var next = enabled ? (_activeLayerMask | bit) : (_activeLayerMask & ~bit);
             if (next == _activeLayerMask) return;
             _activeLayerMask = next & ActiveLayerMaskAllOn;

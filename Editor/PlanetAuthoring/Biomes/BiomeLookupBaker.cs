@@ -204,7 +204,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Biomes
                 if (subzones)
                 {
                     var subzone = DominantChannel(subzoneMask.GetPixelBilinear(u, v));
-                    var subzoneType = sidecar.biomeSubzoneMapping[PqsAuthoringNaming.CellIndex(biome, subzone)];
+                    var subzoneType = sidecar.biomeSubzoneMapping[PlanetAuthoringNaming.CellIndex(biome, subzone)];
                     if (subzoneType != PQSData.KSP2BiomeType.NONE)
                     {
                         type = subzoneType;
