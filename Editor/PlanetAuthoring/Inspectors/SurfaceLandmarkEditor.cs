@@ -86,9 +86,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (PlanetAuthoringTools.IsExclusiveToolActive()) return;
             var landmark = (SurfaceLandmark)target;
             if (landmark == null) return;
-            if (!TryGetBody(landmark, out var pqs, out var bodyTransform, out _)) return;
+            if (!TryGetBody(landmark, out var pqs, out _, out _)) return;
 
-            if (SurfaceTransformHandles.DrawSurfaceMoveHandle(landmark.transform, pqs, bodyTransform, (float)landmark.Altitude, "Move SurfaceLandmark", out var newLatLon))
+            if (SurfaceTransformHandles.DrawSurfaceMoveHandle(landmark.transform, pqs, (float)landmark.Altitude, "Move SurfaceLandmark", out var newLatLon))
             {
                 Undo.RecordObject(landmark, "Move SurfaceLandmark");
                 landmark.Latitude = newLatLon.x;
@@ -451,13 +451,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             SceneViewFraming.FrameAtLatLonAndAltitude(pqs, (float)landmark.Latitude, (float)landmark.Longitude, SurfaceFramingPrefs.AltitudeMeters, SceneFramingMode.Surface);
         }
 
-        private static bool TryGetBody(SurfaceLandmark landmark, out PQS pqs, out Transform bodyTransform, out float radius)
+        private static bool TryGetBody(SurfaceLandmark landmark, out PQS pqs, out Transform pqsTransform, out float radius)
         {
-            bodyTransform = null;
+            pqsTransform = null;
             radius = 0;
             pqs = landmark != null ? landmark.GetComponentInParent<PQS>() : null;
             if (pqs == null) return false;
-            bodyTransform = BodyResolver.FindBody(landmark)?.transform ?? pqs.transform;
+            pqsTransform = pqs.transform;
             radius = (float)(pqs.CoreCelestialBodyData?.Data?.radius ?? 0.0);
             return radius > 0;
         }

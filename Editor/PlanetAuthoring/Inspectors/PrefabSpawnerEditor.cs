@@ -344,8 +344,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var pqs = spawner.GetComponentInParent<PQS>();
             if (pqs == null) return (0, 0, 0, false);
-            var bodyTransform = BodyResolver.FindBody(spawner)?.transform ?? pqs.transform;
-            Vector3d p = bodyTransform.InverseTransformPoint(spawner.transform.position);
+            var pqsTransform = pqs.transform;
+            Vector3d p = pqsTransform.InverseTransformPoint(spawner.transform.position);
             var r = System.Math.Sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
             if (r < 1e-3) return (0, 0, 0, false);
             var lat = System.Math.Asin(p.y / r) * 180.0 / System.Math.PI;
@@ -381,18 +381,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
         }
 
-        private static bool TryGetBody(PrefabSpawner spawner, out PQS pqs, out Transform bodyTransform, out float radius)
+        private static bool TryGetBody(PrefabSpawner spawner, out PQS pqs, out Transform pqsTransform, out float radius)
         {
-            bodyTransform = null;
+            pqsTransform = null;
             radius = 0;
             pqs = spawner != null ? spawner.GetComponentInParent<PQS>() : null;
             if (pqs == null) return false;
-            bodyTransform = BodyResolver.FindBody(spawner)?.transform ?? pqs.transform;
+            pqsTransform = pqs.transform;
             radius = (float)(pqs.CoreCelestialBodyData?.Data?.radius ?? 0.0);
             return radius > 0;
         }
 
-        private static void ApplyLatLonAltToTransform(Transform t, PQS pqs, Transform bodyTransform, double lat, double lon, double altitude)
+        private static void ApplyLatLonAltToTransform(Transform t, PQS pqs, Transform pqsTransform, double lat, double lon, double altitude)
         {
             Vector3 localDir = LatLon.GetRelSurfaceNVector(lat, lon);
             // Snap to terrain (decals included) so altitude=0 sits on the rendered surface, matching
@@ -401,7 +401,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             // radius, which would silently teleport the spawner to sea level.
             if (!TrySurfaceHeight(pqs, localDir, out var terrainHeight)) return;
             var radius = terrainHeight + altitude;
-            t.position = bodyTransform.position + bodyTransform.rotation * (localDir * (float)radius);
+            t.position = pqsTransform.position + pqsTransform.rotation * (localDir * (float)radius);
         }
     }
 }

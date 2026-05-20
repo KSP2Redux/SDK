@@ -206,14 +206,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private void RebuildSpawners(PQS pqs, List<PrefabSpawner> spawners, string filter)
         {
             _prefabsList.Clear();
-            var bodyTransform = BodyResolver.FindBody(pqs)?.transform ?? pqs.transform;
+            var pqsTransform = pqs.transform;
             var visible = 0;
             foreach (var spawner in spawners)
             {
                 var name = spawner.gameObject.name ?? string.Empty;
                 if (!MatchesFilter(name, filter)) continue;
                 visible++;
-                var (lat, lon) = LatLonFromTransform(spawner.transform, bodyTransform);
+                var (lat, lon) = LatLonFromTransform(spawner.transform, pqsTransform);
                 _prefabsList.Add(BuildRow(name,
                     $"({lat:0.00}°, {lon:0.00}°)",
                     () => FrameAt(pqs, lat, lon, SceneFramingMode.Surface, SurfaceFramingPrefs.AltitudeMeters),
@@ -278,7 +278,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private void RebuildLandmarks(PQS pqs, SurfaceLandmark[] landmarks, string filter)
         {
             _landmarksList.Clear();
-            var bodyTransform = BodyResolver.FindBody(pqs)?.transform ?? pqs.transform;
             var visible = 0;
             foreach (var landmark in landmarks)
             {
@@ -408,9 +407,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             EditorGUIUtility.PingObject(go);
         }
 
-        private static (double lat, double lon) LatLonFromTransform(Transform t, Transform bodyTransform)
+        private static (double lat, double lon) LatLonFromTransform(Transform t, Transform pqsTransform)
         {
-            Vector3d p = bodyTransform.InverseTransformPoint(t.position);
+            Vector3d p = pqsTransform.InverseTransformPoint(t.position);
             return LatLonFromBodyLocal(p);
         }
 

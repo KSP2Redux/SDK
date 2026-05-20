@@ -181,8 +181,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var data = TargetData;
             if (data == null) return;
 
-            var bodyTransform = BodyResolver.FindBody(planet)?.transform ?? planet.transform;
-            Vector3 bodyLocal = bodyTransform.InverseTransformPoint(hitWorld);
+            Vector3 bodyLocal = planet.transform.InverseTransformPoint(hitWorld);
 
             Undo.RecordObject(data, "Place Discoverable");
 

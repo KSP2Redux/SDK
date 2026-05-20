@@ -23,14 +23,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// </summary>
         /// <param name="t">The transform to move.</param>
         /// <param name="pqs">The body whose surface is sampled.</param>
-        /// <param name="bodyTransform">The body's transform (provides world origin and orientation).</param>
         /// <param name="altitude">Altitude in meters above the terrain to maintain.</param>
         /// <param name="undoLabel">Undo group label.</param>
         /// <returns>True when the user dragged and a valid surface hit was applied.</returns>
-        public static bool DrawSurfaceMoveHandle(Transform t, PQS pqs, Transform bodyTransform, float altitude, string undoLabel, out Vector2 newLatLon)
+        public static bool DrawSurfaceMoveHandle(Transform t, PQS pqs, float altitude, string undoLabel, out Vector2 newLatLon)
         {
             newLatLon = default;
-            if (t == null || pqs == null || bodyTransform == null) return false;
+            if (t == null || pqs == null) return false;
             var refSize = HandleUtility.GetHandleSize(t.position) * 0.06f;
             EditorGUI.BeginChangeCheck();
             _ = Handles.FreeMoveHandle(t.position, refSize, Vector3.zero, Handles.SphereHandleCap);
@@ -39,12 +38,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             // PlanetSurfaceHit.TryHit already refines against the displaced terrain and returns the
             // world-space surface point and lat/lon, so we use both directly instead of paying for
             // a second GetSurfaceHeight pass to recompute the radius at the picked lat/lon. The
-            // altitude offset is applied along the outward normal from the body center.
+            // altitude offset is applied along the outward normal from the PQS center.
             var ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
             if (!PlanetSurfaceHit.TryHit(pqs, ray, out var hitWorld, out var hitLatLon, out _, includeDecals: true)) return false;
 
             Undo.RecordObject(t, undoLabel);
-            var surfaceUpWorld = (hitWorld - bodyTransform.position).normalized;
+            var surfaceUpWorld = (hitWorld - pqs.transform.position).normalized;
             t.position = hitWorld + surfaceUpWorld * altitude;
             // Preserve the existing yaw by composing the up-axis correction onto the current
             // rotation. Quaternion.FromToRotation(oldUp, newUp) is the smallest rotation that maps

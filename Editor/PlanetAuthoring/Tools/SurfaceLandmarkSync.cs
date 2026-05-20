@@ -52,7 +52,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// </summary>
         private static void WriteWrapperTransform(SurfaceLandmark landmark, PQS pqs)
         {
-            var bodyTransform = BodyResolver.FindBody(landmark)?.transform ?? pqs.transform;
+            var pqsTransform = pqs.transform;
             var localDir = LatLon.GetRelSurfaceNVector(landmark.Latitude, landmark.Longitude);
             double radius;
             if (TrySurfaceHeight(pqs, localDir, out double terrainR))
@@ -64,10 +64,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 radius = (pqs.CoreCelestialBodyData?.Data?.radius ?? 0.0) + landmark.Altitude;
             }
             Undo.RecordObject(landmark.transform, "Sync SurfaceLandmark transform");
-            landmark.transform.position = bodyTransform.position + bodyTransform.rotation * ((Vector3)localDir * (float)radius);
+            landmark.transform.position = pqsTransform.position + pqsTransform.rotation * ((Vector3)localDir * (float)radius);
             // Surface-normal up so children that key off transform.up (the decal handle, the science
             // overlay gizmos) still get a sensible orientation.
-            var surfaceUpWorld = (bodyTransform.rotation * (Vector3)localDir).normalized;
+            var surfaceUpWorld = (pqsTransform.rotation * (Vector3)localDir).normalized;
             landmark.transform.rotation = Quaternion.FromToRotation(landmark.transform.up, surfaceUpWorld) * landmark.transform.rotation;
         }
 
