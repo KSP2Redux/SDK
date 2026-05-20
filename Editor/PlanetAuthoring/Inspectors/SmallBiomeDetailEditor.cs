@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;

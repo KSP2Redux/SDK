@@ -43,8 +43,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static readonly int MidGradienceGId = Shader.PropertyToID("_MidGradienceG");
         private static readonly int MidGradienceBId = Shader.PropertyToID("_MidGradienceB");
         private static readonly int MidGradienceAId = Shader.PropertyToID("_MidGradienceA");
+        private static readonly int GlobalGradienceTexId = Shader.PropertyToID("_GlobalGradienceTex");
         private static readonly int LargeHeightMapUVScalesId = Shader.PropertyToID("_LargeHeightMapUVScales");
         private static readonly int MediumHeightMapUVScalesId = Shader.PropertyToID("_MediumHeightMapUVScales");
+
+        private const string ReduxGradienceKeyword = "REDUX_GRADIENCE";
 
         private readonly Source _source;
         private float _strength = 0.7f;
@@ -127,6 +130,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             if (_source == Source.Slope)
             {
                 var surface = pqs?.data?.materialSettings?.surfaceMaterial;
+                // Match the surface's gradience encoding so the overlay reads the textures the
+                // same way the runtime prepass does. Without this the overlay runs the stock
+                // 4-channel branch over Redux 2-channel data and reports 90 degrees everywhere.
+                if (surface != null && surface.IsKeywordEnabled(ReduxGradienceKeyword))
+                    OverlayMaterial.EnableKeyword(ReduxGradienceKeyword);
+                else
+                    OverlayMaterial.DisableKeyword(ReduxGradienceKeyword);
                 MirrorTexture(surface, BiomeMaskTexId, Texture2D.blackTexture);
                 MirrorTexture(surface, LargeGradienceRId, Texture2D.blackTexture);
                 MirrorTexture(surface, LargeGradienceGId, Texture2D.blackTexture);
@@ -136,6 +146,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
                 MirrorTexture(surface, MidGradienceGId, Texture2D.blackTexture);
                 MirrorTexture(surface, MidGradienceBId, Texture2D.blackTexture);
                 MirrorTexture(surface, MidGradienceAId, Texture2D.blackTexture);
+                MirrorTexture(surface, GlobalGradienceTexId, Texture2D.blackTexture);
                 MirrorVector(surface, LargeHeightMapUVScalesId, Vector4.one);
                 MirrorVector(surface, MediumHeightMapUVScalesId, Vector4.one);
             }

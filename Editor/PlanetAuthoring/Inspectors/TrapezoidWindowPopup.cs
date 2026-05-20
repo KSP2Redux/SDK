@@ -1,4 +1,5 @@
 using System;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -7,21 +8,16 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Popout editor window for a shader trapezoidal-window vector property stored as <c>(center, upRange, downRange, fadeOut)</c> on the material.
+    /// Popout editor window for a trapezoidal-window Vector4 stored as <c>(center, upRange, downRange, fadeOut)</c>.
     /// </summary>
     /// <remarks>
     /// The shader's <c>ComputeFadeTri</c> produces a quadratic fade-in across
     /// <c>[center - downRange, center]</c>, a flat plateau across <c>[center, center + upRange]</c>,
     /// and a quadratic fade-out across <c>[center + upRange, center + upRange + fadeOut]</c>.
-    /// This popup exposes the four edges of that shape via artist-facing names:
-    /// <list type="bullet">
-    ///   <item><c>Fade In</c> = <c>downRange</c> (width of the quadratic fade-in below Start)</item>
-    ///   <item><c>Start</c> = <c>center</c> (where the layer first reaches full strength)</item>
-    ///   <item><c>End</c> = <c>center + upRange</c> (where the plateau ends and fade-out begins)</item>
-    ///   <item><c>Fade Out</c> = <c>fadeOut</c> (width of the quadratic fade-out above End)</item>
-    /// </list>
+    /// This popup exposes the four edges of that shape via artist-facing names (Fade In, Start, End, Fade Out).
     /// Each of the four corner handles is independent. The body of the plateau translates the
-    /// whole window. Shift = fine drag, Ctrl = snap to 100 m or 5 deg.
+    /// whole window. Shift = fine drag, Ctrl = snap to 100 m or 5 deg. Decoupled from any source of
+    /// truth — callers pass in the initial value and a per-edit callback that receives the new value.
     /// </remarks>
     public class TrapezoidWindowPopup : EditorWindow
     {
@@ -33,11 +29,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static readonly Vector2 WindowSize = new(380f, 360f);
 
-        private Material _material;
-        private string _propertyName;
         private TrapezoidWindowField.AxisMode _axisMode;
         private float _xMaxOverride;
-        private Action _onChanged;
+        private Action<Vector4> _onValueChanged;
 
         private VisualElement _graph;
         private FloatField _startField;
@@ -58,29 +52,26 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// Opens the trapezoid-window popup anchored below the supplied trigger rect.
         /// </summary>
         /// <param name="anchorWorldRect">World-space rect of the trigger element. The popup opens just below its bottom edge.</param>
-        /// <param name="material">Material whose vector property is being edited.</param>
-        /// <param name="propertyName">Shader property name on <paramref name="material" />.</param>
+        /// <param name="initialValue">Starting value displayed by the popup.</param>
         /// <param name="axisMode">Whether the X axis represents height or slope.</param>
         /// <param name="xMaxOverride">Explicit X-axis upper bound for height mode. Pass <c>0</c> to use the default.</param>
-        /// <param name="onChanged">Callback invoked after the popup writes a new value back to <paramref name="material" />.</param>
+        /// <param name="onValueChanged">Callback invoked with the new value after each edit. Material or PQSData writes happen outside the popup.</param>
         public static void Show(
             Rect anchorWorldRect,
-            Material material,
-            string propertyName,
+            Vector4 initialValue,
             TrapezoidWindowField.AxisMode axisMode,
             float xMaxOverride,
-            Action onChanged
+            Action<Vector4> onValueChanged
         )
         {
             var window = CreateInstance<TrapezoidWindowPopup>();
             var unitLabel = axisMode == TrapezoidWindowField.AxisMode.Slope ? "Slope" : "Height";
-            window.titleContent = new GUIContent($"{unitLabel} Window - {GraphWidgetCommon.PrettifyPropertyName(propertyName)}");
+            window.titleContent = new GUIContent($"{unitLabel} Window");
             window.minSize = WindowSize;
-            window._material = material;
-            window._propertyName = propertyName;
+            window._value = initialValue;
             window._axisMode = axisMode;
             window._xMaxOverride = xMaxOverride;
-            window._onChanged = onChanged;
+            window._onValueChanged = onValueChanged;
 
             var anchorScreen = GUIUtility.GUIToScreenRect(anchorWorldRect);
             window.position = new Rect(anchorScreen.x, anchorScreen.yMax + 2, WindowSize.x, WindowSize.y);
@@ -89,7 +80,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void CreateGUI()
         {
-            _value = _material != null ? _material.GetVector(_propertyName) : default;
             UpdateAxisRange();
 
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
@@ -182,15 +172,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void ApplyEdit()
         {
-            if (_material == null)
-                return;
-            Undo.RecordObject(_material, "Edit trapezoid window");
-            _material.SetVector(_propertyName, _value);
-            EditorUtility.SetDirty(_material);
             UpdateAxisRange();
             SyncFieldsFromValue();
-            _onChanged?.Invoke();
-            SceneView.RepaintAll();
+            _onValueChanged?.Invoke(_value);
             _graph?.MarkDirtyRepaint();
         }
 
@@ -320,7 +304,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
-            if (_activeHandle == Handle.None || _material == null)
+            if (_activeHandle == Handle.None)
                 return;
 
             var rect = _graph.contentRect;
@@ -349,7 +333,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             {
                 case Handle.LeftFoot:
                 {
-                    // Move LeftFoot, keep Start fixed -> Fade In changes.
                     var newLeftFoot = GraphWidgetCommon.SnapIfNeeded(origLeftFoot + deltaWorldX, snap, snapStep);
                     if (newLeftFoot > origStart) newLeftFoot = origStart;
                     SetEdges(origStart, origEnd, origStart - newLeftFoot, origFadeOut);
@@ -357,7 +340,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 }
                 case Handle.LeftShoulder:
                 {
-                    // Move Start, keep LeftFoot and End fixed -> Fade In width adjusts.
                     var newStart = GraphWidgetCommon.SnapIfNeeded(origStart + deltaWorldX, snap, snapStep);
                     if (newStart > origEnd) newStart = origEnd;
                     if (newStart < origLeftFoot) newStart = origLeftFoot;
@@ -366,7 +348,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 }
                 case Handle.RightShoulder:
                 {
-                    // Move End, keep Start and RightFoot fixed -> Fade Out width adjusts.
                     var newEnd = GraphWidgetCommon.SnapIfNeeded(origEnd + deltaWorldX, snap, snapStep);
                     if (newEnd < origStart) newEnd = origStart;
                     if (newEnd > origRightFoot) newEnd = origRightFoot;
@@ -375,7 +356,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 }
                 case Handle.RightFoot:
                 {
-                    // Move RightFoot, keep End fixed -> Fade Out changes.
                     var newRightFoot = GraphWidgetCommon.SnapIfNeeded(origRightFoot + deltaWorldX, snap, snapStep);
                     if (newRightFoot < origEnd) newRightFoot = origEnd;
                     SetEdges(origStart, origEnd, origFadeIn, newRightFoot - origEnd);
@@ -383,7 +363,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 }
                 case Handle.Body:
                 {
-                    // Translate the whole window - shift everything by the same delta.
                     var shift = GraphWidgetCommon.SnapIfNeeded(deltaWorldX, snap, snapStep);
                     SetEdges(origStart + shift, origEnd + shift, origFadeIn, origFadeOut);
                     break;

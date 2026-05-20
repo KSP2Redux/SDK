@@ -7,14 +7,14 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Popout editor window for a shader fade-vector property stored as <c>(start, range, nearOpacity, farOpacity)</c>.
+    /// Popout editor window for a Vector4 stored as <c>(start, range, nearOpacity, farOpacity)</c>.
     /// </summary>
     /// <remarks>
     /// Hosts the full graph with drag handles plus aligned numeric fields for direct keyed input. The window is anchored
     /// to its trigger element via <see cref="EditorWindow.ShowAuxWindow" /> so it opens as a draggable utility window
-    /// that closes when focus leaves the editor. Layout lives in <c>Assets/Windows/PropertyFields/FadeCurvePopup.uxml</c>
-    /// with styling in <c>PropertyFields.uss</c>. Drag interactions use Shift for fine drag (0.2x) and Ctrl for snap to
-    /// <see cref="GraphWidgetCommon.SnapStepHeight" />, mirroring the trapezoid window popup.
+    /// that closes when focus leaves the editor. Drag interactions use Shift for fine drag (0.2x) and Ctrl for snap to
+    /// <see cref="GraphWidgetCommon.SnapStepHeight" />, mirroring the trapezoid window popup. The popup is decoupled
+    /// from any source of truth — callers pass in the initial value and a per-edit callback that receives the new value.
     /// </remarks>
     public class FadeCurvePopup : EditorWindow
     {
@@ -26,9 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static readonly Vector2 WindowSize = new(360f, 280f);
 
-        private Material _material;
-        private string _propertyName;
-        private Action _onChanged;
+        private Action<Vector4> _onValueChanged;
 
         private VisualElement _graph;
         private FloatField _startField;
@@ -48,17 +46,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// Opens the fade-curve popup anchored below the supplied trigger rect.
         /// </summary>
         /// <param name="anchorWorldRect">World-space rect of the inline preview that triggered the popup. The window opens flush against its bottom edge.</param>
-        /// <param name="material">Material whose vector property is being edited.</param>
-        /// <param name="propertyName">Shader property name on <paramref name="material" />.</param>
-        /// <param name="onChanged">Callback invoked after each edit writes a new value back to <paramref name="material" />.</param>
-        public static void Show(Rect anchorWorldRect, Material material, string propertyName, Action onChanged)
+        /// <param name="initialValue">Starting value displayed by the popup.</param>
+        /// <param name="onValueChanged">Callback invoked with the new value after each edit. Material or PQSData writes happen outside the popup.</param>
+        public static void Show(Rect anchorWorldRect, Vector4 initialValue, Action<Vector4> onValueChanged)
         {
             var window = CreateInstance<FadeCurvePopup>();
-            window.titleContent = new GUIContent($"Fade curve - {GraphWidgetCommon.PrettifyPropertyName(propertyName)}");
+            window.titleContent = new GUIContent("Fade Curve");
             window.minSize = WindowSize;
-            window._material = material;
-            window._propertyName = propertyName;
-            window._onChanged = onChanged;
+            window._value = initialValue;
+            window._onValueChanged = onValueChanged;
 
             var anchorScreen = GUIUtility.GUIToScreenRect(anchorWorldRect);
             window.position = new Rect(anchorScreen.x, anchorScreen.yMax + 2, WindowSize.x, WindowSize.y);
@@ -67,7 +63,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void CreateGUI()
         {
-            _value = _material != null ? _material.GetVector(_propertyName) : default;
             UpdateAxisRange();
 
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
@@ -113,15 +108,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void ApplyEdit()
         {
-            if (_material == null)
-                return;
-            Undo.RecordObject(_material, "Edit fade curve");
-            _material.SetVector(_propertyName, _value);
-            EditorUtility.SetDirty(_material);
             UpdateAxisRange();
             SyncFieldsFromValue();
-            _onChanged?.Invoke();
-            SceneView.RepaintAll();
+            _onValueChanged?.Invoke(_value);
             _graph?.MarkDirtyRepaint();
         }
 
@@ -192,7 +181,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
-            if (_activeHandle == Handle.None || _material == null)
+            if (_activeHandle == Handle.None)
                 return;
 
             var rect = _graph.contentRect;

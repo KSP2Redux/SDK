@@ -1,4 +1,5 @@
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
