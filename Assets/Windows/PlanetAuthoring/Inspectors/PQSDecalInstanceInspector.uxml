@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="decal-inspector-root">
+
+        <engine:Foldout text="Location" value="true" class="decal-inspector-section">
+            <editor:FloatField name="lat-field" label="Latitude (°)" tooltip="Decal center latitude in degrees. -90 = south pole, +90 = north pole." class="decal-inspector-field unity-base-field__aligned" />
+            <editor:FloatField name="lon-field" label="Longitude (°)" tooltip="Decal center longitude in degrees. East-positive, range [-180, 180]." class="decal-inspector-field unity-base-field__aligned" />
+            <engine:VisualElement class="decal-inspector-button-row">
+                <engine:Button name="copy-button" text="Copy" tooltip="Copy lat,lon to the clipboard as a comma-separated pair." />
+                <engine:Button name="paste-button" text="Paste" tooltip="Paste a comma-separated lat,lon pair from the clipboard into the fields above." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Placement" value="true" class="decal-inspector-section">
+            <editor:PropertyField binding-path="Rotation" label="Rotation (°)" tooltip="Yaw around the local surface normal, in degrees. 0 points the decal's local +Z along east." />
+            <editor:PropertyField binding-path="Scale" label="Scale (m)" tooltip="Decal footprint diameter at the body surface, in meters." />
+            <editor:PropertyField binding-path="VerticalOffset" label="Vertical Offset (m)" tooltip="Offset above the body surface in meters. Positive lifts the decal away from the body, negative sinks it in." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Template" value="true" class="decal-inspector-section">
+            <editor:PropertyField binding-path="PQSDecal" label="Template" tooltip="PQSDecal asset this instance inherits its appearance from. Editing fields below modifies the asset and affects every instance using it." />
+            <engine:VisualElement name="template-slot" class="decal-inspector-template-slot" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Overrides" value="false" class="decal-inspector-section">
+            <engine:Label text="Toggle to override the template value just for this instance." class="decal-inspector-hint" />
+            <engine:VisualElement name="overrides-slot" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

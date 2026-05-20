@@ -1,0 +1,220 @@
+/* Validation Report window - overrides on top of Ksp2UnityToolsStyles.uss.
+ * Section chrome, button rows, action buttons, and field margins come from
+ * the shared sheet via the .sdk-* aliases. */
+
+.validation-report-root {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.validation-report-summary-label {
+    -unity-font-style: bold;
+    margin-top: 4px;
+}
+
+.validation-report-last-run-label {
+    color: rgb(170, 170, 170);
+    font-size: 11px;
+}
+
+.validation-report-filters {
+    flex-direction: row;
+    align-items: center;
+}
+
+.validation-report-filters > Toggle {
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-right: 14px;
+}
+
+.validation-report-filters > Toggle > .unity-toggle__input {
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: auto;
+}
+
+.validation-report-filters > Toggle .unity-text-element {
+    flex-grow: 0;
+    min-width: auto;
+    margin-right: 4px;
+}
+
+.vram-content {
+    margin-top: 4px;
+    display: none;
+}
+
+.vram-total {
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.vram-bar-track {
+    height: 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.vram-bar-fill {
+    height: 100%;
+    background-color: rgb(110, 200, 110);
+    width: 0;
+}
+
+.vram-bar-fill--near {
+    background-color: rgb(220, 165, 80);
+}
+
+.vram-bar-fill--over {
+    background-color: rgb(220, 80, 80);
+}
+
+.vram-section-header {
+    -unity-font-style: bold;
+    color: rgb(190, 200, 220);
+    font-size: 11px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
+.vram-rows {
+    margin-left: 4px;
+}
+
+.vram-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 1px;
+}
+
+.vram-row-label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: end;
+}
+
+.vram-row-meta {
+    flex-shrink: 0;
+    color: rgb(150, 150, 150);
+    margin-left: 6px;
+    margin-right: 6px;
+    font-size: 10px;
+}
+
+.vram-row-size {
+    flex-shrink: 0;
+    -unity-text-align: middle-right;
+    min-width: 70px;
+}
+
+.vram-tex-row {
+    flex-direction: column;
+    margin-bottom: 3px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+.vram-tex-row:hover {
+    background-color: rgba(95, 150, 210, 0.18);
+}
+
+.vram-tex-row-top {
+    flex-direction: row;
+    align-items: center;
+}
+
+.vram-tex-row-name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: end;
+}
+
+.vram-tex-row-size {
+    flex-shrink: 0;
+    -unity-text-align: middle-right;
+    min-width: 70px;
+    margin-left: 8px;
+}
+
+.vram-tex-row-meta {
+    color: rgb(150, 150, 150);
+    font-size: 10px;
+    margin-left: 8px;
+    white-space: normal;
+}
+
+.vram-streaming {
+    color: rgb(170, 170, 170);
+    font-size: 11px;
+    margin-top: 8px;
+    white-space: normal;
+}
+
+.validation-report-scroll {
+    flex-grow: 1;
+}
+
+.validation-report-empty {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    align-items: center;
+}
+
+.validation-report-empty-label {
+    color: rgb(110, 200, 110);
+    -unity-font-style: bold;
+}
+
+.validation-report-group {
+    margin-top: 6px;
+    margin-bottom: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: rgba(50, 60, 80, 0.35);
+}
+
+.validation-report-group-header {
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.validation-report-group--error .validation-report-group-header {
+    color: rgb(220, 130, 80);
+}
+
+.validation-report-group--warning .validation-report-group-header {
+    color: rgb(220, 165, 80);
+}
+
+.validation-report-group--info .validation-report-group-header {
+    color: rgb(120, 170, 230);
+}
+
+.validation-report-issue-code {
+    font-size: 10px;
+    color: rgb(160, 175, 200);
+    -unity-font-style: bold;
+    margin-bottom: 1px;
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="unity-base-field">
+        <engine:Label name="field-label" class="unity-base-field__label unity-property-field__label" />
+        <engine:VisualElement name="preview-button" class="unity-base-field__input fade-curve-preview" tooltip="Click to edit. Shows (start, range, nearOpacity, farOpacity).">
+            <engine:VisualElement name="thumbnail" class="fade-curve-thumbnail" />
+            <engine:Label name="summary" class="fade-curve-summary" />
+        </engine:VisualElement>
+    </engine:VisualElement>
+
+</engine:UXML>

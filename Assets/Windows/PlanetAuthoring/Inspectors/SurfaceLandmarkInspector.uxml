@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="decal-inspector-root">
+
+        <engine:Label name="terrain-label" class="decal-inspector-hint" />
+
+        <engine:Foldout text="Location" value="true" class="decal-inspector-section">
+            <editor:PropertyField name="lat-field" binding-path="Latitude" label="Latitude (°)"
+                                  tooltip="Surface point latitude in degrees. -90 = south pole, +90 = north pole." />
+            <editor:PropertyField name="lon-field" binding-path="Longitude" label="Longitude (°)"
+                                  tooltip="Surface point longitude in degrees. East-positive, range [-180, 180]." />
+            <editor:PropertyField name="alt-field" binding-path="Altitude" label="Altitude (m)"
+                                  tooltip="Height above the rendered terrain at this lat/lon. 0 snaps to surface. Editing lat/lon preserves this altitude." />
+            <engine:Button name="pick-button" text="Pick on planet"
+                           tooltip="Activate the surface-pick tool. Click on the planet to snap this landmark's lat/lon to the surface hit."
+                           class="sdk-action-button" />
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="copy-button" text="Copy"
+                               tooltip="Copy lat,lon to the clipboard as a comma-separated pair." />
+                <engine:Button name="paste-button" text="Paste"
+                               tooltip="Paste a comma-separated lat,lon pair from the clipboard, replacing this landmark's position." />
+            </engine:VisualElement>
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="frame-above-button" text="Look from above"
+                               tooltip="Frame the SceneView camera looking down at this landmark from the body's framing altitude." />
+                <engine:Button name="frame-surface-button" text="Look from surface"
+                               tooltip="Frame the SceneView camera at this landmark's lat/lon at the configured Surface framing altitude." />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Decal" value="true" class="decal-inspector-section">
+            <editor:PropertyField binding-path="EnableDecal" label="Enabled"
+                                  tooltip="Whether the landmark spawns a decal child." />
+            <editor:PropertyField binding-path="EnableSmoothing" label="Smooth terrain"
+                                  tooltip="When on, the decal flattens the terrain to its natural height in the area (replace blend, height offset 0.5, height scale tracks terrain). When off, the decal is purely cosmetic with no terrain modification." />
+            <editor:PropertyField binding-path="SmoothingDecal" label="Decal template"
+                                  tooltip="PQSDecal asset the decal uses for its appearance. Leave empty to use the SDK's default template. Height behavior is driven by Smooth terrain regardless of which template is selected."
+                                  class="decal-inspector-field unity-base-field__aligned" />
+            <engine:Button name="create-decal-button" text="Create new decal template..."
+                           tooltip="Open the New Decal prompt, create a PQSDecal asset, and assign it to this landmark." />
+            <editor:PropertyField binding-path="SmoothingRadius" label="Radius (m)"
+                                  tooltip="Radius of the decal in meters. Drives the transform scale as diameter."
+                                  class="decal-inspector-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="SmoothingFadeStrength" label="Fade strength"
+                                  tooltip="Edge falloff of the decal. Lower values fade over a wider band, higher values produce a sharper boundary. Range 0.25 to 2."
+                                  class="decal-inspector-field unity-base-field__aligned" />
+            <engine:VisualElement name="decal-help-slot" />
+            <engine:VisualElement name="decal-template-slot" class="decal-inspector-template-slot" />
+            <engine:VisualElement name="decal-overrides-slot" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Prefab" value="true" class="decal-inspector-section">
+            <editor:PropertyField binding-path="EnablePrefab" label="Enabled"
+                                  tooltip="Whether the landmark spawns a runtime PrefabSpawner that loads the assigned prefab on vessel approach." />
+            <engine:Toggle name="prefab-raw-key-toggle" label="Use raw addressable key"
+                           tooltip="When on, author the prefab as a raw addressable key string instead of dropping a typed prefab. Useful for keys whose source asset isn't available in this project."
+                           class="sdk-field unity-base-field__aligned" />
+            <engine:VisualElement name="prefab-mode-group">
+                <editor:PropertyField binding-path="Prefab" label="Prefab"
+                                      tooltip="Prefab spawned at runtime. Must be addressable." />
+            </engine:VisualElement>
+            <engine:VisualElement name="prefab-raw-key-mode-group" style="display: none;">
+                <editor:PropertyField binding-path="PrefabAddressableKey" label="Addressable key"
+                                      tooltip="Raw addressable primary key. Used verbatim by Addressables.LoadAssetAsync at runtime." />
+                <engine:Label name="prefab-raw-key-status" class="decal-inspector-hint" />
+            </engine:VisualElement>
+            <editor:PropertyField binding-path="PrefabWidth" label="Prefab width (m)"
+                                  tooltip="Footprint width in meters along the surface plane. Used to inset the prefab so its rim sits at the local horizon." />
+            <engine:Label name="inset-label" class="decal-inspector-hint" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Discoverable" value="true" class="decal-inspector-section">
+            <editor:PropertyField binding-path="EnableDiscoverable" label="Enabled"
+                                  tooltip="Whether the landmark contributes a discoverable entry to the body's ScienceRegionData." />
+            <editor:PropertyField binding-path="DiscoverableRadius" label="Discoverable radius (m)"
+                                  tooltip="Discoverable detection radius in meters. A vessel within this radius of the landmark triggers the discoverable's region scalars."
+                                  class="decal-inspector-field unity-base-field__aligned" />
+            <editor:PropertyField binding-path="DiscoverableRegionId" label="Region Id"
+                                  tooltip="Discoverable region Id. Auto-generated as 'NewLandmarkN' on first enable." />
+            <editor:FloatField name="atm-field" label="Atm scalar"
+                               tooltip="Science scalar applied while a vessel is in atmospheric flight within the discoverable's radius. -1 disables this situation."
+                               class="sdk-field unity-base-field__aligned" />
+            <editor:FloatField name="spl-field" label="Splashed scalar"
+                               tooltip="Science scalar applied while a vessel is splashed down within the discoverable's radius. -1 disables this situation."
+                               class="sdk-field unity-base-field__aligned" />
+            <editor:FloatField name="lnd-field" label="Landed scalar"
+                               tooltip="Science scalar applied while a vessel is landed within the discoverable's radius. -1 disables this situation."
+                               class="sdk-field unity-base-field__aligned" />
+            <engine:Label name="science-region-status" class="decal-inspector-hint" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

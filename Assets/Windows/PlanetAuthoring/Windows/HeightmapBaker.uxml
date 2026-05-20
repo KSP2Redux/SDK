@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root">
+
+        <engine:Foldout text="Settings" value="true" class="sdk-section">
+            <editor:ObjectField name="mesh-field" label="High Quality Mesh"
+                                type="UnityEngine.Mesh, UnityEngine"
+                                allow-scene-objects="false"
+                                tooltip="High-detail source mesh sampled by raycast for the heightmap. Should be a unit-radius sphere displaced by the actual terrain - the bake's min and strength values match Blender's Displace modifier on a sphere. Must have Read/Write enabled in its importer."
+                                class="sdk-field unity-base-field__aligned" />
+            <engine:DropdownField name="resolution-field" label="Resolution"
+                                  choices="1024,2048,4096,8192,16384,32768"
+                                  index="2"
+                                  tooltip="Output resolution of the baked heightmap, in pixels per side. 4096 is the typical authoring sweet spot. 8192 and above are diminishing returns and a VRAM hog."
+                                  class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="bake-button" text="Bake"
+                           tooltip="Build a BVH over the source mesh, raycast one ray per output pixel from origin outward in equirectangular projection, normalize, and save the R16 PNG. Pick a save location when the bake finishes."
+                           class="sdk-action-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Last Bake" value="true" class="sdk-section">
+            <engine:VisualElement name="warning-slot" />
+            <engine:TextField name="path-field" label="Export Path"
+                              readonly="true"
+                              tooltip="Path of the last successful bake for the currently selected mesh."
+                              class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="midlevel-field" label="Radius (Midlevel)"
+                                readonly="true"
+                                tooltip="Lowest sampled mesh height. Plug this into Blender's Displace modifier Midlevel field to reconstruct the original mesh from the baked heightmap."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="strength-field" label="Strength"
+                                readonly="true"
+                                tooltip="max - min of the sampled mesh heights. Plug this into Blender's Displace modifier Strength field to reconstruct the original mesh from the baked heightmap."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

@@ -1,15 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using KSP.Game.Science;
+using Ksp2UnityTools.Editor.API;
 using Newtonsoft.Json;
 using UniLinq;
+using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.ScriptableObjects
 {
-    [CreateAssetMenu(fileName = "ScienceRegions", menuName = "KSP2UT/Science Region Data")]
     public class ScienceRegionData : ScriptableObject
     {
+        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Science Region Data", priority = KSP2UnityTools.MenuPriority)]
+        public static void CreateScienceRegionData()
+        {
+            KSP2UnityTools.CreateKsp2UnityToolsAssetAtSelectedPath<ScienceRegionData>("New Science Region");
+        }
+
+
         public Texture2D scienceRegionMap;
         public ScienceRegionDataInformation information = new();
         public List<CelestialBodyDiscoverablePosition> discoverables = new();

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="body-inspector-root">
+
+        <engine:VisualElement class="validation-chip">
+            <engine:Label name="validation-chip-label" class="validation-chip-label" />
+            <engine:Button name="validation-chip-open" text="Open report" tooltip="Open the Validation Report window for this body." class="validation-chip-open" />
+        </engine:VisualElement>
+
+        <engine:Foldout text="Preview" value="true" class="body-inspector-section">
+            <engine:VisualElement name="readiness-section" class="body-inspector-readiness">
+                <engine:Label name="readiness-header" class="body-inspector-readiness-header" />
+                <engine:VisualElement name="readiness-errors" />
+            </engine:VisualElement>
+            <engine:Button name="preview-button" class="body-inspector-preview-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Quick Tools" value="true" class="body-inspector-section body-inspector-quick-tools">
+            <engine:Button name="quick-preview-controls" text="Preview Controls" />
+            <engine:Button name="quick-landmark-manager" text="Landmark Manager" />
+        </engine:Foldout>
+
+        <engine:VisualElement class="body-inspector-body-data">
+
+            <engine:Foldout text="Meta Data" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.bodyName" label="Internal Name" tooltip="Identifier used in saves, JSON, and code. Must be unique across all bodies in the project. Not shown to players." />
+                <editor:PropertyField binding-path="core.data.assetKeyScaled" label="Scaled Prefab Key" tooltip="Addressable key for the scaled-space prefab (orbital and far-camera view). Convention: Celestial.&lt;BodyName&gt;.Scaled.prefab." />
+                <editor:PropertyField binding-path="core.data.assetKeySimulation" label="Simulation Prefab Key" tooltip="Addressable key for the simulation-time prefab (in-physics GameObject hierarchy). Convention: Celestial.&lt;BodyName&gt;.Local.prefab." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Decoration" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.bodyDisplayName" label="Display Name Key" tooltip="Localization key for the player-facing name. Resolved via LocalizationManager. Falls back to the Internal Name when the key has no translation." />
+                <editor:PropertyField binding-path="core.data.bodyDescription" label="Description Key" tooltip="Localization key for the player-facing description. Same fallback behavior as Display Name Key." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Descriptors" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.isStar" label="Is Star" tooltip="This body is the system's primary light source. Implies no solid surface, no atmosphere flight, and that the directional sun light points away from this body." />
+                <editor:PropertyField binding-path="core.data.isHomeWorld" label="Is Home World" tooltip="The player's starting body. Hosts the launchpad and default crew. Should be set on exactly one body per project." />
+                <editor:PropertyField binding-path="core.data.navballSwitchAltitudeHigh" label="Navball Orbit Switch Altitude" tooltip="Altitude above sea level. When the vessel rises above this, the navball switches to Orbit mode." />
+                <editor:PropertyField binding-path="core.data.navballSwitchAltitudeLow" label="Navball Surface Switch Altitude" tooltip="Altitude above sea level. When the vessel falls below this, the navball switches to Surface mode." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Properties - General" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.hasSolidSurface" label="Has Solid Surface" tooltip="Body has a PQS-rendered solid terrain. False for stars and gas giants, which use the scaled-space prefab only." />
+                <editor:PropertyField binding-path="core.data.hasOcean" label="Has Ocean" tooltip="Body has a liquid ocean layer. The ocean is rendered separately from atmosphere and uses Ocean Altitude and Ocean Density below." />
+                <editor:PropertyField binding-path="core.data.HasLocalSpace" label="Has Local Space" tooltip="Body renders in local (close-up) space, with full PQS detail and physics interaction. Disable for bodies that should only ever appear at scaled-space distance." />
+                <editor:PropertyField binding-path="core.data.radius" label="Radius (m)" tooltip="Body radius in meters, measured from the center of mass to sea level." />
+                <editor:PropertyField binding-path="core.data.gravityASL" label="Surface Gravity (m/s²)" tooltip="Acceleration due to gravity at sea level, in meters per second squared." />
+                <editor:PropertyField binding-path="core.data.oceanAltitude" label="Ocean Altitude (m)" tooltip="Altitude of the ocean surface above the body radius, in meters. Negative values place the ocean below mean radius." />
+                <editor:PropertyField binding-path="core.data.oceanDensity" label="Ocean Density" tooltip="Density of the ocean liquid. Used for buoyancy and drag calculations." />
+                <editor:PropertyField binding-path="core.data.MinTerrainHeight" label="Min Terrain Height (m)" tooltip="Lowest elevation reached by the heightmap, in meters relative to sea level. Used for camera and physics range calculations." />
+                <editor:PropertyField binding-path="core.data.MaxTerrainHeight" label="Max Terrain Height (m)" tooltip="Highest elevation reached by the heightmap, in meters relative to sea level. Used for camera and physics range calculations." />
+                <engine:Button name="recalc-terrain-height-button" text="Recalculate min/max from heightmap"
+                               tooltip="Sweep the body's PQS heightmap on a 1° lat/lon grid and write the lowest and highest sampled elevations into the fields above. Requires an active planet preview." />
+                <engine:Label name="recalc-terrain-height-status" class="body-inspector-error-label" />
+                <editor:PropertyField binding-path="core.data.TerrainHeightScale" label="Terrain Height Scale" tooltip="Multiplier applied to heightmap samples when computing terrain elevation. Increase to make mountains taller without re-baking the heightmap." />
+                <editor:PropertyField binding-path="core.data.TimeWarpAltitudeOffset" label="Time Warp Altitude Offset (m)" tooltip="Altitude above the atmosphere or terrain top at which time warp faster than 4x becomes available, in meters." />
+                <engine:VisualElement name="soi-calc-slot" />
+            </engine:Foldout>
+
+            <engine:Foldout text="Properties - Movement" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.isRotating" label="Is Rotating" tooltip="Master toggle for body rotation. When false, the body stays at Initial Rotation indefinitely." />
+                <editor:PropertyField binding-path="core.data.isTidallyLocked" label="Is Tidally Locked" tooltip="When true, Rotation Period is overridden at runtime to match the orbital period. The same face always points at the parent body." />
+                <editor:PropertyField binding-path="core.data.rotationPeriod" label="Rotation Period (s)" tooltip="Length of one full rotation in seconds. Overridden at runtime to match orbital period when Is Tidally Locked is true." />
+                <editor:PropertyField binding-path="core.data.initialRotation" label="Initial Rotation (deg)" tooltip="Rotation angle at universalTime zero, in degrees." />
+                <editor:PropertyField binding-path="core.data.axialTilt" label="Axial Tilt (deg)" tooltip="Body's axial tilt as Euler angles in degrees (X, Y, Z)." />
+                <editor:PropertyField binding-path="core.data.hasInverseRotation" label="Use Inverse Rotation" tooltip="When true, the body renders as stationary while the universe rotates around it. Reduces floating-point error at orbital radii." />
+                <editor:PropertyField binding-path="core.data.hasInverseRotationThresholdClamp" label="Clamp Inverse Rotation Threshold" tooltip="When true, the inverse-rotation threshold is auto-raised at runtime to at least the atmosphere depth. Prevents the threshold from sitting inside atmosphere." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Properties - Atmosphere" value="false" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.hasAtmosphere" label="Has Atmosphere" tooltip="Body has an atmospheric layer. Required for aerodynamics, jet engines, parachutes, and atmospheric reentry effects." />
+                <editor:PropertyField binding-path="core.data.atmosphereContainsOxygen" label="Contains Oxygen" tooltip="Atmosphere contains breathable oxygen. Required for jet engine air intakes, atmospheric engine VFX, and kerbal helmet removal." />
+                <editor:PropertyField binding-path="core.data.atmosphereDepth" label="Atmosphere Depth (m)" tooltip="Altitude above sea level at which the atmosphere ends, in meters." />
+                <editor:PropertyField binding-path="core.data.atmosphereTemperatureSeaLevel" label="Sea-Level Temperature (K)" tooltip="Atmospheric temperature at sea level, in Kelvin. Earth-like default is 288 K." />
+                <editor:PropertyField binding-path="core.data.atmospherePressureSeaLevel" label="Sea-Level Pressure (kPa)" tooltip="Atmospheric pressure at sea level, in kilopascals. Earth-like default is 101.325 kPa (1 atm)." />
+                <editor:PropertyField binding-path="core.data.atmosphereMolarMass" label="Molar Mass (kg/mol)" tooltip="Average molar mass of the atmospheric gas mix, in kilograms per mole. Earth-like default is 0.0289644 kg/mol." />
+                <editor:PropertyField binding-path="core.data.atmosphereAdiabaticIndex" label="Adiabatic Index" tooltip="Ratio of specific heats (Cp/Cv) for the atmospheric gas. Default 1.4 matches diatomic gases like air." />
+                <editor:PropertyField binding-path="core.data.atmosphericReentryVFXGradient" label="Reentry VFX Gradient Key" tooltip="Addressable key for the Texture2D gradient used by reentry VFX. Empty string falls back to the default reentry gradient." />
+                <editor:PropertyField binding-path="core.data.useAtmospherePressureCurve" label="Use Pressure Curve" tooltip="When true, the Pressure Curve below overrides the analytic pressure formula." />
+                <editor:PropertyField binding-path="core.data.useAtmosphereTemperatureCurve" label="Use Temperature Curve" tooltip="When true, the Temperature Curve below overrides the analytic temperature lapse rate." />
+                <editor:PropertyField binding-path="core.data.useAtmosphereHumidityCurve" label="Use Humidity Curve" tooltip="When true, atmospheric humidity is sampled from the Humidity Curve below." />
+                <editor:PropertyField binding-path="core.data.atmospherePressureCurve" label="Pressure Curve" tooltip="Pressure as a function of altitude. Used when Use Pressure Curve is enabled." />
+                <editor:PropertyField binding-path="core.data.BodyAltitudeTemperatureCurve" label="Temperature Curve" tooltip="Temperature as a function of altitude. Used when Use Temperature Curve is enabled." />
+                <editor:PropertyField binding-path="core.data.BodyAltitudeSurfaceFluxCurve" label="Surface Heat Flux Curve" tooltip="Altitude scaling applied to the surface heat-flux map (Properties - Thermals). Multiplies the base surface flux at each altitude." />
+                <editor:PropertyField binding-path="core.data.BodyAltitudeFluxCurve" label="Local Environmental Flux Curve" tooltip="Local environmental heat flux as a function of altitude. Combined with each part's wetted area to compute the body's thermal contribution." />
+                <editor:PropertyField binding-path="core.data.BodyAltitudeRelativeHumidityCurve" label="Humidity Curve" tooltip="Relative humidity as a function of altitude. Used when Use Humidity Curve is enabled." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Properties - Thermals" value="false" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.BodySurfaceFluxMapPath" label="Surface Flux Map Key" tooltip="Addressable key for a Texture2D encoding the per-pixel surface heat flux map. Sampled by latitude and longitude during thermal simulation. Empty string means no surface flux map." />
+                <editor:PropertyField binding-path="core.data.BodySurfaceFluxScale" label="Surface Flux Scale" tooltip="Multiplier scaling the magnitude of surface heat flux values decoded from the flux map." />
+            </engine:Foldout>
+
+            <engine:Foldout name="star-section" text="Properties - Star" value="false" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.StarLuminosity" label="Star Luminosity (W)" tooltip="Total radiant power output of the star, in watts. Solar flux at any point is L / (4π × distance²). Only meaningful when Is Star is true." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Properties - Rings" value="false" class="body-inspector-section">
+                <editor:PropertyField binding-path="core.data.ringGroupData" label="Ring Groups" tooltip="List of rings on this body. Each entry has an inner radius and outer radius in meters from the body center, plus a density curve sampled across the ring width." />
+            </engine:Foldout>
+
+            <engine:Foldout text="Properties - Resources" value="false" class="body-inspector-section">
+                <engine:VisualElement name="mine-dust-color-slot" />
+            </engine:Foldout>
+
+            <engine:Foldout text="Body Surface Baking" value="false" class="body-inspector-section">
+                <engine:DropdownField name="body-surface-bake-resolution" label="Mesh Resolution"
+                                      choices="64 x 32,128 x 64,256 x 128,512 x 256" index="1"
+                                      tooltip="Lat/lon resolution of the baked low-poly sphere. 128 x 64 produces about 16k triangles, matching stock scaled-space mesh size." />
+                <engine:Toggle name="body-surface-bake-include-ocean" label="Include Ocean"
+                               tooltip="When on, ocean color is composited into the scaled albedo and the scaled mesh's terrain is clamped to the ocean surface. Off uses the artist's albedo unchanged and the raw heightmap displacement." />
+                <editor:ColorField name="body-surface-bake-ocean-color" label="Ocean Color"
+                                   tooltip="Color written over ocean pixels in the scaled albedo." />
+                <engine:Button name="body-surface-bake-button" text="Bake Body Surface" />
+                <engine:Label name="body-surface-bake-status" class="body-inspector-error-label" />
+            </engine:Foldout>
+
+            <engine:Foldout name="save-section" text="Body Saving" value="true" class="body-inspector-section body-inspector-save">
+                <engine:VisualElement name="save-section-content" />
+            </engine:Foldout>
+
+        </engine:VisualElement>
+
+    </engine:VisualElement>
+
+</engine:UXML>

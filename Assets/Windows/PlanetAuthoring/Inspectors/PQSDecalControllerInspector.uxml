@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="decal-controller-root">
+
+        <engine:Foldout text="References" value="true" class="decal-controller-section">
+            <editor:PropertyField binding-path="Pqs" label="PQS" tooltip="PQS component this controller draws decals onto. Auto-resolved from the same GameObject if left empty." />
+            <editor:PropertyField binding-path="CoreCelestialBodyData" label="Body Data" tooltip="CoreCelestialBodyData providing radius and other parameters the decal placement needs. Auto-resolved from the linked PQS if left empty." />
+            <editor:PropertyField binding-path="PqsDecalData" label="Decal Data" tooltip="Baked output ScriptableObject consumed at runtime. Regenerate with the Bake button below after changing decals or shared textures." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Shared Textures" value="true" class="decal-controller-section">
+            <editor:PropertyField binding-path="SharedHeightmap" label="Heightmap (R16)" tooltip="Per-body R16 heightmap sampled by every decal on this body. Set Texture Type = Single Channel, Channel = Red, Format = R16 in the importer." />
+            <editor:PropertyField binding-path="SharedAlphaMap" label="Alpha Map (R16)" tooltip="Per-body R16 alpha map sampled by every decal on this body. Same R16 importer settings as the heightmap." />
+            <engine:Label text="These textures are per-body, not per-decal. The runtime has no per-instance height region in the compute shader, so all decals on this body sample the same heightmap and alpha map." class="decal-controller-hint" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Bake" value="true" class="decal-controller-section">
+            <engine:Button name="bake-button" text="Bake all decals" tooltip="Rebuild PQSDecalData from the controller's instance list and shared textures. Required after editing shared textures or adding/removing instances outside an active session." />
+            <engine:Label text="Rebuilds PQSDecalData from the controller's instance list and shared textures. Auto-runs on decal asset and instance changes when a planet preview session is active." class="decal-controller-hint" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

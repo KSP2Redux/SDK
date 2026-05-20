@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="fade-curve-popup-root">
+        <engine:VisualElement name="graph" class="fade-curve-popup-graph" />
+        <editor:FloatField name="fadeIn"  label="Fade In"  class="fade-curve-popup-field" tooltip="Width of the quadratic fade-in BELOW Start. The layer ramps from 0 to full strength over this range." />
+        <editor:FloatField name="start"   label="Start"    class="fade-curve-popup-field" tooltip="Axis value where the layer first reaches full strength. The fade-in ends here." />
+        <editor:FloatField name="end"     label="End"      class="fade-curve-popup-field" tooltip="Axis value where the layer leaves full strength. The fade-out begins here." />
+        <editor:FloatField name="fadeOut" label="Fade Out" class="fade-curve-popup-field" tooltip="Width of the quadratic fade-out ABOVE End. The layer ramps from full strength to 0 over this range." />
+    </engine:VisualElement>
+
+</engine:UXML>

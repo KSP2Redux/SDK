@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- Inspector for CelestialBodyLighting. Binds the inline CelestialBodyLightingData fields under domain foldouts. Driven by CelestialBodyLightingEditor. -->
+
+    <engine:VisualElement class="body-inspector-root">
+
+        <engine:Foldout text="Time of Day" value="true" class="body-inspector-section">
+            <editor:PropertyField binding-path="data.horizonOffset" label="Horizon Offset" tooltip="Shifts the day/night transition relative to the geometric horizon. Positive values delay sunset, negative values bring it earlier." />
+            <editor:PropertyField binding-path="data.dayBlendRange" label="Day Blend Range" tooltip="Width (sun-to-horizon dot product) over which the day lighting fades in around the horizon offset." />
+            <editor:PropertyField binding-path="data.nightBlendRange" label="Night Blend Range" tooltip="Width (sun-to-horizon dot product) over which the night lighting fades in around the horizon offset." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Ambient" value="true" class="body-inspector-section">
+            <editor:PropertyField binding-path="data.useAmbient" label="Use Ambient" tooltip="Apply the ambient color blend below. When off, the body falls back to the global ambient setting." />
+            <editor:PropertyField binding-path="data.ambientInnerAltitude" label="Inner Altitude (m)" tooltip="Altitude (m) at which ambient is fully active. Below this the ambient blend is 1." />
+            <editor:PropertyField binding-path="data.ambientOuterAltitude" label="Outer Altitude (m)" tooltip="Altitude (m) at which ambient fades out. Above this only Ambient Scaled contributes." />
+            <editor:PropertyField binding-path="data.ambientDay" label="Day Color" tooltip="Ambient color used when the sun is above the horizon." />
+            <editor:PropertyField binding-path="data.ambientNight" label="Night Color" tooltip="Ambient color used when the sun is below the horizon." />
+            <editor:PropertyField binding-path="data.ambientScaled" label="Scaled Color" tooltip="Ambient color used at scaled-space distance (above Outer Altitude)." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Directional" value="true" class="body-inspector-section">
+            <editor:PropertyField binding-path="data.directionalInnerAltitude" label="Inner Altitude (m)" tooltip="Altitude (m) at which the directional light overrides take full effect." />
+            <editor:PropertyField binding-path="data.directionalOuterAltitude" label="Outer Altitude (m)" tooltip="Altitude (m) at which the directional light overrides fade out." />
+            <editor:PropertyField binding-path="data.lightingOverrides" label="Lighting Overrides" tooltip="Named per-volume lighting overrides. The PrevisData scene's CameraManager populates this list." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Bounce Light" value="true" class="body-inspector-section">
+            <editor:PropertyField binding-path="data.enabled" label="Enabled" tooltip="Apply the bounce-light spherical Gaussian below." />
+            <editor:PropertyField binding-path="data.sphericalGaussianSettings" label="Spherical Gaussian Settings" tooltip="Lobe parameters (sharpness, axis, amplitude) of the bounce-light spherical Gaussian." />
+            <editor:PropertyField binding-path="data.color" label="Color" tooltip="Tint of the bounce light. HDR-enabled." />
+            <editor:PropertyField binding-path="data.intensityAtPeriapsis" label="Intensity at Periapsis" tooltip="Bounce-light intensity multiplier at the body's periapsis distance from the parent body." />
+            <editor:PropertyField binding-path="data.intensityAtApoapsis" label="Intensity at Apoapsis" tooltip="Bounce-light intensity multiplier at the body's apoapsis distance from the parent body." />
+            <editor:PropertyField binding-path="data.lightFalloffDistance" label="Falloff Distance (m)" tooltip="Distance over which the bounce light falls off when the camera leaves the body's atmosphere." />
+            <editor:PropertyField binding-path="data.lightFalloffCurve" label="Falloff Curve" tooltip="Curve sampled across Falloff Distance to shape how the bounce light decays." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Skybox Visibility" value="true" class="body-inspector-section">
+            <editor:PropertyField binding-path="data.skyboxVisibilityInnerAltitude" label="Inner Altitude (m)" tooltip="Altitude (m) below which the skybox visibility blend is fully applied." />
+            <editor:PropertyField binding-path="data.skyboxVisibilityOuterAltitude" label="Outer Altitude (m)" tooltip="Altitude (m) above which the skybox is fully visible regardless of day/night." />
+            <editor:PropertyField binding-path="data.dayVisibility" label="Day Visibility" tooltip="Skybox alpha during day. 0 hides the skybox behind the atmosphere, 1 leaves it visible." />
+            <editor:PropertyField binding-path="data.nightVisibility" label="Night Visibility" tooltip="Skybox alpha during night. 1 reveals the full starfield." />
+            <editor:PropertyField binding-path="data.dayNightBlendDistanceScale" label="Day/Night Blend Distance Scale" tooltip="Multiplier on the day/night transition width in altitude units." />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

@@ -1,0 +1,11 @@
+/* Decal Instance inspector — overrides on top of PlanetAuthoring.uss.
+ * Only rules unique to this inspector live here. Override-row styles moved to the shared
+ * Ksp2UnityToolsStyles.uss so other inspectors (Surface Landmark) can reuse them. */
+
+.decal-inspector-template-slot {
+    margin-top: 4px;
+    margin-left: -4px;
+    padding-left: 8px;
+    border-left-width: 2px;
+    border-left-color: rgba(70, 100, 140, 0.5);
+}
