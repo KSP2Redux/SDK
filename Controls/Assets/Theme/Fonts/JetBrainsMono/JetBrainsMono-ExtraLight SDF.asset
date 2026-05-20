@@ -64,11 +64,7 @@ MonoBehaviour:
     m_GlyphPairAdjustmentRecords: []
     m_MarkToBaseAdjustmentRecords: []
     m_MarkToMarkAdjustmentRecords: []
-  m_FallbackFontAssetTable:
-  - {fileID: 11400000, guid: d33ea30b993a81b488080baaf5774437, type: 2}
-  - {fileID: 11400000, guid: d3b1a1905b29fcf4486068baa3e2ff48, type: 2}
-  - {fileID: 11400000, guid: cbfd30a0bf5f0de44ab9795b2f6a09a8, type: 2}
-  - {fileID: 11400000, guid: 7e59a668a0d7f70429ea9a2737af9ff9, type: 2}
+  m_FallbackFontAssetTable: []
   m_fontAssetCreationEditorSettings:
     sourceFontFileGUID: 7932ea7deaf1a3b4291af53dad7f2a41
     faceIndex: 0
@@ -128,9 +124,9 @@ Texture2D:
   m_DownscaleFallback: 0
   m_IsAlphaChannelOptional: 0
   serializedVersion: 2
-  m_Width: 0
-  m_Height: 0
-  m_CompleteImageSize: 0
+  m_Width: 1
+  m_Height: 1
+  m_CompleteImageSize: 1
   m_MipsStripped: 0
   m_TextureFormat: 1
   m_MipCount: 1
@@ -155,9 +151,8 @@ Texture2D:
   m_LightmapFormat: 0
   m_ColorSpace: 1
   m_PlatformBlob:
-  image data: 0
-  _typelessdata:
-  m_StreamData:
+  image data: 1
+  _typelessdata: 00m_StreamData:
     serializedVersion: 2
     offset: 0
     size: 0
