@@ -35,7 +35,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
                 var handle = Addressables.LoadAssetAsync<GameObject>(GraphicsManagerAddressableKey);
                 handle.WaitForCompletion();
-                _cachedSettings = handle.Result?.GetComponent<GraphicsManager>()?.PQSGlobalSettings;
+
+                // handle.Result == null uses Unity's overloaded operator==, so destroyed
+                // GameObjects (from a prior load whose asset got unloaded) are caught here
+                // instead of falling through C#'s ?. operator and tripping MissingReferenceException.
+                var prefab = handle.Result;
+                var graphicsManager = prefab == null ? null : prefab.GetComponent<GraphicsManager>();
+                _cachedSettings = graphicsManager == null ? null : graphicsManager.PQSGlobalSettings;
 
                 if (_cachedSettings == null && !_warnedMissingCatalog)
                 {

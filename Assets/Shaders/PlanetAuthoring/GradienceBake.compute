@@ -1,0 +1,125 @@
+// Bakes a per-biome raw heightmap into a half-resolution gradience texture in the
+// channel layout that the runtime expects.
+//
+// REDUX_GRADIENCE off (stock-compatible) channel layout:
+//   R = max(0, +grad_u_flipped)
+//   G = max(0, +grad_v)
+//   B = max(0, -grad_u_flipped)
+//   A = max(0, -grad_v)
+// 4-channel signed-split. Runtime recovers the signed gradient via diffs = xy - zw =
+// (grad_u_flipped, grad_v), and length(xy - zw) = slope_deg / 90 for this single
+// source. Runtime's min(length, 1) * 90 yields true degrees for the source alone.
+//
+// REDUX_GRADIENCE on channel layout:
+//   R = du * 0.5 + 0.5
+//   G = dv * 0.5 + 0.5
+//   B = 0
+//   A = 1
+// 2-channel signed-around-0.5 encoding in m/m units. Runtime decodes (sample.rg - 0.5) * 2
+// to recover the signed gradient and sums per-source gradients as vectors, then
+// atan(length(sum)) gives the true geometric slope of the composed surface. Per-source
+// range capped at ~45 deg of slope (tan = 1) before clipping.
+
+#pragma kernel CSBakeGradience
+#pragma multi_compile_local _ REDUX_GRADIENCE
+
+Texture2D<float4>   _RawHeightmap;       // Source heightmap (.x channel holds the height; R16 import gives full precision).
+RWTexture2D<float4> _OutGradience;       // Half-res output: signed-split with flip-U, magnitude = slope_deg / 90.
+
+float _HeightScaleMeters;                // HeightRegion.heightScale, vertical scale applied to the [0,1] heightmap value.
+float _BodyRadius;                       // Planet body radius in meters.
+int   _SrcWidth;                         // Source heightmap width in pixels.
+int   _SrcHeight;                        // Source heightmap height in pixels.
+int   _OutWidth;                         // Gradience output width in pixels (half of source by convention).
+int   _OutHeight;                        // Gradience output height in pixels.
+int   _UVScale;                          // HeightRegion.uvScale, number of times the heightmap tiles across the planet.
+
+// Equirect wrap in U (longitude), clamp in V (poles). Matches the runtime's heightmap
+// sampling expectations.
+float SampleSource(int sx, int sy)
+{
+    sx = ((sx % _SrcWidth) + _SrcWidth) % _SrcWidth;
+    sy = clamp(sy, 0, _SrcHeight - 1);
+    return _RawHeightmap.Load(int3(sx, sy, 0)).x;
+}
+
+// 2x2 box mean at source-pixel coords (srcX, srcY) covering the [srcX, srcX+2) x [srcY, srcY+2) block.
+float Box2x2(int srcX, int srcY)
+{
+    return (SampleSource(srcX,     srcY)
+          + SampleSource(srcX + 1, srcY)
+          + SampleSource(srcX,     srcY + 1)
+          + SampleSource(srcX + 1, srcY + 1)) * 0.25;
+}
+
+[numthreads(8, 8, 1)]
+void CSBakeGradience(uint3 id : SV_DispatchThreadID)
+{
+    int x = (int)id.x;
+    int y = (int)id.y;
+    if (x >= _OutWidth || y >= _OutHeight) return;
+
+    // Output pixel (x, y) corresponds to source block starting at (2x, 2y). Sample the
+    // four output-pixel neighbors of this position via 2x2 box at their source-coord
+    // blocks. Central diff over those neighbors gives the half-res gradient.
+    int sx = x * 2;
+    int sy = y * 2;
+
+    float left  = Box2x2(sx - 2, sy);
+    float right = Box2x2(sx + 2, sy);
+    float up    = Box2x2(sx,     sy - 2);
+    float down  = Box2x2(sx,     sy + 2);
+
+    // Gradient in heightmap units per output pixel.
+    float du_hu = (right - left) * 0.5;
+    float dv_hu = (down  - up)   * 0.5;
+
+    // Convert to meters per meter of surface distance (gradient magnitude as a true tangent):
+    //   meters of vertical = height_unit_value * _HeightScaleMeters
+    //   arc per output pixel at the equator = 2*pi*R / (outW * uvScale)
+    // The uvScale factor reflects that the heightmap tiles uvScale times across the planet,
+    // so each output pixel covers 1/uvScale of the arc it would cover at unit tiling.
+    // Underestimates arc length near the poles, matching the runtime's flat-UV gradient
+    // evaluation which has the same equirect distortion.
+    const float TwoPi = 6.28318530717958647692;
+    float uvScale = max((float)_UVScale, 1.0);
+    float arcPerOutPixel = max(TwoPi * _BodyRadius / ((float)_OutWidth * uvScale), 1e-6);
+    float du = du_hu * _HeightScaleMeters / arcPerOutPixel;
+    float dv = dv_hu * _HeightScaleMeters / arcPerOutPixel;
+
+#ifdef REDUX_GRADIENCE
+    // Redux 2-channel encoding: signed gradient remapped to [0,1] with the canonical
+    // 0.5 = zero offset. Runtime decodes via (sample.rg - 0.5) * 2 to recover signed
+    // (du, dv) in m/m. The U flip matches stock's UV convention.
+    float4 outPx;
+    // saturate caps each component at [0, 1], which after the * 0.5 + 0.5 remap clips
+    // |du|, |dv| > 1 (per-axis slopes steeper than 45 deg, tan > 1) to the channel
+    // extremes. Steeper-per-axis slopes are rare in real heightmaps and acceptable to
+    // clip rather than expand the stored range.
+    outPx.x = saturate(-du * 0.5 + 0.5);
+    outPx.y = saturate( dv * 0.5 + 0.5);
+    outPx.z = 0.0;
+    outPx.w = 1.0;
+#else
+    // Stock-compatible 4-channel signed-split: store slope_deg / 90 in the gradient
+    // direction. length(xy - zw) * 90 at runtime then gives true slope degrees for
+    // this single-source gradient, but per-source magnitudes don't compose linearly
+    // under vector addition.
+    float gradLen = sqrt(du * du + dv * dv);
+    float slopeDeg = degrees(atan(gradLen));
+    float m = saturate(slopeDeg / 90.0);
+    float invLen = (gradLen > 1e-8) ? (1.0 / gradLen) : 0.0;
+    float dirU = du * invLen;
+    float dirV = dv * invLen;
+    float duPacked = -m * dirU;
+    float dvPacked =  m * dirV;
+
+    float4 outPx;
+    outPx.x = saturate( duPacked);
+    outPx.y = saturate( dvPacked);
+    outPx.z = saturate(-duPacked);
+    outPx.w = saturate(-dvPacked);
+#endif
+
+    _OutGradience[int2(x, y)] = outPx;
+}

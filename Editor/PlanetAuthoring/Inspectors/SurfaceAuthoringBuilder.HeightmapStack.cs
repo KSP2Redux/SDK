@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
@@ -8,11 +9,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         // ===================== Heightmap stack (PQSData) =====================
 
         /// <summary>
-        /// Builds the Heightmap stack foldout exposing global heightmap, transition, and filtering fields.
+        /// Builds the Heightmap stack foldout exposing global heightmap, per-biome raw heightmaps, transition, and filtering fields.
         /// </summary>
         /// <param name="pqsDataSO">SerializedObject wrapping the bound PQSData whose heightmap settings are edited.</param>
+        /// <param name="material">Surface material that hosts the <c>_LargeHeightMapUVScales</c> and <c>_MediumHeightMapUVScales</c> Vector4 slots mirrored from the per-biome UV scales.</param>
         /// <returns>The populated Heightmap stack foldout.</returns>
-        public static Foldout BuildHeightmapStackSection(SerializedObject pqsDataSO)
+        public static Foldout BuildHeightmapStackSection(SerializedObject pqsDataSO, Material material)
         {
             var foldout = new Foldout { text = "Heightmap stack", value = true };
             foldout.AddToClassList("pqs-inspector-section");
@@ -39,6 +41,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "Per-quad displacement dithering scale. Prevents banding on flat regions."
             ));
 
+            // Global gradience texture only contributes when REDUX_GRADIENCE is enabled.
+            if (material != null && material.IsKeywordEnabled("REDUX_GRADIENCE"))
+            {
+                foldout.Add(MaterialPropertyFields.MaterialOnlyTexture(
+                    material, "_GlobalGradienceTex",
+                    "Global gradience",
+                    "Baked whole-planet gradience texture. Auto-populated by the body surface bake. Re-bake to refresh."
+                ));
+            }
+
+            foldout.Add(GroupLabel("Large heightmaps"));
+            AddBiomeHeightmapRows(foldout, pqsDataSO, "large", "large-scale", material);
+
+            foldout.Add(GroupLabel("Medium heightmaps"));
+            AddBiomeHeightmapRows(foldout, pqsDataSO, "medium", "mid-scale", material);
+
             foldout.Add(GroupLabel("Scaled-to-local transition"));
             foldout.Add(BindPropertyField(
                 pqsDataSO, "heightMapInfo.scaledToLocalTransition",
@@ -60,12 +78,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             foldout.Add(BindPropertyField(
                 pqsDataSO, "heightMapInfo.largeTextureFilteringMode",
                 "Large",
-                "Filtering mode for the per-biome large gradience maps."
+                "Filtering mode for the per-biome large raw heightmaps during CPU mesh-displacement sampling."
             ));
             foldout.Add(BindPropertyField(
                 pqsDataSO, "heightMapInfo.mediumTextureFilteringMode",
                 "Mid",
-                "Filtering mode for the per-biome mid gradience maps."
+                "Filtering mode for the per-biome mid raw heightmaps during CPU mesh-displacement sampling."
             ));
             foldout.Add(BindPropertyField(
                 pqsDataSO, "heightMapInfo.decalHeightFilteringMode",
@@ -113,6 +131,63 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             AddPoleDecalFields(foldout, pqsDataSO, "heightMapInfo.PoleHeightDecalSettings.South", "south");
 
             return foldout;
+        }
+
+        // Renders four (Texture, Scale, UV Scale) triples (R/G/B/A) per biome bound directly
+        // to the per-biome HeightRegion fields on PQSData. The Texture and Height Scale feed
+        // CPU mesh displacement and the bake's gradience output. The UV Scale is also mirrored
+        // into the material's _LargeHeightMapUVScales / _MediumHeightMapUVScales Vector4 so the
+        // runtime shader samples the gradience at the same tile rate the raw heightmap uses.
+        // Adds a spacer between biome groupings for visual separation, and applies
+        // unity-base-field__aligned so labels share a column width across the section.
+        private static void AddBiomeHeightmapRows(
+            VisualElement parent, SerializedObject pqsDataSO, string regionPrefix, string scaleDescription, Material material)
+        {
+            string uvScaleMaterialProp = regionPrefix == "large"
+                ? "_LargeHeightMapUVScales"
+                : "_MediumHeightMapUVScales";
+
+            for (int idx = 0; idx < PlanetAuthoringNaming.BiomeChannels.Length; idx++)
+            {
+                string c = PlanetAuthoringNaming.BiomeChannels[idx];
+
+                if (idx > 0)
+                    parent.Add(BiomeGroupSpacer());
+
+                var textureField = BindPropertyField(
+                    pqsDataSO, $"heightMapInfo.{regionPrefix}{c}.heightMap",
+                    $"{c} Texture",
+                    $"Raw heightmap for biome {c}'s {scaleDescription} contribution. " +
+                    "Consumed by CPU mesh displacement and as the source for the bake's gradience output."
+                );
+                textureField.AddToClassList("unity-base-field__aligned");
+                parent.Add(textureField);
+
+                var scaleField = BindPropertyField(
+                    pqsDataSO, $"heightMapInfo.{regionPrefix}{c}.heightScale",
+                    $"{c} Scale",
+                    $"Vertical scale (meters) applied to biome {c}'s {scaleDescription} heightmap."
+                );
+                scaleField.AddToClassList("unity-base-field__aligned");
+                parent.Add(scaleField);
+
+                var uvScaleField = MaterialPropertyFields.MirroredIntChannel(
+                    pqsDataSO, $"heightMapInfo.{regionPrefix}{c}.uvScale",
+                    material, uvScaleMaterialProp, idx,
+                    $"{c} UV Scale",
+                    $"Tile rate for biome {c}'s {scaleDescription} heightmap across the planet. " +
+                    $"Higher values tile more frequently. Packed into {uvScaleMaterialProp} channel {idx} for runtime sampling."
+                );
+                uvScaleField.AddToClassList("unity-base-field__aligned");
+                parent.Add(uvScaleField);
+            }
+        }
+
+        private static VisualElement BiomeGroupSpacer()
+        {
+            var spacer = new VisualElement();
+            spacer.style.height = 6;
+            return spacer;
         }
 
         private static void AddPoleDecalFields(VisualElement parent, SerializedObject pqsDataSO, string pathPrefix, string poleName)

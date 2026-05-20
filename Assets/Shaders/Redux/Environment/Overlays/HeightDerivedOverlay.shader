@@ -14,6 +14,9 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
         _SlopeLowColor  ("Slope: flat color",     Color) = (0.10, 0.85, 0.20, 1.0)
         _SlopeHighColor ("Slope: vertical color", Color) = (1.00, 0.10, 0.10, 1.0)
         _SlopeGamma     ("Slope: ramp gamma",     Range(0.2, 4.0)) = 1.0
+        // 0 = continuous ramp. Any positive value bins the displayed slope to multiples
+        // of that step (in the same stretched degrees the runtime/bake trapezoid uses).
+        _SlopeStepDeg   ("Slope: quantization step (deg, 0=continuous)", Range(0, 30)) = 0
 
         // Contour-mode params. Radius is the surface-zero radial distance in object-space
         // units, supplied by the C# overlay impl from CoreCelestialBodyData.
@@ -40,6 +43,7 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_local _USE_PQS_BUFFER
+            #pragma multi_compile_local _ REDUX_GRADIENCE
 
             #include "OverlayCommon.hlsl"
 
@@ -49,6 +53,7 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
             float4 _SlopeLowColor;
             float4 _SlopeHighColor;
             float  _SlopeGamma;
+            float  _SlopeStepDeg;
 
             float  _PlanetRadius;
             float  _BandHeight;
@@ -58,19 +63,31 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
             float  _LineWidth;
             float  _LineSoftness;
 
-            // Slope sources its normal from the surface shader's prepass world-normal RT
-            // (LARGE + MID heightmap normals folded in) so artists see the same slope the
-            // small-biome layer windows are evaluated against, not raw mesh facets.
-            sampler2D _LocalSpacePrepassTex4;
+            // Slope samples the same gradience heightmaps the runtime prepass samples so
+            // the overlay shows exactly what the trapezoid window will gate against. The
+            // gradience texture's RGBA packs (sample_+u, sample_+v, sample_-u, sample_-v),
+            // so xy-zw gives the finite-difference gradient directly. Subzones and decals
+            // are intentionally not contributed -- the overlay reads the macro slope from
+            // Large + Mid with unit weights, matching the bake's anchor evaluation.
+            Texture2D<float4>  _LargeGradienceR;
+            Texture2D<float4>  _LargeGradienceG;
+            Texture2D<float4>  _LargeGradienceB;
+            Texture2D<float4>  _LargeGradienceA;
+            Texture2D<float4>  _MidGradienceR;
+            Texture2D<float4>  _MidGradienceG;
+            Texture2D<float4>  _MidGradienceB;
+            Texture2D<float4>  _MidGradienceA;
+            Texture2D<float4>  _GlobalGradienceTex;
+            Texture2D<float4>  _BiomeMaskTex;
+            SamplerState       sampler_LinearRepeat;
+            float4             _LargeHeightMapUVScales;
+            float4             _MediumHeightMapUVScales;
 
-            // The vertex stage adds a screen-pos varying so the fragment can sample the
-            // prepass RT at this fragment's screen UV.
             struct slope_v2f
             {
                 float4 vertex : SV_POSITION;
                 float2 uv     : TEXCOORD0;
                 float4 posH   : TEXCOORD1;
-                float4 screen : TEXCOORD2;
             };
 
             slope_v2f vert(appdata v)
@@ -80,20 +97,59 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
                 o.vertex = UnityObjectToClipPos(q.position);
                 o.uv     = q.uv;
                 o.posH   = float4(q.position, q.height.w);
-                o.screen = ComputeScreenPos(o.vertex);
                 return o;
             }
 
             float4 EvalSlope(slope_v2f i)
             {
-                float2 screenUV = i.screen.xy / max(i.screen.w, 1e-5);
-                // Prepass tex4 stores the reconstructed terrain normal in world space.
-                float3 worldN = normalize(tex2D(_LocalSpacePrepassTex4, screenUV).xyz * 2.0 - 1.0);
-                // For an authoring scene with the body at world origin, posH.xyz is the
-                // world-space radial vector; normalize gives the surface up direction.
-                float3 radial = normalize(i.posH.xyz);
-                float s = saturate(1.0 - abs(dot(worldN, radial)));
-                float t = pow(s, _SlopeGamma);
+                float2 uv = i.uv;
+
+                // Per-pixel normalized biome weight, matching Prepass.cginc:343-346.
+                float4 mask        = _BiomeMaskTex.Sample(sampler_LinearRepeat, uv);
+                float  maskSum     = max(mask.x + mask.y + mask.z + mask.w, 0.001);
+                float4 biomeWeight = mask / maskSum;
+
+                // Biome-weighted Large + Mid gradience accumulation. Each Sample returns
+                // (sample_+u, sample_+v, sample_-u, sample_-v) packed in xyzw.
+                float4 large = 0;
+                float4 mid   = 0;
+                if (biomeWeight.x > 0.001)
+                {
+                    large += biomeWeight.x * _LargeGradienceR.Sample(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.x);
+                    mid   += biomeWeight.x * _MidGradienceR.Sample(sampler_LinearRepeat,   uv * _MediumHeightMapUVScales.x);
+                }
+                if (biomeWeight.y > 0.001)
+                {
+                    large += biomeWeight.y * _LargeGradienceG.Sample(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.y);
+                    mid   += biomeWeight.y * _MidGradienceG.Sample(sampler_LinearRepeat,   uv * _MediumHeightMapUVScales.y);
+                }
+                if (biomeWeight.z > 0.001)
+                {
+                    large += biomeWeight.z * _LargeGradienceB.Sample(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.z);
+                    mid   += biomeWeight.z * _MidGradienceB.Sample(sampler_LinearRepeat,   uv * _MediumHeightMapUVScales.z);
+                }
+                if (biomeWeight.w > 0.001)
+                {
+                    large += biomeWeight.w * _LargeGradienceA.Sample(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.w);
+                    mid   += biomeWeight.w * _MidGradienceA.Sample(sampler_LinearRepeat,   uv * _MediumHeightMapUVScales.w);
+                }
+
+#ifdef REDUX_GRADIENCE
+                // Redux 2-channel encoding: each source's .rg stores (du*0.5+0.5, dv*0.5+0.5).
+                // Biome-weighted accumulation preserves the offset; recover via (rg - 0.5) * 2.
+                float2 grad = (large.xy - 0.5) * 2.0 + (mid.xy - 0.5) * 2.0;
+                float4 globalSample = _GlobalGradienceTex.Sample(sampler_LinearRepeat, uv);
+                grad += (globalSample.xy - 0.5) * 2.0;
+                float slopeDeg = degrees(atan(length(grad)));
+#else
+                // Stock 4-channel signed-split: xy - zw recovers signed gradient per source.
+                float2 grad = (large.xy - large.zw) + (mid.xy - mid.zw);
+                float slopeDeg = min(length(grad), 1.0) * 90.0;
+#endif
+                if (_SlopeStepDeg > 0.001)
+                    slopeDeg = floor(slopeDeg / _SlopeStepDeg) * _SlopeStepDeg;
+
+                float t = pow(saturate(slopeDeg / 90.0), _SlopeGamma);
                 float3 rgb = lerp(_SlopeLowColor.rgb, _SlopeHighColor.rgb, t);
                 return OverlayCompose(rgb, _Strength);
             }

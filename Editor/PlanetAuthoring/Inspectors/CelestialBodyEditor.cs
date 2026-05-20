@@ -101,69 +101,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 button.clicked += handler;
         }
 
-        // Prefs key prefix kept as the legacy "ScaledSpaceBake." string so users' saved settings
-        // survive the C# rename to BodySurfaceBakerOperation.
-        private const string BodySurfaceBakePrefsPrefix = "Ksp2UnityTools.ScaledSpaceBake.";
-        private static readonly Color DefaultOceanColor = new(0.05f, 0.15f, 0.4f, 1f);
-        private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
-
         private void WireBodySurfaceBake(VisualElement root)
         {
-            var resolution = root.Q<DropdownField>("body-surface-bake-resolution");
-            var includeOcean = root.Q<Toggle>("body-surface-bake-include-ocean");
-            var oceanColor = root.Q<ColorField>("body-surface-bake-ocean-color");
-            var bake = root.Q<Button>("body-surface-bake-button");
-            var status = root.Q<Label>("body-surface-bake-status");
-            if (bake == null) return;
-
-            int resIndex = EditorPrefs.GetInt(BodySurfaceBakePrefsPrefix + "MeshResIndex", 1);
-            if (resolution != null && resIndex >= 0 && resIndex < resolution.choices.Count)
-                resolution.SetValueWithoutNotify(resolution.choices[resIndex]);
-            includeOcean?.SetValueWithoutNotify(EditorPrefs.GetBool(BodySurfaceBakePrefsPrefix + "IncludeOcean", false));
-            oceanColor?.SetValueWithoutNotify(LoadOceanColor());
-
-            bake.clicked += () =>
-            {
-                int currentResIndex = resolution?.index ?? 1;
-                bool currentIncludeOcean = includeOcean?.value ?? false;
-                Color currentOceanColor = oceanColor?.value ?? DefaultOceanColor;
-
-                EditorPrefs.SetInt(BodySurfaceBakePrefsPrefix + "MeshResIndex", currentResIndex);
-                EditorPrefs.SetBool(BodySurfaceBakePrefsPrefix + "IncludeOcean", currentIncludeOcean);
-                StoreOceanColor(currentOceanColor);
-
-                var settings = new BodySurfaceBakerOperation.Settings
-                {
-                    MeshResolutionIndex = currentResIndex,
-                    IncludeOcean = currentIncludeOcean,
-                    OceanColor = currentOceanColor,
-                };
-                var result = BodySurfaceBakerOperation.Bake(TargetData, settings);
-                if (status != null)
-                    status.text = result.Success ? $"Baked to {result.ScaledFolder}." : $"Bake failed: {result.Error}";
-            };
-        }
-
-        private static Color LoadOceanColor()
-        {
-            var packed = EditorPrefs.GetString(BodySurfaceBakePrefsPrefix + "OceanColor", null);
-            if (string.IsNullOrEmpty(packed)) return DefaultOceanColor;
-            var parts = packed.Split(',');
-            if (parts.Length == 4
-                && float.TryParse(parts[0], NumberStyles.Float, Invariant, out var r)
-                && float.TryParse(parts[1], NumberStyles.Float, Invariant, out var g)
-                && float.TryParse(parts[2], NumberStyles.Float, Invariant, out var b)
-                && float.TryParse(parts[3], NumberStyles.Float, Invariant, out var a))
-            {
-                return new Color(r, g, b, a);
-            }
-            return DefaultOceanColor;
-        }
-
-        private static void StoreOceanColor(Color c)
-        {
-            var packed = string.Format(Invariant, "{0},{1},{2},{3}", c.r, c.g, c.b, c.a);
-            EditorPrefs.SetString(BodySurfaceBakePrefsPrefix + "OceanColor", packed);
+            BodySurfaceBakeSection.Wire(root, () => TargetData);
         }
 
         private void BuildSaveSection(VisualElement container)

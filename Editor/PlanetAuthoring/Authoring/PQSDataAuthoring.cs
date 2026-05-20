@@ -60,5 +60,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         /// Stamped by Texture2DArrayPacker.RepackSmallTiles after a successful pack, read by the bake-drift validator.
         /// </summary>
         public string LastSmallTilesPackFingerprint = string.Empty;
+
+        /// <summary>
+        /// Stamped by <see cref="Tools.BodySurfaceBakerOperation" /> after a successful bake, read by the surface-bake-drift validator.
+        /// </summary>
+        /// <remarks>
+        /// Covers the inputs that feed the gradience bake and per-biome normal bake (per-biome raw
+        /// heightmaps + their height scales + body radius). A mismatch means the artist edited an
+        /// input since the last bake, so the gradience/normal outputs sampled by the surface
+        /// shader are stale.
+        /// </remarks>
+        public string LastSurfaceBakeFingerprint = string.Empty;
     }
 }

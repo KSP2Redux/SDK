@@ -110,7 +110,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             slot.Add(BuildQualitySection(material, pqsDataSO, refresh));
             slot.Add(BuildSubdivisionSection(pqs, pqsDataSO));
-            slot.Add(BuildHeightmapStackSection(pqsDataSO));
+            slot.Add(BuildHeightmapStackSection(pqsDataSO, material));
             slot.Add(BuildPoleSettingsSection(pqsDataSO));
             slot.Add(BuildScaledSpaceSection(material));
             slot.Add(BuildBiomeControlSection(material, pqsDataSO));

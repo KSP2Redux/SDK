@@ -212,7 +212,17 @@ float ComputeLayerPhi(
                 + diffs.mid   * gradWeights.z
                 + diffs.aux   * gradWeights.x
                 + diffs.large * gradWeights.y;
+#ifdef REDUX_GRADIENCE
+    // Redux encoding: gradience textures store true (dh/du, dh/dv) signed-split,
+    // so the per-source diffs sum as actual gradient vectors. Global gradience
+    // contributes here. Slope is the geometric angle of the composed gradient.
+    grad += diffs.global;
+    float slopeAng = degrees(atan(length(grad)));
+#else
+    // Stock encoding: gradience magnitudes are heightmap-units per pixel, mapped
+    // linearly into the [0,90] range via the saturate-then-multiply formula.
     float slopeAng = min(length(grad), 1.0) * 90.0;
+#endif
     bool slopeDegenerate = slopeParams.x == 0.0 && slopeParams.y == 0.0 && slopeEnable != 0.0;
     float slopeW = slopeDegenerate
         ? 0.0
@@ -538,8 +548,16 @@ PrepassOutput frag(V2F i)
 #endif
 
     HmDiffs diffs;
+#ifdef REDUX_GRADIENCE
+    // Redux 2-channel encoding: gradient stored as (du*0.5+0.5, dv*0.5+0.5) in .rg
+    // with .b=0, .a=1. Biome-weighted accumulation preserves the +0.5 offset because
+    // hmBiomeWeight sums to 1, so the recovery is (xy - 0.5) * 2 instead of xy - zw.
+    diffs.large = (hmFinal.large.xy - 0.5) * 2.0;
+    diffs.mid   = (hmFinal.med.xy   - 0.5) * 2.0;
+#else
     diffs.large = hmFinal.large.xy - hmFinal.large.zw;
     diffs.mid   = hmFinal.med.xy   - hmFinal.med.zw;
+#endif
 #ifdef SUB_ZONES_ENABLED
     diffs.sz3 = hmFinal.sz3.xy - hmFinal.sz3.zw;
     diffs.sz4 = hmFinal.sz4.xy - hmFinal.sz4.zw;
@@ -548,6 +566,14 @@ PrepassOutput frag(V2F i)
     diffs.sz3 = (float2)0;
     diffs.sz4 = (float2)0;
     diffs.aux = subzoneWeight.xy - subzoneWeight.zw;
+#endif
+#ifdef REDUX_GRADIENCE
+    // Global gradience contribution (whole-planet). 2-channel encoding, .rg holds
+    // (du*0.5+0.5, dv*0.5+0.5), recovered via (sample.rg - 0.5) * 2.
+    float4 globalSample = _GlobalGradienceTex.Sample(sampler_LinearRepeat, uv);
+    diffs.global = (globalSample.xy - 0.5) * 2.0;
+#else
+    diffs.global = (float2)0;
 #endif
 
     // Apply decal loop -- mutates diffs.aux/large/mid and the running normal

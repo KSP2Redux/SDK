@@ -412,6 +412,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             // cascade the shader's PARAMS.md recommends.
             mat.SetVector("_DistanceResampleDistances", new Vector4(50f, 500f, 2000f, 12000f));
             mat.SetVector("_DistanceResampleUVScales", new Vector4(1f, 2f, 4f, 8f));
+            // New bodies opt into REDUX_GRADIENCE by default.
+            mat.EnableKeyword("REDUX_GRADIENCE");
             string path = folder + "/" + PlanetAuthoringNaming.LocalMaterial(key);
             AssetDatabase.CreateAsset(mat, path);
             createdPaths.Add(path);
@@ -422,6 +424,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         {
             PQSData data = ScriptableObject.CreateInstance<PQSData>();
             data.materialSettings.surfaceMaterial = localMaterial;
+            data.materialSettings.reduxGradienceEnabled = true;
             string path = folder + "/" + PlanetAuthoringNaming.PqsData(key);
             AssetDatabase.CreateAsset(data, path);
             createdPaths.Add(path);

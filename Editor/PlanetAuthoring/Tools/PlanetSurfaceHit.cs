@@ -1,4 +1,3 @@
-using KSP;
 using KSP.Rendering.Planets;
 using KSP.Tools.PQSFreeCamUtils;
 using UnityEngine;
@@ -39,17 +38,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             altitudeAboveMean = 0;
             if (planet == null) return false;
 
-            // Anchor on the body, not the PQS. PQS is a scene sibling so its transform doesn't track the body's framing rotation, but every lat/lon consumer applies body.transform.rotation.
-            var body = BodyResolver.FindBody(planet);
-            if (body == null) return false;
-            var bodyTransform = body.transform;
-            var radius = body.Data?.radius ?? 0;
+            // Anchor on the PQS transform. The PQS is what actually parents the rendered terrain, and
+            // SceneViewFraming rotates the PQS to bring the chosen lat/lon under the camera. Anchoring
+            // the pick anywhere else (e.g. CoreCelestialBodyData) decouples the picked direction from
+            // the rendered geometry and breaks Look At / Jump To round-trips.
+            var radius = planet.CoreCelestialBodyData?.Data?.radius ?? 0;
             if (radius <= 0) return false;
 
-            var center = bodyTransform.position;
+            var center = planet.transform.position;
             Vector3d localRayPos = (Vector3d)(ray.origin - center);
             Vector3d rayDir = (Vector3d)ray.direction;
-            var invRot = Quaternion.Inverse(bodyTransform.rotation);
+            var invRot = Quaternion.Inverse(planet.transform.rotation);
             var tolerance = radius * RefinementToleranceFraction;
 
             if (!PositionUtils.RaycastParametricSphere(radius, localRayPos, rayDir, out var t1, out var t2)) return false;

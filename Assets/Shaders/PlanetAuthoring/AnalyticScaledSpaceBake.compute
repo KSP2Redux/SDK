@@ -49,14 +49,14 @@ RWTexture2D<float4> _OutLargeNormal;
 Texture2D<float4> _BiomeMaskTex;
 Texture2D<float4> _GlobalHeightMap;
 
-// Per-biome large + mid gradience textures. The runtime PQS shader weights these by the
-// biome mask and uses them to drive slope-gating; we additionally fold their composed
-// gradient into the macro normal and AO so the bake captures the macro features the
-// artist authored into the per-biome stack rather than into the global heightmap. Without
-// these the orbit bake would look smoother than the runtime view at the same distance,
-// causing pop-in detail at the scaled-to-local crossfade.
-Texture2D<float4> _LargeGradienceR, _LargeGradienceG, _LargeGradienceB, _LargeGradienceA;
-Texture2D<float4> _MidGradienceR,   _MidGradienceG,   _MidGradienceB,   _MidGradienceA;
+// Per-biome large + mid raw heightmaps. The C# driver binds heightMapInfo.large{c}.heightMap
+// and .medium{c}.heightMap directly into these slots, so they're heightmaps in [0,1] (not
+// the runtime's baked gradience textures despite the historical naming overlap). The bake
+// composes per-pixel altitude from these to match the runtime's vertex-composed altitude,
+// and finite-differences the composed value to recover the macro gradient for the macro
+// normal and AO.
+Texture2D<float4> _LargeHeightR, _LargeHeightG, _LargeHeightB, _LargeHeightA;
+Texture2D<float4> _MidHeightR,   _MidHeightG,   _MidHeightB,   _MidHeightA;
 float4 _LargeHeightMapUVScales;     // per-biome scalar UV scales
 float4 _MediumHeightMapUVScales;
 // Per-biome AUTHORED heightScales (the .heightScale field on each PQSData.HeightRegion).
@@ -91,8 +91,8 @@ float2 _LargeBakeAnchorUV;     // equirect-UV center for this biome's Large tile
 float2 _LargeBakeTileSpanUV;   // equirect-UV span one Large tile covers
 uint   _LargeOutWidth;
 uint   _LargeOutHeight;
-float  _LargeGradienceWeight;
-float  _MidGradienceWeight;
+float  _LargeHeightWeight;
+float  _MidHeightWeight;
 
 // Per-slice 4x4 SUBMEAN grids precomputed in C# via Graphics.Blit reduction. Instead of
 // one mean per slice (which makes every patch of a single material look identical at
@@ -223,15 +223,15 @@ HeightSample ComposedHeightAt(float2 uv, float4 biomeNorm)
     HeightSample h;
     h.global = _GlobalHeightMap.SampleLevel(sampler_LinearRepeat, uv, 0).x * _HeightScale;
 
-    float lr = _LargeGradienceR.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.x, 0).x * _LargeHeightScales.x;
-    float lg = _LargeGradienceG.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.y, 0).x * _LargeHeightScales.y;
-    float lb = _LargeGradienceB.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.z, 0).x * _LargeHeightScales.z;
-    float la = _LargeGradienceA.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.w, 0).x * _LargeHeightScales.w;
+    float lr = _LargeHeightR.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.x, 0).x * _LargeHeightScales.x;
+    float lg = _LargeHeightG.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.y, 0).x * _LargeHeightScales.y;
+    float lb = _LargeHeightB.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.z, 0).x * _LargeHeightScales.z;
+    float la = _LargeHeightA.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.w, 0).x * _LargeHeightScales.w;
 
-    float mr = _MidGradienceR.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.x, 0).x * _MidHeightScales.x;
-    float mg = _MidGradienceG.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.y, 0).x * _MidHeightScales.y;
-    float mb = _MidGradienceB.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.z, 0).x * _MidHeightScales.z;
-    float ma = _MidGradienceA.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.w, 0).x * _MidHeightScales.w;
+    float mr = _MidHeightR.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.x, 0).x * _MidHeightScales.x;
+    float mg = _MidHeightG.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.y, 0).x * _MidHeightScales.y;
+    float mb = _MidHeightB.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.z, 0).x * _MidHeightScales.z;
+    float ma = _MidHeightA.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.w, 0).x * _MidHeightScales.w;
 
     float gradienceContrib = biomeNorm.x * (lr + mr)
                            + biomeNorm.y * (lg + mg)
@@ -239,6 +239,19 @@ HeightSample ComposedHeightAt(float2 uv, float4 biomeNorm)
                            + biomeNorm.w * (la + ma);
     h.composed = h.global + gradienceContrib;
     return h;
+}
+
+// Slope value fed to the trapezoid windows. Matches the runtime fragment shader
+// (Prepass.cginc): slopeDeg = min(length(grad), 1) * 90, evaluated here from the
+// normal's z component via tan(angle) = sqrt(1 - nz^2) / nz. Not a true degree
+// measure - the relationship saturates at length(grad) >= 1, so a 45 deg true slope
+// reads as 90 here. Authors tune trapezoid params against what they see at runtime,
+// so the bake mirrors the same stretched scale rather than acos.
+float RuntimeSlopeDegFromNormalZ(float nz)
+{
+    float c = saturate(nz);
+    float s = sqrt(saturate(1.0 - c * c));
+    return min(s / max(c, 1e-5), 1.0) * 90.0;
 }
 
 // Per-layer weight (excluding biome-channel) for biome b / layer l at the given height
@@ -461,11 +474,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
             subAO /= (float)K;
             accumAO += subAO;
 
-            // Slope reuses the macro normal we already computed. Trapezoid HEIGHT axis
-            // uses the GLOBAL altitude (matches runtime: PQS feeds mesh-vertex altitude
-            // from globalHeightMap, not the composed stack, into the height window).
-            float subSlopeDeg = degrees(acos(saturate(subNormal.z)));
-            float subTrapezoidHeight = hC.global;
+            float subSlopeDeg = RuntimeSlopeDegFromNormalZ(subNormal.z);
+            // Runtime quad-mesh construction composes vertex altitude from globalHeightMap +
+            // all per-biome heightmaps weighted by the biome mask and per-biome heightScales,
+            // so the trapezoid height window sees the composed altitude at runtime. Match that
+            // here so the bake's anchor evaluation picks the same winning layer the runtime would.
+            float subTrapezoidHeight = hC.composed;
 
             // Variation-noise UV: low-frequency value noise sampled at the unit-sphere
             // position so the noise field is continuous across the U=0/U=1 wrap (no vertical
@@ -637,9 +651,12 @@ void CSBakeMid(uint3 id : SV_DispatchThreadID)
     float dhdu = (hUp.composed - hUm.composed) * 0.5;
     float dhdv = (hVp.composed - hVm.composed) * 0.5;
     float3 anchorNormal   = MakeMacroNormalFromGradient(dhdu, dhdv, arcU, arcV);
-    float  anchorSlopeDeg = degrees(acos(saturate(anchorNormal.z)));
-    // Trapezoid height axis uses global (not composed): runtime PQS feeds mesh-vertex altitude from globalHeightMap.
-    float  anchorTrapH    = hC.global;
+    float  anchorSlopeDeg = RuntimeSlopeDegFromNormalZ(anchorNormal.z);
+    // Trapezoid height axis uses the composed altitude to match the runtime: quad-mesh
+    // construction (PQSQuadConstructorShader) feeds vertex altitude from globalHeightMap +
+    // per-biome heightmaps weighted by the biome mask, so the runtime trapezoid window
+    // evaluates against that composed value.
+    float  anchorTrapH    = hC.composed;
 
     int   b         = (int)_MidBakeBiomeIndex;
     float biomeChan = ScalarFromPack(biomeNorm, b);
@@ -666,26 +683,26 @@ void CSBakeMid(uint3 id : SV_DispatchThreadID)
     _OutMidNormal[pixel] = float4(1.0, nXY.y, 1.0, nXY.x);
 }
 
-// Samples a per-biome gradience heightmap at the given equirect UV with the given UV scale.
+// Samples a per-biome raw heightmap at the given equirect UV with the given UV scale.
 // b selects which channel's heightmap to read. If/else chain (not early returns) so the
 // HLSL compiler can statically prove the result is always assigned.
-float SampleLargeGradience(int b, float2 uv, float uvScale)
+float SampleLargeHeight(int b, float2 uv, float uvScale)
 {
     float h;
-    if (b == 0)      h = _LargeGradienceR.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 1) h = _LargeGradienceG.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 2) h = _LargeGradienceB.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else             h = _LargeGradienceA.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    if (b == 0)      h = _LargeHeightR.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    else if (b == 1) h = _LargeHeightG.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    else if (b == 2) h = _LargeHeightB.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    else             h = _LargeHeightA.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
     return h;
 }
 
-float SampleMidGradience(int b, float2 uv, float uvScale)
+float SampleMidHeight(int b, float2 uv, float uvScale)
 {
     float h;
-    if (b == 0)      h = _MidGradienceR.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 1) h = _MidGradienceG.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 2) h = _MidGradienceB.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else             h = _MidGradienceA.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    if (b == 0)      h = _MidHeightR.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    else if (b == 1) h = _MidHeightG.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    else if (b == 2) h = _MidHeightB.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
+    else             h = _MidHeightA.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
     return h;
 }
 
@@ -710,29 +727,29 @@ void CSBakeLarge(uint3 id : SV_DispatchThreadID)
     float  arcUStep = (2.0 * UNITY_PI * _Radius * cosLat) * stepUV.x;
     float  arcVStep = (UNITY_PI * _Radius)               * stepUV.y;
 
-    // Mid gradience gradient. UV scale and height scale are scalar per biome.
+    // Mid heightmap gradient. UV scale and height scale are scalar per biome.
     float midScale       = ScalarFromPack(_MediumHeightMapUVScales, b);
     float midHeightScale = ScalarFromPack(_MidHeightScales, b);
-    float mUp = SampleMidGradience(b, eqUV + float2(stepUV.x, 0), midScale) * midHeightScale;
-    float mUm = SampleMidGradience(b, eqUV - float2(stepUV.x, 0), midScale) * midHeightScale;
-    float mVp = SampleMidGradience(b, eqUV + float2(0, stepUV.y), midScale) * midHeightScale;
-    float mVm = SampleMidGradience(b, eqUV - float2(0, stepUV.y), midScale) * midHeightScale;
+    float mUp = SampleMidHeight(b, eqUV + float2(stepUV.x, 0), midScale) * midHeightScale;
+    float mUm = SampleMidHeight(b, eqUV - float2(stepUV.x, 0), midScale) * midHeightScale;
+    float mVp = SampleMidHeight(b, eqUV + float2(0, stepUV.y), midScale) * midHeightScale;
+    float mVm = SampleMidHeight(b, eqUV - float2(0, stepUV.y), midScale) * midHeightScale;
     float midDU = (mUp - mUm) * 0.5;
     float midDV = (mVp - mVm) * 0.5;
     float3 nMid = MakeMacroNormalFromGradient(midDU, midDV, arcUStep, arcVStep);
 
-    // Large gradience gradient. UV scale and height scale are scalar per biome.
+    // Large heightmap gradient. UV scale and height scale are scalar per biome.
     float largeScale       = ScalarFromPack(_LargeHeightMapUVScales, b);
     float largeHeightScale = ScalarFromPack(_LargeHeightScales, b);
-    float lUp = SampleLargeGradience(b, eqUV + float2(stepUV.x, 0), largeScale) * largeHeightScale;
-    float lUm = SampleLargeGradience(b, eqUV - float2(stepUV.x, 0), largeScale) * largeHeightScale;
-    float lVp = SampleLargeGradience(b, eqUV + float2(0, stepUV.y), largeScale) * largeHeightScale;
-    float lVm = SampleLargeGradience(b, eqUV - float2(0, stepUV.y), largeScale) * largeHeightScale;
+    float lUp = SampleLargeHeight(b, eqUV + float2(stepUV.x, 0), largeScale) * largeHeightScale;
+    float lUm = SampleLargeHeight(b, eqUV - float2(stepUV.x, 0), largeScale) * largeHeightScale;
+    float lVp = SampleLargeHeight(b, eqUV + float2(0, stepUV.y), largeScale) * largeHeightScale;
+    float lVm = SampleLargeHeight(b, eqUV - float2(0, stepUV.y), largeScale) * largeHeightScale;
     float largeDU = (lUp - lUm) * 0.5;
     float largeDV = (lVp - lVm) * 0.5;
     float3 nLarge = MakeMacroNormalFromGradient(largeDU, largeDV, arcUStep, arcVStep);
 
-    float3 outN = normalize(_MidGradienceWeight * nMid + _LargeGradienceWeight * nLarge);
+    float3 outN = normalize(_MidHeightWeight * nMid + _LargeHeightWeight * nLarge);
     float2 nXY  = saturate(outN.xy * 0.5 + 0.5);
     _OutLargeNormal[pixel] = float4(1.0, nXY.y, 1.0, nXY.x);
 }

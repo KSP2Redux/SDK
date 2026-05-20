@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using KSP;
 using KSP.Rendering.Planets;
-using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,32 +22,34 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     }
 
     /// <summary>
-    /// Single source of truth for SceneView framing against a celestial body. The camera frame is
-    /// fixed (forward=+Z, up=+Y) and the body rotates to bring the chosen lat/lon under the camera.
+    /// Single source of truth for SceneView framing against a celestial body.
     /// </summary>
     /// <remarks>
-    /// The radical rework: jumps used to move the camera around the body, which left SceneView nav
-    /// disoriented after every jump. Now the camera stays in a stable world frame and the body (and
-    /// the artist's sun light, via SunCoupling) rotates as a rigid block. PlanetAuthoringSession
-    /// snapshots and restores body and sun rotation so the scene stays clean when preview ends.
+    /// The camera frame is fixed (forward=+Z, up=+Y) and the PQS transform rotates to bring the
+    /// chosen lat/lon under the camera. All framing math anchors on the PQS transform, since that
+    /// is what parents the rendered terrain in the editor authoring scene. The radical rework:
+    /// jumps used to move the camera around the body, which left SceneView nav disoriented after
+    /// every jump. Now the camera stays in a stable world frame and the PQS (and the artist's sun
+    /// light, via SunCoupling) rotates as a rigid block. PlanetAuthoringSession snapshots and
+    /// restores PQS and sun rotation so the scene stays clean when preview ends.
     /// </remarks>
     public static class SceneViewFraming
     {
-        // Body entity ID -> last (lat, lon) framed by a lat/lon-bearing call. SessionInitialFraming
+        // PQS instance ID -> last (lat, lon) framed by a lat/lon-bearing call. SessionInitialFraming
         // reads this on session start so re-entering preview returns to the artist's last view
         // instead of snapping back to (0, 0). In-memory only - lost on domain reload, which is acceptable.
-        private static readonly Dictionary<EntityId, (double lat, double lon)> LastLatLon = new();
+        private static readonly Dictionary<int, (double lat, double lon)> LastLatLon = new();
 
         /// <summary>
-        /// Reads the last (lat, lon) framed for this body via a lat/lon-bearing call.
+        /// Reads the last (lat, lon) framed for this PQS via a lat/lon-bearing call.
         /// </summary>
-        /// <param name="body">The body whose framing record to look up.</param>
+        /// <param name="pqs">The PQS whose framing record to look up.</param>
         /// <param name="lat">The last latitude in degrees, or 0 if no record exists.</param>
         /// <param name="lon">The last longitude in degrees, or 0 if no record exists.</param>
-        /// <returns>True if a record exists for this body, false otherwise.</returns>
-        public static bool TryGetLastLatLon(CoreCelestialBodyData body, out double lat, out double lon)
+        /// <returns>True if a record exists for this PQS, false otherwise.</returns>
+        public static bool TryGetLastLatLon(PQS pqs, out double lat, out double lon)
         {
-            if (body != null && LastLatLon.TryGetValue(body.GetEntityId(), out var entry))
+            if (pqs != null && LastLatLon.TryGetValue(pqs.GetInstanceID(), out var entry))
             {
                 lat = entry.lat;
                 lon = entry.lon;
@@ -71,10 +71,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             if (!Resolve(planet, out var ctx)) return;
             var localDir = LatLon.GetRelSurfaceNVector(latitudeDegrees, longitudeDegrees);
-            var altitude = CurrentAltitudeAboveSurface(ctx, mode);
-            ApplyBodyRotation(ctx, localDir, mode);
-            PositionCamera(ctx, planet, mode, localDir, altitude);
-            LastLatLon[ctx.Body.GetEntityId()] = (latitudeDegrees, longitudeDegrees);
+            var distanceFromCenter = CurrentDistanceFromCenter(ctx, mode);
+            ApplyPqsRotation(ctx, localDir, mode);
+            PositionCameraAtDistance(ctx, mode, distanceFromCenter);
+            LastLatLon[ctx.Pqs.GetInstanceID()] = (latitudeDegrees, longitudeDegrees);
         }
 
         /// <summary>
@@ -89,9 +89,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             if (!Resolve(planet, out var ctx)) return;
             var localDir = LatLon.GetRelSurfaceNVector(latitudeDegrees, longitudeDegrees);
-            ApplyBodyRotation(ctx, localDir, mode);
-            PositionCamera(ctx, planet, mode, localDir, altitudeAboveSurfaceMeters);
-            LastLatLon[ctx.Body.GetEntityId()] = (latitudeDegrees, longitudeDegrees);
+            ApplyPqsRotation(ctx, localDir, mode);
+            PositionCameraAtAltitude(ctx, mode, localDir, altitudeAboveSurfaceMeters);
+            LastLatLon[ctx.Pqs.GetInstanceID()] = (latitudeDegrees, longitudeDegrees);
         }
 
         /// <summary>
@@ -105,9 +105,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             if (!Resolve(planet, out var ctx)) return;
             if (bodyLocalPosition.sqrMagnitude < 1e-6) return;
             var localDir = bodyLocalPosition.normalized;
-            var altitude = CurrentAltitudeAboveSurface(ctx, mode);
-            ApplyBodyRotation(ctx, localDir, mode);
-            PositionCamera(ctx, planet, mode, localDir, altitude);
+            var distanceFromCenter = CurrentDistanceFromCenter(ctx, mode);
+            ApplyPqsRotation(ctx, localDir, mode);
+            PositionCameraAtDistance(ctx, mode, distanceFromCenter);
         }
 
         /// <summary>
@@ -125,15 +125,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         public static void FrameAtAltitude(PQS planet, double altitudeAboveSurfaceMeters, SceneFramingMode mode = SceneFramingMode.Side)
         {
             if (!Resolve(planet, out var ctx)) return;
-            var fromBodyToCam = ctx.Sv.camera.transform.position - ctx.Body.transform.position;
-            // Camera-at-body-center degenerates the lookup. Fall back to the body's current forward
-            // axis (Vector3.forward in local space) so the call becomes a no-op rotation instead of
-            // corrupting orientation with an arbitrary axis.
-            var localFocusDir = fromBodyToCam.sqrMagnitude > 1e-6f
-                ? (Vector3d)(Quaternion.Inverse(ctx.Body.transform.rotation) * fromBodyToCam.normalized)
+            var fromPqsToCam = ctx.Sv.camera.transform.position - ctx.Pqs.transform.position;
+            // Camera-at-PQS-center degenerates the lookup. Fall back to PQS-local +Z so the call
+            // becomes a no-op rotation instead of corrupting orientation with an arbitrary axis.
+            var localFocusDir = fromPqsToCam.sqrMagnitude > 1e-6f
+                ? (Vector3d)(Quaternion.Inverse(ctx.Pqs.transform.rotation) * fromPqsToCam.normalized)
                 : (Vector3d)Vector3.forward;
-            ApplyBodyRotation(ctx, localFocusDir, mode);
-            PositionCamera(ctx, planet, mode, localFocusDir, altitudeAboveSurfaceMeters);
+            ApplyPqsRotation(ctx, localFocusDir, mode);
+            PositionCameraAtAltitude(ctx, mode, localFocusDir, altitudeAboveSurfaceMeters);
         }
 
         /// <summary>
@@ -150,10 +149,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             if (!Resolve(planet, out var ctx)) return;
             if (worldOutwardToFaceCamera.sqrMagnitude < 1e-6f) return;
             worldOutwardToFaceCamera.Normalize();
-            Vector3d localDir = Quaternion.Inverse(ctx.Body.transform.rotation) * worldOutwardToFaceCamera;
-            var altitude = CurrentAltitudeAboveSurface(ctx, mode);
-            ApplyBodyRotation(ctx, localDir, mode);
-            PositionCamera(ctx, planet, mode, localDir, altitude);
+            Vector3d localDir = Quaternion.Inverse(ctx.Pqs.transform.rotation) * worldOutwardToFaceCamera;
+            var distanceFromCenter = CurrentDistanceFromCenter(ctx, mode);
+            ApplyPqsRotation(ctx, localDir, mode);
+            PositionCameraAtDistance(ctx, mode, distanceFromCenter);
         }
 
         // ----- internals ----------------------------------------------------
@@ -161,7 +160,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         private struct FramingContext
         {
             public SceneView Sv;
-            public CoreCelestialBodyData Body;
+            public PQS Pqs;
             public double Radius;
         }
 
@@ -169,12 +168,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             ctx = default;
             if (planet == null) return false;
-            var body = BodyResolver.FindBody(planet);
-            var radius = body?.Data?.radius ?? 0;
+            // Radius is the only datum we need from CoreCelestialBodyData. Everything else (position,
+            // rotation, framing math) anchors on the PQS transform, since that is what parents the
+            // rendered terrain in the editor authoring scene.
+            var radius = planet.CoreCelestialBodyData?.Data?.radius ?? 0;
             if (radius <= 0) return false;
             var sv = SceneView.lastActiveSceneView;
             if (sv == null) return false;
-            ctx = new FramingContext { Sv = sv, Body = body, Radius = radius };
+            ctx = new FramingContext { Sv = sv, Pqs = planet, Radius = radius };
             return true;
         }
 
@@ -194,24 +195,24 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             _ => -Vector3.forward,
         };
 
-        private static void ApplyBodyRotation(in FramingContext ctx, Vector3d localDir, SceneFramingMode mode)
+        private static void ApplyPqsRotation(in FramingContext ctx, Vector3d localDir, SceneFramingMode mode)
         {
-            // Body rotation is transient framing state, not authoring intent. Skipping Undo.RecordObject
+            // PQS rotation is transient framing state, not authoring intent. Skipping Undo.RecordObject
             // here keeps jumps out of the artist's undo stack so Ctrl+Z can't replay framing rotations
             // after the session ends.
             var (targetWorldDir, worldUpHint) = WorldFrameFor(mode);
-            var newRot = ComputeBodyRotation((Vector3)localDir.normalized, targetWorldDir, worldUpHint);
-            var oldRot = ctx.Body.transform.rotation;
+            var newRot = ComputePqsRotation((Vector3)localDir.normalized, targetWorldDir, worldUpHint);
+            var oldRot = ctx.Pqs.transform.rotation;
             var delta = newRot * Quaternion.Inverse(oldRot);
-            ctx.Body.transform.rotation = newRot;
+            ctx.Pqs.transform.rotation = newRot;
             SunCoupling.ApplyRotationDelta(delta);
         }
 
-        // Builds a rotation that aligns body-local localDir with targetWorldDir AND projects body-
+        // Builds a rotation that aligns PQS-local localDir with targetWorldDir AND projects PQS-
         // local +Y (north pole axis in LatLon convention) onto worldUpHint. Quaternion.LookRotation
         // composition handles the orthogonal-basis math. The inverse takes the local "look" to
         // identity, then the world LookRotation re-aims it at the desired world axes.
-        private static Quaternion ComputeBodyRotation(Vector3 localDir, Vector3 targetWorldDir, Vector3 worldUpHint)
+        private static Quaternion ComputePqsRotation(Vector3 localDir, Vector3 targetWorldDir, Vector3 worldUpHint)
         {
             var localNorth = Vector3.up;
             var localNorthTangent = localNorth - Vector3.Dot(localNorth, localDir) * localDir;
@@ -229,50 +230,63 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             return worldLook * Quaternion.Inverse(localLook);
         }
 
-        private static double CurrentAltitudeAboveSurface(in FramingContext ctx, SceneFramingMode mode)
+        // Camera distance from PQS center along the current outward axis. Preserved across framing
+        // calls so repeated Look At clicks on the same lat/lon are a no-op instead of drifting.
+        private static double CurrentDistanceFromCenter(in FramingContext ctx, SceneFramingMode mode)
         {
             var outward = CameraOffsetDirectionFor(mode);
-            double currentDistFromCenter = Vector3.Dot(ctx.Sv.camera.transform.position - ctx.Body.transform.position, outward);
+            double currentDistFromCenter = Vector3.Dot(ctx.Sv.camera.transform.position - ctx.Pqs.transform.position, outward);
+            // Camera inside the planet (or on the wrong side of the outward axis) - kick it out to a
+            // safe default so the next placement isn't below the surface.
             if (currentDistFromCenter <= ctx.Radius)
                 currentDistFromCenter = ctx.Radius * 1.5;
-            var altitude = currentDistFromCenter - ctx.Radius;
-            if (altitude <= 0)
-                altitude = ctx.Radius;
-            return altitude;
+            return currentDistFromCenter;
         }
 
-        private static void PositionCamera(in FramingContext ctx, PQS planet, SceneFramingMode mode, Vector3d localFacingDir, double altitudeAboveSurface)
+        // Places the camera at a precise distance from the PQS center along the mode's outward axis.
+        // Used by callers that want to preserve the artist's current zoom across a Look At / mode
+        // switch without going through an altitude-above-terrain intermediate.
+        private static void PositionCameraAtDistance(in FramingContext ctx, SceneFramingMode mode, double distanceFromCenter)
         {
-            // Camera rotation is always forward=+Z, up=+Y (Unity world). Camera position depends on mode:
-            //   Side    -> body + (-Z) * (terrainDist + altitude). Body fills the screen in front.
-            //   Surface -> body + (+Y) * (terrainDist + altitude). Body sits below, horizon extends in +Z.
-            //
-            // terrainDist is the actual radial distance from body center to the rendered surface at
-            // the chosen lat/lon, sampled via PQS.GetSurfaceHeight with decals included. Without this
-            // the camera lands at base radius + altitude, which is below any decal-raised pad or
-            // displaced mountain at the chosen point.
-            var terrainDist = planet.GetSurfaceHeight(localFacingDir, true);
-            if (terrainDist <= 0) terrainDist = ctx.Radius;
+            ApplyCameraTransform(ctx, mode, distanceFromCenter);
+        }
 
+        // Places the camera at terrainDist(lat,lon) + altitude. Used by jump-to-altitude buttons
+        // where the artist asks for "10 m above the surface" and expects to clear raised decals
+        // (KSC pad) and mountains rather than 10 m above the mean-radius sphere.
+        private static void PositionCameraAtAltitude(in FramingContext ctx, SceneFramingMode mode, Vector3d localFacingDir, double altitudeAboveSurface)
+        {
+            var terrainDist = ctx.Pqs.GetSurfaceHeight(localFacingDir, true);
+            if (terrainDist <= 0) terrainDist = ctx.Radius;
+            ApplyCameraTransform(ctx, mode, terrainDist + altitudeAboveSurface);
+        }
+
+        private static void ApplyCameraTransform(in FramingContext ctx, SceneFramingMode mode, double distanceFromCenter)
+        {
+            // Camera rotation is always forward=+Z, up=+Y (Unity world). Position depends on mode:
+            //   Side    -> pqs + (-Z) * distanceFromCenter. Body fills the screen in front.
+            //   Surface -> pqs + (+Y) * distanceFromCenter. Body sits below, horizon extends in +Z.
             var camFwdWorld = Vector3.forward; // +Z
             var camUpWorld = Vector3.up; // +Y
             var cameraOffsetDir = CameraOffsetDirectionFor(mode);
-            var cameraPos = ctx.Body.transform.position + cameraOffsetDir * (float)(terrainDist + altitudeAboveSurface);
-            var cameraDistance = (float)System.Math.Max(altitudeAboveSurface, 1.0);
-            var pivot = cameraPos + camFwdWorld * cameraDistance;
+            var cameraPos = ctx.Pqs.transform.position + cameraOffsetDir * (float)distanceFromCenter;
+            // SceneView orbits around its pivot; placing the pivot at the mean-radius sphere surface
+            // means orbit gestures spin you around the planet rather than around a point in mid-air.
+            var pivotAhead = (float)System.Math.Max(distanceFromCenter - ctx.Radius, 1.0);
+            var pivot = cameraPos + camFwdWorld * pivotAhead;
 
             var rotation = Quaternion.LookRotation(camFwdWorld, camUpWorld);
             var halfFov = ctx.Sv.camera.fieldOfView * 0.5f * Mathf.Deg2Rad;
-            var size = cameraDistance * Mathf.Sin(halfFov);
+            var size = pivotAhead * Mathf.Sin(halfFov);
             ctx.Sv.LookAt(pivot, rotation, size, ctx.Sv.orthographic, instant: true);
-            ApplyClipPlanes(ctx.Sv, ctx.Radius, altitudeAboveSurface);
+            ApplyClipPlanes(ctx.Sv, ctx.Radius, pivotAhead);
         }
 
-        private static void ApplyClipPlanes(SceneView sv, double radius, double altitudeAboveSurface)
+        private static void ApplyClipPlanes(SceneView sv, double radius, double pivotAhead)
         {
             sv.cameraSettings.dynamicClip = false;
-            sv.cameraSettings.nearClip = Mathf.Max(0.05f, (float)(altitudeAboveSurface * 0.1));
-            sv.cameraSettings.farClip = (float)((radius + altitudeAboveSurface) * 4.0);
+            sv.cameraSettings.nearClip = Mathf.Max(0.05f, (float)(pivotAhead * 0.1));
+            sv.cameraSettings.farClip = (float)((radius + pivotAhead) * 4.0);
         }
     }
 }

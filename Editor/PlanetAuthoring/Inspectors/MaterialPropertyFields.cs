@@ -350,6 +350,81 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         }
 
         /// <summary>
+        /// Creates a bare <see cref="Toggle" /> bound to a material shader keyword, with no PQSData mirror.
+        /// </summary>
+        /// <remarks>
+        /// Used when a keyword has no corresponding PQSData bool to mirror. Differs from
+        /// <see cref="Keyword" /> by returning a bare Toggle (not a wrapping VisualElement), so the
+        /// toggle aligns with sibling bare-Toggle rows in the same section.
+        /// </remarks>
+        /// <param name="material">The material whose keyword is toggled.</param>
+        /// <param name="keywordName">The shader keyword name.</param>
+        /// <param name="label">The display label for the toggle.</param>
+        /// <param name="tooltip">The tooltip shown on hover.</param>
+        /// <param name="onChanged">Optional callback invoked after each edit.</param>
+        /// <returns>The constructed <see cref="Toggle" />.</returns>
+        public static Toggle MaterialOnlyKeyword(
+            Material material,
+            string keywordName,
+            string label,
+            string tooltip = "",
+            Action onChanged = null
+        )
+        {
+            var field = new Toggle(label) { tooltip = tooltip };
+            field.AddToClassList("unity-base-field__aligned");
+            field.SetValueWithoutNotify(material != null && material.IsKeywordEnabled(keywordName));
+            field.RegisterValueChangedCallback(evt =>
+            {
+                ApplyMaterialKeyword(material, keywordName, evt.newValue, label);
+                onChanged?.Invoke();
+                SceneView.RepaintAll();
+            });
+            return field;
+        }
+
+        /// <summary>
+        /// Creates a Texture2D field bound to a material texture property, with no PQSData mirror.
+        /// </summary>
+        /// <remarks>
+        /// Used when the slot is a bake-output target on the material (e.g. <c>_LargeGradienceR</c>)
+        /// and there is no corresponding PQSData field to mirror to. Differs from <see cref="Texture" />,
+        /// which returns a <see cref="MaterialTextureField" /> typed to <see cref="UnityEngine.Texture" />,
+        /// by returning a bare <see cref="ObjectField" /> typed to <see cref="Texture2D" />.
+        /// </remarks>
+        /// <param name="material">The surface material whose property is edited.</param>
+        /// <param name="materialPropertyName">The shader property name on the material.</param>
+        /// <param name="label">The display label for the field.</param>
+        /// <param name="tooltip">The tooltip shown on hover.</param>
+        /// <param name="onChanged">Optional callback invoked after each edit.</param>
+        /// <returns>The constructed <see cref="ObjectField" />.</returns>
+        public static ObjectField MaterialOnlyTexture(
+            Material material,
+            string materialPropertyName,
+            string label,
+            string tooltip = "",
+            Action onChanged = null
+        )
+        {
+            var field = new ObjectField(label) { objectType = typeof(Texture2D), tooltip = tooltip };
+            field.AddToClassList("unity-base-field__aligned");
+            field.SetValueWithoutNotify(material != null ? material.GetTexture(materialPropertyName) : null);
+            field.RegisterValueChangedCallback(evt =>
+            {
+                if (material != null)
+                {
+                    Undo.RecordObject(material, $"Edit {label}");
+                    material.SetTexture(materialPropertyName, evt.newValue as Texture2D);
+                    EditorUtility.SetDirty(material);
+                }
+
+                onChanged?.Invoke();
+                SceneView.RepaintAll();
+            });
+            return field;
+        }
+
+        /// <summary>
         /// Creates a texture field whose value lives on a PQSData SerializedObject and is mirrored to a surface material property.
         /// </summary>
         /// <remarks>
@@ -426,6 +501,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var prop = FindOrWarn(pqsDataSO, pqsDataBoolPath, label);
             var field = new Toggle(label) { tooltip = tooltip };
+            field.AddToClassList("unity-base-field__aligned");
             var initial = material != null && material.IsKeywordEnabled(keywordName);
             field.SetValueWithoutNotify(initial);
             field.RegisterValueChangedCallback(evt =>
@@ -437,20 +513,25 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                     pqsDataSO.ApplyModifiedProperties();
                 }
 
-                if (material != null)
-                {
-                    Undo.RecordObject(material, $"Toggle {label}");
-                    if (evt.newValue)
-                        material.EnableKeyword(keywordName);
-                    else
-                        material.DisableKeyword(keywordName);
-                    EditorUtility.SetDirty(material);
-                }
-
+                ApplyMaterialKeyword(material, keywordName, evt.newValue, label);
                 onChanged?.Invoke();
                 SceneView.RepaintAll();
             });
             return field;
+        }
+
+        // Atomic apply for a material-side shader keyword. Records undo and dirties the
+        // material so the next save picks it up. Single source of truth shared by
+        // MaterialOnlyKeyword and MirroredKeyword so they cannot drift.
+        private static void ApplyMaterialKeyword(Material material, string keywordName, bool value, string label)
+        {
+            if (material == null) return;
+            Undo.RecordObject(material, $"Toggle {label}");
+            if (value)
+                material.EnableKeyword(keywordName);
+            else
+                material.DisableKeyword(keywordName);
+            EditorUtility.SetDirty(material);
         }
 
         /// <summary>
@@ -474,6 +555,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         )
         {
             var field = new Toggle(label) { tooltip = tooltip };
+            field.AddToClassList("unity-base-field__aligned");
             field.SetValueWithoutNotify(material != null && material.IsKeywordEnabled(keywordName));
             field.SetEnabled(false);
             return field;

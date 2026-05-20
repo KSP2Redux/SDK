@@ -62,6 +62,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Label _overlayScienceRegionStatus;
         private Slider _overlayStrengthSlider;
         private FloatField _overlayBandHeightField;
+        private Slider _overlaySlopeStepSlider;
         private bool _suppressOverlayUpdates;
         private static readonly string[] ScienceRegionModeChoices = { "Baked palette", "Source texture" };
 
@@ -91,7 +92,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             window.minSize = new Vector2(280f, 220f);
         }
 
-        /// <inheritdoc />
         private void CreateGUI()
         {
             var root = rootVisualElement;
@@ -174,6 +174,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlayScienceRegionStatus = root.Q<Label>("overlay-science-region-status");
             _overlayStrengthSlider = root.Q<Slider>("overlay-strength-slider");
             _overlayBandHeightField = root.Q<FloatField>("overlay-band-height-field");
+            _overlaySlopeStepSlider = root.Q<Slider>("overlay-slope-step-slider");
             BindOverlayToggle(_overlayBiomeToggle, PreviewOverlayKind.BiomeMask);
             BindOverlayToggle(_overlaySubzoneToggle, PreviewOverlayKind.SubzoneMask);
             BindOverlayToggle(_overlaySlopeToggle, PreviewOverlayKind.Slope);
@@ -198,6 +199,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             {
                 if (_suppressOverlayUpdates) return;
                 PreviewOverlayManager.BandHeightMeters = evt.newValue;
+            });
+            _overlaySlopeStepSlider.RegisterValueChangedCallback(evt =>
+            {
+                if (_suppressOverlayUpdates) return;
+                PreviewOverlayManager.SlopeStepDegrees = evt.newValue;
             });
             PreviewOverlayManager.StateChanged += RefreshOverlayControls;
             RefreshOverlayControls();
@@ -316,6 +322,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlayScienceRegionMode.SetValueWithoutNotify(ScienceRegionModeChoices[(int)PreviewOverlayManager.ScienceRegionMode]);
             _overlayStrengthSlider.SetValueWithoutNotify(PreviewOverlayManager.Strength);
             _overlayBandHeightField.SetValueWithoutNotify(PreviewOverlayManager.BandHeightMeters);
+            _overlaySlopeStepSlider.SetValueWithoutNotify(PreviewOverlayManager.SlopeStepDegrees);
             _suppressOverlayUpdates = false;
             RefreshActiveLayerGrid();
             RefreshScienceRegionStatus();

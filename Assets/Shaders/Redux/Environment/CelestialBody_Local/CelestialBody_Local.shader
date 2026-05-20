@@ -41,6 +41,10 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_GlobalGradienceTex ("Global Gradience Map", 2D) = "black" {}
 		_GlobalCurvatureTex ("Global Curvature Map", 2D) = "black" {}
 
+		// The REDUX_GRADIENCE keyword is declared by the prepass passes'
+		// `multi_compile_local _ REDUX_GRADIENCE` pragma and toggled directly from the
+		// surface authoring inspector. No Property declaration is needed.
+
 		// ===== Per-biome height-map UV scales (PARAMS §3.4 / §3.5) =====
 		// One scalar per biome (R,G,B,A) -- UV scale on each tier's gradience map.
 		_LargeHeightMapUVScales ("Large Grad Map UV Scales", Vector) = (1,1,1,1)
@@ -832,6 +836,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma target 5.0
 			#pragma multi_compile _ SUB_ZONES_ENABLED
 			#pragma multi_compile _ UNITY_HDR_ON
+			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#define PASS_PREPASS
 			#define DECAL_MODE_NONE
 			#define ZONE_BIT 29
@@ -851,6 +856,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile _ SUB_ZONES_ENABLED
 			#pragma multi_compile _ UNITY_HDR_ON
 			#pragma multi_compile _ DECALS_ENABLED
+			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#define PASS_PREPASS
 			#define DECAL_MODE_PACKED4
 			#define ZONE_BIT 28
@@ -870,6 +876,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile _ SUB_ZONES_ENABLED
 			#pragma multi_compile _ UNITY_HDR_ON
 			#pragma multi_compile _ DECALS_ENABLED
+			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#define PASS_PREPASS
 			#define DECAL_MODE_INFINITE
 			#define ZONE_BIT 27

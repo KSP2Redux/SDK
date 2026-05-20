@@ -6,13 +6,12 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 {
     /// <summary>
-    /// Bakes per-biome Mid and Large normal maps for a body from the small-tile normal stack
-    /// (Mid) and the per-biome gradience heightmap gradients (Large).
+    /// Bakes per-biome Mid and Large normal maps for a body from the small-tile normal stack (Mid) and the per-biome raw heightmap gradients (Large).
     /// </summary>
     /// <remarks>
     /// Mid is sampled triplanar in world-space at runtime, so the bake produces an adirectional
     /// detail tile per biome. Large is sampled biplanar at equirect tiling, so the bake produces
-    /// a directional gradient-derived tile per biome from the Mid + Large gradience heightmaps.
+    /// a directional gradient-derived tile per biome from the Mid + Large raw heightmaps.
     /// The two bakes are independent leaves and can skip individually.
     /// </remarks>
     public static class BiomeNormalBaker
@@ -43,7 +42,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             /// </summary>
             /// <remarks>
             /// Callers writing the textures to disk should skip null entries rather than substituting a flat normal. A null
-            /// entry means the biome was empty or had no gradience heightmaps configured.
+            /// entry means the biome was empty or had no raw heightmaps configured.
             /// </remarks>
             public Texture2D[] LargePerBiome;
             /// <summary>
@@ -66,7 +65,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <summary>
         /// Runs the bake against the given body.
         /// </summary>
-        /// <param name="pqsData">PQSData with heightMapInfo, biome mask, and a surface material with gradience + small-normal bindings.</param>
+        /// <param name="pqsData">PQSData with heightMapInfo, biome mask, and a surface material with raw heightmap + small-normal bindings.</param>
         /// <param name="radius">Body radius in meters.</param>
         /// <returns>The per-biome bake outputs, or a skipped <see cref="Result" /> when preconditions are not met.</returns>
         public static Result Bake(PQSData pqsData, float radius)
@@ -186,7 +185,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         private static int TextureSide(Texture2D tex) => tex != null ? Mathf.Max(tex.width, tex.height) : 0;
 
         /// <summary>
-        /// Returns the Large gradience heightmap UV scale for the given biome.
+        /// Returns the Large raw heightmap UV scale for the given biome.
         /// </summary>
         /// <param name="hmi">The body's height-map info container, or null.</param>
         /// <param name="b">Biome index (0=R, 1=G, 2=B, 3=A).</param>
@@ -205,8 +204,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return            hmi.largeA?.uvScale ?? 1f;
         }
 
-        // True if biome b has at least one of large/mid gradience heightmaps assigned. Used to
-        // gate per-biome Large bakes - skip biomes where the source would just be flat-black.
+        // True if biome b has at least one of large/mid raw heightmaps assigned. Used to gate
+        // per-biome Large bakes - skip biomes where the source would just be flat-black.
         private static bool HasGradienceForBiome(PQSData.HeightMapInfo hmi, int b)
         {
             if (b == 0) return hmi.largeR?.heightMap != null || hmi.mediumR?.heightMap != null;
@@ -280,7 +279,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         {
             int kernel = compute.FindKernel("CSBakeMid");
 
-            // Shared gradience + heightmap bindings (also used by CSMain - already in shader).
+            // Shared raw heightmap + global heightmap bindings (also used by CSMain - already in shader).
             BindSharedHeightStack(compute, kernel, mat, hmi);
             compute.SetTexture(kernel, "_BiomeMaskTex", biomeMask);
             compute.SetTexture(kernel, "_SmallNormalArray", smallNormalArray);
@@ -325,15 +324,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         {
             int kernel = compute.FindKernel("CSBakeLarge");
 
-            // Gradience textures and per-biome scales (UV + height) shared with CSBakeMid.
-            BindGradienceTexturesToKernel(compute, kernel, hmi);
-            BindGradienceUniformsToKernel(compute, hmi);
+            // Raw heightmap textures and per-biome scales (UV + height) shared with CSBakeMid.
+            BindHeightmapsToKernel(compute, kernel, hmi);
+            BindHeightmapUniformsToKernel(compute, hmi);
 
             compute.SetFloat("_Radius", radius);
             compute.SetInt("_LargeOutWidth", side);
             compute.SetInt("_LargeOutHeight", side);
-            compute.SetFloat("_LargeGradienceWeight", 1.0f);
-            compute.SetFloat("_MidGradienceWeight", 1.0f);
+            compute.SetFloat("_LargeHeightWeight", 1.0f);
+            compute.SetFloat("_MidHeightWeight", 1.0f);
 
             int gx = (side + 7) / 8;
             int gy = (side + 7) / 8;
@@ -347,10 +346,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 }
 
                 // Tile-span in equirect UV = one heightmap tile's worth of surface. The Large
-                // gradience heightmap is the dominant signal we're sampling here, so its uvScale
-                // is the natural tile rate of the output. Mid gradience is a supplementary
-                // higher-frequency overlay; we let its uvScale govern its own per-pixel sample
-                // step but not the output span.
+                // raw heightmap is the dominant signal we're sampling here, so its uvScale is
+                // the natural tile rate of the output. Mid is a supplementary higher-frequency
+                // overlay, so its uvScale governs its own per-pixel sample step but not the
+                // output span.
                 float heightmapUvScale = LargeUvScaleForBiome(hmi, b);
                 heightmapUvScale = Mathf.Max(heightmapUvScale, 0.01f);
                 var tileSpan = new Vector2(1f / heightmapUvScale, 1f / heightmapUvScale);
@@ -372,33 +371,33 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             }
         }
 
-        // Binds the global heightmap + per-biome gradience textures + their UV/height scales.
-        // CSBakeMid and CSBakeLarge both consume this stack via ComposedHeightAt / the gradient
+        // Binds the global heightmap + per-biome raw heightmaps + their UV/height scales.
+        // CSBakeMid and CSBakeLarge both consume this stack via ComposedHeightAt / the height
         // samplers, so both kernels need it.
         private static void BindSharedHeightStack(ComputeShader compute, int kernel, Material mat,
             PQSData.HeightMapInfo hmi)
         {
             compute.SetTexture(kernel, "_GlobalHeightMap", FlatOr(hmi.globalHeightMap));
-            BindGradienceTexturesToKernel(compute, kernel, hmi);
-            BindGradienceUniformsToKernel(compute, hmi);
+            BindHeightmapsToKernel(compute, kernel, hmi);
+            BindHeightmapUniformsToKernel(compute, hmi);
         }
 
-        // Binds the 8 per-biome gradience textures (Large R/G/B/A + Mid R/G/B/A) to one kernel.
-        private static void BindGradienceTexturesToKernel(ComputeShader compute, int kernel, PQSData.HeightMapInfo hmi)
+        // Binds the 8 per-biome raw heightmaps (Large R/G/B/A + Mid R/G/B/A) to one kernel.
+        private static void BindHeightmapsToKernel(ComputeShader compute, int kernel, PQSData.HeightMapInfo hmi)
         {
-            compute.SetTexture(kernel, "_LargeGradienceR", FlatOr(hmi.largeR?.heightMap));
-            compute.SetTexture(kernel, "_LargeGradienceG", FlatOr(hmi.largeG?.heightMap));
-            compute.SetTexture(kernel, "_LargeGradienceB", FlatOr(hmi.largeB?.heightMap));
-            compute.SetTexture(kernel, "_LargeGradienceA", FlatOr(hmi.largeA?.heightMap));
-            compute.SetTexture(kernel, "_MidGradienceR",   FlatOr(hmi.mediumR?.heightMap));
-            compute.SetTexture(kernel, "_MidGradienceG",   FlatOr(hmi.mediumG?.heightMap));
-            compute.SetTexture(kernel, "_MidGradienceB",   FlatOr(hmi.mediumB?.heightMap));
-            compute.SetTexture(kernel, "_MidGradienceA",   FlatOr(hmi.mediumA?.heightMap));
+            compute.SetTexture(kernel, "_LargeHeightR", FlatOr(hmi.largeR?.heightMap));
+            compute.SetTexture(kernel, "_LargeHeightG", FlatOr(hmi.largeG?.heightMap));
+            compute.SetTexture(kernel, "_LargeHeightB", FlatOr(hmi.largeB?.heightMap));
+            compute.SetTexture(kernel, "_LargeHeightA", FlatOr(hmi.largeA?.heightMap));
+            compute.SetTexture(kernel, "_MidHeightR",   FlatOr(hmi.mediumR?.heightMap));
+            compute.SetTexture(kernel, "_MidHeightG",   FlatOr(hmi.mediumG?.heightMap));
+            compute.SetTexture(kernel, "_MidHeightB",   FlatOr(hmi.mediumB?.heightMap));
+            compute.SetTexture(kernel, "_MidHeightA",   FlatOr(hmi.mediumA?.heightMap));
         }
 
         // Binds the 4 per-biome scalar uniforms (UV scale + height scale, large + mid) shared
         // across kernels. Not kernel-local, so no kernel index needed.
-        private static void BindGradienceUniformsToKernel(ComputeShader compute, PQSData.HeightMapInfo hmi)
+        private static void BindHeightmapUniformsToKernel(ComputeShader compute, PQSData.HeightMapInfo hmi)
         {
             compute.SetVector("_LargeHeightMapUVScales", new Vector4(
                 hmi.largeR?.uvScale ?? 1f,
@@ -422,7 +421,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 hmi.mediumA?.heightScale ?? 0f));
         }
 
-        // Falls back to a 1x1 black texture when a gradience slot is unbound, matching the
+        // Falls back to a 1x1 black texture when a raw heightmap slot is unbound, matching the
         // existing scaled-bake's behavior (unbound slots contribute zero to the composed height).
         private static Texture FlatOr(Texture tex)
         {

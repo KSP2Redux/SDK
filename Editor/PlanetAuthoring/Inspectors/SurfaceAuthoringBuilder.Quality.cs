@@ -45,6 +45,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "Mirrored to PQSData.materialSettings.antiTileOn."
             ));
 
+            foldout.Add(MaterialPropertyFields.MirroredKeyword(
+                pqsDataSO, "materialSettings.reduxGradienceEnabled",
+                material, "REDUX_GRADIENCE",
+                "Redux gradience format",
+                "When on, gradience textures store true (dh/du, dh/dv) gradients that sum as " +
+                "vectors, and the global gradience texture contributes to slope evaluation. " +
+                "Slope windows read true degrees. Re-bake required after toggling.",
+                refresh
+            ));
+
             foldout.Add(MaterialPropertyFields.KeywordReadOnly(
                 material, "DECALS_ENABLED", "Decals enabled (auto)",
                 "Auto-managed by PQSDecalController based on decal instance count. Read-only. " +
@@ -63,6 +73,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                     "preference. Persisted in EditorPrefs.",
                 value = ShowReservedPref,
             };
+            showReservedToggle.AddToClassList("unity-base-field__aligned");
             showReservedToggle.RegisterValueChangedCallback(evt =>
             {
                 ShowReservedPref = evt.newValue;

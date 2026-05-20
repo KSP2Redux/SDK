@@ -141,18 +141,20 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var metalArray = surfaceMaterial.GetTexture("_SmallMetalArray") as Texture2DArray
                 ?? throw new InvalidOperationException("Surface material has no _SmallMetalArray.");
 
-            // Per-biome large + mid gradience textures contribute to the composed height stack
-            // that drives macro normal and AO. Missing slots fall back to a flat gray (0.5)
-            // texture so the bake still runs on bodies that haven't authored every biome's
-            // gradience. Their per-biome contribution factors should typically be 0 in that case.
-            var largeR = ResolveGradienceOrFlat(surfaceMaterial, "_LargeGradienceR");
-            var largeG = ResolveGradienceOrFlat(surfaceMaterial, "_LargeGradienceG");
-            var largeB = ResolveGradienceOrFlat(surfaceMaterial, "_LargeGradienceB");
-            var largeA = ResolveGradienceOrFlat(surfaceMaterial, "_LargeGradienceA");
-            var midR   = ResolveGradienceOrFlat(surfaceMaterial, "_MidGradienceR");
-            var midG   = ResolveGradienceOrFlat(surfaceMaterial, "_MidGradienceG");
-            var midB   = ResolveGradienceOrFlat(surfaceMaterial, "_MidGradienceB");
-            var midA   = ResolveGradienceOrFlat(surfaceMaterial, "_MidGradienceA");
+            // Per-biome large + mid raw heightmaps contribute to the composed altitude that
+            // drives macro normal and AO. Pulled directly from PQSData (NOT from the surface
+            // material's _LargeGradience*/_MidGradience* slots, which hold baked gradient
+            // textures under Redux mode and would be dimensionally wrong as height inputs).
+            // Missing slots fall back to flat-black so the bake runs on bodies that haven't
+            // authored every biome's heightmap.
+            var largeR = ResolveHeightmapOrFlat(heightMapInfo.largeR?.heightMap);
+            var largeG = ResolveHeightmapOrFlat(heightMapInfo.largeG?.heightMap);
+            var largeB = ResolveHeightmapOrFlat(heightMapInfo.largeB?.heightMap);
+            var largeA = ResolveHeightmapOrFlat(heightMapInfo.largeA?.heightMap);
+            var midR   = ResolveHeightmapOrFlat(heightMapInfo.mediumR?.heightMap);
+            var midG   = ResolveHeightmapOrFlat(heightMapInfo.mediumG?.heightMap);
+            var midB   = ResolveHeightmapOrFlat(heightMapInfo.mediumB?.heightMap);
+            var midA   = ResolveHeightmapOrFlat(heightMapInfo.mediumA?.heightMap);
 
             var compute = AssetDatabase.LoadAssetAtPath<ComputeShader>(ComputeShaderPath)
                 ?? throw new FileNotFoundException($"Could not load compute shader at '{ComputeShaderPath}'.");
@@ -197,14 +199,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 compute.SetTexture(kernel, "_BiomeMaskTex", biomeMask);
                 compute.SetTexture(kernel, "_GlobalHeightMap", globalHeightMap);
 
-                compute.SetTexture(kernel, "_LargeGradienceR", largeR);
-                compute.SetTexture(kernel, "_LargeGradienceG", largeG);
-                compute.SetTexture(kernel, "_LargeGradienceB", largeB);
-                compute.SetTexture(kernel, "_LargeGradienceA", largeA);
-                compute.SetTexture(kernel, "_MidGradienceR",   midR);
-                compute.SetTexture(kernel, "_MidGradienceG",   midG);
-                compute.SetTexture(kernel, "_MidGradienceB",   midB);
-                compute.SetTexture(kernel, "_MidGradienceA",   midA);
+                compute.SetTexture(kernel, "_LargeHeightR", largeR);
+                compute.SetTexture(kernel, "_LargeHeightG", largeG);
+                compute.SetTexture(kernel, "_LargeHeightB", largeB);
+                compute.SetTexture(kernel, "_LargeHeightA", largeA);
+                compute.SetTexture(kernel, "_MidHeightR",   midR);
+                compute.SetTexture(kernel, "_MidHeightG",   midG);
+                compute.SetTexture(kernel, "_MidHeightB",   midB);
+                compute.SetTexture(kernel, "_MidHeightA",   midA);
 
                 compute.SetVector("_LargeHeightMapUVScales",  surfaceMaterial.GetVector("_LargeHeightMapUVScales"));
                 compute.SetVector("_MediumHeightMapUVScales", surfaceMaterial.GetVector("_MediumHeightMapUVScales"));
@@ -470,11 +472,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return _flatBlackFallback;
         }
 
-        private static Texture ResolveGradienceOrFlat(Material mat, string propertyName)
-        {
-            var tex = mat.GetTexture(propertyName);
-            return tex != null ? tex : GetFlatBlackFallback();
-        }
+        private static Texture ResolveHeightmapOrFlat(Texture heightmap) => heightmap != null ? heightmap : GetFlatBlackFallback();
 
         /// <summary>
         /// Creates a linear random-write <see cref="RenderTexture" /> sized for a compute dispatch.

@@ -41,6 +41,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static GUIStyle _sectionStyle;
         private static GUIStyle _smallStyle;
         private static GUIStyle _smallStyleRight;
+        private static GUIStyle _smallStyleCenter;
         private static GUIStyle _panelStyle;
 
         /// <summary>
@@ -106,12 +107,20 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         {
             PreviewOverlayKind.BiomeMask     => RowHeight + RowHeight,                      // title + swatch row
             PreviewOverlayKind.SubzoneMask   => RowHeight + RowHeight,
-            PreviewOverlayKind.Slope         => RowHeight + RowHeight,                      // title + gradient
+            PreviewOverlayKind.Slope         => SlopeLegendHeight(),                        // title + gradient (+ degree row when quantized)
             PreviewOverlayKind.AltitudeBands => RowHeight + RowHeight + RowHeight,          // title + minor + major
             PreviewOverlayKind.ActiveLayer   => RowHeight + RowHeight + 4f * SwatchSize + 4f, // title + biome row + 4x4 grid
             PreviewOverlayKind.ScienceRegion => ScienceRegionLegendHeight(),                // title + mode + optional stale row
             _ => RowHeight,
         };
+
+        private static float SlopeLegendHeight()
+        {
+            // Title + band row, plus an extra row for degree ticks when the user has
+            // turned quantization on.
+            var rows = PreviewOverlayManager.SlopeStepDegrees > 0.001f ? 3 : 2;
+            return RowHeight * rows;
+        }
 
         private static float ScienceRegionLegendHeight()
         {
@@ -197,19 +206,53 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
 
         private static float DrawSlopeGradient(Rect r, float y)
         {
-            // Gradient bar fills the row width. Labels sit beside it (not overlaid)
-            // so neither end's label fights the underlying color.
             const float labelW = 36f;
             const float gap = 4f;
-            var flatLabel = new Rect(r.x, y, labelW, RowHeight);
-            var gradient = new Rect(r.x + labelW + gap, y + RowHeight * 0.5f - SwatchSize * 0.5f,
-                                    r.width - labelW * 2f - gap * 2f, SwatchSize);
-            var steepLabel = new Rect(gradient.xMax + gap, y, labelW, RowHeight);
+            var barRect = new Rect(r.x + labelW + gap, y + RowHeight * 0.5f - SwatchSize * 0.5f,
+                                   r.width - labelW * 2f - gap * 2f, SwatchSize);
 
-            GUI.Label(flatLabel, "flat", _smallStyleRight);
-            GUI.DrawTexture(gradient, GetSlopeGradient(), ScaleMode.StretchToFill);
-            GUI.Label(steepLabel, "steep", _smallStyle);
-            return y + RowHeight;
+            var step = PreviewOverlayManager.SlopeStepDegrees;
+            if (step <= 0.001f)
+            {
+                // Continuous ramp with flat/steep end labels.
+                GUI.Label(new Rect(r.x, y, labelW, RowHeight), "flat", _smallStyleRight);
+                GUI.DrawTexture(barRect, GetSlopeGradient(), ScaleMode.StretchToFill);
+                GUI.Label(new Rect(barRect.xMax + gap, y, labelW, RowHeight), "steep", _smallStyle);
+                return y + RowHeight;
+            }
+
+            // Quantized: discrete colored bands proportional to angular width, then
+            // degree-mark labels at each band boundary on a row below the bar.
+            for (var d = 0f; d < 90f - 0.001f; d += step)
+            {
+                var upper = Mathf.Min(d + step, 90f);
+                var xLow = barRect.x + (d / 90f) * barRect.width;
+                var xHigh = barRect.x + (upper / 90f) * barRect.width;
+                DrawSwatch(new Rect(xLow, barRect.y, xHigh - xLow, barRect.height),
+                           Color.Lerp(SlopeFlat, SlopeVertical, d / 90f));
+            }
+
+            var labelY = y + RowHeight;
+            const float labelTickW = 30f;
+            const float minLabelSeparation = 26f;
+            var prevLabelX = float.NegativeInfinity;
+
+            void TryTick(float degree)
+            {
+                var x = barRect.x + (degree / 90f) * barRect.width;
+                if (x - prevLabelX < minLabelSeparation) return;
+                GUI.Label(new Rect(x - labelTickW * 0.5f, labelY, labelTickW, RowHeight),
+                          $"{Mathf.RoundToInt(degree)}°", _smallStyleCenter);
+                prevLabelX = x;
+            }
+
+            for (var d = 0f; d < 90f - 0.001f; d += step)
+            {
+                TryTick(d);
+            }
+            TryTick(90f);
+
+            return y + RowHeight * 2f;
         }
 
         private static float DrawContourLegend(Rect r, float y)
@@ -328,6 +371,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             _smallStyleRight = new GUIStyle(_smallStyle)
             {
                 alignment = TextAnchor.MiddleRight,
+            };
+            _smallStyleCenter = new GUIStyle(_smallStyle)
+            {
+                alignment = TextAnchor.MiddleCenter,
             };
             _panelStyle = new GUIStyle(GUI.skin.box)
             {

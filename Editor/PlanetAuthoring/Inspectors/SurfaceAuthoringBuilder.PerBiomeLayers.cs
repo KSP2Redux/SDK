@@ -29,27 +29,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var foldout = new Foldout { text = $"Large Biome {c}", value = false };
             foldout.AddToClassList("pqs-inspector-section");
 
-            foldout.Add(MaterialPropertyFields.MirroredTexture(
-                pqsDataSO, $"heightMapInfo.large{c}.heightMap",
+            foldout.Add(MaterialPropertyFields.MaterialOnlyTexture(
                 material, $"_LargeGradience{c}",
                 "Gradience map",
-                "Per-biome large-scale height field. Adds mesh displacement scaled by " +
-                "Height scale (m) on top of the global heightmap, and drives layer " +
-                "selection in the surface shader."
-            ));
-
-            foldout.Add(MaterialPropertyFields.MirroredIntChannel(
-                pqsDataSO, $"heightMapInfo.large{c}.uvScale",
-                material, "_LargeHeightMapUVScales", idx,
-                "UV scale",
-                "Tile rate for this biome's gradience map. Higher values tile more " +
-                $"frequently. Packed into _LargeHeightMapUVScales channel {idx} for biome {c} at runtime."
-            ));
-
-            foldout.Add(MaterialPropertyFields.PqsDataFloat(
-                pqsDataSO, $"heightMapInfo.large{c}.heightScale",
-                "Height scale (m)",
-                "Vertical scale (in meters) of the biome's large-scale gradience contribution."
+                $"Baked gradience texture for biome {c}. Auto-populated by the body " +
+                "surface bake from the raw heightmap in the Heightmap stack section. " +
+                "Re-bake to refresh."
             ));
 
             foldout.Add(MaterialPropertyFields.Texture(
@@ -111,27 +96,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var foldout = new Foldout { text = $"Mid Biome {c}", value = false };
             foldout.AddToClassList("pqs-inspector-section");
 
-            foldout.Add(MaterialPropertyFields.MirroredTexture(
-                pqsDataSO, $"heightMapInfo.medium{c}.heightMap",
+            foldout.Add(MaterialPropertyFields.MaterialOnlyTexture(
                 material, $"_MidGradience{c}",
                 "Gradience map",
-                "Per-biome mid-scale height field (ridge-sized features). Adds mesh " +
-                "displacement scaled by Height scale (m) on top of the global heightmap, " +
-                "and feeds layer/slope selection in the surface shader."
-            ));
-
-            foldout.Add(MaterialPropertyFields.MirroredIntChannel(
-                pqsDataSO, $"heightMapInfo.medium{c}.uvScale",
-                material, "_MediumHeightMapUVScales", idx,
-                "UV scale",
-                "Tile rate for this biome's mid gradience map. Higher values tile more " +
-                $"frequently. Packed into _MediumHeightMapUVScales channel {idx} for biome {c} at runtime."
-            ));
-
-            foldout.Add(MaterialPropertyFields.PqsDataFloat(
-                pqsDataSO, $"heightMapInfo.medium{c}.heightScale",
-                "Height scale (m)",
-                "Vertical scale (in meters) of the biome's mid-scale gradience contribution."
+                $"Baked gradience texture for biome {c}. Auto-populated by the body " +
+                "surface bake from the raw heightmap in the Heightmap stack section. " +
+                "Re-bake to refresh."
             ));
 
             foldout.Add(MaterialPropertyFields.Texture(
@@ -183,6 +153,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// </remarks>
         /// <param name="material">The surface material whose subzone-tier properties are edited.</param>
         /// <param name="pqsDataSO">SerializedObject wrapping the bound PQSData for mirrored fields.</param>
+        /// <param name="pqsDataAuthoringSO">SerializedObject wrapping the PQSDataAuthoring sidecar that carries the subzone normal slice references.</param>
         /// <param name="pqsData">The bound PQSData. Used to drive the texture-array repack.</param>
         /// <param name="tier">The subzone tier number (3 or 4).</param>
         /// <param name="c">The biome channel letter (R, G, B, or A) selecting which biome slot to build.</param>

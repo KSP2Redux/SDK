@@ -60,6 +60,9 @@ struct HmDiffs
     float2 sz3;
     float2 sz4;
     float2 aux;
+    // Global heightmap gradient, populated only under REDUX_GRADIENCE from
+    // _GlobalGradienceTex. Zero in the stock variant.
+    float2 global;
 };
 
 // File-scope declarations of texture / uniform inputs used across pass kinds.
@@ -72,6 +75,12 @@ Texture2D<float4> _MidNormalR,    _MidNormalG,    _MidNormalB,    _MidNormalA;
 Texture2D<float4> _LargeNormalR,  _LargeNormalG,  _LargeNormalB,  _LargeNormalA;
 Texture2D<float4> _LargeGradienceR, _LargeGradienceG, _LargeGradienceB, _LargeGradienceA;
 Texture2D<float4> _MidGradienceR,   _MidGradienceG,   _MidGradienceB,   _MidGradienceA;
+
+// Global gradience map: planet-wide pre-baked gradient texture, sampled by the
+// REDUX_GRADIENCE variant of the slope code to contribute a global term to the
+// composed gradient. Bound via the material's _GlobalGradienceTex slot. In the
+// stock variant this texture is declared but unsampled.
+Texture2D<float4> _GlobalGradienceTex;
 
 // Subzone3/4 normals (SZ-only) live in a single Texture2DArray addressed
 // per-biome-channel via NormalIndices.  Declared unconditionally — the

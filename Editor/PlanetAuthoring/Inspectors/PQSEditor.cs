@@ -1,4 +1,5 @@
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -45,6 +46,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var surfaceSlot = root.Q<VisualElement>("surface-authoring-slot");
             if (surfaceSlot != null)
                 SurfaceAuthoringBuilder.Populate(surfaceSlot, target as PQS);
+
+            BodySurfaceBakeSection.Wire(root, () => BodyResolver.FindBodyIncludingAsset(target as PQS));
 
             root.Bind(serializedObject);
             return root;

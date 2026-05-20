@@ -26,6 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private const string SessionStateKey = "Redux.PlanetAuthoring.PreviewOverlay.Enabled";
         private const string StrengthPrefKey = "Redux.PlanetAuthoring.PreviewOverlay.Strength";
         private const string BandHeightPrefKey = "Redux.PlanetAuthoring.PreviewOverlay.BandHeight";
+        private const string SlopeStepDegPrefKey = "Redux.PlanetAuthoring.PreviewOverlay.SlopeStepDeg";
         private const string ActiveLayerMaskPrefKey = "Redux.PlanetAuthoring.PreviewOverlay.ActiveLayerMask";
         private const string ScienceRegionModePrefKey = "Redux.PlanetAuthoring.PreviewOverlay.ScienceRegionMode";
 
@@ -41,6 +42,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static PQS _registeredPqs;
         private static float _strength = 0.7f;
         private static float _bandHeight = 500f;
+        private static float _slopeStepDeg;
         private static int _activeLayerMask = ActiveLayerMaskAllOn;
         private static ScienceRegionPreviewOverlay.Mode _scienceRegionMode = ScienceRegionPreviewOverlay.Mode.BakedPalette;
 
@@ -57,6 +59,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             LoadEnabledFromSessionState();
             _strength = EditorPrefs.GetFloat(StrengthPrefKey, 0.7f);
             _bandHeight = EditorPrefs.GetFloat(BandHeightPrefKey, 500f);
+            _slopeStepDeg = EditorPrefs.GetFloat(SlopeStepDegPrefKey, 0f);
             _activeLayerMask = EditorPrefs.GetInt(ActiveLayerMaskPrefKey, ActiveLayerMaskAllOn) & ActiveLayerMaskAllOn;
             _scienceRegionMode = (ScienceRegionPreviewOverlay.Mode)EditorPrefs.GetInt(ScienceRegionModePrefKey, (int)ScienceRegionPreviewOverlay.Mode.BakedPalette);
             PlanetPreviewState.ActiveChanged += OnSessionStateChanged;
@@ -114,6 +117,26 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
                 _bandHeight = Mathf.Max(1f, value);
                 EditorPrefs.SetFloat(BandHeightPrefKey, _bandHeight);
                 ApplyBandHeightToInstances();
+                SceneView.RepaintAll();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the slope quantization step in degrees used by the slope overlay.
+        /// </summary>
+        /// <remarks>
+        /// Zero produces the continuous green-to-red ramp. Positive values bin the displayed
+        /// slope to multiples of the step using the same stretched scale as the runtime and
+        /// bake trapezoid windows.
+        /// </remarks>
+        public static float SlopeStepDegrees
+        {
+            get => _slopeStepDeg;
+            set
+            {
+                _slopeStepDeg = Mathf.Clamp(value, 0f, 90f);
+                EditorPrefs.SetFloat(SlopeStepDegPrefKey, _slopeStepDeg);
+                ApplySlopeStepToInstances();
                 SceneView.RepaintAll();
             }
         }
@@ -241,6 +264,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
                 if (overlay is HeightDerivedPreviewOverlay h)
                 {
                     h.BandHeightMeters = _bandHeight;
+                }
+            }
+        }
+
+        private static void ApplySlopeStepToInstances()
+        {
+            foreach (var overlay in _instances.Values)
+            {
+                if (overlay is HeightDerivedPreviewOverlay h)
+                {
+                    h.SlopeStepDegrees = _slopeStepDeg;
                 }
             }
         }
@@ -377,7 +411,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             switch (created)
             {
                 case MaskPreviewOverlay m:             m.Strength = _strength; break;
-                case HeightDerivedPreviewOverlay h:    h.Strength = _strength; h.BandHeightMeters = _bandHeight; break;
+                case HeightDerivedPreviewOverlay h:    h.Strength = _strength; h.BandHeightMeters = _bandHeight; h.SlopeStepDegrees = _slopeStepDeg; break;
                 case ActiveLayerPreviewOverlay a:      a.Strength = _strength; a.LayerEnableMask = _activeLayerMask; break;
                 case ScienceRegionPreviewOverlay s:    s.Strength = _strength; s.CurrentMode = _scienceRegionMode; break;
             }
