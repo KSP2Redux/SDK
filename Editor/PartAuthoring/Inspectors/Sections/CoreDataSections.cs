@@ -103,10 +103,17 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         public static VisualElement BuildAttachment(SerializedObject so, CorePartData target)
         {
             var foldout = MakeSectionFoldout("Attachment");
-            AddField(foldout, so, "core.data.attachRules");
-            AddField(foldout, so, "core.data.attachNodes");
+            foldout.Add(BuildAttachRulesField(so));
 
-            var autoBtn = new Button(() => AttachNodeAutoGenerator.RegenerateFromHierarchy(target))
+            var listBuilder = new AttachNodesListBuilder(so);
+            foldout.Add(listBuilder.Build());
+
+            var autoBtn = new Button(() =>
+            {
+                AttachNodeAutoGenerator.RegenerateFromHierarchy(target);
+                so.Update();
+                listBuilder.Refresh();
+            })
             {
                 text = "Auto-detect from GO",
                 tooltip = "Replace the attach-node list with one entry per AttachmentNode component found in the prefab hierarchy.",
@@ -115,6 +122,47 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 
             AddField(foldout, so, "core.data.fuelCrossFeed");
             return Bound(foldout, so);
+        }
+
+        private static VisualElement BuildAttachRulesField(SerializedObject so)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("attach-rules-container");
+
+            var header = new Label("Attach Rules");
+            header.AddToClassList("attach-rules-header");
+            container.Add(header);
+
+            var grid = new VisualElement();
+            grid.AddToClassList("attach-rules-grid");
+
+            var rulesProp = so.FindProperty("core.data.attachRules");
+            if (rulesProp != null)
+            {
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("stack"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("srfAttach"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowStack"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowSrfAttach"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowCollision"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowDock"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowRotate"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowRoot"));
+            }
+
+            container.Add(grid);
+            return container;
+        }
+
+        private static void AddRuleCell(VisualElement grid, SerializedProperty prop)
+        {
+            if (prop == null)
+            {
+                return;
+            }
+            var toggle = new Toggle(prop.displayName);
+            toggle.BindProperty(prop);
+            toggle.AddToClassList("attach-rules-cell");
+            grid.Add(toggle);
         }
 
         /// <summary>
