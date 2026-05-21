@@ -173,7 +173,11 @@ NormalLayerResult DecodeAndReorientNormal(
         ctx.normLocalPos.x + localN.x + (ctx.normLocalPos.x * reorientDot) / absYP1,
         ctx.normLocalPos.y + ctx.triSignYNorm * (reorientDot - localN.z),
         ctx.normLocalPos.z + localN.y + (ctx.normLocalPos.z * reorientDot) / absYP1);
-    float3 worldNorm = normalize(mul((float3x3)_PQSToWorld, normalize(reorientVec)));
+    // Fall back to unperturbed unit-sphere normal if the reorient sum collapses (normalize of near-zero produces NaN on AMD).
+    float3 reorientUnit = dot(reorientVec, reorientVec) < 0.0001
+        ? ctx.normLocalPos
+        : normalize(reorientVec);
+    float3 worldNorm = normalize(mul((float3x3)_PQSToWorld, reorientUnit));
 
     NormalLayerResult r;
     r.normal = lerp(worldNorm, tbnNorm, ctx.normYBlend);
@@ -254,6 +258,11 @@ NormalLayerResult SampleMidNormal(
 float3 RotateByHalfArcQuat(float3 from, float3 to, float3 v)
 {
     float  quatDot = dot(from, to) + 1.0;
+    // Degenerate when from approx -to (quatDot near 0): quatLen sqrt collapses, divisions produce NaN on AMD.
+    if (quatDot < 0.0001)
+    {
+        return v;
+    }
     float  quatLen = sqrt(2.0 * quatDot);
     float3 qXYZ    = cross(from, to) / quatLen;
     float  qW      = quatDot / quatLen;
@@ -276,6 +285,11 @@ float3 BlendLayerNormal(
     if (0.001 < blendWeight)
     {
         float3 blendNorm = w.x * r.normal + w.y * g.normal + w.z * b.normal + w.w * a.normal;
+        // Guard against degenerate blendNorm (NaN propagation on AMD when feeding zero/near-zero vector to RotateByHalfArcQuat).
+        if (dot(blendNorm, blendNorm) < 0.0001)
+        {
+            return prevNorm;
+        }
         float3 rotated   = RotateByHalfArcQuat(worldTangentDir, blendNorm, prevNorm);
         return lerp(prevNorm, rotated, (1.0 - normalScaleFade) * blendWeight);
     }
