@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:Foldout text="Reentry Mesh Generator" value="true" name="reentry-mesh-foldout" class="sdk-section sdk-section-vertical-scope">
+
+        <engine:VisualElement class="reentry-mesh-button-row">
+            <engine:Button name="reentry-validate-button"  text="Validate Existing" class="reentry-mesh-button" />
+            <engine:Button name="reentry-generate-button"  text="Generate/Rebuild"  class="reentry-mesh-button" />
+            <engine:Button name="reentry-remove-button"    text="Remove Generated"  class="reentry-mesh-button" />
+        </engine:VisualElement>
+
+        <engine:HelpBox name="reentry-status-helpbox" message-type="Info" text="" />
+
+        <engine:Foldout text="Reentry Mesh Preview" value="true" name="reentry-preview-foldout" class="sdk-subsection-inset">
+            <engine:Label    name="reentry-preview-summary" class="reentry-preview-summary" />
+            <engine:VisualElement name="reentry-preview-grid" class="reentry-preview-grid" />
+        </engine:Foldout>
+
+    </engine:Foldout>
+
+</engine:UXML>

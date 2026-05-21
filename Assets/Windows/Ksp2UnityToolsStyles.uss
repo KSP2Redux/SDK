@@ -33,6 +33,23 @@
     padding-bottom: 6px;
 }
 
+/* ----- Standalone section header (non-foldout) -------------------------- */
+
+.sdk-section-header {
+    -unity-font-style: bold;
+    color: rgb(245, 248, 255);
+    background-color: rgba(70, 100, 140, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    margin-bottom: 6px;
+}
+
 /* ----- Section foldout chrome ------------------------------------------- */
 
 .sdk-section > .unity-foldout__toggle,
@@ -48,9 +65,10 @@
     border-bottom-right-radius: 3px;
     padding-top: 3px;
     padding-bottom: 3px;
-    padding-left: 4px;
+    padding-left: 0;
     padding-right: 4px;
     margin-top: 4px;
+    margin-left: 0;
 }
 
 .sdk-section > .unity-foldout__toggle Label,
@@ -80,6 +98,33 @@
     display: none;
 }
 
+/* Section content sits flush with the toggle (no Unity-default indent). */
+.sdk-section > .unity-foldout__content {
+    margin-left: 0;
+}
+
+/* Vertical-scope modifier -- compose with .sdk-section to wrap the section's
+ * content area in a bordered card, mirroring IMGUI's
+ * EditorGUILayout.VerticalScope(EditorStyles.helpBox). */
+
+.sdk-section-vertical-scope > .unity-foldout__content {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(0, 0, 0, 0.45);
+    border-right-color: rgba(0, 0, 0, 0.45);
+    border-top-color: rgba(0, 0, 0, 0.45);
+    border-bottom-color: rgba(0, 0, 0, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-top: 2px;
+}
+
+
 /* ----- Sub-section foldout (nested, lighter chrome) --------------------- */
 
 .sdk-subsection,
@@ -88,8 +133,14 @@
     margin-right: -4px;
 }
 
+.sdk-subsection-inset {
+    margin-left: 4px;
+    margin-top: 2px;
+}
+
 .sdk-subsection > .unity-foldout__toggle,
-.pqs-inspector-subsection > .unity-foldout__toggle {
+.pqs-inspector-subsection > .unity-foldout__toggle,
+.sdk-subsection-inset > .unity-foldout__toggle {
     background-color: rgba(70, 100, 140, 0.25);
     border-top-left-radius: 2px;
     border-top-right-radius: 2px;
@@ -103,12 +154,14 @@
 }
 
 .sdk-subsection > .unity-foldout__toggle Label,
-.pqs-inspector-subsection > .unity-foldout__toggle Label {
+.pqs-inspector-subsection > .unity-foldout__toggle Label,
+.sdk-subsection-inset > .unity-foldout__toggle Label {
     -unity-font-style: bold;
 }
 
 .sdk-subsection > .unity-foldout__content,
-.pqs-inspector-subsection > .unity-foldout__content {
+.pqs-inspector-subsection > .unity-foldout__content,
+.sdk-subsection-inset > .unity-foldout__content {
     margin-left: 0;
     padding-left: 8px;
     padding-right: 4px;

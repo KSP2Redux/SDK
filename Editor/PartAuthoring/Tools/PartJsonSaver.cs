@@ -1,0 +1,114 @@
+using System.IO;
+using System.Reflection;
+using KSP;
+using KSP.IO;
+using KSP.Sim.Definitions;
+using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using UnityEditor;
+using UnityEngine;
+
+namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
+{
+    /// <summary>
+    /// Serialises a <see cref="CorePartData" /> and its module data blocks to the part's JSON sidecar.
+    /// </summary>
+    /// <remarks>
+    /// Walks every <see cref="PartBehaviourModule" /> on the GameObject, invokes the non-public
+    /// <c>AddDataModules</c> and <c>RebuildDataContext</c> reflection hooks so each module rebuilds
+    /// its serialised state, then pretty-prints the result through Newtonsoft. Registers the file
+    /// with the parent mod's addressables group when one is reachable.
+    /// </remarks>
+    public static class PartJsonSaver
+    {
+        private static bool _initialized;
+
+        /// <summary>
+        /// Saves <paramref name="target" />'s JSON sidecar next to its prefab and shows a
+        /// confirmation dialog with the resulting path.
+        /// </summary>
+        /// <remarks>
+        /// No-op when <paramref name="target" /> is null, has no <see cref="PartCore" />, or its
+        /// owning prefab path cannot be resolved.
+        /// </remarks>
+        /// <param name="target">The part to serialise.</param>
+        public static void Save(CorePartData target)
+        {
+            if (target == null || target.Core == null)
+            {
+                return;
+            }
+
+            string prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                return;
+            }
+
+            string jsonPath = Path.GetDirectoryName(prefabPath) + $"/{target.name}.json";
+
+            if (!_initialized)
+            {
+                IOProvider.Init();
+                _initialized = true;
+            }
+
+            target.Core.data.serializedPartModules.Clear();
+            foreach (Component child in target.gameObject.GetComponents<Component>())
+            {
+                if (child is not PartBehaviourModule partBehaviourModule)
+                {
+                    continue;
+                }
+
+                MethodInfo addMethod =
+                    child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                    child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
+                addMethod?.Invoke(child, new object[] { });
+
+                foreach (ModuleData data in partBehaviourModule.DataModules.Values)
+                {
+                    MethodInfo rebuildMethod =
+                        data.GetType().GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                        data.GetType().GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.Public);
+                    rebuildMethod?.Invoke(data, new object[] { });
+                }
+
+                target.Core.data.serializedPartModules.Add(new SerializedPartModule(partBehaviourModule, false));
+            }
+
+            string json = IOProvider.ToJson(target.Core);
+            JObject jObject = JObject.Parse(json);
+            json = jObject.ToString(Formatting.Indented);
+            string path = jsonPath.Replace("%NAME%", target.Core.data.partName);
+            string directoryName = new FileInfo(path).DirectoryName;
+            Directory.CreateDirectory(directoryName);
+            File.WriteAllText(path, json);
+            AssetDatabase.ImportAsset(path);
+
+            bool madeAddressable = false;
+            if (KSP2UnityTools.FindParentMod(target) is { } mod)
+            {
+                madeAddressable = true;
+                AddressablesTools.MakeAddressable(
+                    mod.partsGroup,
+                    path,
+                    $"{target.Core.data.partName}.json",
+                    "parts_data"
+                );
+            }
+
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
+            EditorUtility.DisplayDialog(
+                "Part Exported",
+                !madeAddressable
+                    ? $"Json is at: {path}, you need to manually make it addressable"
+                    : $"Json is at: {path}",
+                "ok"
+            );
+        }
+    }
+}

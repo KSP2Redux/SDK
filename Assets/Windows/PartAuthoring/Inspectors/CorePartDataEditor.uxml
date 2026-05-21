@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="part-inspector-root">
+
+        <engine:VisualElement name="part-inspector-header" class="part-inspector-header">
+
+            <engine:VisualElement class="part-inspector-identity-row">
+                <engine:VisualElement name="header-icon" class="part-inspector-icon" />
+                <engine:VisualElement class="part-inspector-identity-text">
+                    <engine:Label name="header-part-name" class="part-inspector-part-name" />
+                    <engine:VisualElement class="part-inspector-identity-chips">
+                        <engine:Label name="header-family-chip" class="part-inspector-meta-chip" />
+                        <engine:Label name="header-size-chip"   class="part-inspector-meta-chip" />
+                    </engine:VisualElement>
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:VisualElement class="part-inspector-readiness-row">
+                <engine:Label text="Readiness:" class="part-inspector-section-label" />
+                <engine:VisualElement class="part-inspector-chip-row">
+                    <engine:Label name="readiness-chip-json"    class="part-inspector-readiness-chip" />
+                    <engine:Label name="readiness-chip-icon"    class="part-inspector-readiness-chip" />
+                    <engine:Label name="readiness-chip-reentry" class="part-inspector-readiness-chip" />
+                    <engine:Label name="readiness-chip-valid"   class="part-inspector-readiness-chip" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:VisualElement class="part-inspector-quick-tools">
+                <engine:Label text="Quick Tools:" class="part-inspector-section-label" />
+                <engine:VisualElement class="part-inspector-chip-row">
+                    <engine:Button name="chip-bake-icon"     text="Bake Icon"         class="part-inspector-chip" />
+                    <engine:Button name="chip-bake-reentry"  text="Bake Reentry Mesh" class="part-inspector-chip" />
+                    <engine:Button name="chip-reexport-json" text="Re-export JSON"    class="part-inspector-chip" />
+                    <engine:Button name="chip-open-prefab"   text="Open Prefab"       class="part-inspector-chip" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:VisualElement class="part-inspector-gizmos-row">
+                <engine:Label text="Gizmos:" class="part-inspector-section-label" />
+                <engine:VisualElement class="part-inspector-gizmo-pill-row">
+                    <engine:Button name="gizmo-pill-com"    text="Center of Mass" class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-col"    text="Center of Lift" class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-attach" text="Attach Nodes"   class="part-inspector-gizmo-pill" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+        </engine:VisualElement>
+
+        <engine:VisualElement name="part-tab-bar" class="part-tab-bar">
+            <engine:Button name="tab-core"      text="Core"      class="part-tab" />
+            <engine:Button name="tab-modules"   text="Modules"   class="part-tab" />
+            <engine:Button name="tab-resources" text="Resources" class="part-tab" />
+            <engine:Button name="tab-variants"  text="Variants"  class="part-tab" />
+            <engine:Button name="tab-interacts" text="Interacts" class="part-tab" />
+        </engine:VisualElement>
+
+        <engine:VisualElement name="part-tab-content" class="part-tab-content" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

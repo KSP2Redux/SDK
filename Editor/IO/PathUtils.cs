@@ -18,14 +18,13 @@ namespace Ksp2UnityTools.Editor.IO
                 return path;
             }
     
-            // if we're editing a prefab in Prefab Mode, use the prefab stage asset path
+            // Editing a prefab in Prefab Mode (isolated or in-context). IsPartOfPrefabContents
+            // covers both modes; transform.root would only match isolated mode because in-context
+            // parents the prefab under a hidden environment root.
             PrefabStage? stage = PrefabStageUtility.GetCurrentPrefabStage();
-            if (stage != null && stage.prefabContentsRoot != null)
+            if (stage != null && go != null && stage.IsPartOfPrefabContents(go))
             {
-                if (go != null && go.transform.root == stage.prefabContentsRoot.transform)
-                {
-                    return stage.assetPath;
-                }
+                return stage.assetPath;
             }
     
             // if this is a prefab instance in a scene, ask PrefabUtility for the prefab asset path
