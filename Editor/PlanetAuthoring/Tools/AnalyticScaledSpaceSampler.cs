@@ -352,8 +352,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             int w = normal.width;
             int h = normal.height;
 
-            // Constant "facing outward" pole-tangent normal in DXT5nm pack.
-            var poleColor = new Color(1f, 0.5f, 1f, 0.5f);
+            // Constant "facing outward" pole-tangent normal in source-PNG convention
+            // (R = encoded nx, G = encoded ny, B = encoded nz). The NormalMap importer
+            // swizzles R into the DXT5nm output's alpha at import time.
+            var poleColor = new Color(0.5f, 0.5f, 1f, 1f);
 
             for (int y = 0; y < totalLines; y++)
             {

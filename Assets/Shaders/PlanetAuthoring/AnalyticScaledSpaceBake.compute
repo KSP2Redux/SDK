@@ -28,7 +28,10 @@
 // Outputs (no decals, no per-tile normals, no subzone normals - all of those
 // collapse below the scaled-space pixel and are intentionally excluded):
 //   _OutAlbedo   RGB
-//   _OutNormal   DXT5nm pack: (1, n.y, 1, n.x)
+//   _OutNormal   RGB normal-map source: (n.x, n.y, n.z); the NormalMap importer
+//                swizzles source.R into DXT5nm output.A for runtime decode. Do
+//                NOT pre-pack as (1, n.y, 1, n.x) here - that's the on-GPU
+//                sampled layout, not the source-PNG convention.
 //   _OutPacked   R = metallic, G = AO (macro), B = emission strength, A = smoothness
 //   _OutEmission RGB
 // ============================================================================
@@ -615,7 +618,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float3 emissionSrgb = pow(saturate(accumEmission), 1.0 / 2.2);
 
     _OutAlbedo[pixel]   = float4(albedoSrgb, 1.0);
-    _OutNormal[pixel]   = float4(1.0, nXY.y, 1.0, nXY.x);
+    _OutNormal[pixel]   = float4(nXY.x, nXY.y, 0.0, 1.0);
     _OutPacked[pixel]   = float4(saturate(accumMetallic), saturate(accumAO), 0.0, saturate(accumSmoothness));
     _OutEmission[pixel] = float4(emissionSrgb, 1.0);
 }
@@ -680,7 +683,7 @@ void CSBakeMid(uint3 id : SV_DispatchThreadID)
     // Flat fallback when no layer wins at the anchor.
     float3 outN = (accumW > 0.0) ? normalize(accumN) : float3(0, 0, 1);
     float2 nXY  = saturate(outN.xy * 0.5 + 0.5);
-    _OutMidNormal[pixel] = float4(1.0, nXY.y, 1.0, nXY.x);
+    _OutMidNormal[pixel] = float4(nXY.x, nXY.y, 0.0, 1.0);
 }
 
 // Samples a per-biome raw heightmap at the given equirect UV with the given UV scale.
@@ -751,5 +754,5 @@ void CSBakeLarge(uint3 id : SV_DispatchThreadID)
 
     float3 outN = normalize(_MidHeightWeight * nMid + _LargeHeightWeight * nLarge);
     float2 nXY  = saturate(outN.xy * 0.5 + 0.5);
-    _OutLargeNormal[pixel] = float4(1.0, nXY.y, 1.0, nXY.x);
+    _OutLargeNormal[pixel] = float4(nXY.x, nXY.y, 0.0, 1.0);
 }
