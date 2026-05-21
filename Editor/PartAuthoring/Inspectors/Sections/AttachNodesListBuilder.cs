@@ -1,3 +1,5 @@
+using KSP;
+using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -16,16 +18,19 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
     {
         private readonly SerializedObject _so;
         private readonly SerializedProperty _arrayProp;
+        private readonly CorePartData _target;
         private VisualElement _container;
 
         /// <summary>
         /// Creates a list builder bound to the attachNodes array on the supplied SerializedObject.
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
-        public AttachNodesListBuilder(SerializedObject so)
+        /// <param name="target">The CorePartData the array belongs to. Used by the SceneView handle pickers.</param>
+        public AttachNodesListBuilder(SerializedObject so, CorePartData target)
         {
             _so = so;
             _arrayProp = so.FindProperty("core.data.attachNodes");
+            _target = target;
         }
 
         /// <summary>
@@ -120,6 +125,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             card.Add(headerRow);
             card.Add(body);
 
+            var positionProp = elementProp.FindPropertyRelative("position");
+
             var iterator = elementProp.Copy();
             var endProp = iterator.GetEndProperty();
             if (iterator.NextVisible(true))
@@ -132,6 +139,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     }
                     if (iterator.name == "nodeID")
                     {
+                        continue;
+                    }
+                    if (iterator.name == "position")
+                    {
+                        body.Add(new Vector3dHandleField(iterator.Copy(), _target, SceneHandlePicker.HandleMode.Position));
+                        continue;
+                    }
+                    if (iterator.name == "orientation")
+                    {
+                        body.Add(new Vector3dHandleField(iterator.Copy(), _target, SceneHandlePicker.HandleMode.Orientation, positionProp));
                         continue;
                     }
                     body.Add(new PropertyField(iterator.Copy()));

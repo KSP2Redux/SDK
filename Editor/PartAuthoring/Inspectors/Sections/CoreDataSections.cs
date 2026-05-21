@@ -1,4 +1,5 @@
 using KSP;
+using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using Ksp2UnityTools.Editor.PartAuthoring.Tools;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -105,7 +106,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             var foldout = MakeSectionFoldout("Attachment");
             foldout.Add(BuildAttachRulesField(so));
 
-            var listBuilder = new AttachNodesListBuilder(so);
+            var listBuilder = new AttachNodesListBuilder(so, target);
             foldout.Add(listBuilder.Build());
 
             var autoBtn = new Button(() =>
@@ -186,33 +187,106 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
         /// <returns>A bound Foldout with the section's PropertyFields.</returns>
-        public static VisualElement BuildCentersBuoyancy(SerializedObject so)
+        public static VisualElement BuildCentersBuoyancy(SerializedObject so, CorePartData target)
         {
             var foldout = MakeSectionFoldout("Centers & Buoyancy");
-            AddField(foldout, so, "core.data.coMassOffset");
-            AddField(foldout, so, "core.data.coLiftOffset");
-            AddField(foldout, so, "core.data.coPressureOffset");
-            AddField(foldout, so, "core.data.coBuoyancy");
-            AddField(foldout, so, "core.data.coDisplacement");
+            AddPositionHandleField(foldout, so, "core.data.coMassOffset", target);
+            AddPositionHandleField(foldout, so, "core.data.coLiftOffset", target);
+            AddPositionHandleField(foldout, so, "core.data.coPressureOffset", target);
+            AddPositionHandleField(foldout, so, "core.data.coBuoyancy", target);
+            AddPositionHandleField(foldout, so, "core.data.coDisplacement", target);
             AddField(foldout, so, "core.data.buoyancy");
             AddField(foldout, so, "core.data.buoyancyUseSine");
             AddField(foldout, so, "core.data.buoyancyUseCubeNamed");
             return Bound(foldout, so);
         }
 
+        private static void AddPositionHandleField(VisualElement parent, SerializedObject so, string path, CorePartData target)
+        {
+            var prop = so.FindProperty(path);
+            if (prop != null)
+            {
+                parent.Add(new Vector3dHandleField(prop, target, SceneHandlePicker.HandleMode.Position));
+            }
+        }
+
         /// <summary>
-        /// Builds the Resources section. Fields here are slated to move into the future Resources tab.
+        /// Builds the Resources section (per-part storage containers, resource cost rollup, report-storage flag).
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
-        /// <returns>A bound Foldout with the section's PropertyFields and a future-tab notice HelpBox.</returns>
+        /// <returns>A bound Foldout with the section's table widgets and report-storage toggle.</returns>
         public static VisualElement BuildResources(SerializedObject so)
         {
             var foldout = MakeSectionFoldout("Resources");
-            foldout.Add(new HelpBox(
-                "These fields move to the Resources tab when that tab is built.",
-                HelpBoxMessageType.Info));
-            AddField(foldout, so, "core.data.resourceContainers");
-            AddField(foldout, so, "core.data.resourceCosts");
+
+            var storageTable = new SerializedArrayTable(
+                so,
+                "core.data.resourceContainers",
+                "Storage",
+                "+ Add Container",
+                new[]
+                {
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Name",
+                        PropertyName = "name",
+                        Kind = SerializedTableColumnKind.Text,
+                        Flex = 1f,
+                        Tooltip = "Resource name. Must match a known ResourceDefinition.",
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Capacity",
+                        PropertyName = "capacityUnits",
+                        Kind = SerializedTableColumnKind.Double,
+                        FixedWidth = 80f,
+                        Tooltip = "Maximum stored units of this resource.",
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Initial",
+                        PropertyName = "initialUnits",
+                        Kind = SerializedTableColumnKind.Double,
+                        FixedWidth = 80f,
+                        Tooltip = "Stored units at part spawn.",
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Non-Stageable",
+                        PropertyName = "NonStageable",
+                        Kind = SerializedTableColumnKind.Toggle,
+                        FixedWidth = 90f,
+                        Tooltip = "When true, the resource is hidden from the staging flow rollup.",
+                    },
+                });
+            foldout.Add(storageTable.Build());
+
+            var costsTable = new SerializedArrayTable(
+                so,
+                "core.data.resourceCosts",
+                "Build Costs",
+                "+ Add Cost",
+                new[]
+                {
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Name",
+                        PropertyName = "name",
+                        Kind = SerializedTableColumnKind.Text,
+                        Flex = 1f,
+                        Tooltip = "Resource name consumed to build the part in the OAB.",
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Units",
+                        PropertyName = "resourceUnits",
+                        Kind = SerializedTableColumnKind.Double,
+                        FixedWidth = 80f,
+                        Tooltip = "Units of this resource required to build one of this part.",
+                    },
+                });
+            foldout.Add(costsTable.Build());
+
             AddField(foldout, so, "core.data.HasReportStorage");
             return Bound(foldout, so);
         }

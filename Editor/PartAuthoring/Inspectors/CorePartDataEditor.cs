@@ -18,10 +18,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
     /// </summary>
     /// <remarks>
     /// Header chrome above the tab bar surfaces identity (part name, family, size category), the
-    /// Quick Tools chip row, and a Gizmo Settings foldout. Tabs are Core, Modules, Resources,
-    /// Variants, Interacts. While each tab's content is being authored in UI Toolkit, the Core
-    /// tab embeds the existing IMGUI editor through an <see cref="IMGUIContainer" /> so the
-    /// existing affordances stay available.
+    /// Quick Tools chip row, and a Gizmo Settings foldout. Tabs are Core, Modules, Variants,
+    /// Interacts.
     /// </remarks>
     [CustomEditor(typeof(CorePartData))]
     public sealed class CorePartDataEditor : UnityEditor.Editor
@@ -33,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private const string DEFAULT_TAB = "core";
         private const string TAB_ACTIVE_CLASS = "part-tab--active";
 
-        private static readonly string[] TAB_IDS = { "core", "modules", "resources", "variants", "interacts" };
+        private static readonly string[] TAB_IDS = { "core", "modules", "variants", "interacts" };
 
         private VisualElement _root;
         private VisualElement _tabContent;
@@ -336,14 +334,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                     _tabContent.Add(CoreDataSections.BuildAerodynamicsPhysics(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildAttachment(serializedObject, cpd));
                     _tabContent.Add(CoreDataSections.BuildStaging(serializedObject));
-                    _tabContent.Add(CoreDataSections.BuildCentersBuoyancy(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildCentersBuoyancy(serializedObject, cpd));
                     _tabContent.Add(CoreDataSections.BuildResources(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildOabEditor(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildPamOverrides(serializedObject));
                     _tabContent.Add(new ReentryMeshSection(cpd));
                     break;
                 case "modules":
-                case "resources":
                 case "variants":
                 case "interacts":
                     _tabContent.Add(BuildPlaceholder());
