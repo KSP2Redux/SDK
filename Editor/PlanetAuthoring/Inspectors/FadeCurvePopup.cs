@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// to its trigger element via <see cref="EditorWindow.ShowAuxWindow" /> so it opens as a draggable utility window
     /// that closes when focus leaves the editor. Drag interactions use Shift for fine drag (0.2x) and Ctrl for snap to
     /// <see cref="GraphWidgetCommon.SnapStepHeight" />, mirroring the trapezoid window popup. The popup is decoupled
-    /// from any source of truth — callers pass in the initial value and a per-edit callback that receives the new value.
+    /// from any source of truth: callers pass in the initial value and a per-edit callback that receives the new value.
     /// </remarks>
     public class FadeCurvePopup : EditorWindow
     {

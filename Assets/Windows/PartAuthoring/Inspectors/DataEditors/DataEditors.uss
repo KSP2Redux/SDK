@@ -1,0 +1,208 @@
+/* Shared styles for IDataEditor implementations: card frames, section headers, disclosure
+ * buttons, remove buttons, empty hints, vector rows. Mirrors the .module-card vocabulary
+ * in ModulesTab.uss so the Modules tab and the cards nested inside it stay visually
+ * consistent.
+ */
+
+/* ----- Card frame (used by drag cubes, engine modes, etc.) -------------- */
+
+.data-editor-card {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(0, 0, 0, 0.45);
+    border-right-color: rgba(0, 0, 0, 0.45);
+    border-top-color: rgba(0, 0, 0, 0.45);
+    border-bottom-color: rgba(0, 0, 0, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding-bottom: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.data-editor-card-header {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(70, 100, 140, 0.25);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 4px;
+    margin-bottom: 4px;
+}
+
+.data-editor-card-disclosure {
+    width: 18px;
+    height: 18px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 4px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    color: rgb(220, 230, 245);
+    -unity-text-align: middle-center;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.data-editor-card-name-field {
+    flex-grow: 1;
+    margin-right: 6px;
+}
+
+.data-editor-card-mini-label {
+    margin-right: 4px;
+    color: rgb(180, 195, 215);
+}
+
+.data-editor-card-summary-chip {
+    margin-right: 6px;
+    color: rgb(180, 195, 215);
+}
+
+.data-editor-card-remove-btn {
+    width: 22px;
+    height: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    flex-shrink: 0;
+}
+
+.data-editor-card-body {
+    padding-top: 4px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* ----- Section header (bold blue label above a list of cards) ----------- */
+
+.data-editor-section {
+    margin-top: 4px;
+}
+
+.data-editor-section-header-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.data-editor-section-header {
+    -unity-font-style: bold;
+    color: rgb(210, 220, 235);
+    flex-grow: 1;
+}
+
+.data-editor-section-list {
+    flex-direction: column;
+}
+
+/* ----- Sub-section header (smaller bold inside a card body) ------------- */
+
+.data-editor-subsection-header {
+    -unity-font-style: bold;
+    color: rgb(195, 205, 220);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+/* ----- Empty-list italic hint ------------------------------------------- */
+
+.data-editor-empty-hint {
+    color: rgb(160, 170, 185);
+    -unity-font-style: italic;
+}
+
+/* ----- Subsection foldout (used inside card bodies for [Header]-grouped --
+ * field clusters: Heat Variables, Exhaust Damage Variables, etc. in Engine. */
+
+.data-editor-subsection-foldout {
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.data-editor-subsection-foldout > .unity-foldout__toggle {
+    background-color: rgba(70, 100, 140, 0.18);
+    border-left-width: 2px;
+    border-left-color: rgba(95, 150, 210, 0.55);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 4px;
+    margin-bottom: 0;
+}
+
+.data-editor-subsection-foldout > .unity-foldout__toggle Label {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+}
+
+.data-editor-subsection-foldout > .unity-foldout__content {
+    padding-top: 2px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    margin-left: 0;
+}
+
+/* PropertyField auto-renders [Header] attributes inside a decorator container.
+ * Inside our subsection foldouts the chrome already shows the group title, so
+ * hide the duplicate inner label. */
+.data-editor-subsection-foldout .unity-decorator-drawers-container {
+    display: none;
+}
+
+/* ----- Inline block (subtly framed sub-region inside a card body, used --
+ * for the Engine thrust-transforms table). */
+
+.data-editor-inline-block {
+    background-color: rgba(0, 0, 0, 0.10);
+    border-left-width: 2px;
+    border-left-color: rgba(95, 150, 210, 0.40);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    padding-right: 4px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+/* ----- Vector3 row (horizontal narrow label + flex-grow Vector3Field) --- */
+
+.data-editor-vector-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.data-editor-vector-row__label {
+    width: 60px;
+    flex-shrink: 0;
+    color: rgb(195, 205, 220);
+}
+
+.data-editor-vector-row__field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}

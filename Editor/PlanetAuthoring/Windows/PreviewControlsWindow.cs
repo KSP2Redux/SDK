@@ -272,7 +272,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                     int capturedLayer = layer;
                     var cell = new VisualElement
                     {
-                        tooltip = $"Biome {BiomeLabels[biome]} Layer {layer + 1} — click to toggle visibility in the Active layer overlay.",
+                        tooltip = $"Biome {BiomeLabels[biome]} Layer {layer + 1}: click to toggle visibility in the Active layer overlay.",
                     };
                     cell.AddToClassList("sdk-tile-grid-cell");
                     cell.style.backgroundColor = BiomeColors[biome] * LayerBrightness[layer];

@@ -11,7 +11,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields
     /// </summary>
     /// <remarks>
     /// Used wherever a shader Vector4 is authored with per-channel meaning (R/G/B/A weights, Sx/Sy/Ox/Oy
-    /// UV transform, sz0..sz3 subzone filter). Decoupled from any source of truth — callers wire it to a
+    /// UV transform, sz0..sz3 subzone filter). Decoupled from any source of truth: callers wire it to a
     /// material or PQSData via the binder helpers and listen for value changes via the standard
     /// <c>RegisterValueChangedCallback</c> path.
     /// </remarks>

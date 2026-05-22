@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -19,6 +20,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         Int,
         /// <summary>Boolean cell backed by a <see cref="Toggle" />.</summary>
         Toggle,
+        /// <summary>Custom cell - the table delegates construction to <see cref="SerializedTableColumn.CustomBuilder" />.</summary>
+        Custom,
     }
 
     /// <summary>
@@ -43,6 +46,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         public float FixedWidth;
         /// <summary>Optional tooltip for both the header cell and the row cell.</summary>
         public string Tooltip;
+        /// <summary>Cell builder for <see cref="SerializedTableColumnKind.Custom" /> columns. Receives the cell's SerializedProperty.</summary>
+        public Func<SerializedProperty, VisualElement> CustomBuilder;
     }
 
     /// <summary>
@@ -221,6 +226,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     var field = new Toggle();
                     field.BindProperty(prop);
                     return field;
+                }
+                case SerializedTableColumnKind.Custom:
+                {
+                    return col.CustomBuilder?.Invoke(prop) ?? new Label("(missing builder)");
                 }
                 default:
                 {

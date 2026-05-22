@@ -15,6 +15,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Gizmos
         private const string PREF_KEY_SHOW_CENTER_OF_MASS = "PartAuthoring.Gizmos.ShowCenterOfMass";
         private const string PREF_KEY_SHOW_CENTER_OF_LIFT = "PartAuthoring.Gizmos.ShowCenterOfLift";
         private const string PREF_KEY_SHOW_ATTACH_NODES = "PartAuthoring.Gizmos.ShowAttachNodes";
+        private const string PREF_KEY_SHOW_HEATSHIELD_SHIELDING_DIRECTION = "PartAuthoring.Gizmos.ShowHeatshieldShieldingDirection";
+        private const string PREF_KEY_SHOW_WHEEL_BOGEY_AXIS = "PartAuthoring.Gizmos.ShowWheelBogeyAxis";
+        private const string PREF_KEY_SHOW_WHEEL_BOGEY_UP_AXIS = "PartAuthoring.Gizmos.ShowWheelBogeyUpAxis";
 
         /// <summary>
         /// Gets or sets a value indicating whether the centre-of-mass icon is drawn in the SceneView.
@@ -41,6 +44,33 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Gizmos
         {
             get => EditorPrefs.GetBool(PREF_KEY_SHOW_ATTACH_NODES, true);
             set => EditorPrefs.SetBool(PREF_KEY_SHOW_ATTACH_NODES, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the heatshield shielding-direction arrow is drawn in the SceneView.
+        /// </summary>
+        public static bool ShowHeatshieldShieldingDirection
+        {
+            get => EditorPrefs.GetBool(PREF_KEY_SHOW_HEATSHIELD_SHIELDING_DIRECTION, true);
+            set => EditorPrefs.SetBool(PREF_KEY_SHOW_HEATSHIELD_SHIELDING_DIRECTION, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the wheel-bogey rotation-axis arrow is drawn in the SceneView.
+        /// </summary>
+        public static bool ShowWheelBogeyAxis
+        {
+            get => EditorPrefs.GetBool(PREF_KEY_SHOW_WHEEL_BOGEY_AXIS, true);
+            set => EditorPrefs.SetBool(PREF_KEY_SHOW_WHEEL_BOGEY_AXIS, value);
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the wheel-bogey up-axis arrow is drawn in the SceneView.
+        /// </summary>
+        public static bool ShowWheelBogeyUpAxis
+        {
+            get => EditorPrefs.GetBool(PREF_KEY_SHOW_WHEEL_BOGEY_UP_AXIS, true);
+            set => EditorPrefs.SetBool(PREF_KEY_SHOW_WHEEL_BOGEY_UP_AXIS, value);
         }
     }
 }

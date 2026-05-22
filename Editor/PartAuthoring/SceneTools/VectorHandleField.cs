@@ -1,33 +1,36 @@
-using KSP;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
 {
     /// <summary>
-    /// Inspector field for a Vector3d that pairs a PropertyField with a SceneView handle picker button.
+    /// Inspector field for a Vector3 or Vector3d that pairs a PropertyField with a SceneView handle
+    /// picker button.
     /// </summary>
     /// <remarks>
-    /// The PropertyField uses the registered Vector3d drawer (three DoubleField inputs). The
-    /// button toggles a <see cref="SceneHandlePicker" /> session on the field; while engaged,
-    /// a Unity Handle is drawn in the SceneView and dragged updates the field's value.
+    /// The PropertyField uses Unity's stock drawer for the value type (three FloatField inputs for
+    /// Vector3, three DoubleField inputs for Vector3d). The button toggles a
+    /// <see cref="SceneHandlePicker" /> session on the field; while engaged a Unity Handle is
+    /// drawn in the SceneView and dragged updates the field's value.
     /// </remarks>
-    public sealed class Vector3dHandleField : VisualElement
+    public sealed class VectorHandleField : VisualElement
     {
         /// <summary>
-        /// Creates a handle-enabled Vector3d field.
+        /// Creates a handle-enabled vector field.
         /// </summary>
-        /// <param name="primary">The Vector3d property being edited.</param>
-        /// <param name="target">The owning part. Provides the transform and Undo target.</param>
+        /// <param name="primary">The Vector3 or Vector3d property being edited.</param>
+        /// <param name="target">The Component the property lives on. Provides the SerializedObject and Undo target.</param>
         /// <param name="mode">Position or Orientation handle kind.</param>
         /// <param name="anchor">Anchor position for Orientation handles. Ignored for Position handles.</param>
-        public Vector3dHandleField(SerializedProperty primary, CorePartData target, SceneHandlePicker.HandleMode mode, SerializedProperty anchor = null)
+        public VectorHandleField(SerializedProperty primary, Component target, SceneHandlePicker.HandleMode mode, SerializedProperty anchor = null)
         {
             AddToClassList("vector3d-handle-field");
 
             var field = new PropertyField(primary);
             field.AddToClassList("vector3d-handle-field__field");
+            field.AddToClassList("unity-base-field__aligned");
             Add(field);
 
             var button = new Button(() => SceneHandlePicker.Engage(target, primary, mode, anchor))

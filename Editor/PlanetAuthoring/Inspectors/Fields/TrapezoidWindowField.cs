@@ -13,7 +13,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields
     /// <remarks>
     /// Renders like Unity's <c>CurveField</c>. One widget covers both height windows (X axis in meters,
     /// range <c>[0, planetMaxAltitude]</c>) and slope windows (X axis in degrees, range <c>[0, 90]</c>).
-    /// The widget is decoupled from any specific source — callers wire it via the binder helpers and
+    /// The widget is decoupled from any specific source: callers wire it via the binder helpers and
     /// listen for value changes via the standard <c>RegisterValueChangedCallback</c> path.
     /// </remarks>
     public class TrapezoidWindowField : BaseField<Vector4>

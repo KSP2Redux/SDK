@@ -12,7 +12,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// <remarks>
     /// Each <c>Bind*</c> method takes an already-constructed field, seeds its current value from the material,
     /// and registers a value-changed callback that records an undo, writes the property, marks the material
-    /// dirty, and repaints the scene view. Callers stay decoupled from the widget types — they construct the
+    /// dirty, and repaints the scene view. Callers stay decoupled from the widget types: they construct the
     /// field once and call the matching <c>Bind*</c> to wire it to a material.
     /// </remarks>
     public static class MaterialBinder

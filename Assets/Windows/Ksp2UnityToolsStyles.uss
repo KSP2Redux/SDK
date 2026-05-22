@@ -380,3 +380,43 @@
 .validation-issue-fix {
     margin-right: 4px;
 }
+
+/* ----- AutocompleteField (and its specialisations) --------------------- */
+
+.autocomplete-field {
+    flex-direction: column;
+    position: relative;
+}
+
+.autocomplete-field__suggestions {
+    position: absolute;
+    max-height: 140px;
+    background-color: rgb(28, 32, 40);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(85, 100, 125);
+    border-right-color: rgb(85, 100, 125);
+    border-top-color: rgb(85, 100, 125);
+    border-bottom-color: rgb(85, 100, 125);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.autocomplete-field__suggestion {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+    color: rgb(220, 230, 245);
+    font-size: 11px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.autocomplete-field__suggestion:hover {
+    background-color: rgba(95, 150, 210, 0.55);
+    color: rgb(245, 250, 255);
+}

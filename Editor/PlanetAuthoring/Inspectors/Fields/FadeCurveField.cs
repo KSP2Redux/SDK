@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields
     /// Renders like Unity's <c>CurveField</c>. The label sits on the left (provided by <see cref="BaseField{T}" />)
     /// and a clickable preview on the right shows a thumbnail of the curve plus the current value summary.
     /// Clicking the preview opens <see cref="FadeCurvePopup" /> for full editing. The widget is decoupled
-    /// from any specific source — callers wire it to a material/PQSData via the binder helpers and listen for
+    /// from any specific source: callers wire it to a material/PQSData via the binder helpers and listen for
     /// value changes via the standard <c>RegisterValueChangedCallback</c> path.
     /// </remarks>
     public class FadeCurveField : BaseField<Vector4>

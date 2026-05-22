@@ -394,7 +394,7 @@
 
 .vector3d-handle-field {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .vector3d-handle-field__field {

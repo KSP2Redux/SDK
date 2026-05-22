@@ -1,9 +1,11 @@
-using System.IO;
+using System.Collections.Generic;
 using System.IO;
 using KSP;
+using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.IO;
 using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs;
 using Ksp2UnityTools.Editor.PartAuthoring.Tools;
 using Redux.VFX.ReentryMeshGeneration;
 using UnityEditor;
@@ -36,10 +38,47 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private VisualElement _root;
         private VisualElement _tabContent;
         private string _activeTab;
+        private Dictionary<PartBehaviourModule, HideFlags> _originalModuleHideFlags;
 
         private void OnEnable()
         {
             _activeTab = SessionState.GetString(SESSION_STATE_KEY_ACTIVE_TAB, DEFAULT_TAB);
+            HideModuleComponentEditors();
+        }
+
+        private void OnDisable()
+        {
+            RestoreModuleComponentEditors();
+        }
+
+        private void HideModuleComponentEditors()
+        {
+            _originalModuleHideFlags = new Dictionary<PartBehaviourModule, HideFlags>();
+            if (target is not CorePartData cpd)
+            {
+                return;
+            }
+            foreach (var module in cpd.gameObject.GetComponents<PartBehaviourModule>())
+            {
+                _originalModuleHideFlags[module] = module.hideFlags;
+                module.hideFlags |= HideFlags.HideInInspector;
+            }
+        }
+
+        private void RestoreModuleComponentEditors()
+        {
+            if (_originalModuleHideFlags == null)
+            {
+                return;
+            }
+            foreach (var pair in _originalModuleHideFlags)
+            {
+                if (pair.Key != null)
+                {
+                    pair.Key.hideFlags = pair.Value;
+                }
+            }
+            _originalModuleHideFlags = null;
         }
 
         /// <inheritdoc />
@@ -337,10 +376,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                     _tabContent.Add(CoreDataSections.BuildCentersBuoyancy(serializedObject, cpd));
                     _tabContent.Add(CoreDataSections.BuildResources(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildOabEditor(serializedObject));
-                    _tabContent.Add(CoreDataSections.BuildPamOverrides(serializedObject));
                     _tabContent.Add(new ReentryMeshSection(cpd));
                     break;
                 case "modules":
+                    _tabContent.Add(ModulesTab.Build((CorePartData)target));
+                    break;
                 case "variants":
                 case "interacts":
                     _tabContent.Add(BuildPlaceholder());

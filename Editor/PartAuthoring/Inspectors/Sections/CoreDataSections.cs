@@ -1,4 +1,5 @@
 using KSP;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using Ksp2UnityTools.Editor.PartAuthoring.Tools;
 using UnityEditor;
@@ -206,7 +207,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             var prop = so.FindProperty(path);
             if (prop != null)
             {
-                parent.Add(new Vector3dHandleField(prop, target, SceneHandlePicker.HandleMode.Position));
+                parent.Add(new VectorHandleField(prop, target, SceneHandlePicker.HandleMode.Position));
             }
         }
 
@@ -230,9 +231,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     {
                         HeaderLabel = "Name",
                         PropertyName = "name",
-                        Kind = SerializedTableColumnKind.Text,
+                        Kind = SerializedTableColumnKind.Custom,
+                        CustomBuilder = prop => new ResourceNameField(prop, string.Empty),
                         Flex = 1f,
-                        Tooltip = "Resource name. Must match a known ResourceDefinition.",
                     },
                     new SerializedTableColumn
                     {
@@ -272,9 +273,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     {
                         HeaderLabel = "Name",
                         PropertyName = "name",
-                        Kind = SerializedTableColumnKind.Text,
+                        Kind = SerializedTableColumnKind.Custom,
+                        CustomBuilder = prop => new ResourceNameField(prop, string.Empty),
                         Flex = 1f,
-                        Tooltip = "Resource name consumed to build the part in the OAB.",
                     },
                     new SerializedTableColumn
                     {
@@ -309,22 +310,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             AddField(foldout, so, "core.data.PickupRotationPointOffset");
             AddField(foldout, so, "core.data.hideFromFlightPartsManager");
             AddField(foldout, so, "core.data.hideFromOABPartsManager");
-            return Bound(foldout, so);
-        }
-
-        /// <summary>
-        /// Builds the PAM Overrides section (Parts Action Menu sort and display overrides).
-        /// </summary>
-        /// <param name="so">The CorePartData's SerializedObject.</param>
-        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
-        public static VisualElement BuildPamOverrides(SerializedObject so)
-        {
-            var foldout = MakeSectionFoldout("PAM Overrides");
-            foldout.Add(new HelpBox(
-                "These overrides move to the per-module editors (and the Variants editor for the variants module) when those are built.",
-                HelpBoxMessageType.Info));
-            AddField(foldout, so, "core.data.PAMModuleSortOverride");
-            AddField(foldout, so, "core.data.PAMModuleVisualsOverride");
             return Bound(foldout, so);
         }
 

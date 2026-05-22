@@ -143,12 +143,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     }
                     if (iterator.name == "position")
                     {
-                        body.Add(new Vector3dHandleField(iterator.Copy(), _target, SceneHandlePicker.HandleMode.Position));
+                        body.Add(new VectorHandleField(iterator.Copy(), _target, SceneHandlePicker.HandleMode.Position));
                         continue;
                     }
                     if (iterator.name == "orientation")
                     {
-                        body.Add(new Vector3dHandleField(iterator.Copy(), _target, SceneHandlePicker.HandleMode.Orientation, positionProp));
+                        body.Add(new VectorHandleField(iterator.Copy(), _target, SceneHandlePicker.HandleMode.Orientation, positionProp));
                         continue;
                     }
                     body.Add(new PropertyField(iterator.Copy()));

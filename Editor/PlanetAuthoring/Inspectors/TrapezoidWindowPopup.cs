@@ -17,7 +17,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// This popup exposes the four edges of that shape via artist-facing names (Fade In, Start, End, Fade Out).
     /// Each of the four corner handles is independent. The body of the plateau translates the
     /// whole window. Shift = fine drag, Ctrl = snap to 100 m or 5 deg. Decoupled from any source of
-    /// truth — callers pass in the initial value and a per-edit callback that receives the new value.
+    /// truth: callers pass in the initial value and a per-edit callback that receives the new value.
     /// </remarks>
     public class TrapezoidWindowPopup : EditorWindow
     {
