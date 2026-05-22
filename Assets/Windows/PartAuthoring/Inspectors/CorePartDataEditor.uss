@@ -119,6 +119,24 @@
     color: rgb(250, 220, 215);
 }
 
+.part-inspector-readiness-chip--clickable {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.25);
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+    border-left-color: rgba(255, 255, 255, 0.25);
+    border-right-color: rgba(255, 255, 255, 0.25);
+}
+
+.part-inspector-readiness-chip--clickable:hover {
+    border-top-color: rgba(255, 255, 255, 0.65);
+    border-bottom-color: rgba(255, 255, 255, 0.65);
+    border-left-color: rgba(255, 255, 255, 0.65);
+    border-right-color: rgba(255, 255, 255, 0.65);
+}
+
 /* ----- Quick Tools chip row --------------------------------------------- */
 
 .part-inspector-quick-tools {

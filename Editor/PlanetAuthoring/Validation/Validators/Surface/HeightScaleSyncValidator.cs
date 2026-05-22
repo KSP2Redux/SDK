@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEngine;
+using Ksp2UnityTools.Editor.Validation;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
 {
@@ -43,8 +44,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
             PQSData pqsData = pqs.data;
             var fixes = new[]
             {
-                new ValidationFix("Copy PQSData → body", () => SyncBodyToPqsData(body, pqsData)),
-                new ValidationFix("Copy body → PQSData", () => SyncPqsDataToBody(body, pqsData)),
+                new ValidationFix("Copy PQSData â†’ body", () => SyncBodyToPqsData(body, pqsData)),
+                new ValidationFix("Copy body â†’ PQSData", () => SyncPqsDataToBody(body, pqsData)),
             };
 
             yield return new ValidationIssue(Code, ValidationSeverity.Warning, message, fixes);

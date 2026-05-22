@@ -1,6 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using KSP;
 using UnityEditor;
+using Ksp2UnityTools.Editor.Validation;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environment
 {

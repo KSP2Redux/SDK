@@ -1,9 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using KSP;
 using KSP.Game.Science;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Science;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using UnityEditor;
+using Ksp2UnityTools.Editor.Validation;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Science
 {

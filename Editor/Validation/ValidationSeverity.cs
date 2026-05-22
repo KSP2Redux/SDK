@@ -1,4 +1,4 @@
-namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
+namespace Ksp2UnityTools.Editor.Validation
 {
     /// <summary>
     /// Severity classification for a <see cref="ValidationIssue" />.
@@ -10,9 +10,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
     {
         /// <summary>Informational note. No action required.</summary>
         Info,
-        /// <summary>Likely authoring mistake. Should be reviewed but does not block running the body.</summary>
+        /// <summary>Likely authoring mistake. Should be reviewed but does not block running the validation target.</summary>
         Warning,
-        /// <summary>Hard error. The body will not work correctly until this is resolved.</summary>
+        /// <summary>Hard error. The validation target will not work correctly until this is resolved.</summary>
         Error,
     }
 }

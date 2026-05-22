@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using KSP;
 using KSP.Rendering.Planets;
@@ -6,6 +6,7 @@ using Ksp2UnityTools.Editor.IO;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEngine;
+using Ksp2UnityTools.Editor.Validation;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
 {

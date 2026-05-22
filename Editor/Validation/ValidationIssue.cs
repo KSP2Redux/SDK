@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 
-namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
+namespace Ksp2UnityTools.Editor.Validation
 {
     /// <summary>
-    /// One validation finding emitted by an <see cref="IPlanetValidator" />.
+    /// One validation finding emitted by an <see cref="IValidator{T}" />.
     /// </summary>
     /// <remarks>
     /// Identified by <see cref="Code" /> for stable matching across runs. <see cref="Message" /> is the artist-facing display string.

@@ -1,6 +1,6 @@
 using System;
 
-namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
+namespace Ksp2UnityTools.Editor.Validation
 {
     /// <summary>
     /// One auto-fix action attached to a <see cref="ValidationIssue" />.

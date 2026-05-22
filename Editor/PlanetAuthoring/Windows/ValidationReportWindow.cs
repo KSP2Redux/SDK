@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ksp2UnityTools.Editor.Validation;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 {
@@ -291,7 +292,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             if (!string.IsNullOrEmpty(dims)) metaParts.Add(dims);
             if (!string.IsNullOrEmpty(e.Category)) metaParts.Add(e.Category);
             if (!string.IsNullOrEmpty(e.Detail)) metaParts.Add(e.Detail);
-            var metaLabel = new Label(string.Join("  ·  ", metaParts));
+            var metaLabel = new Label(string.Join("  Â·  ", metaParts));
             metaLabel.AddToClassList("vram-tex-row-meta");
             row.Add(metaLabel);
 

@@ -1,0 +1,90 @@
+/* Part Validation Report window - mirrors PlanetAuthoring/Windows/ValidationReportWindow.uss
+ * minus the VRAM panel. Issue-row visuals come from the shared Ksp2UnityToolsStyles.uss sheet
+ * via the .validation-issue-* selectors. */
+
+.validation-report-root {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.validation-report-summary-label {
+    -unity-font-style: bold;
+    margin-top: 4px;
+}
+
+.validation-report-last-run-label {
+    color: rgb(170, 170, 170);
+    font-size: 11px;
+}
+
+.validation-report-filters {
+    flex-direction: row;
+    align-items: center;
+}
+
+.validation-report-filters > Toggle {
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-right: 14px;
+}
+
+.validation-report-filters > Toggle > .unity-toggle__input {
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: auto;
+}
+
+.validation-report-filters > Toggle .unity-text-element {
+    flex-grow: 0;
+    min-width: auto;
+    margin-right: 4px;
+}
+
+.validation-report-empty {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    align-items: center;
+}
+
+.validation-report-empty-label {
+    color: rgb(110, 200, 110);
+    -unity-font-style: bold;
+}
+
+.validation-report-group {
+    margin-top: 6px;
+    margin-bottom: 4px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: rgba(50, 60, 80, 0.35);
+}
+
+.validation-report-group-header {
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.validation-report-group--error .validation-report-group-header {
+    color: rgb(220, 130, 80);
+}
+
+.validation-report-group--warning .validation-report-group-header {
+    color: rgb(220, 165, 80);
+}
+
+.validation-report-group--info .validation-report-group-header {
+    color: rgb(120, 170, 230);
+}
+
+.validation-report-issue-code {
+    font-size: 10px;
+    color: rgb(160, 175, 200);
+    -unity-font-style: bold;
+    margin-bottom: 1px;
+}

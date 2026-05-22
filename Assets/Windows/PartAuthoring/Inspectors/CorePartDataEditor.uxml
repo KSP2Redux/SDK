@@ -24,7 +24,7 @@
                     <engine:Label name="readiness-chip-json"    class="part-inspector-readiness-chip" />
                     <engine:Label name="readiness-chip-icon"    class="part-inspector-readiness-chip" />
                     <engine:Label name="readiness-chip-reentry" class="part-inspector-readiness-chip" />
-                    <engine:Label name="readiness-chip-valid"   class="part-inspector-readiness-chip" />
+                    <engine:Button name="readiness-chip-valid"  class="part-inspector-readiness-chip part-inspector-readiness-chip--clickable" />
                 </engine:VisualElement>
             </engine:VisualElement>
 

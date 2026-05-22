@@ -1,4 +1,4 @@
-namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
+namespace Ksp2UnityTools.Editor.Validation
 {
     /// <summary>
     /// Categorization for how often a validator should run.

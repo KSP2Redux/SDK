@@ -7,9 +7,13 @@ using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs;
 using Ksp2UnityTools.Editor.PartAuthoring.Tools;
+using Ksp2UnityTools.Editor.PartAuthoring.Validation;
+using Ksp2UnityTools.Editor.PartAuthoring.Windows;
+using Ksp2UnityTools.Editor.Validation;
 using Redux.VFX.ReentryMeshGeneration;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -44,11 +48,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         {
             _activeTab = SessionState.GetString(SESSION_STATE_KEY_ACTIVE_TAB, DEFAULT_TAB);
             HideModuleComponentEditors();
+            PartValidationExpensiveCache.Changed += OnExpensiveCacheChanged;
         }
 
         private void OnDisable()
         {
             RestoreModuleComponentEditors();
+            PartValidationExpensiveCache.Changed -= OnExpensiveCacheChanged;
+        }
+
+        private void OnExpensiveCacheChanged(CorePartData part)
+        {
+            if (_root == null) return;
+            if (part != null && part != target) return;
+            UpdateValidationChip();
         }
 
         private void HideModuleComponentEditors()
@@ -203,15 +216,66 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 SetReadinessState(reentryChip, baked ? "is-ok" : "is-warn");
             }
 
-            var validChip = _root.Q<Label>("readiness-chip-valid");
-            if (validChip != null)
+            UpdateValidationChip();
+        }
+
+        private void UpdateValidationChip()
+        {
+            if (_root == null)
             {
-                validChip.text = "Validators pending";
+                return;
+            }
+            var validChip = _root.Q<Button>("readiness-chip-valid");
+            if (validChip == null)
+            {
+                return;
+            }
+            var cpd = target as CorePartData;
+            if (cpd == null)
+            {
+                validChip.text = "Validation: n/a";
                 SetReadinessState(validChip, null);
+                return;
+            }
+
+            PartValidationReport cheap = PartValidationReport.Run(new PartValidationContext(cpd), ValidatorCost.Cheap);
+            IReadOnlyList<ValidationIssue> expensive = PartValidationExpensiveCache.Get(cpd);
+            int errors = cheap.ErrorCount;
+            int warnings = cheap.WarningCount;
+            int info = cheap.InfoCount;
+            foreach (var issue in expensive)
+            {
+                switch (issue.Severity)
+                {
+                    case ValidationSeverity.Error: errors++; break;
+                    case ValidationSeverity.Warning: warnings++; break;
+                    case ValidationSeverity.Info: info++; break;
+                }
+            }
+
+            if (errors + warnings + info == 0)
+            {
+                validChip.text = "No issues";
+                SetReadinessState(validChip, "is-ok");
+            }
+            else
+            {
+                validChip.text = $"✕ {errors}  ·  ⚠ {warnings}  ·  ⓘ {info}";
+                SetReadinessState(validChip, errors > 0 ? "is-error" : "is-warn");
+            }
+
+            if (!_validationChipWired)
+            {
+                _validationChipWired = true;
+                validChip.clicked += () => PartValidationReportWindow.Open(target as CorePartData);
+                validChip.tooltip = "Open the Part Validation Report.";
+                _root.TrackSerializedObjectValue(serializedObject, _ => UpdateValidationChip());
             }
         }
 
-        private static void SetReadinessState(Label chip, string stateClass)
+        private bool _validationChipWired;
+
+        private static void SetReadinessState(VisualElement chip, string stateClass)
         {
             chip.EnableInClassList("is-ok", stateClass == "is-ok");
             chip.EnableInClassList("is-warn", stateClass == "is-warn");

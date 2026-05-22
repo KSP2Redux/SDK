@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Rendering.Planets;
@@ -6,6 +6,7 @@ using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Science;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.ScriptableObjects;
+using Ksp2UnityTools.Editor.Validation;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Landmark
 {
