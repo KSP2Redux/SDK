@@ -98,11 +98,11 @@ struct V2F
 V2F vert(Appdata input)
 {
     uint triIndex  = input.vertexIndex / 3;
-    uint quadIndex = VisibleQuadMeshIndices.Load(input.vertexIndex);
+    uint quadIndex = VisibleQuadMeshIndices[input.vertexIndex];
 
-    uint flags     = VisibleQuadMeshIndicesMask.Load(input.vertexIndex / 3u);
+    uint flags     = VisibleQuadMeshIndicesMask[input.vertexIndex / 3u];
 
-    QuadMeshData q = GetQuadMeshData(quadIndex);
+    QuadMeshData q = QuadMeshDataBuffer[quadIndex];
 
     V2F o;
     o.clipPos = mul(unity_MatrixVP, float4(q.position, 1.0));
@@ -119,7 +119,7 @@ V2F vert(Appdata input)
     o.screenPos         = ComputeScreenPos(o.clipPos).xyw;
 
 #ifdef DECAL_MODE_PACKED4
-    o.triangleData      = BucketedQuadInfoDecalIndices.Load(triIndex);
+    o.triangleData      = BucketedQuadInfoDecalIndices[triIndex];
 #endif
 
 #ifdef PASS_DEFERRED
