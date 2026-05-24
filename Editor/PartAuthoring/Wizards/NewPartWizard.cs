@@ -48,6 +48,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         public bool FbxAutoRotate = true;
         public bool FbxTagDragCubeMesh = true;
         public readonly HashSet<Type> EnabledModules = new();
+        public readonly Dictionary<string, float> ValueOverrides = new();
 
         // Folder picker state - persists across Identity step rebuilds.
         private FolderChoice _folderChoice;
@@ -311,7 +312,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                                           Array.Empty<StockBucket>(), Array.Empty<StockBucket>());
 
             HashSet<Type> enabled = EnabledModules != null && EnabledModules.Count > 0 ? EnabledModules : null;
-            var scaffold = new PartFolderScaffold(Archetype, DestinationFolder, PartName, Size, bucket, enabled);
+            IReadOnlyDictionary<string, float> overrides = ValueOverrides.Count > 0 ? ValueOverrides : null;
+            var scaffold = new PartFolderScaffold(Archetype, DestinationFolder, PartName, Size, bucket, enabled, overrides,
+                MeshChoice, SourcePrefab, SourceFbxAsset, FbxTagDragCubeMesh, FbxAutoScale, FbxAutoRotate);
 
             string prefabPath;
             try
@@ -642,6 +645,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             var defaultRadioLabel = container.Q<Label>("default-radio-label");
             var customRadio = container.Q<RadioButton>("custom-radio");
             var customField = container.Q<TextField>("custom-field");
+            var customBrowseButton = container.Q<Button>("custom-browse-button");
+            var customWarningSlot = container.Q<VisualElement>("custom-folder-warning-slot");
             var finalDestLabel = container.Q<Label>("final-dest-label");
 
             // Initialize from state.
@@ -711,6 +716,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 #endif
             customRadio.SetValueWithoutNotify(_folderChoice == FolderChoice.Custom);
             customField.SetEnabled(_folderChoice == FolderChoice.Custom);
+            customBrowseButton.SetEnabled(_folderChoice == FolderChoice.Custom);
+            customBrowseButton.clicked += () => OnCustomFolderBrowse(customField, customWarningSlot);
 
             void RefreshSlugUi()
             {
@@ -738,6 +745,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 #endif
                 customRadio.SetValueWithoutNotify(choice == FolderChoice.Custom);
                 customField.SetEnabled(choice == FolderChoice.Custom);
+                customBrowseButton.SetEnabled(choice == FolderChoice.Custom);
+                if (choice != FolderChoice.Custom)
+                {
+                    customWarningSlot.Clear();
+                }
                 ResolveDestinationFolder();
                 RefreshFinalDestLabel();
                 RefreshFooter();
@@ -769,6 +781,51 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             RefreshSlugUi();
             RefreshFinalDestLabel();
             return container;
+        }
+
+        private void OnCustomFolderBrowse(TextField customField, VisualElement warningSlot)
+        {
+            warningSlot.Clear();
+
+            string assetsAbs = Path.GetFullPath(Application.dataPath).Replace('\\', '/');
+            string startDir = assetsAbs;
+            if (!string.IsNullOrEmpty(_customFolder) && _customFolder.StartsWith("Assets", StringComparison.Ordinal))
+            {
+                string candidate = Path.GetFullPath(_customFolder).Replace('\\', '/');
+                if (Directory.Exists(candidate))
+                {
+                    startDir = candidate;
+                }
+            }
+
+            string picked = EditorUtility.OpenFolderPanel("Select destination folder", startDir, string.Empty);
+            if (string.IsNullOrEmpty(picked))
+            {
+                return;
+            }
+
+            string normalized = Path.GetFullPath(picked).Replace('\\', '/').TrimEnd('/');
+            string assetsRoot = assetsAbs.TrimEnd('/');
+
+            string relative;
+            if (string.Equals(normalized, assetsRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                relative = "Assets";
+            }
+            else if (normalized.StartsWith(assetsRoot + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                relative = "Assets" + normalized.Substring(assetsRoot.Length);
+            }
+            else
+            {
+                warningSlot.Add(new HelpBox(
+                    "Folder must be inside the project's Assets/ directory.",
+                    HelpBoxMessageType.Warning));
+                return;
+            }
+
+            _customFolder = relative;
+            customField.value = relative;
         }
 
         private void EnsureFolderChoiceInitialized()
@@ -1076,29 +1133,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 container.Add(header);
                 foreach (StockField field in visibleFields)
                 {
-                    StockFieldEntry entry = StockFieldPaths.Find(field.Name);
-                    string display = entry?.DisplayName ?? field.Name;
-                    string units = entry?.UnitsSuffix ?? string.Empty;
-                    string format = entry?.Format ?? "{0:0.##}";
-                    string subKey = entry?.SubKey;
-                    string label = string.IsNullOrEmpty(subKey) ? display : $"{display} ({subKey})";
-
-                    string median = string.Format(System.Globalization.CultureInfo.InvariantCulture, format, field.Median) + units;
-                    string min = string.Format(System.Globalization.CultureInfo.InvariantCulture, format, field.Min) + units;
-                    string max = string.Format(System.Globalization.CultureInfo.InvariantCulture, format, field.Max) + units;
-
-                    var row = new VisualElement();
-                    row.AddToClassList("wizard-defaults-row");
-                    var nameCell = new Label(label);
-                    nameCell.AddToClassList("wizard-defaults-row-name");
-                    row.Add(nameCell);
-                    var medianCell = new Label(median);
-                    medianCell.AddToClassList("wizard-defaults-row-median");
-                    row.Add(medianCell);
-                    var rangeCell = new Label($"range {min} - {max}");
-                    rangeCell.AddToClassList("wizard-defaults-row-range");
-                    row.Add(rangeCell);
-                    container.Add(row);
+                    container.Add(BuildDefaultsRow(field));
                 }
             }
 
@@ -1117,6 +1152,117 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             }
 
             return container;
+        }
+
+        private VisualElement BuildDefaultsRow(StockField field)
+        {
+            StockFieldEntry entry = StockFieldPaths.Find(field.Name);
+            string display = entry?.DisplayName ?? field.Name;
+            string units = entry?.UnitsSuffix ?? string.Empty;
+            string format = entry?.Format ?? "{0:0.##}";
+            string subKey = entry?.SubKey;
+            string label = string.IsNullOrEmpty(subKey) ? display : $"{display} ({subKey})";
+
+            string min = string.Format(System.Globalization.CultureInfo.InvariantCulture, format, field.Min) + units;
+            string max = string.Format(System.Globalization.CultureInfo.InvariantCulture, format, field.Max) + units;
+
+            var row = new VisualElement();
+            row.AddToClassList("wizard-defaults-row");
+
+            var nameCell = new Label(label);
+            nameCell.AddToClassList("wizard-defaults-row-name");
+            row.Add(nameCell);
+
+            bool hasOverride = ValueOverrides.TryGetValue(field.Name, out float currentValue);
+            float initialValue = hasOverride ? currentValue : field.Median;
+            bool canEdit = entry?.IsCopyable == true;
+
+            VisualElement valueElement;
+            Button resetBtn = null;
+
+            if (!canEdit)
+            {
+                string median = string.Format(System.Globalization.CultureInfo.InvariantCulture, format, field.Median) + units;
+                var readonlyLabel = new Label(median);
+                readonlyLabel.AddToClassList("wizard-defaults-row-median");
+                valueElement = readonlyLabel;
+            }
+            else if (entry.IsInteger)
+            {
+                var intField = new IntegerField { value = (int)initialValue };
+                intField.AddToClassList("wizard-defaults-row-input");
+                intField.RegisterValueChangedCallback(evt =>
+                {
+                    if (evt.newValue == (int)field.Median)
+                    {
+                        ValueOverrides.Remove(field.Name);
+                    }
+                    else
+                    {
+                        ValueOverrides[field.Name] = evt.newValue;
+                    }
+                    if (resetBtn != null)
+                    {
+                        resetBtn.style.visibility = ValueOverrides.ContainsKey(field.Name)
+                            ? Visibility.Visible : Visibility.Hidden;
+                    }
+                });
+                valueElement = intField;
+                resetBtn = new Button(() =>
+                {
+                    ValueOverrides.Remove(field.Name);
+                    intField.SetValueWithoutNotify((int)field.Median);
+                    resetBtn.style.visibility = Visibility.Hidden;
+                }) { text = "↺", tooltip = "Reset to median" };
+            }
+            else
+            {
+                var floatField = new FloatField { value = initialValue };
+                floatField.AddToClassList("wizard-defaults-row-input");
+                floatField.RegisterValueChangedCallback(evt =>
+                {
+                    if (Mathf.Approximately(evt.newValue, field.Median))
+                    {
+                        ValueOverrides.Remove(field.Name);
+                    }
+                    else
+                    {
+                        ValueOverrides[field.Name] = evt.newValue;
+                    }
+                    if (resetBtn != null)
+                    {
+                        resetBtn.style.visibility = ValueOverrides.ContainsKey(field.Name)
+                            ? Visibility.Visible : Visibility.Hidden;
+                    }
+                });
+                valueElement = floatField;
+                resetBtn = new Button(() =>
+                {
+                    ValueOverrides.Remove(field.Name);
+                    floatField.SetValueWithoutNotify(field.Median);
+                    resetBtn.style.visibility = Visibility.Hidden;
+                }) { text = "↺", tooltip = "Reset to median" };
+            }
+
+            row.Add(valueElement);
+
+            string unitsLabel = string.IsNullOrEmpty(units) ? string.Empty : units.TrimStart();
+            var unitsCell = new Label(unitsLabel);
+            unitsCell.AddToClassList("wizard-defaults-row-units");
+            row.Add(unitsCell);
+
+            var rangeCell = new Label($"range {min} - {max}");
+            rangeCell.AddToClassList("wizard-defaults-row-range");
+            row.Add(rangeCell);
+
+            if (resetBtn != null)
+            {
+                resetBtn.AddToClassList("wizard-defaults-row-reset");
+                resetBtn.style.visibility = hasOverride ? Visibility.Visible : Visibility.Hidden;
+                row.Add(resetBtn);
+            }
+
+            return row;
         }
 
         private static string GetModuleGroupName(string fieldName)

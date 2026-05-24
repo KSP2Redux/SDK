@@ -30439,7 +30439,34 @@ MonoBehaviour:
         Value: 0.5
       - Name: controlSurface.actuatorSpeed
         Value: 30
+  ResourceMasses:
+  - Name: Ablator
+    MassPerUnit: 1
+  - Name: EVAPropellant
+    MassPerUnit: 1
+  - Name: Hydrogen
+    MassPerUnit: 1
+  - Name: IntakeAir
+    MassPerUnit: 1
+  - Name: Methane
+    MassPerUnit: 1
+  - Name: MonoPropellant
+    MassPerUnit: 1
+  - Name: Oxidizer
+    MassPerUnit: 1
+  - Name: SolidFuel
+    MassPerUnit: 1
+  - Name: TestRocks
+    MassPerUnit: 0.01
+  - Name: Uranium
+    MassPerUnit: 1
+  - Name: Xenon
+    MassPerUnit: 1
+  - Name: Methalox
+    MassPerUnit: 1
+  - Name: MethaneAir
+    MassPerUnit: 2
   SourceHash: 823c2cbadfa5c1c2a1a8ced4eb61a566c42fc56ba4e914265343a5ba1024b594
-  BakedAt: 2026-05-24T02:22:36.0864340Z
-  SchemaVersion: 1
+  BakedAt: 2026-05-24T12:50:30.8411918Z
+  SchemaVersion: 2
   PartsScanned: 400

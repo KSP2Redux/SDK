@@ -299,7 +299,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             rangeText.AddToClassList("reference-parts-range-text");
             row.Add(rangeText);
 
-            if (_activePart != null && ActivePartFieldReader.TryRead(field.Name, _activePart, out float activeValue))
+            float activeValue = 0f;
+            bool haveActive = _activePart != null
+                && (ActivePartFieldReader.TryRead(field.Name, _activePart, out activeValue)
+                    || TryComputeDerivedActive(field.Name, out activeValue));
+            if (haveActive)
             {
                 var active = new Label($"this: {FormatValue(activeValue, entry)}");
                 active.AddToClassList("reference-parts-range-active");
@@ -310,6 +314,53 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
                 row.Add(active);
             }
             return row;
+        }
+
+        private bool TryComputeDerivedActive(string fieldName, out float value)
+        {
+            value = 0f;
+            if (_activePart?.Data == null || _lookup == null)
+            {
+                return false;
+            }
+            if (fieldName == StockFieldNames.TankResourcePercent)
+            {
+                return TryComputeTankResourcePercent(out value);
+            }
+            return false;
+        }
+
+        private bool TryComputeTankResourcePercent(out float value)
+        {
+            value = 0f;
+            var data = _activePart.Data;
+            if (data.resourceContainers == null || data.resourceContainers.Count == 0)
+            {
+                return false;
+            }
+            if (data.mass <= 0f)
+            {
+                return false;
+            }
+            float fuelMass = 0f;
+            foreach (KSP.Sim.ResourceSystem.ContainedResourceDefinition c in data.resourceContainers)
+            {
+                if (c == null || string.IsNullOrEmpty(c.name))
+                {
+                    continue;
+                }
+                if (!_lookup.TryGetResourceMass(c.name, out float massPerUnit))
+                {
+                    return false;
+                }
+                fuelMass += (float)c.capacityUnits * massPerUnit;
+            }
+            if (fuelMass <= 0f)
+            {
+                return false;
+            }
+            value = fuelMass / ((float)data.mass + fuelMass) * 100f;
+            return true;
         }
 
         private static readonly string[] _moduleRenderOrder = { "engine", "tank", "rcs" };

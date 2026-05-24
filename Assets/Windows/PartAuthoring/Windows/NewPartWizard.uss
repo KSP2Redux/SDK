@@ -220,6 +220,29 @@
     margin-bottom: 4px;
 }
 
+.wizard-custom-folder-row {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 24px;
+    margin-bottom: 4px;
+}
+
+.wizard-custom-folder-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-right: 4px;
+}
+
+.wizard-custom-folder-browse {
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.wizard-custom-folder-warning-slot {
+    margin-left: 24px;
+    margin-bottom: 4px;
+}
+
 .wizard-final-destination {
     -unity-font-style: bold;
     color: rgb(200, 220, 240);
@@ -293,6 +316,33 @@
     color: rgb(150, 170, 200);
     font-size: 11px;
     flex-shrink: 1;
+}
+
+.wizard-defaults-row-input {
+    width: 90px;
+    flex-shrink: 0;
+    margin-right: 2px;
+}
+
+.wizard-defaults-row-units {
+    width: 32px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    color: rgb(180, 195, 215);
+    font-size: 11px;
+}
+
+.wizard-defaults-row-reset {
+    width: 22px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 14px;
+    -unity-text-align: middle-center;
 }
 
 .wizard-defaults-group-header {

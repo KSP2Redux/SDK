@@ -33,6 +33,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private readonly MetaAssemblySizeFilterType _size;
         private readonly BucketResolution _bucket;
         private readonly HashSet<Type> _enabledModules;
+        private readonly IReadOnlyDictionary<string, float> _valueOverrides;
+        private readonly SourceMeshChoice _meshChoice;
+        private readonly GameObject _sourcePrefab;
+        private readonly GameObject _sourceFbxAsset;
+        private readonly bool _tagDragCubeMesh;
+        private readonly bool _fbxAutoScale;
+        private readonly bool _fbxAutoRotate;
 
         private readonly List<string> _createdPaths = new();
         private string _addressableEntryGuid;
@@ -44,7 +51,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             string partName,
             MetaAssemblySizeFilterType size,
             BucketResolution bucket,
-            HashSet<Type> enabledModules = null)
+            HashSet<Type> enabledModules = null,
+            IReadOnlyDictionary<string, float> valueOverrides = null,
+            SourceMeshChoice meshChoice = SourceMeshChoice.Skip,
+            GameObject sourcePrefab = null,
+            GameObject sourceFbxAsset = null,
+            bool tagDragCubeMesh = true,
+            bool fbxAutoScale = true,
+            bool fbxAutoRotate = true)
         {
             _archetype = archetype ?? throw new ArgumentNullException(nameof(archetype));
             _parentFolder = parentFolder ?? throw new ArgumentNullException(nameof(parentFolder));
@@ -52,6 +66,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             _size = size;
             _bucket = bucket;
             _enabledModules = enabledModules;
+            _valueOverrides = valueOverrides;
+            _meshChoice = meshChoice;
+            _sourcePrefab = sourcePrefab;
+            _sourceFbxAsset = sourceFbxAsset;
+            _tagDragCubeMesh = tagDragCubeMesh;
+            _fbxAutoScale = fbxAutoScale;
+            _fbxAutoRotate = fbxAutoRotate;
         }
 
         /// <summary>Runs the full create flow. Returns the saved prefab path. On any failure, rolls back and rethrows.</summary>
@@ -75,6 +96,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 CorePartData prefabCore = prefabAsset.GetComponent<CorePartData>();
 
                 _archetype.SeedDefaults(prefabCore, _bucket);
+                ApplyValueOverrides(prefabCore);
                 EditorUtility.SetDirty(prefabAsset);
                 AssetDatabase.SaveAssets();
 
@@ -96,6 +118,23 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 {
                     Object.DestroyImmediate(tempRoot);
                 }
+            }
+        }
+
+        private void ApplyValueOverrides(CorePartData core)
+        {
+            if (_valueOverrides == null || _valueOverrides.Count == 0 || core == null)
+            {
+                return;
+            }
+            foreach (KeyValuePair<string, float> pair in _valueOverrides)
+            {
+                StockFieldEntry entry = StockFieldPaths.Find(pair.Key);
+                if (entry?.Copier == null)
+                {
+                    continue;
+                }
+                entry.Copier(core, pair.Value, out _);
             }
         }
 
@@ -126,10 +165,63 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             model.transform.SetParent(root.transform, false);
             var col = new GameObject("col");
             col.transform.SetParent(model.transform, false);
-            var lodReentry = new GameObject("lod_reentry");
-            lodReentry.transform.SetParent(model.transform, false);
-            lodReentry.SetActive(false);
+            InstantiateSourceMesh(model);
+            if (_tagDragCubeMesh)
+            {
+                TagDragCubeRenderers(model);
+            }
             return root;
+        }
+
+        private void InstantiateSourceMesh(GameObject modelRoot)
+        {
+            GameObject source = _meshChoice switch
+            {
+                SourceMeshChoice.FBX => _sourceFbxAsset,
+                SourceMeshChoice.ExistingPrefab => _sourcePrefab,
+                _ => null
+            };
+            if (source == null)
+            {
+                return;
+            }
+            var instance = PrefabUtility.InstantiatePrefab(source, modelRoot.transform) as GameObject;
+            if (instance == null)
+            {
+                return;
+            }
+            if (_meshChoice == SourceMeshChoice.FBX)
+            {
+                instance.transform.localPosition = Vector3.zero;
+                if (_fbxAutoRotate)
+                {
+                    instance.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+                }
+                if (_fbxAutoScale)
+                {
+                    instance.transform.localScale = Vector3.one * 100f;
+                }
+            }
+        }
+
+        private static void TagDragCubeRenderers(GameObject modelRoot)
+        {
+            Renderer[] renderers = modelRoot.GetComponentsInChildren<Renderer>(includeInactive: true);
+            foreach (Renderer r in renderers)
+            {
+                if (r == null)
+                {
+                    continue;
+                }
+                try
+                {
+                    r.gameObject.tag = "DragCubeMesh";
+                }
+                catch (UnityException)
+                {
+                    return;
+                }
+            }
         }
 
         private CorePartData AttachCorePartData(GameObject root)

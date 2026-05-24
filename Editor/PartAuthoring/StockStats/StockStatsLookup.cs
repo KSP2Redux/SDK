@@ -20,6 +20,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// <summary>One bucket per (family, sizeCategory) combination found in the source dump.</summary>
         public List<StockBucket> Buckets = new();
 
+        /// <summary>Recipe-resolved mass per unit per resource, captured at bake time. Empty on legacy assets.</summary>
+        public List<ResourceMassEntry> ResourceMasses = new();
+
         /// <summary>Cheap staleness fingerprint of the source folder, recomputed on bake.</summary>
         public string SourceHash;
 
@@ -27,10 +30,30 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public string BakedAt;
 
         /// <summary>Bumped when the schema changes in a way that invalidates stored entries.</summary>
-        public int SchemaVersion = 1;
+        public int SchemaVersion = 2;
 
         /// <summary>Total parts contributing across all buckets, summarised at bake time.</summary>
         public int PartsScanned;
+
+        /// <summary>Looks up the resource's recipe-resolved mass per unit. Returns false if the bake didn't resolve it (or the asset predates the schema).</summary>
+        public bool TryGetResourceMass(string resourceName, out float massPerUnit)
+        {
+            massPerUnit = 0f;
+            if (string.IsNullOrEmpty(resourceName) || ResourceMasses == null)
+            {
+                return false;
+            }
+            for (int i = 0; i < ResourceMasses.Count; i++)
+            {
+                ResourceMassEntry entry = ResourceMasses[i];
+                if (entry != null && string.Equals(entry.Name, resourceName, StringComparison.Ordinal))
+                {
+                    massPerUnit = entry.MassPerUnit;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /// <summary>Returns the bucket matching the given family / size, or null if none exists.</summary>
         public StockBucket FindBucket(string family, string sizeCategory)
@@ -248,6 +271,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     {
         public string Name;
         public float Value;
+    }
+
+    /// <summary>Recipe-resolved mass per unit for one resource. Used by derived-value computations against live parts.</summary>
+    [Serializable]
+    public sealed class ResourceMassEntry
+    {
+        public string Name;
+        public float MassPerUnit;
     }
 
     /// <summary>Canonical names for tracked stat fields. Use these when constructing or querying entries.</summary>

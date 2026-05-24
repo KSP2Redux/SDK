@@ -24,6 +24,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public string NonCopyableReason;
         /// <summary>True when the field is computed from other authored values (e.g. Resource %, Peak Output, Fuel Flow). Surfaces should hide derived fields when showing "what will be seeded."</summary>
         public bool IsDerived;
+        /// <summary>True when the underlying PartData / module field is an int. Editors should use IntegerField instead of FloatField.</summary>
+        public bool IsInteger;
         public bool IsCopyable => Copier != null;
     }
 
@@ -54,16 +56,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             {
                 // PartData scalars
                 ScalarEntry(StockFieldNames.Mass,               "Mass",                " t",     "{0:0.000}", "Copy mass",                (d, v) => d.mass = v),
-                ScalarEntry(StockFieldNames.Cost,               "Cost",                "",       "{0:0}",     "Copy cost",                (d, v) => d.cost = (int)v),
+                ScalarEntry(StockFieldNames.Cost,               "Cost",                "",       "{0:0}",     "Copy cost",                (d, v) => d.cost = (int)v, isInteger: true),
                 ScalarEntry(StockFieldNames.CrashTolerance,     "Crash Tolerance",     " m/s",   "{0:0.0}",   "Copy crash tolerance",     (d, v) => d.crashTolerance = v),
                 ScalarEntry(StockFieldNames.BreakingForce,      "Breaking Force",      " kN",    "{0:0.0}",   "Copy breaking force",      (d, v) => d.breakingForce = v),
                 ScalarEntry(StockFieldNames.BreakingTorque,     "Breaking Torque",     " kN·m",  "{0:0.0}",   "Copy breaking torque",     (d, v) => d.breakingTorque = v),
                 ScalarEntry(StockFieldNames.ExplosionPotential, "Explosion Potential", "",       "{0:0.00}",  "Copy explosion potential", (d, v) => d.explosionPotential = v),
                 ScalarEntry(StockFieldNames.MaxTemp,            "Max Temp",            " K",     "{0:0}",     "Copy max temp",            (d, v) => d.maxTemp = v),
-                ScalarEntry(StockFieldNames.CrewCapacity,       "Crew Capacity",       "",       "{0:0}",     "Copy crew capacity",       (d, v) => d.crewCapacity = (int)v),
+                ScalarEntry(StockFieldNames.CrewCapacity,       "Crew Capacity",       "",       "{0:0}",     "Copy crew capacity",       (d, v) => d.crewCapacity = (int)v, isInteger: true),
                 ScalarEntry(StockFieldNames.HeatConductivity,   "Heat Conductivity",   "",       "{0:0.000}", "Copy heat conductivity",   (d, v) => d.heatConductivity = v),
                 ScalarEntry(StockFieldNames.SkinMaxTemp,        "Skin Max Temp",       " K",     "{0:0}",     "Copy skin max temp",       (d, v) => d.skinMaxTemp = v),
-                ScalarEntry(StockFieldNames.MaxLength,          "Max Length",          " m",     "{0:0}",     "Copy max length",          (d, v) => d.maxLength = (int)v),
+                ScalarEntry(StockFieldNames.MaxLength,          "Max Length",          " m",     "{0:0}",     "Copy max length",          (d, v) => d.maxLength = (int)v, isInteger: true),
                 ScalarEntry(StockFieldNames.Buoyancy,           "Buoyancy",            "",       "{0:0.000}", "Copy buoyancy",            (d, v) => d.buoyancy = v),
 
                 // Tank
@@ -271,13 +273,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 string display;
                 string units;
                 string fmt;
+                bool sciIsInteger = false;
                 switch (prop)
                 {
                     case "timeToComplete":
                         display = "Time to Complete"; units = " s"; fmt = "{0:0.#}";
                         break;
                     case "crewRequired":
-                        display = "Crew Required"; units = ""; fmt = "{0:0}";
+                        display = "Crew Required"; units = ""; fmt = "{0:0}"; sciIsInteger = true;
                         break;
                     case "ecRate":
                         display = "EC Rate"; units = " EC/s"; fmt = "{0:0.000}";
@@ -295,6 +298,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                     Format = fmt,
                     Copier = null,
                     NonCopyableReason = "Science experiment settings are opinionated. Edit via the Module_ScienceExperiment inspector.",
+                    IsInteger = sciIsInteger,
                 };
             }
             return null;
@@ -340,7 +344,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             string units,
             string format,
             string undoLabel,
-            Action<PartData, float> mutator)
+            Action<PartData, float> mutator,
+            bool isInteger = false)
         {
             StockFieldCopier copier = delegate (CorePartData target, float value, out string error)
             {
@@ -362,6 +367,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 UnitsSuffix = units,
                 Format = format,
                 Copier = copier,
+                IsInteger = isInteger,
             };
         }
 

@@ -24,7 +24,11 @@
         <engine:Label name="default-radio-label" class="wizard-folder-radio-detail" />
 
         <engine:RadioButton name="custom-radio" text="Custom" class="wizard-folder-radio" />
-        <engine:TextField name="custom-field" class="wizard-folder-radio-detail-field" />
+        <engine:VisualElement class="wizard-custom-folder-row">
+            <engine:TextField name="custom-field" class="wizard-custom-folder-field" />
+            <engine:Button name="custom-browse-button" text="Browse..." class="wizard-custom-folder-browse" />
+        </engine:VisualElement>
+        <engine:VisualElement name="custom-folder-warning-slot" class="wizard-custom-folder-warning-slot" />
 
         <engine:Label name="final-dest-label" class="wizard-final-destination" />
 

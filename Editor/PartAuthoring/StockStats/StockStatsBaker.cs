@@ -141,9 +141,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             {
                 lookup.Buckets.Add(AggregateBucket(pair.Key, pair.Value, extractors, ctx));
             }
+            lookup.ResourceMasses.Clear();
+            foreach (var pair in massPerUnit)
+            {
+                lookup.ResourceMasses.Add(new ResourceMassEntry
+                {
+                    Name = pair.Key,
+                    MassPerUnit = pair.Value,
+                });
+            }
             lookup.SourceHash = ComputeSourceHash(sourceDir);
             lookup.BakedAt = DateTime.UtcNow.ToString("o");
-            lookup.SchemaVersion = 1;
+            lookup.SchemaVersion = 2;
             lookup.PartsScanned = result.PartsScanned;
             result.SourceHash = lookup.SourceHash;
 

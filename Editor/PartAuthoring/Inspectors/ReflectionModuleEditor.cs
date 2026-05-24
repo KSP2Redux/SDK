@@ -136,7 +136,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 block.AddToClassList("reflection-module-editor__data-block");
 
                 var header = new Label(GetDataBlockDisplayName(dataType));
-                header.AddToClassList("reflection-module-editor__data-header");
+                header.AddToClassList("data-editor-section-header");
                 block.Add(header);
 
                 var content = customEditor.Build(dataProp, module);
@@ -203,7 +203,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             if (showHeader)
             {
                 var header = new Label(GetDataBlockDisplayName(dataType));
-                header.AddToClassList("reflection-module-editor__data-header");
+                header.AddToClassList("data-editor-section-header");
                 block.Add(header);
             }
 
