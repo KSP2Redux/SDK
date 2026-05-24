@@ -132,7 +132,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
             var headerRow = new VisualElement();
             headerRow.AddToClassList("data-editor-card-header");
 
-            var disclosure = new Button { text = "▶" };
+            var disclosure = new Button { text = "▼" };
             disclosure.AddToClassList("data-editor-card-disclosure");
             headerRow.Add(disclosure);
 
@@ -208,8 +208,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
             card.userData = (Action<int>)Bind;
             Bind(initialIndex);
 
-            bool expanded = false;
-            body.style.display = DisplayStyle.None;
+            bool expanded = true;
+            body.style.display = DisplayStyle.Flex;
             disclosure.clicked += () =>
             {
                 expanded = !expanded;

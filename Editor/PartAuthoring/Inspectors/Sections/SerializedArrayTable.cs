@@ -91,6 +91,23 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         }
 
         /// <summary>
+        /// Creates a table directly bound to an array <see cref="SerializedProperty" />. Useful when the array's path
+        /// isn't a static string on the SerializedObject (e.g., inside a polymorphic <c>[SerializeReference]</c> entry).
+        /// </summary>
+        public SerializedArrayTable(
+            SerializedProperty arrayProp,
+            string title,
+            string addButtonText,
+            SerializedTableColumn[] columns)
+        {
+            _so = arrayProp?.serializedObject;
+            _arrayProp = arrayProp;
+            _title = title;
+            _addButtonText = addButtonText;
+            _columns = columns;
+        }
+
+        /// <summary>
         /// Builds the table's VisualElement tree.
         /// </summary>
         public VisualElement Build()
@@ -130,6 +147,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                 _body.Add(BuildDataRow(i));
             }
             _body.Add(BuildAddButton());
+            // Trigger a binding pass so PropertyFields inside Custom-kind cells (and any other
+            // deferred-binding widgets added on this refresh) build their drawers immediately
+            // instead of waiting for an external panel-update tick.
+            _body.Bind(_so);
         }
 
         private VisualElement BuildHeaderRow()

@@ -48,6 +48,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants
                 }
                 root.Add(AttributeAwareFieldRow.Build(fieldProp, field, partRoot));
             }
+            if (root.childCount == 0)
+            {
+                root.Add(new HelpBox("No configuration.", HelpBoxMessageType.Info));
+            }
             root.Bind(transformerProp.serializedObject);
             return root;
         }

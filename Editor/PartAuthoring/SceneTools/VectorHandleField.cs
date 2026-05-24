@@ -24,11 +24,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
         /// <param name="target">The Component the property lives on. Provides the SerializedObject and Undo target.</param>
         /// <param name="mode">Position or Orientation handle kind.</param>
         /// <param name="anchor">Anchor position for Orientation handles. Ignored for Position handles.</param>
-        public VectorHandleField(SerializedProperty primary, Component target, SceneHandlePicker.HandleMode mode, SerializedProperty anchor = null)
+        /// <param name="label">Overrides the PropertyField label. Pass an empty string to hide it (useful in table cells where the column header names the field). Pass null to keep the property's default display name.</param>
+        public VectorHandleField(SerializedProperty primary, Component target, SceneHandlePicker.HandleMode mode, SerializedProperty anchor = null, string label = null)
         {
             AddToClassList("vector3d-handle-field");
 
-            var field = new PropertyField(primary);
+            var field = label == null ? new PropertyField(primary) : new PropertyField(primary, label);
             field.AddToClassList("vector3d-handle-field__field");
             field.AddToClassList("unity-base-field__aligned");
             Add(field);

@@ -96,7 +96,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             var headerRow = new VisualElement();
             headerRow.AddToClassList("data-editor-card-header");
 
-            var disclosure = new Button { text = "▶" };
+            var disclosure = new Button { text = "▼" };
             disclosure.AddToClassList("data-editor-card-disclosure");
             headerRow.Add(disclosure);
 
@@ -199,8 +199,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             card.userData = (Action<int>)Bind;
             Bind(initialIndex);
 
-            var expanded = false;
-            body.style.display = DisplayStyle.None;
+            var expanded = true;
+            body.style.display = DisplayStyle.Flex;
             disclosure.clicked += () =>
             {
                 expanded = !expanded;

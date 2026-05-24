@@ -2,6 +2,7 @@ using KSP;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
@@ -18,7 +19,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
     {
         private readonly SerializedObject _so;
         private readonly SerializedProperty _arrayProp;
-        private readonly CorePartData _target;
+        private readonly Component _target;
         private VisualElement _container;
 
         /// <summary>
@@ -27,9 +28,22 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// <param name="so">The CorePartData's SerializedObject.</param>
         /// <param name="target">The CorePartData the array belongs to. Used by the SceneView handle pickers.</param>
         public AttachNodesListBuilder(SerializedObject so, CorePartData target)
+            : this(so?.FindProperty("core.data.attachNodes"), target)
         {
-            _so = so;
-            _arrayProp = so.FindProperty("core.data.attachNodes");
+        }
+
+        /// <summary>
+        /// Creates a list builder bound directly to an attach-node array SerializedProperty.
+        /// </summary>
+        /// <remarks>
+        /// Use this overload when the array's path isn't a static string on a single SerializedObject - for example, when the list lives inside a polymorphic <c>[SerializeReference]</c> entry (variant transformer).
+        /// </remarks>
+        /// <param name="arrayProp">The array property to render.</param>
+        /// <param name="target">A Component whose Transform anchors SceneView handles in local space (usually the part root).</param>
+        public AttachNodesListBuilder(SerializedProperty arrayProp, Component target)
+        {
+            _arrayProp = arrayProp;
+            _so = arrayProp?.serializedObject;
             _target = target;
         }
 
@@ -72,6 +86,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                 _container.Add(BuildCard(i));
             }
             _container.Add(BuildAddButton());
+            // Trigger a binding pass so PropertyFields in freshly-rebuilt cards build their
+            // drawers immediately instead of waiting for an external panel-update tick.
+            _container.Bind(_so);
         }
 
         private VisualElement BuildCard(int index)
