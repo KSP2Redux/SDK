@@ -108,7 +108,8 @@
     margin-bottom: 2px;
 }
 
-.data-editor-section-header {
+.data-editor-section-header,
+.unity-decorator-drawers-container Label {
     -unity-font-style: bold;
     color: rgb(210, 220, 235);
     flex-grow: 1;

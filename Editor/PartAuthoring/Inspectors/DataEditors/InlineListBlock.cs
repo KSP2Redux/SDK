@@ -10,27 +10,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     /// as inline card-style lists, replacing Unity's default ReorderableList chrome.
     /// </summary>
     /// <remarks>
-    /// Only the per-row layout varies between call sites; the surrounding scaffold is identical.
-    /// Pass a row builder delegate that constructs one row given the element property, index,
-    /// and an <c>onChanged</c> callback to invoke after a delete or external mutation.
+    /// Mutations are surgical and state-preserving:
+    /// - Add appends a single row at the end of the array.
+    /// - Remove deletes the array element at the row's CURRENT visual position
+    ///   (<see cref="VisualElement.IndexOf" />), then rebuilds every subsequent sibling row
+    ///   at its new index. Row content is re-created (lose transient cursor focus) but the
+    ///   data bindings are correct after the shift.
     /// </remarks>
     public static class InlineListBlock
     {
-        /// <summary>
-        /// Builds an inline list block bound to an array SerializedProperty.
-        /// </summary>
-        /// <param name="arrayProp">The array SerializedProperty to render.</param>
-        /// <param name="titleFormat">Title format string taking the element count as <c>{0}</c>
-        /// (e.g. <c>"Engine Modes ({0})"</c>).</param>
-        /// <param name="addButtonText">Text on the add button (e.g. <c>"+ Add"</c>).</param>
-        /// <param name="emptyHint">Italic-gray hint shown when the array is empty.</param>
-        /// <param name="rowBuilder">Builds one row for an array element. Receives the element
-        /// SerializedProperty, the index, and an <c>onDelete</c> callback that removes the
-        /// element from the array and refreshes the list. Wire the remove button to this
-        /// callback.</param>
-        /// <param name="onAdd">Optional post-add hook to seed a new element with defaults
-        /// (e.g. give it a unique name). Called with the new element's SerializedProperty inside
-        /// an Update/ApplyModifiedProperties pair.</param>
         public static VisualElement Build(
             SerializedProperty arrayProp,
             string titleFormat,
@@ -62,35 +50,80 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             var rows = new VisualElement();
             outer.Add(rows);
 
-            void Refresh()
+            var emptyLabel = new Label(emptyHint);
+            emptyLabel.AddToClassList("data-editor-empty-hint");
+
+            void UpdateCount()
             {
                 countLabel.text = string.Format(titleFormat, arrayProp.arraySize);
-                rows.Clear();
                 if (arrayProp.arraySize == 0)
                 {
-                    var empty = new Label(emptyHint);
-                    empty.AddToClassList("data-editor-empty-hint");
-                    rows.Add(empty);
-                    return;
-                }
-                for (var i = 0; i < arrayProp.arraySize; i++)
-                {
-                    var entry = arrayProp.GetArrayElementAtIndex(i);
-                    var capturedIndex = i;
-                    Action onDelete = () =>
+                    if (emptyLabel.parent == null)
                     {
-                        arrayProp.serializedObject.Update();
-                        arrayProp.DeleteArrayElementAtIndex(capturedIndex);
-                        arrayProp.serializedObject.ApplyModifiedProperties();
-                        Refresh();
-                    };
-                    var row = rowBuilder(entry, i, onDelete);
-                    if (row != null)
-                    {
-                        rows.Add(row);
+                        rows.Add(emptyLabel);
                     }
                 }
+                else if (emptyLabel.parent != null)
+                {
+                    emptyLabel.RemoveFromHierarchy();
+                }
             }
+
+            VisualElement CreateRow(int index)
+            {
+                if (index < 0 || index >= arrayProp.arraySize)
+                {
+                    return null;
+                }
+                var entry = arrayProp.GetArrayElementAtIndex(index);
+                VisualElement row = null;
+                Action onDelete = () =>
+                {
+                    int currentIndex = rows.IndexOf(row);
+                    if (currentIndex < 0)
+                    {
+                        return;
+                    }
+                    arrayProp.serializedObject.Update();
+                    if (currentIndex >= arrayProp.arraySize)
+                    {
+                        return;
+                    }
+                    arrayProp.DeleteArrayElementAtIndex(currentIndex);
+                    arrayProp.serializedObject.ApplyModifiedProperties();
+                    rows.Remove(row);
+                    arrayProp.serializedObject.Update();
+                    // Rebuild subsequent rows with their new indexes so bindings stay correct.
+                    for (int i = currentIndex; i < rows.childCount; i++)
+                    {
+                        VisualElement old = rows.ElementAt(i);
+                        if (old == emptyLabel)
+                        {
+                            continue;
+                        }
+                        VisualElement replacement = CreateRow(i);
+                        if (replacement != null)
+                        {
+                            rows.Insert(i, replacement);
+                            rows.Remove(old);
+                        }
+                    }
+                    UpdateCount();
+                };
+                row = rowBuilder(entry, index, onDelete);
+                return row;
+            }
+
+            // Initial population.
+            for (var i = 0; i < arrayProp.arraySize; i++)
+            {
+                VisualElement row = CreateRow(i);
+                if (row != null)
+                {
+                    rows.Add(row);
+                }
+            }
+            UpdateCount();
 
             addBtn.clicked += () =>
             {
@@ -104,10 +137,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
                     onAdd(arrayProp.GetArrayElementAtIndex(newIndex));
                     arrayProp.serializedObject.ApplyModifiedProperties();
                 }
-                Refresh();
+                arrayProp.serializedObject.Update();
+                VisualElement newRow = CreateRow(newIndex);
+                if (newRow != null)
+                {
+                    rows.Add(newRow);
+                }
+                UpdateCount();
             };
 
-            Refresh();
             return outer;
         }
     }

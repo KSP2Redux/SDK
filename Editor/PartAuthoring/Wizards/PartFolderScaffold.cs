@@ -227,8 +227,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private CorePartData AttachCorePartData(GameObject root)
         {
             CorePartData core = root.AddComponent<CorePartData>();
-            if (core.Core?.data != null)
+            if (core.Core != null)
             {
+                if (core.Core.data == null)
+                {
+                    core.Core.data = new PartData();
+                }
                 core.Core.data.partName = _partName;
                 core.Core.data.family = _archetype.Family ?? string.Empty;
                 core.Core.data.sizeCategory = _size;

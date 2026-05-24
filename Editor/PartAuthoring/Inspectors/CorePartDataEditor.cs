@@ -447,6 +447,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                     _tabContent.Add(ModulesTab.Build((CorePartData)target));
                     break;
                 case "variants":
+                    _tabContent.Add(VariantsTab.Build((CorePartData)target));
+                    break;
                 case "interacts":
                     _tabContent.Add(BuildPlaceholder());
                     break;

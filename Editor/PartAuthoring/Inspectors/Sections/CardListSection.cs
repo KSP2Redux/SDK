@@ -7,69 +7,35 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 {
     /// <summary>
     /// Reusable scaffold for the "named record card list" pattern used by Engine modes,
-    /// Science experiments, and ResourceConverter formulas. Renders an array SerializedProperty
-    /// as a section with a count-header plus add button, one card per element, each card with
-    /// disclosure toggle, identity field, optional summary chip, delete button, and a
-    /// caller-supplied body.
+    /// Science experiments, ResourceConverter formulas, and Variants. Renders an array
+    /// SerializedProperty as a section with a count-header plus add button, one card per
+    /// element, each card with disclosure toggle, identity field, optional summary chip,
+    /// delete button, and a caller-supplied body.
     /// </summary>
     /// <remarks>
-    /// Manages its own refresh state via a closure over the section container, so callers do
-    /// not need to track containers, count labels, or invalidation callbacks themselves.
+    /// Mutations are surgical and state-preserving:
+    /// - Add appends a single new card without touching existing cards.
+    /// - Remove deletes the array element at the card's CURRENT visual position
+    ///   (<see cref="VisualElement.IndexOf" />), then re-binds every subsequent sibling
+    ///   to its new index so their identity / chip / body fields point at the correct
+    ///   serialized data. Foldout expansion state survives because each card's chrome
+    ///   (disclosure button, body container) is reused; only the content children of
+    ///   the rebindable slots are replaced.
     /// </remarks>
     internal static class CardListSection
     {
-        /// <summary>
-        /// Per-card configuration. Most fields are optional; required fields are
-        /// <see cref="Title" />, <see cref="AddButtonText" />, and <see cref="BuildBody" />.
-        /// </summary>
         public sealed class Config
         {
-            /// <summary>Section header text. The element count is appended in parentheses.</summary>
             public string Title { get; set; }
-
-            /// <summary>Text on the section's add button.</summary>
             public string AddButtonText { get; set; }
-
-            /// <summary>
-            /// Name of the array-element field used as the card's primary identity. The field
-            /// is shown in the card header. Leave null to omit an identity field.
-            /// </summary>
             public string IdentityFieldName { get; set; }
-
-            /// <summary>
-            /// Optional custom widget factory for the identity field. Defaults to a plain
-            /// delayed TextField when null.
-            /// </summary>
             public Func<SerializedProperty, VisualElement> BuildIdentityField { get; set; }
-
-            /// <summary>
-            /// Name of the array-element field whose value drives the right-aligned summary chip.
-            /// Leave null to omit the chip.
-            /// </summary>
             public string ChipFieldName { get; set; }
-
-            /// <summary>
-            /// Formats the chip text from the chip property. Return null or empty to hide the
-            /// chip for that card. Re-evaluated whenever the chip property changes.
-            /// </summary>
             public Func<SerializedProperty, string> ChipFormatter { get; set; }
-
-            /// <summary>
-            /// Builds the card body. Receives the array-element SerializedProperty and the
-            /// (empty) body container; populate the body with the per-card field rows.
-            /// </summary>
             public Action<SerializedProperty, VisualElement> BuildBody { get; set; }
-
-            /// <summary>
-            /// Optional pre-fill hook invoked on a newly-added array element. Receives the new
-            /// element's SerializedProperty and its index.
-            /// </summary>
             public Action<SerializedProperty, int> OnAddSeed { get; set; }
         }
 
-        /// <summary>
-        /// Builds a card-list section bound to <paramref name="arrayProp" />.
-        /// </summary>
         public static VisualElement Build(SerializedProperty arrayProp, Config config)
         {
             var outer = new VisualElement();
@@ -91,15 +57,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             container.AddToClassList("data-editor-section-list");
             outer.Add(container);
 
-            void Refresh()
+            void UpdateCount()
             {
-                container.Clear();
                 countLabel.text = $"{config.Title} ({arrayProp.arraySize})";
-                for (var i = 0; i < arrayProp.arraySize; i++)
-                {
-                    container.Add(BuildCard(arrayProp, i, config, Refresh));
-                }
             }
+
+            for (var i = 0; i < arrayProp.arraySize; i++)
+            {
+                container.Add(BuildCard(arrayProp, i, container, config, UpdateCount));
+            }
+            UpdateCount();
 
             addBtn.clicked += () =>
             {
@@ -113,17 +80,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     config.OnAddSeed(arrayProp.GetArrayElementAtIndex(newIndex), newIndex);
                     arrayProp.serializedObject.ApplyModifiedProperties();
                 }
-                Refresh();
+                arrayProp.serializedObject.Update();
+                container.Add(BuildCard(arrayProp, newIndex, container, config, UpdateCount));
+                UpdateCount();
             };
 
-            Refresh();
             return outer;
         }
 
-        private static VisualElement BuildCard(SerializedProperty arrayProp, int index, Config config, Action onRefresh)
+        private static VisualElement BuildCard(SerializedProperty arrayProp, int initialIndex, VisualElement container, Config config, Action updateCount)
         {
-            var entry = arrayProp.GetArrayElementAtIndex(index);
-
             var card = new VisualElement();
             card.AddToClassList("data-editor-card");
 
@@ -134,52 +100,39 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             disclosure.AddToClassList("data-editor-card-disclosure");
             headerRow.Add(disclosure);
 
-            if (!string.IsNullOrEmpty(config.IdentityFieldName))
-            {
-                var idProp = entry.FindPropertyRelative(config.IdentityFieldName);
-                if (idProp != null)
-                {
-                    VisualElement idField;
-                    if (config.BuildIdentityField != null)
-                    {
-                        idField = config.BuildIdentityField(idProp);
-                    }
-                    else
-                    {
-                        var textField = new TextField { value = idProp.stringValue, isDelayed = true };
-                        textField.RegisterValueChangedCallback(evt =>
-                        {
-                            idProp.serializedObject.Update();
-                            idProp.stringValue = evt.newValue ?? string.Empty;
-                            idProp.serializedObject.ApplyModifiedProperties();
-                        });
-                        idField = textField;
-                    }
-                    idField.AddToClassList("data-editor-card-name-field");
-                    headerRow.Add(idField);
-                }
-            }
+            var idSlot = new VisualElement { style = { flexGrow = 1f, flexShrink = 1f } };
+            idSlot.AddToClassList("data-editor-card-name-field");
+            headerRow.Add(idSlot);
 
-            if (!string.IsNullOrEmpty(config.ChipFieldName) && config.ChipFormatter != null)
-            {
-                var chipProp = entry.FindPropertyRelative(config.ChipFieldName);
-                if (chipProp != null)
-                {
-                    var chip = new Label();
-                    chip.AddToClassList("data-editor-card-summary-chip");
-                    UpdateChip(chip, chipProp, config.ChipFormatter);
-                    chip.TrackPropertyValue(chipProp, p => UpdateChip(chip, p, config.ChipFormatter));
-                    headerRow.Add(chip);
-                }
-            }
+            var chipSlot = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+            headerRow.Add(chipSlot);
 
-            var capturedIndex = index;
+            VisualElement cardRef = card;
             var removeBtn = new Button(() =>
             {
+                int currentIndex = container.IndexOf(cardRef);
+                if (currentIndex < 0)
+                {
+                    return;
+                }
                 arrayProp.serializedObject.Update();
-                arrayProp.DeleteArrayElementAtIndex(capturedIndex);
+                if (currentIndex >= arrayProp.arraySize)
+                {
+                    return;
+                }
+                arrayProp.DeleteArrayElementAtIndex(currentIndex);
                 arrayProp.serializedObject.ApplyModifiedProperties();
-                onRefresh();
+                container.Remove(cardRef);
+                arrayProp.serializedObject.Update();
+                // Rebind subsequent cards to their new indexes.
+                for (int i = currentIndex; i < container.childCount; i++)
+                {
+                    if (container.ElementAt(i).userData is Action<int> rebind)
+                    {
+                        rebind(i);
+                    }
+                }
+                updateCount?.Invoke();
             }) { text = "X" };
             removeBtn.AddToClassList("data-editor-card-remove-btn");
             headerRow.Add(removeBtn);
@@ -188,8 +141,63 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 
             var body = new VisualElement();
             body.AddToClassList("data-editor-card-body");
-            config.BuildBody?.Invoke(entry, body);
             card.Add(body);
+
+            void Bind(int index)
+            {
+                if (index < 0 || index >= arrayProp.arraySize)
+                {
+                    return;
+                }
+                var entry = arrayProp.GetArrayElementAtIndex(index);
+
+                idSlot.Clear();
+                if (!string.IsNullOrEmpty(config.IdentityFieldName))
+                {
+                    var idProp = entry.FindPropertyRelative(config.IdentityFieldName);
+                    if (idProp != null)
+                    {
+                        VisualElement idField;
+                        if (config.BuildIdentityField != null)
+                        {
+                            idField = config.BuildIdentityField(idProp);
+                        }
+                        else
+                        {
+                            var textField = new TextField { value = idProp.stringValue, isDelayed = true };
+                            textField.RegisterValueChangedCallback(evt =>
+                            {
+                                idProp.serializedObject.Update();
+                                idProp.stringValue = evt.newValue ?? string.Empty;
+                                idProp.serializedObject.ApplyModifiedProperties();
+                            });
+                            idField = textField;
+                        }
+                        idField.style.flexGrow = 1f;
+                        idSlot.Add(idField);
+                    }
+                }
+
+                chipSlot.Clear();
+                if (!string.IsNullOrEmpty(config.ChipFieldName) && config.ChipFormatter != null)
+                {
+                    var chipProp = entry.FindPropertyRelative(config.ChipFieldName);
+                    if (chipProp != null)
+                    {
+                        var chip = new Label();
+                        chip.AddToClassList("data-editor-card-summary-chip");
+                        UpdateChip(chip, chipProp, config.ChipFormatter);
+                        chip.TrackPropertyValue(chipProp, p => UpdateChip(chip, p, config.ChipFormatter));
+                        chipSlot.Add(chip);
+                    }
+                }
+
+                body.Clear();
+                config.BuildBody?.Invoke(entry, body);
+            }
+
+            card.userData = (Action<int>)Bind;
+            Bind(initialIndex);
 
             var expanded = false;
             body.style.display = DisplayStyle.None;
