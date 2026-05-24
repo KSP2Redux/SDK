@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root stock-stats-bake-root">
+
+        <engine:Foldout text="Source" value="true" class="sdk-section">
+            <engine:VisualElement class="stock-stats-bake-source-row">
+                <engine:Label name="source-path-label" class="stock-stats-bake-path" />
+                <engine:Button name="pick-source-button" text="Pick…" tooltip="Pick the ksp2-assets/Assets folder containing the base-game .bytes files." />
+            </engine:VisualElement>
+            <engine:Label name="source-summary-label" class="stock-stats-bake-muted" />
+            <engine:VisualElement name="source-help-slot" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Status" value="true" class="sdk-section">
+            <engine:Label name="status-label" />
+            <engine:Label name="last-baked-label" class="stock-stats-bake-muted" />
+            <engine:Label name="hash-match-label" class="stock-stats-bake-hash" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Output" value="true" class="sdk-section">
+            <engine:Label name="output-path-label" class="stock-stats-bake-path" />
+        </engine:Foldout>
+
+        <engine:VisualElement class="stock-stats-bake-action-row">
+            <engine:Button name="rebake-button" text="Rebake" tooltip="Re-scan source folder and overwrite the lookup asset." class="stock-stats-bake-primary" />
+        </engine:VisualElement>
+
+        <engine:Foldout name="last-bake-summary" text="Last bake summary" value="false" class="sdk-section">
+            <engine:Label name="summary-label" class="stock-stats-bake-summary" />
+            <engine:Foldout name="verbose-log-foldout" text="Verbose log" value="false">
+                <engine:ScrollView class="stock-stats-bake-verbose-scroll">
+                    <engine:Label name="verbose-log-label" class="stock-stats-bake-verbose" />
+                </engine:ScrollView>
+            </engine:Foldout>
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

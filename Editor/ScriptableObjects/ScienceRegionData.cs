@@ -11,7 +11,7 @@ namespace Ksp2UnityTools.Editor.ScriptableObjects
 {
     public class ScienceRegionData : ScriptableObject
     {
-        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Science Region Data", priority = KSP2UnityTools.MenuPriority)]
+        [MenuItem("Assets/Redux SDK/Planet Authoring/Science Region Data", priority = KSP2UnityTools.MenuPriority)]
         public static void CreateScienceRegionData()
         {
             KSP2UnityTools.CreateKsp2UnityToolsAssetAtSelectedPath<ScienceRegionData>("New Science Region");

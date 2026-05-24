@@ -89,11 +89,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             AssetDatabase.ImportAsset(path);
 
             bool madeAddressable = false;
-            if (KSP2UnityTools.FindParentMod(target) is { } mod)
+            var group = PartAuthoringAddressables.ResolveGroup(target);
+            if (group != null)
             {
                 madeAddressable = true;
                 AddressablesTools.MakeAddressable(
-                    mod.partsGroup,
+                    group,
                     path,
                     $"{target.Core.data.partName}.json",
                     "parts_data"

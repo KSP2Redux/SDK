@@ -1,0 +1,63 @@
+.stock-stats-bake-root {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.stock-stats-bake-source-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.stock-stats-bake-path {
+    flex-grow: 1;
+    -unity-font-style: italic;
+    white-space: normal;
+    color: rgb(200, 200, 200);
+    margin-right: 8px;
+}
+
+.stock-stats-bake-muted {
+    color: rgb(150, 150, 150);
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.stock-stats-bake-hash {
+    -unity-font-style: bold;
+    margin-top: 4px;
+}
+
+.stock-stats-bake-hash.stale {
+    color: rgb(220, 165, 80);
+}
+
+.stock-stats-bake-hash.fresh {
+    color: rgb(110, 200, 110);
+}
+
+.stock-stats-bake-action-row {
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.stock-stats-bake-primary {
+    height: 28px;
+    -unity-font-style: bold;
+}
+
+.stock-stats-bake-summary {
+    white-space: normal;
+    -unity-font-style: normal;
+    margin-bottom: 4px;
+}
+
+.stock-stats-bake-verbose-scroll {
+    max-height: 200px;
+}
+
+.stock-stats-bake-verbose {
+    white-space: normal;
+    color: rgb(180, 180, 180);
+    font-size: 11px;
+}

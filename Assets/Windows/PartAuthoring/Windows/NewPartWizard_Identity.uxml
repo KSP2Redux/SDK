@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="wizard-identity-step">
+
+        <engine:TextField name="part-name-field" label="Part name" class="wizard-identity-field" />
+        <engine:Label name="slug-hint" text="Use a-z 0-9 _ - . only" class="wizard-slug-hint" />
+
+        <engine:TextField name="author-field" label="Author" class="wizard-identity-field" />
+
+        <engine:VisualElement name="empty-extras">
+            <engine:DropdownField name="category-field" label="Category" class="wizard-identity-field" />
+            <engine:VisualElement name="family-slot" />
+        </engine:VisualElement>
+
+        <engine:Label text="Destination folder" class="wizard-identity-section-header" />
+
+        <engine:RadioButton name="under-selected-radio" text="Under selected folder (recommended)" class="wizard-folder-radio" />
+        <engine:Label name="under-selected-label" class="wizard-folder-radio-detail" />
+
+        <engine:RadioButton name="default-radio" text="Default Redux folder" class="wizard-folder-radio" />
+        <engine:Label name="default-radio-label" class="wizard-folder-radio-detail" />
+
+        <engine:RadioButton name="custom-radio" text="Custom" class="wizard-folder-radio" />
+        <engine:TextField name="custom-field" class="wizard-folder-radio-detail-field" />
+
+        <engine:Label name="final-dest-label" class="wizard-final-destination" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

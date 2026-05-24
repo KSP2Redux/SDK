@@ -61,7 +61,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         /// <summary>
         /// Opens the Create Celestial Body wizard window.
         /// </summary>
-        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Celestial Body", priority = KSP2UnityTools.MenuPriority)]
+        [MenuItem("Assets/Redux SDK/Planet Authoring/Celestial Body", priority = KSP2UnityTools.MenuPriority)]
         public static void ShowWindow()
         {
             var window = GetWindow<CreateCelestialBodyWindow>();
@@ -75,7 +75,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         /// <remarks>
         /// Use for bodies that have prefabs but no authoring scene yet. Select the Celestial.&lt;Key&gt;.Scaled.prefab.
         /// </remarks>
-        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Create Authoring Scene For Selected Celestial Body", priority = KSP2UnityTools.MenuPriority + 1)]
+        [MenuItem("Assets/Redux SDK/Planet Authoring/Create Authoring Scene For Selected Celestial Body", priority = KSP2UnityTools.MenuPriority + 1)]
         public static void CreateAuthoringSceneForSelected()
         {
             UnityEngine.Object selected = Selection.activeObject;

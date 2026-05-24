@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="wizard-size-step">
+        <engine:Label name="archetype-label" class="wizard-size-header-line" />
+        <engine:Label name="family-label" class="wizard-size-header-line" />
+        <engine:DropdownField name="size-dropdown" label="Size class" class="wizard-size-dropdown" />
+        <engine:VisualElement name="reference-panel" class="wizard-reference-panel" />
+    </engine:VisualElement>
+
+</engine:UXML>

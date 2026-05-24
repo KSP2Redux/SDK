@@ -16,7 +16,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     /// </remarks>
     public class SmallLayerMaterial : ScriptableObject
     {
-        [MenuItem("Assets/KSP2 Unity Tools/Planet Authoring/Small Layer Material", priority = KSP2UnityTools.MenuPriority + 2)]
+        [MenuItem("Assets/Redux SDK/Planet Authoring/Small Layer Material", priority = KSP2UnityTools.MenuPriority + 2)]
         private static void CreateSmallLayerMaterial()
         {
             KSP2UnityTools.CreateKsp2UnityToolsAssetAtSelectedPath<SmallLayerMaterial>("New Small Layer Material");

@@ -323,6 +323,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             WireChip("chip-bake-reentry", () => ReentryMeshBaker.Bake((CorePartData)target));
             WireChip("chip-reexport-json", () => PartJsonSaver.Save((CorePartData)target));
             WireChip("chip-open-prefab", OpenPrefab);
+            WireChip("chip-open-reference-parts", Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows.ReferencePartsWindow.ShowWindow);
         }
 
         private void WireChip(string name, System.Action onClick)

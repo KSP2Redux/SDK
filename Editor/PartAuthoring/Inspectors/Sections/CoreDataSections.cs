@@ -29,7 +29,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             AddField(foldout, so, "core.data.partName");
             AddField(foldout, so, "core.data.author");
             AddField(foldout, so, "core.data.category");
-            AddField(foldout, so, "core.data.family");
+            AddFamilyField(foldout, so);
             AddField(foldout, so, "core.data.sizeKey");
             AddField(foldout, so, "core.data.sizeCategory");
             AddField(foldout, so, "core.data.tags");
@@ -326,6 +326,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             if (prop != null)
             {
                 parent.Add(new PropertyField(prop));
+            }
+        }
+
+        private static void AddFamilyField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.family");
+            if (prop != null)
+            {
+                parent.Add(new Widgets.FamilyField(prop, "Family"));
             }
         }
 

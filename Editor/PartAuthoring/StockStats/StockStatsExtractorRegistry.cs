@@ -1,0 +1,101 @@
+#if REDUX
+using System.Collections.Generic;
+using Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors;
+
+namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
+{
+    /// <summary>Static list of every field extractor the bake runs.</summary>
+    /// <remarks>
+    /// Adding a tracked field means adding one entry here. The baker iterates this list per
+    /// part, so order here determines column order in <see cref="StockBucket.Fields" />.
+    /// Reflection-based auto-discovery is deliberately not used so the list stays explicit
+    /// and reviewable.
+    /// </remarks>
+    internal static class StockStatsExtractorRegistry
+    {
+        public static List<IStockFieldExtractor> Create()
+        {
+            return new List<IStockFieldExtractor>
+            {
+                // PartData scalars
+                new ScalarFieldExtractor(StockFieldNames.Mass, d => d.mass),
+                new ScalarFieldExtractor(StockFieldNames.Cost, d => d.cost),
+                new ScalarFieldExtractor(StockFieldNames.CrashTolerance, d => d.crashTolerance),
+                new ScalarFieldExtractor(StockFieldNames.BreakingForce, d => d.breakingForce),
+                new ScalarFieldExtractor(StockFieldNames.BreakingTorque, d => d.breakingTorque),
+                new ScalarFieldExtractor(StockFieldNames.ExplosionPotential, d => d.explosionPotential),
+                new ScalarFieldExtractor(StockFieldNames.MaxTemp, d => d.maxTemp),
+                new ScalarFieldExtractor(StockFieldNames.CrewCapacity, d => d.crewCapacity),
+                new ScalarFieldExtractor(StockFieldNames.HeatConductivity, d => d.heatConductivity),
+                new ScalarFieldExtractor(StockFieldNames.SkinMaxTemp, d => d.skinMaxTemp),
+                new ScalarFieldExtractor(StockFieldNames.MaxLength, d => d.maxLength),
+                new ScalarFieldExtractor(StockFieldNames.Buoyancy, d => d.buoyancy),
+
+                // Engine + paired gimbal
+                new EngineMaxThrustExtractor(),
+                new EngineIspVacExtractor(),
+                new EngineIspSlExtractor(),
+                new EngineFuelFlowExtractor(),
+                new GimbalExtractor(),
+
+                // Reaction wheel
+                new ReactionWheelExtractor(),
+
+                // Command (pod / probe core EC requirement)
+                new CommandExtractor(),
+
+                // Science experiments (per-experiment presence flag)
+                new ScienceExperimentExtractor(),
+
+                // Resource intake (jet engine air intake)
+                new ResourceIntakeExtractor(),
+
+                // Lifting surface (wings, tail fins)
+                new LiftingSurfaceExtractor(),
+
+                // Heatshield
+                new HeatshieldExtractor(),
+
+                // Active radiator
+                new ActiveRadiatorExtractor(),
+
+                // Cargo bay
+                new CargoBayExtractor(),
+
+                // Decoupler
+                new DecoupleExtractor(),
+
+                // Tank
+                new TankCapacityExtractor(),
+                new TankResourcePercentExtractor(),
+
+                // RCS
+                new RcsThrustExtractor(),
+
+                // Solar
+                new SolarPanelExtractor(),
+
+                // Antenna
+                new AntennaExtractor(),
+
+                // Parachute
+                new ParachuteExtractor(),
+
+                // Generator / converter
+                new GeneratorExtractor(),
+                new ConverterExtractor(),
+
+                // Wheel
+                new WheelBrakeTorqueExtractor(),
+                new WheelSuspensionExtractor(),
+
+                // Docking
+                new DockingNodeExtractor(),
+
+                // Control surface
+                new ControlSurfaceExtractor(),
+            };
+        }
+    }
+}
+#endif

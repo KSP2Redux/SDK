@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="wizard-source-mesh-step">
+
+        <engine:RadioButtonGroup name="mesh-group" label="Source mesh" />
+
+        <engine:VisualElement name="prefab-block" class="wizard-mesh-block">
+            <editor:ObjectField name="prefab-field" label="Prefab" />
+        </engine:VisualElement>
+
+        <engine:VisualElement name="fbx-block" class="wizard-mesh-block">
+            <editor:ObjectField name="fbx-field" label="FBX" />
+            <engine:Toggle name="auto-scale-toggle" text="Auto-scale 100x (Redux convention)" />
+            <engine:Toggle name="auto-rotate-toggle" text="Auto-rotate -90 deg X (FBX -&gt; Unity Y-up)" />
+            <engine:Toggle name="drag-cube-toggle" text="Tag renderers DragCubeMesh" />
+        </engine:VisualElement>
+
+    </engine:VisualElement>
+
+</engine:UXML>

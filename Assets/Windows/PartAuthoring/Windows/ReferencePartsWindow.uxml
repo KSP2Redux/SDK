@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root reference-parts-root">
+
+        <engine:Foldout text="Filter" value="true" class="sdk-section">
+            <engine:VisualElement name="bucket-override-slot" class="reference-parts-bucket-override" />
+            <engine:Label name="match-count-label" class="reference-parts-muted" />
+        </engine:Foldout>
+
+        <engine:VisualElement name="empty-state-slot" />
+
+        <engine:VisualElement name="buckets-container" class="reference-parts-buckets-container" />
+
+        <engine:VisualElement name="staleness-slot" />
+
+    </engine:ScrollView>
+
+</engine:UXML>

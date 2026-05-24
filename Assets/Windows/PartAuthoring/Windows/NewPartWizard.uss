@@ -1,0 +1,339 @@
+.new-part-wizard-root {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.new-part-wizard-header {
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 10px 12px 10px 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.3);
+}
+
+.new-part-wizard-step-counter {
+    -unity-font-style: italic;
+    color: rgb(150, 170, 200);
+    font-size: 11px;
+}
+
+.new-part-wizard-step-title {
+    -unity-font-style: bold;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.new-part-wizard-content {
+    flex-grow: 1;
+}
+
+.new-part-wizard-step-slot {
+    padding: 10px 12px 10px 12px;
+}
+
+.new-part-wizard-footer {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 8px 8px 8px 8px;
+    border-top-width: 1px;
+    border-top-color: rgba(0, 0, 0, 0.3);
+}
+
+.new-part-wizard-footer-spacer {
+    flex-grow: 1;
+}
+
+.new-part-wizard-button {
+    min-width: 80px;
+    margin: 0 2px 0 2px;
+}
+
+.new-part-wizard-button-primary {
+    -unity-font-style: bold;
+}
+
+/* Archetype picker categories: boxed sections with blue-tinted headers, matching the
+ * Add Module picker's category vocabulary. Foldout toggle is restyled to act as the
+ * colored header row.
+ */
+
+.wizard-archetype-category {
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.10);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.wizard-archetype-category > .unity-foldout__toggle {
+    background-color: rgba(70, 100, 140, 0.25);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    margin: 0;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.45);
+}
+
+.wizard-archetype-category > .unity-foldout__toggle > .unity-toggle__input > .unity-label {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+}
+
+.wizard-archetype-category > .unity-foldout__content {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.wizard-archetype-row {
+    flex-direction: column;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 12px;
+    padding-right: 8px;
+    margin: 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.25);
+}
+
+.wizard-archetype-row:hover {
+    background-color: rgba(95, 150, 210, 0.15);
+}
+
+.wizard-archetype-row-selected {
+    background-color: rgba(95, 150, 210, 0.40);
+}
+
+.wizard-archetype-row-selected:hover {
+    background-color: rgba(95, 150, 210, 0.50);
+}
+
+.wizard-archetype-row-name {
+    color: rgb(245, 248, 255);
+    -unity-font-style: bold;
+    font-size: 12px;
+}
+
+.wizard-archetype-row-desc {
+    color: rgb(180, 190, 205);
+    font-size: 11px;
+    margin-top: 1px;
+    white-space: normal;
+}
+
+.wizard-size-header-line {
+    color: rgb(180, 180, 180);
+    margin-bottom: 2px;
+}
+
+.wizard-size-dropdown {
+    margin-top: 6px;
+    margin-bottom: 8px;
+}
+
+.wizard-reference-panel {
+    margin-top: 8px;
+    padding: 6px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+.wizard-reference-section-header {
+    -unity-font-style: italic;
+    color: rgb(150, 170, 200);
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.wizard-reference-row {
+    color: rgb(200, 200, 200);
+    margin-left: 12px;
+    font-size: 11px;
+}
+
+.wizard-reference-adjacent {
+    margin-top: 6px;
+}
+
+.wizard-no-bake-warning {
+    color: rgb(220, 180, 80);
+    margin: 6px 0 6px 0;
+    padding: 6px;
+    background-color: rgba(220, 180, 80, 0.1);
+    border-radius: 2px;
+}
+
+/* Identity step */
+
+.wizard-identity-step {
+    flex-direction: column;
+}
+
+.wizard-identity-field {
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.wizard-identity-section-header {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+.wizard-slug-hint {
+    color: rgb(150, 170, 200);
+    -unity-font-style: italic;
+    font-size: 11px;
+    margin-left: 122px;
+    margin-bottom: 4px;
+}
+
+.wizard-slug-hint-error {
+    color: rgb(220, 110, 100);
+    -unity-font-style: normal;
+}
+
+.wizard-folder-radio {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.wizard-folder-radio-detail {
+    color: rgb(180, 190, 205);
+    font-size: 11px;
+    margin-left: 24px;
+    margin-bottom: 4px;
+}
+
+.wizard-folder-radio-detail-field {
+    margin-left: 24px;
+    margin-bottom: 4px;
+}
+
+.wizard-final-destination {
+    -unity-font-style: bold;
+    color: rgb(200, 220, 240);
+    margin-top: 12px;
+    padding: 6px;
+    background-color: rgba(70, 100, 140, 0.20);
+    border-radius: 2px;
+}
+
+/* Source mesh step */
+
+.wizard-source-mesh-step {
+    flex-direction: column;
+}
+
+.wizard-mesh-block {
+    flex-direction: column;
+    margin-top: 6px;
+    padding: 6px;
+    background-color: rgba(0, 0, 0, 0.10);
+    border-radius: 2px;
+}
+
+/* Defaults step */
+
+.wizard-defaults-step {
+    flex-direction: column;
+}
+
+.wizard-defaults-section-header {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+    margin-top: 10px;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(70, 100, 140, 0.40);
+}
+
+.wizard-module-toggle {
+    margin-left: 8px;
+}
+
+.wizard-defaults-row {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 8px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.wizard-defaults-row-name {
+    min-width: 260px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    color: rgb(220, 230, 245);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wizard-defaults-row-median {
+    min-width: 120px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    -unity-font-style: bold;
+    color: rgb(245, 248, 255);
+}
+
+.wizard-defaults-row-range {
+    color: rgb(150, 170, 200);
+    font-size: 11px;
+    flex-shrink: 1;
+}
+
+.wizard-defaults-group-header {
+    -unity-font-style: italic;
+    color: rgb(150, 170, 200);
+    margin-top: 6px;
+    margin-bottom: 2px;
+    margin-left: 4px;
+}
+
+/* Review step */
+
+.wizard-review-step {
+    flex-direction: column;
+}
+
+.wizard-review-section-header {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+    margin-top: 10px;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(70, 100, 140, 0.40);
+}
+
+.wizard-review-row {
+    flex-direction: row;
+    align-items: flex-start;
+    margin-left: 8px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.wizard-review-row-key {
+    width: 130px;
+    color: rgb(180, 190, 205);
+}
+
+.wizard-review-row-value {
+    color: rgb(245, 248, 255);
+    flex-shrink: 1;
+    white-space: normal;
+}
