@@ -45,6 +45,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private StockStatsBaker.BakeResult _lastResult;
         private HelpBox _sourceHelpBox;
 
+        /// <summary>
+        /// Opens or focuses the Stock Stats Bake window.
+        /// </summary>
         [MenuItem(PartAuthoringWindows.MENU_ROOT + "Stock Stats Bake", priority = PartAuthoringWindows.PRIORITY_STOCK_STATS_BAKE)]
         public static void ShowWindow()
         {

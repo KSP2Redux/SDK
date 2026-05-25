@@ -26,6 +26,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// <summary>Size class assigned to the node's <c>sizeKey</c>.</summary>
         public MetaAssemblySizeFilterType Size { get; }
 
+        /// <summary>
+        /// Creates a new <see cref="AttachNodeTemplate" />.
+        /// </summary>
+        /// <param name="nodeId">The node ID, used as the child GameObject name.</param>
+        /// <param name="localPosition">The node position relative to the part root.</param>
+        /// <param name="localDirection">The outward-facing direction of the node, relative to the part root.</param>
+        /// <param name="size">The size class assigned to the node.</param>
         public AttachNodeTemplate(string nodeId, Vector3 localPosition, Vector3 localDirection, MetaAssemblySizeFilterType size)
         {
             NodeId = nodeId;

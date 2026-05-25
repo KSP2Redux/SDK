@@ -4,10 +4,11 @@ using UnityEditor;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
 {
     /// <summary>
-    /// <see cref="AutocompleteField" /> specialised for resource definition names. Suggestions
-    /// come from <see cref="ResourceNameCatalog" />, which loads addressables labelled
-    /// <c>"resources"</c>.
+    /// <see cref="AutocompleteField" /> specialised for resource definition names.
     /// </summary>
+    /// <remarks>
+    /// Suggestions come from <see cref="ResourceNameCatalog" />, which loads addressables labelled <c>"resources"</c>.
+    /// </remarks>
     public sealed class ResourceNameField : AutocompleteField
     {
         /// <summary>

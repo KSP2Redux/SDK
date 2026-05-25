@@ -1,10 +1,7 @@
 using System.Reflection;
 using KSP.Modules;
-using KSP.Sim;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
-using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
@@ -16,92 +13,26 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     /// SceneView arrow lives with the axis it controls.
     /// </summary>
     [DataEditor(typeof(Data_WheelBogey))]
-    public sealed class WheelBogeyDataEditor : IDataEditor
+    public sealed class WheelBogeyDataEditor : DataFieldIteratorEditor<Data_WheelBogey>
     {
-        private const BindingFlags FIELD_FLAGS =
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
-
         /// <inheritdoc />
-        public VisualElement Build(SerializedProperty dataProp, PartBehaviourModule module)
+        protected override VisualElement InjectAfter(FieldInfo field)
         {
-            var partRoot = module == null ? null : module.gameObject.transform;
-            var root = new VisualElement();
-            root.style.flexDirection = FlexDirection.Column;
-
-            var iterator = dataProp.Copy();
-            var end = iterator.GetEndProperty();
-            bool first = true;
-            while (iterator.NextVisible(first))
+            if (field.Name == nameof(Data_WheelBogey.bogeyAxis))
             {
-                first = false;
-                if (SerializedProperty.EqualContents(iterator, end))
-                {
-                    break;
-                }
-                var field = typeof(Data_WheelBogey).GetField(iterator.name, FIELD_FLAGS);
-                if (!ShouldRender(field))
-                {
-                    continue;
-                }
-                var row = ReflectionModuleEditor.BuildFieldRowForCustomEditor(iterator.Copy(), field, partRoot);
-                if (row != null)
-                {
-                    root.Add(row);
-                }
-
-                if (field.Name == nameof(Data_WheelBogey.bogeyAxis))
-                {
-                    root.Add(BuildGizmoToggleRow(
-                        "Show Axis Gizmo",
-                        () => PartAuthoringGizmoSettings.ShowWheelBogeyAxis,
-                        v => PartAuthoringGizmoSettings.ShowWheelBogeyAxis = v));
-                }
-                else if (field.Name == nameof(Data_WheelBogey.bogeyUpAxis))
-                {
-                    root.Add(BuildGizmoToggleRow(
-                        "Show Up Axis Gizmo",
-                        () => PartAuthoringGizmoSettings.ShowWheelBogeyUpAxis,
-                        v => PartAuthoringGizmoSettings.ShowWheelBogeyUpAxis = v));
-                }
+                return BuildGizmoToggle(
+                    "Show Axis Gizmo",
+                    () => PartAuthoringGizmoSettings.ShowWheelBogeyAxis,
+                    v => PartAuthoringGizmoSettings.ShowWheelBogeyAxis = v);
             }
-
-            return root;
-        }
-
-        private static bool ShouldRender(FieldInfo field)
-        {
-            if (field == null)
+            if (field.Name == nameof(Data_WheelBogey.bogeyUpAxis))
             {
-                return false;
+                return BuildGizmoToggle(
+                    "Show Up Axis Gizmo",
+                    () => PartAuthoringGizmoSettings.ShowWheelBogeyUpAxis,
+                    v => PartAuthoringGizmoSettings.ShowWheelBogeyUpAxis = v);
             }
-            if (field.IsDefined(typeof(KSPStateAttribute), inherit: true))
-            {
-                return false;
-            }
-            if (field.IsDefined(typeof(HideInInspector), inherit: true))
-            {
-                return false;
-            }
-            if (!field.IsDefined(typeof(KSPDefinitionAttribute), inherit: true))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static VisualElement BuildGizmoToggleRow(string label, System.Func<bool> getter, System.Action<bool> setter)
-        {
-            var toggle = new Toggle(label)
-            {
-                value = getter(),
-            };
-            toggle.AddToClassList("unity-base-field__aligned");
-            toggle.RegisterValueChangedCallback(evt =>
-            {
-                setter(evt.newValue);
-                SceneView.RepaintAll();
-            });
-            return toggle;
+            return null;
         }
     }
 }

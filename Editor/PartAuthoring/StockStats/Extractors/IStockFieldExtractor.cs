@@ -20,6 +20,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
         /// (<c>"engine.maxThrust.Methalox"</c>). Empty enumeration is valid for parts that
         /// don't have the field.
         /// </remarks>
+        /// <param name="part">Stock part record to read.</param>
+        /// <param name="ctx">Shared bake context.</param>
+        /// <returns>Per-field name and value entries, possibly empty.</returns>
         IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx);
     }
 
@@ -31,6 +34,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// </remarks>
     internal sealed class BakeContext
     {
+        /// <summary>
+        /// Creates a new bake context with the given resource-mass lookup.
+        /// </summary>
+        /// <param name="resourceMassPerUnit">Recipe-resolved mass per unit, keyed by resource name. Null is treated as empty.</param>
         public BakeContext(IReadOnlyDictionary<string, float> resourceMassPerUnit)
         {
             ResourceMassPerUnit = resourceMassPerUnit ?? new Dictionary<string, float>();

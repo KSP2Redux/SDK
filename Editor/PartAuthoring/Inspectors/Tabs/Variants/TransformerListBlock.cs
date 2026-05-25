@@ -1,9 +1,11 @@
 using System;
 using KSP;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 using VSwift.Modules.Behaviours;
 using VSwift.Modules.Transformers;
@@ -11,13 +13,21 @@ using VSwift.Modules.Transformers;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
 {
     /// <summary>
-    /// List scaffold for <see cref="Variant.Transformers" /> (polymorphic <c>[SerializeReference]</c> list). Mirrors the chrome of <see cref="Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections.CardListSection" /> but uses the SerializedProperty API for both reads and writes because <c>[SerializeReference]</c> arrays require an explicit <c>managedReferenceValue</c> assignment after <c>arraySize++</c> to bind a concrete type into the new slot.
+    /// List scaffold for <see cref="Variant.Transformers" /> (polymorphic <c>[SerializeReference]</c> list).
     /// </summary>
     /// <remarks>
-    /// Mutations are surgical and state-preserving. Add appends one card without disturbing existing ones. Remove deletes at the card's CURRENT visual position and rebinds every subsequent card to its new index so their body content reflects the correct transformer instance and serialized property.
+    /// Mirrors the chrome of <see cref="Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections.CardListSection" /> but uses the SerializedProperty API for both reads and writes because <c>[SerializeReference]</c> arrays require an explicit <c>managedReferenceValue</c> assignment after <c>arraySize++</c> to bind a concrete type into the new slot. Mutations are surgical and state-preserving. Add appends one card without disturbing existing ones. Remove deletes at the card's current visual position and rebinds every subsequent card to its new index so their body content reflects the correct transformer instance and serialized property.
     /// </remarks>
     internal static class TransformerListBlock
     {
+        /// <summary>
+        /// Builds the transformer-list block for a single variant.
+        /// </summary>
+        /// <param name="module">The owning <see cref="Module_PartSwitch" />.</param>
+        /// <param name="part">The owning part used to scope transformer editors.</param>
+        /// <param name="transformersArrayProp">The <c>[SerializeReference]</c> array property to render.</param>
+        /// <param name="markDirty">Callback invoked after mutations so the editor records dirty state.</param>
+        /// <returns>A VisualElement containing the header row, empty hint, and per-transformer cards.</returns>
         public static VisualElement Build(
             Module_PartSwitch module,
             CorePartData part,
@@ -44,7 +54,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
 
             var emptyHint = new Label("(no transformers - add one to apply effects when this variant is active)")
             {
-                style = { unityFontStyleAndWeight = UnityEngine.FontStyle.Italic },
+                style = { unityFontStyleAndWeight = FontStyle.Italic },
             };
             emptyHint.AddToClassList("transformer-list-empty");
 
@@ -61,7 +71,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
             void UpdateCountAndEmpty()
             {
                 transformersArrayProp.serializedObject.Update();
-                int n = transformersArrayProp.arraySize;
+                var n = transformersArrayProp.arraySize;
                 countLabel.text = $"Transformers ({n})";
                 emptyHint.style.display = n == 0 ? DisplayStyle.Flex : DisplayStyle.None;
             }
@@ -83,7 +93,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
                         }
                         var so = transformersArrayProp.serializedObject;
                         so.Update();
-                        int newIndex = transformersArrayProp.arraySize;
+                        var newIndex = transformersArrayProp.arraySize;
                         transformersArrayProp.arraySize++;
                         so.ApplyModifiedProperties();
                         so.Update();
@@ -96,7 +106,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
                     }
                     catch (Exception e)
                     {
-                        UnityEngine.Debug.LogError($"[AddTransformerPicker] Failed to instantiate {type}: {e.Message}");
+                        Debug.LogError($"[AddTransformerPicker] Failed to instantiate {type}: {e.Message}");
                     }
                 });
             })
@@ -110,7 +120,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
             outer.Add(emptyHint);
             outer.Add(container);
 
-            for (int i = 0; i < transformersArrayProp.arraySize; i++)
+            for (var i = 0; i < transformersArrayProp.arraySize; i++)
             {
                 container.Add(BuildTransformerCard(transformersArrayProp, i, container, context, UpdateCountAndEmpty));
             }
@@ -126,96 +136,43 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants
             TransformerEditorContext context,
             Action updateCountAndEmpty)
         {
-            var card = new VisualElement();
-            card.AddToClassList("data-editor-card");
-
-            var headerRow = new VisualElement();
-            headerRow.AddToClassList("data-editor-card-header");
-
-            var disclosure = new Button { text = "▼" };
-            disclosure.AddToClassList("data-editor-card-disclosure");
-            headerRow.Add(disclosure);
+            var card = CardShell.Build(out var slots);
 
             var nameLabel = new Label();
             nameLabel.AddToClassList("data-editor-card-name-field");
-            headerRow.Add(nameLabel);
+            slots.Header.Add(nameLabel);
 
-            VisualElement cardRef = card;
-            var removeBtn = new Button(() =>
+            slots.Header.Add(CardShell.BuildRemoveButton(card, container, transformersArrayProp, () =>
             {
-                int currentIndex = container.IndexOf(cardRef);
-                if (currentIndex < 0)
-                {
-                    return;
-                }
-                var so = transformersArrayProp.serializedObject;
-                so.Update();
-                if (currentIndex >= transformersArrayProp.arraySize)
-                {
-                    return;
-                }
-                transformersArrayProp.DeleteArrayElementAtIndex(currentIndex);
-                so.ApplyModifiedProperties();
                 context?.MarkDirty?.Invoke();
-                container.Remove(cardRef);
-                for (int i = currentIndex; i < container.childCount; i++)
-                {
-                    if (container.ElementAt(i).userData is Action<int> rebind)
-                    {
-                        rebind(i);
-                    }
-                }
                 updateCountAndEmpty?.Invoke();
-            }) { text = "X" };
-            removeBtn.AddToClassList("data-editor-card-remove-btn");
-            headerRow.Add(removeBtn);
-
-            card.Add(headerRow);
-
-            var body = new VisualElement();
-            body.AddToClassList("data-editor-card-body");
-            card.Add(body);
+            }));
 
             void Bind(int index)
             {
                 transformersArrayProp.serializedObject.Update();
-                if (index < 0 || index >= transformersArrayProp.arraySize)
-                {
-                    return;
-                }
-                SerializedProperty entryProp = transformersArrayProp.GetArrayElementAtIndex(index);
-                ITransformer transformer = entryProp?.managedReferenceValue as ITransformer;
+                if (index < 0 || index >= transformersArrayProp.arraySize) return;
+                var entryProp = transformersArrayProp.GetArrayElementAtIndex(index);
+                var transformer = entryProp?.managedReferenceValue as ITransformer;
                 nameLabel.text = transformer?.GetType().Name ?? "(null transformer)";
 
-                body.Clear();
+                slots.Body.Clear();
                 if (transformer != null)
                 {
-                    Type t = transformer.GetType();
-                    VisualElement content = TransformerEditorRegistry.TryCreate(t, out var customEditor)
+                    var t = transformer.GetType();
+                    var content = TransformerEditorRegistry.TryCreate(t, out var customEditor)
                         ? customEditor.Build(transformer, entryProp, context)
                         : ReflectionTransformerEditor.Build(entryProp, context);
-                    if (content != null)
-                    {
-                        body.Add(content);
-                    }
+                    if (content != null) slots.Body.Add(content);
                 }
                 else
                 {
-                    body.Add(new HelpBox("Transformer reference is null.", HelpBoxMessageType.Error));
+                    slots.Body.Add(new HelpBox("Transformer reference is null.", HelpBoxMessageType.Error));
                 }
             }
 
             card.userData = (Action<int>)Bind;
             Bind(initialIndex);
-
-            bool expanded = true;
-            body.style.display = DisplayStyle.Flex;
-            disclosure.clicked += () =>
-            {
-                expanded = !expanded;
-                body.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-                disclosure.text = expanded ? "▼" : "▶";
-            };
 
             return card;
         }

@@ -22,6 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation
         private readonly Lazy<IReadOnlyDictionary<string, Transform>> _transformByName;
         private readonly Lazy<IReadOnlyList<Collider>> _colliders;
         private readonly Lazy<IReadOnlyDictionary<string, ContainedResourceDefinition>> _storedResources;
+        private readonly Lazy<IReadOnlyList<ModuleData>> _modules;
 
         /// <summary>
         /// Constructs a context wrapping <paramref name="part" />.
@@ -38,6 +39,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation
             _transformByName = new Lazy<IReadOnlyDictionary<string, Transform>>(BuildTransformByName);
             _colliders = new Lazy<IReadOnlyList<Collider>>(BuildColliders);
             _storedResources = new Lazy<IReadOnlyDictionary<string, ContainedResourceDefinition>>(BuildStoredResources);
+            _modules = new Lazy<IReadOnlyList<ModuleData>>(BuildModules);
         }
 
         /// <summary>The validated part.</summary>
@@ -52,8 +54,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation
         /// <summary>The part's data block. Null when the part or core is null.</summary>
         public PartData Data => Part != null ? Part.Data : null;
 
-        /// <summary>The part's module list. Empty when the part is null.</summary>
-        public IReadOnlyList<ModuleData> Modules => Core?.modules ?? (IReadOnlyList<ModuleData>)Array.Empty<ModuleData>();
+        /// <summary>The part's <see cref="ModuleData" /> records at edit-time.</summary>
+        /// <remarks>
+        /// Sourced from every <see cref="PartBehaviourModule" /> on the prefab and that module's
+        /// live <c>DataModules</c> dictionary. <c>PartCore.modules</c> is only populated by the
+        /// runtime JSON loader and stays empty during authoring, so walking it directly returns
+        /// nothing for the part the author is editing. Aggregating <c>DataModules</c> here keeps
+        /// the per-validator code simple while letting validators run against the data the author
+        /// actually sees in the inspector.
+        /// </remarks>
+        public IReadOnlyList<ModuleData> ModuleDatas => _modules.Value;
 
         /// <summary>Union of all Renderer bounds on the prefab, in part-local space.</summary>
         public Bounds PrefabBounds => _prefabBounds.Value;
@@ -142,6 +152,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation
                 }
             }
             return dict;
+        }
+
+        private IReadOnlyList<ModuleData> BuildModules()
+        {
+            if (Prefab == null) return Array.Empty<ModuleData>();
+            var list = new List<ModuleData>();
+            foreach (var module in Prefab.GetComponents<PartBehaviourModule>())
+            {
+                if (module == null || module.DataModules == null) continue;
+                foreach (var data in module.DataModules.Values)
+                {
+                    if (data != null) list.Add(data);
+                }
+            }
+            return list;
         }
     }
 }

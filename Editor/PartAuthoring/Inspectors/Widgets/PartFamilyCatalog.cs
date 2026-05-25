@@ -2,14 +2,11 @@ using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
 {
-    /// <summary>Static list of known part-family values in their canonical sort order.</summary>
+    /// <summary>
+    /// Static list of known part-family values in their canonical sort order.
+    /// </summary>
     /// <remarks>
-    /// Mirrors the family taxonomy KSP2's Parts Manager uses. The four-digit numeric prefix
-    /// drives sort order in the parts picker. Authors should pick from this list rather than
-    /// invent new families to keep the picker grouping coherent. Adding a new family is a small
-    /// edit here followed by sharing the new value with anyone else authoring parts. Entries
-    /// with the same prefix (e.g. <c>0560-Resource Gathering</c> and <c>0560-Science Collector</c>)
-    /// are intentional siblings sharing a sort bucket.
+    /// Mirrors the family taxonomy KSP2's Parts Manager uses. The four-digit numeric prefix drives sort order in the parts picker. Authors should pick from this list rather than invent new families to keep the picker grouping coherent. Adding a new family is a small edit here followed by sharing the new value with anyone else authoring parts. Entries with the same prefix (for example <c>0560-Resource Gathering</c> and <c>0560-Science Collector</c>) are intentional siblings sharing a sort bucket.
     /// </remarks>
     public static class PartFamilyCatalog
     {
@@ -82,7 +79,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
             "0560-Science Collector",
         };
 
-        /// <summary>Returns the canonical list of known families. Stable order; safe to enumerate repeatedly.</summary>
+        /// <summary>
+        /// Returns the canonical list of known families.
+        /// </summary>
+        /// <remarks>
+        /// Stable order, safe to enumerate repeatedly.
+        /// </remarks>
+        /// <returns>The canonical family list.</returns>
         public static IReadOnlyList<string> GetKnownFamilies() => _families;
     }
 }

@@ -39,10 +39,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
 
         static ActivePartTracker()
         {
-            Selection.selectionChanged += RefreshFromSelection;
+            Selection.selectionChanged += Refresh;
             PrefabStage.prefabStageOpened += OnPrefabStageOpened;
             PrefabStage.prefabStageClosing += OnPrefabStageClosing;
-            RefreshFromSelection();
+            Refresh();
         }
 
         /// <summary>
@@ -55,16 +55,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
         /// </remarks>
         public static void Refresh()
         {
-            RefreshFromSelection();
-        }
-
-        private static void RefreshFromSelection()
-        {
             var resolved = Resolve();
-            if (resolved == _current)
-            {
-                return;
-            }
+            if (resolved == _current) return;
             _current = resolved;
             OnChanged?.Invoke(_current);
         }
@@ -100,12 +92,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
 
         private static void OnPrefabStageOpened(PrefabStage stage)
         {
-            RefreshFromSelection();
+            Refresh();
         }
 
         private static void OnPrefabStageClosing(PrefabStage stage)
         {
-            RefreshFromSelection();
+            Refresh();
         }
     }
 }

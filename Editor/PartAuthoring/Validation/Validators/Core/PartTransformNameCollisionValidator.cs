@@ -33,7 +33,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Core
             {
                 yield break;
             }
-            var modules = context.Modules;
+            var modules = context.ModuleDatas;
             if (modules == null)
             {
                 yield break;

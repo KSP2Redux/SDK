@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using KSP;
@@ -36,18 +37,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         /// <param name="target">The part to serialise.</param>
         public static void Save(CorePartData target)
         {
-            if (target == null || target.Core == null)
-            {
-                return;
-            }
+            if (target == null || target.Core == null) return;
 
-            string prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
-            if (string.IsNullOrEmpty(prefabPath))
-            {
-                return;
-            }
+            var prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
+            if (string.IsNullOrEmpty(prefabPath)) return;
 
-            string jsonPath = Path.GetDirectoryName(prefabPath) + $"/{target.name}.json";
+            var path = Path.GetDirectoryName(prefabPath) + $"/{target.name}.json";
 
             if (!_initialized)
             {
@@ -56,39 +51,37 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             }
 
             target.Core.data.serializedPartModules.Clear();
-            foreach (Component child in target.gameObject.GetComponents<Component>())
+            foreach (var child in target.gameObject.GetComponents<Component>())
             {
-                if (child is not PartBehaviourModule partBehaviourModule)
-                {
-                    continue;
-                }
+                if (child is not PartBehaviourModule partBehaviourModule) continue;
 
-                MethodInfo addMethod =
+                // Reflection on private AddDataModules is fragile against stock-game API changes.
+                var addMethod =
                     child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
                     child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
-                addMethod?.Invoke(child, new object[] { });
+                addMethod?.Invoke(child, Array.Empty<object>());
 
-                foreach (ModuleData data in partBehaviourModule.DataModules.Values)
+                foreach (var data in partBehaviourModule.DataModules.Values)
                 {
-                    MethodInfo rebuildMethod =
+                    // Reflection on private RebuildDataContext is fragile against stock-game API changes.
+                    var rebuildMethod =
                         data.GetType().GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.NonPublic) ??
                         data.GetType().GetMethod("RebuildDataContext", BindingFlags.Instance | BindingFlags.Public);
-                    rebuildMethod?.Invoke(data, new object[] { });
+                    rebuildMethod?.Invoke(data, Array.Empty<object>());
                 }
 
                 target.Core.data.serializedPartModules.Add(new SerializedPartModule(partBehaviourModule, false));
             }
 
-            string json = IOProvider.ToJson(target.Core);
-            JObject jObject = JObject.Parse(json);
+            var json = IOProvider.ToJson(target.Core);
+            var jObject = JObject.Parse(json);
             json = jObject.ToString(Formatting.Indented);
-            string path = jsonPath.Replace("%NAME%", target.Core.data.partName);
-            string directoryName = new FileInfo(path).DirectoryName;
+            var directoryName = new FileInfo(path).DirectoryName;
             Directory.CreateDirectory(directoryName);
             File.WriteAllText(path, json);
             AssetDatabase.ImportAsset(path);
 
-            bool madeAddressable = false;
+            var madeAddressable = false;
             var group = PartAuthoringAddressables.ResolveGroup(target);
             if (group != null)
             {
@@ -108,7 +101,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                 !madeAddressable
                     ? $"Json is at: {path}, you need to manually make it addressable"
                     : $"Json is at: {path}",
-                "ok"
+                "OK"
             );
         }
     }

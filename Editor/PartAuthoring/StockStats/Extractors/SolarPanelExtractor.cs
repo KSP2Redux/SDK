@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Solar panel peak output: Rate × EfficiencyMultiplier from Data_SolarPanel. EC/s.</summary>
     internal sealed class SolarPanelExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             SolarPanelDataObjectMirror sol = ModuleResolver.FindModuleData<SolarPanelDataObjectMirror>(part);

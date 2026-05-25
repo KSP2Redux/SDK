@@ -15,6 +15,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
     [TransformerEditor(typeof(EngineModeSwapper))]
     public sealed class EngineModeSwapperEditor : ITransformerEditor
     {
+        /// <inheritdoc />
         public VisualElement Build(ITransformer transformer, SerializedProperty transformerProp, TransformerEditorContext context)
         {
             var outer = new VisualElement();

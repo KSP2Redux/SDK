@@ -17,6 +17,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// </summary>
         /// <param name="arrayProp">The string-array SerializedProperty to render.</param>
         /// <param name="title">Header title. The element count is appended in parentheses.</param>
+        /// <returns>The built block element.</returns>
         public static VisualElement Build(SerializedProperty arrayProp, string title)
         {
             var outer = new VisualElement();
@@ -33,13 +34,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         private static VisualElement BuildStringRow(SerializedProperty entry, int index, Action onDelete)
         {
             var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
-            row.style.marginBottom = 2f;
+            row.AddToClassList("data-editor-inline-row");
 
             var textField = new TextField { value = entry.stringValue, isDelayed = true };
-            textField.style.flexGrow = 1f;
-            textField.style.marginRight = 4f;
+            textField.AddToClassList("data-editor-inline-row__grow");
             textField.RegisterValueChangedCallback(evt =>
             {
                 entry.serializedObject.Update();

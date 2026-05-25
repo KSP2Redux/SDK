@@ -16,7 +16,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators
     /// <remarks>
     /// Recurses through nested classes, arrays, and List&lt;T&gt; so attributes on fields buried
     /// inside container records (e.g. ExperimentConfiguration.ResourcesCost[].ResourceName) are
-    /// reached. Unity scalar types and primitives short-circuit to keep the walk bounded; a depth
+    /// reached. Unity scalar types and primitives short-circuit to keep the walk bounded. A depth
     /// limit protects against accidental cycles.
     /// </remarks>
     internal static class ModuleFieldEnumerator
@@ -31,6 +31,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators
         /// <summary>One <see cref="string" />-typed field reference plus its live value.</summary>
         public readonly struct StringFieldRef
         {
+            /// <summary>
+            /// Constructs a reference to a single string field reached during the walk.
+            /// </summary>
+            /// <param name="module">The top-level module that owns the field's containing graph.</param>
+            /// <param name="field">The leaf <see cref="string" />-typed field.</param>
+            /// <param name="value">Live value of the field at walk time.</param>
+            /// <param name="displayPath">Dotted or indexed path from the module root to the field.</param>
             public StringFieldRef(ModuleData module, FieldInfo field, string value, string displayPath)
             {
                 Module = module;

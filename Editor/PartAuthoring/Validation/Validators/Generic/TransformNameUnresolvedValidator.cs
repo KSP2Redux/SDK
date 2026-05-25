@@ -26,7 +26,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Generic
                 yield break;
             }
             var byName = context.TransformByName;
-            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<TransformNameAttribute>(context.Modules))
+            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<TransformNameAttribute>(context.ModuleDatas))
             {
                 if (string.IsNullOrEmpty(fieldRef.Value))
                 {

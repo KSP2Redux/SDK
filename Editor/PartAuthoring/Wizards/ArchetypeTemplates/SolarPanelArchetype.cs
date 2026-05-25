@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -11,12 +11,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Solar panel - deployable EC generator.</summary>
     public sealed class SolarPanelArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Electrical";
+        /// <inheritdoc />
         public override string Family => "0480-Solar Array";
+        /// <inheritdoc />
         public override string DisplayName => "Solar panel";
+        /// <inheritdoc />
         public override string Description => "Deployable solar array that generates electric charge.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.XS;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_SolarPanel),
@@ -24,8 +30,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => Array.Empty<AttachNodeTemplate>();
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

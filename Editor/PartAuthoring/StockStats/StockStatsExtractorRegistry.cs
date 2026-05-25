@@ -13,6 +13,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     /// </remarks>
     internal static class StockStatsExtractorRegistry
     {
+        /// <summary>
+        /// Builds the ordered list of extractors the bake runs against each part.
+        /// </summary>
+        /// <returns>A fresh list of extractor instances in invocation order.</returns>
         public static List<IStockFieldExtractor> Create()
         {
             return new List<IStockFieldExtractor>

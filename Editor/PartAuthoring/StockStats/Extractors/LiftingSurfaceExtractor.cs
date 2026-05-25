@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -9,6 +9,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// </summary>
     internal sealed class LiftingSurfaceExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             LiftingSurfaceDataObjectMirror lift = ModuleResolver.FindModuleData<LiftingSurfaceDataObjectMirror>(part);

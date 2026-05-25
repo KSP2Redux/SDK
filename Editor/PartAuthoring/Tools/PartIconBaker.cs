@@ -53,7 +53,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                 EditorUtility.DisplayDialog(
                     "Icon Export Failed",
                     "No renderable meshes were found for this part.",
-                    "ok"
+                    "OK"
                 );
                 return;
             }
@@ -91,7 +91,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                 !madeAddressable
                     ? $"Icon is at: {path}, you need to manually make it addressable"
                     : $"Icon is at: {path}",
-                "ok"
+                "OK"
             );
         }
 

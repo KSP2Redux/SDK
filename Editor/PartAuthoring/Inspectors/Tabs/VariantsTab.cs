@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Game;
@@ -13,10 +14,10 @@ using VSwift.Modules.Variants;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
 {
     /// <summary>
-    /// Variants tab content. Authoring surface for V-SwiFT <see cref="Module_PartSwitch" /> data.
+    /// Variants tab content that exposes V-SwiFT <see cref="Module_PartSwitch" /> data as an authoring surface.
     /// </summary>
     /// <remarks>
-    /// Two layouts: an empty state when the part has no <see cref="Module_PartSwitch" /> attached (single "Add PartSwitch Module" button), and a populated state when the module is present (variant-set list + remove button). Step 4 renders VariantSet cards via the shared <see cref="CardListSection" /> scaffold used by engine modes, science experiments, and resource-converter formulas.
+    /// Two layouts. An empty state when the part has no <see cref="Module_PartSwitch" /> attached (single "Add PartSwitch Module" button), and a populated state when the module is present (variant-set list plus remove button). VariantSet cards use the shared <see cref="CardListSection" /> scaffold also used by engine modes, science experiments, and resource-converter formulas.
     /// </remarks>
     internal static class VariantsTab
     {
@@ -27,6 +28,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
         private const string PartSwitchComponentModuleName = "PartComponentModule_PartSwitch";
         private const string PartSwitchPamDisplayName = "VSwift/PartSwitch";
 
+        /// <summary>
+        /// Builds the Variants tab content for the given part.
+        /// </summary>
+        /// <param name="target">The CorePartData whose GameObject hosts the optional <see cref="Module_PartSwitch" />.</param>
+        /// <returns>A root VisualElement containing either the empty-state CTA or the populated variant-set editor.</returns>
         public static VisualElement Build(CorePartData target)
         {
             var root = new VisualElement();
@@ -39,7 +45,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             void Rebuild()
             {
                 root.Clear();
-                Module_PartSwitch module = target.gameObject.GetComponent<Module_PartSwitch>();
+                var module =target.gameObject.GetComponent<Module_PartSwitch>();
                 if (module == null)
                 {
                     BuildEmptyState(root, target, Rebuild);
@@ -54,7 +60,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             return root;
         }
 
-        private static void BuildEmptyState(VisualElement root, CorePartData target, System.Action rebuild)
+        private static void BuildEmptyState(VisualElement root, CorePartData target, Action rebuild)
         {
             var help = new HelpBox(
                 "This part has no variants. Variants are owned by the PartSwitch module. Add the module to begin authoring variant sets.",
@@ -71,7 +77,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             root.Add(addBtn);
         }
 
-        private static void BuildPopulatedState(VisualElement root, CorePartData target, Module_PartSwitch module, System.Action rebuild)
+        private static void BuildPopulatedState(VisualElement root, CorePartData target, Module_PartSwitch module, Action rebuild)
         {
             var so = new SerializedObject(module);
             var variantSetsProp = so.FindProperty("_dataPartSwitch.VariantSets");
@@ -158,7 +164,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
 
         private static VisualElement BuildDefaultVariantField(SerializedProperty variantSetEntry)
         {
-            int setIndex = ExtractIndexFromPath(variantSetEntry.propertyPath);
+            var setIndex =ExtractIndexFromPath(variantSetEntry.propertyPath);
             var so = variantSetEntry.serializedObject;
             var defaultsProp = so.FindProperty("_dataPartSwitch.DefaultActiveVariants");
             var variantsProp = variantSetEntry.FindPropertyRelative("Variants");
@@ -175,10 +181,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                 var choices = new List<string>();
                 if (variantsProp != null)
                 {
-                    for (int i = 0; i < variantsProp.arraySize; i++)
+                    for (var i = 0; i < variantsProp.arraySize; i++)
                     {
                         var idProp = variantsProp.GetArrayElementAtIndex(i).FindPropertyRelative("VariantId");
-                        string id = idProp?.stringValue ?? string.Empty;
+                        var id = idProp?.stringValue ?? string.Empty;
                         if (!string.IsNullOrEmpty(id))
                         {
                             choices.Add(id);
@@ -197,7 +203,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                 dropdown.SetEnabled(true);
                 dropdown.choices = choices;
 
-                string current = string.Empty;
+                var current = string.Empty;
                 if (defaultsProp != null && setIndex >= 0 && setIndex < defaultsProp.arraySize)
                 {
                     current = defaultsProp.GetArrayElementAtIndex(setIndex).stringValue ?? string.Empty;
@@ -258,19 +264,19 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             {
                 return new HelpBox("Variant is not on a Module_PartSwitch target.", HelpBoxMessageType.Error);
             }
-            CorePartData part = module.gameObject.GetComponent<CorePartData>();
+            var part =module.gameObject.GetComponent<CorePartData>();
 
-            int setIndex = ExtractIndexFromPath(GetParentArrayPath(variantEntry.propertyPath, "Variants"));
-            int variantIndex = ExtractIndexFromPath(variantEntry.propertyPath);
+            var setIndex =ExtractIndexFromPath(GetParentArrayPath(variantEntry.propertyPath, "Variants"));
+            var variantIndex =ExtractIndexFromPath(variantEntry.propertyPath);
             if (setIndex < 0 || variantIndex < 0)
             {
                 return new HelpBox("Could not resolve variant index.", HelpBoxMessageType.Error);
             }
 
-            VariantSet set = module.DataPartSwitch?.VariantSets != null && setIndex < module.DataPartSwitch.VariantSets.Count
+            var set = module.DataPartSwitch?.VariantSets != null && setIndex < module.DataPartSwitch.VariantSets.Count
                 ? module.DataPartSwitch.VariantSets[setIndex]
                 : null;
-            Variant variant = set?.Variants != null && variantIndex < set.Variants.Count
+            var variant = set?.Variants != null && variantIndex < set.Variants.Count
                 ? set.Variants[variantIndex]
                 : null;
             if (variant == null)
@@ -286,7 +292,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                 EditorUtility.SetDirty(module);
             }
 
-            SerializedProperty transformersArrayProp = variantEntry?.FindPropertyRelative("Transformers");
+            var transformersArrayProp = variantEntry?.FindPropertyRelative("Transformers");
             holder.Add(TransformerListBlock.Build(module, part, transformersArrayProp, MarkDirty));
             return holder;
         }
@@ -297,18 +303,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             {
                 return -1;
             }
-            int close = propertyPath.LastIndexOf(']');
-            if (close <= 0)
-            {
-                return -1;
-            }
-            int open = propertyPath.LastIndexOf('[', close - 1);
-            if (open < 0)
-            {
-                return -1;
-            }
-            string slice = propertyPath.Substring(open + 1, close - open - 1);
-            return int.TryParse(slice, out int idx) ? idx : -1;
+            var close = propertyPath.LastIndexOf(']');
+            if (close <= 0) return -1;
+            var open = propertyPath.LastIndexOf('[', close - 1);
+            if (open < 0) return -1;
+            var slice = propertyPath.Substring(open + 1, close - open - 1);
+            return int.TryParse(slice, out var idx) ? idx : -1;
         }
 
         private static string GetParentArrayPath(string propertyPath, string arrayName)
@@ -317,15 +317,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             {
                 return string.Empty;
             }
-            int marker = propertyPath.IndexOf("." + arrayName + ".Array.data[", System.StringComparison.Ordinal);
-            if (marker < 0)
-            {
-                return string.Empty;
-            }
+            var marker = propertyPath.IndexOf("." + arrayName + ".Array.data[", StringComparison.Ordinal);
+            if (marker < 0) return string.Empty;
             return propertyPath.Substring(0, marker);
         }
 
-        private static Button BuildRemoveButton(Module_PartSwitch module, System.Action rebuild)
+        private static Button BuildRemoveButton(Module_PartSwitch module, Action rebuild)
         {
             var removeBtn = new Button(() => RemovePartSwitchModule(module, rebuild))
             {
@@ -336,9 +333,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             return removeBtn;
         }
 
-        private static void AddPartSwitchModule(CorePartData target, System.Action rebuild)
+        private static void AddPartSwitchModule(CorePartData target, Action rebuild)
         {
-            Module_PartSwitch module = Undo.AddComponent<Module_PartSwitch>(target.gameObject);
+            var module =Undo.AddComponent<Module_PartSwitch>(target.gameObject);
             if (module == null)
             {
                 return;
@@ -349,13 +346,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             rebuild();
         }
 
-        private static void RemovePartSwitchModule(Module_PartSwitch module, System.Action rebuild)
+        private static void RemovePartSwitchModule(Module_PartSwitch module, Action rebuild)
         {
-            int variantSetCount = module.DataPartSwitch?.VariantSets?.Count ?? 0;
+            var variantSetCount = module.DataPartSwitch?.VariantSets?.Count ?? 0;
             if (variantSetCount > 0)
             {
-                string suffix = variantSetCount == 1 ? "set" : "sets";
-                bool confirm = EditorUtility.DisplayDialog(
+                var suffix = variantSetCount == 1 ? "set" : "sets";
+                var confirm = EditorUtility.DisplayDialog(
                     "Remove PartSwitch?",
                     $"Removing this module will discard {variantSetCount} variant {suffix}. Proceed?",
                     "Remove",
@@ -365,7 +362,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                     return;
                 }
             }
-            CorePartData target = module.gameObject.GetComponent<CorePartData>();
+            var target =module.gameObject.GetComponent<CorePartData>();
             Undo.DestroyObjectImmediate(module);
             if (target != null)
             {
@@ -384,7 +381,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             foreach (var existing in data.PAMModuleVisualsOverride)
             {
                 if (existing != null
-                    && string.Equals(existing.PartComponentModuleName, PartSwitchComponentModuleName, System.StringComparison.Ordinal))
+                    && string.Equals(existing.PartComponentModuleName, PartSwitchComponentModuleName, StringComparison.Ordinal))
                 {
                     return;
                 }
@@ -407,9 +404,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             {
                 return;
             }
-            int removed = data.PAMModuleVisualsOverride.RemoveAll(o =>
+            var removed = data.PAMModuleVisualsOverride.RemoveAll(o =>
                 o != null
-                && string.Equals(o.PartComponentModuleName, PartSwitchComponentModuleName, System.StringComparison.Ordinal));
+                && string.Equals(o.PartComponentModuleName, PartSwitchComponentModuleName, StringComparison.Ordinal));
             if (removed > 0)
             {
                 Undo.RecordObject(target, "Remove PartSwitch PAM override");

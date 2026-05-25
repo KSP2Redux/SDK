@@ -86,30 +86,30 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                 });
             }
 
-            BindFloatSlider("icon-padding-field",  () => _settings.cameraPadding,        v => _settings.cameraPadding = v);
-            BindVector3   ("icon-rotation-field", () => _settings.partTransformRotation, v => _settings.partTransformRotation = v);
+            Bind<Slider,        float>  ("icon-padding-field",  () => _settings.cameraPadding,        v => _settings.cameraPadding = v);
+            Bind<Vector3Field,  Vector3>("icon-rotation-field", () => _settings.partTransformRotation, v => _settings.partTransformRotation = v);
 
-            BindFloatSlider("icon-yaw-field",                   () => _settings.cameraYawDegrees,        v => _settings.cameraYawDegrees = v);
-            BindFloatSlider("icon-pitch-field",                 () => _settings.cameraPitchDegrees,      v => _settings.cameraPitchDegrees = v);
-            BindFloatSlider("icon-roll-field",                  () => _settings.cameraOrbitDegrees,      v => _settings.cameraOrbitDegrees = v);
-            BindToggle     ("icon-orthographic-override-field", () => _settings.overrideOrthographicSize, v => _settings.overrideOrthographicSize = v);
-            BindFloatSlider("icon-orthographic-size-field",     () => _settings.cameraOrthographicSize,  v => _settings.cameraOrthographicSize = v);
+            Bind<Slider, float>("icon-yaw-field",                   () => _settings.cameraYawDegrees,        v => _settings.cameraYawDegrees = v);
+            Bind<Slider, float>("icon-pitch-field",                 () => _settings.cameraPitchDegrees,      v => _settings.cameraPitchDegrees = v);
+            Bind<Slider, float>("icon-roll-field",                  () => _settings.cameraOrbitDegrees,      v => _settings.cameraOrbitDegrees = v);
+            Bind<Toggle, bool> ("icon-orthographic-override-field", () => _settings.overrideOrthographicSize, v => _settings.overrideOrthographicSize = v);
+            Bind<Slider, float>("icon-orthographic-size-field",     () => _settings.cameraOrthographicSize,  v => _settings.cameraOrthographicSize = v);
 
-            BindFloatSlider("icon-front-key-intensity", () => _settings.frontKeyIntensity,     v => _settings.frontKeyIntensity = v);
-            BindVector3   ("icon-front-key-direction", () => _settings.frontKeyDirection,     v => _settings.frontKeyDirection = v);
-            BindFloatSlider("icon-top-key-intensity",   () => _settings.topKeyIntensity,       v => _settings.topKeyIntensity = v);
-            BindVector3   ("icon-top-key-direction",   () => _settings.topKeyDirection,       v => _settings.topKeyDirection = v);
-            BindFloatSlider("icon-rim-intensity",       () => _settings.rimIntensity,          v => _settings.rimIntensity = v);
-            BindVector3   ("icon-rim-direction",       () => _settings.rimDirection,          v => _settings.rimDirection = v);
-            BindFloatSlider("icon-fill-intensity",      () => _settings.fillIntensity,         v => _settings.fillIntensity = v);
-            BindFloatSlider("icon-key-spread",          () => _settings.keyLightSpreadDegrees, v => _settings.keyLightSpreadDegrees = v);
+            Bind<Slider,       float>  ("icon-front-key-intensity", () => _settings.frontKeyIntensity,     v => _settings.frontKeyIntensity = v);
+            Bind<Vector3Field, Vector3>("icon-front-key-direction", () => _settings.frontKeyDirection,     v => _settings.frontKeyDirection = v);
+            Bind<Slider,       float>  ("icon-top-key-intensity",   () => _settings.topKeyIntensity,       v => _settings.topKeyIntensity = v);
+            Bind<Vector3Field, Vector3>("icon-top-key-direction",   () => _settings.topKeyDirection,       v => _settings.topKeyDirection = v);
+            Bind<Slider,       float>  ("icon-rim-intensity",       () => _settings.rimIntensity,          v => _settings.rimIntensity = v);
+            Bind<Vector3Field, Vector3>("icon-rim-direction",       () => _settings.rimDirection,          v => _settings.rimDirection = v);
+            Bind<Slider,       float>  ("icon-fill-intensity",      () => _settings.fillIntensity,         v => _settings.fillIntensity = v);
+            Bind<Slider,       float>  ("icon-key-spread",          () => _settings.keyLightSpreadDegrees, v => _settings.keyLightSpreadDegrees = v);
 
-            BindToggle("icon-palette-toggle", () => _settings.applyModuleColorPalette, v => _settings.applyModuleColorPalette = v);
-            BindColor ("icon-base-color",     () => _settings.moduleColorBase,         v => _settings.moduleColorBase = v);
-            BindColor ("icon-accent-color",   () => _settings.moduleColorAccent,       v => _settings.moduleColorAccent = v);
+            Bind<Toggle,     bool> ("icon-palette-toggle", () => _settings.applyModuleColorPalette, v => _settings.applyModuleColorPalette = v);
+            Bind<ColorField, Color>("icon-base-color",     () => _settings.moduleColorBase,         v => _settings.moduleColorBase = v);
+            Bind<ColorField, Color>("icon-accent-color",   () => _settings.moduleColorAccent,       v => _settings.moduleColorAccent = v);
 
-            BindToggle   ("icon-outline-toggle", () => _settings.addOutline,    v => _settings.addOutline = v);
-            BindIntSlider("icon-outline-radius", () => _settings.outlineRadius, v => _settings.outlineRadius = v);
+            Bind<Toggle,    bool>("icon-outline-toggle", () => _settings.addOutline,    v => _settings.addOutline = v);
+            Bind<SliderInt, int> ("icon-outline-radius", () => _settings.outlineRadius, v => _settings.outlineRadius = v);
         }
 
         private void SyncControlsFromSettings()
@@ -142,73 +142,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             field?.SetValueWithoutNotify(value);
         }
 
-        private void BindFloatSlider(string name, Func<float> getter, Action<float> setter)
+        private void Bind<TField, TValue>(string name, Func<TValue> getter, Action<TValue> setter) where TField : BaseField<TValue>
         {
-            var field = this.Q<Slider>(name);
-            if (field == null)
-            {
-                return;
-            }
-            field.SetValueWithoutNotify(getter());
-            field.RegisterValueChangedCallback(evt =>
-            {
-                setter(evt.newValue);
-                QueueRefresh();
-            });
-        }
-
-        private void BindIntSlider(string name, Func<int> getter, Action<int> setter)
-        {
-            var field = this.Q<SliderInt>(name);
-            if (field == null)
-            {
-                return;
-            }
-            field.SetValueWithoutNotify(getter());
-            field.RegisterValueChangedCallback(evt =>
-            {
-                setter(evt.newValue);
-                QueueRefresh();
-            });
-        }
-
-        private void BindVector3(string name, Func<Vector3> getter, Action<Vector3> setter)
-        {
-            var field = this.Q<Vector3Field>(name);
-            if (field == null)
-            {
-                return;
-            }
-            field.SetValueWithoutNotify(getter());
-            field.RegisterValueChangedCallback(evt =>
-            {
-                setter(evt.newValue);
-                QueueRefresh();
-            });
-        }
-
-        private void BindToggle(string name, Func<bool> getter, Action<bool> setter)
-        {
-            var field = this.Q<Toggle>(name);
-            if (field == null)
-            {
-                return;
-            }
-            field.SetValueWithoutNotify(getter());
-            field.RegisterValueChangedCallback(evt =>
-            {
-                setter(evt.newValue);
-                QueueRefresh();
-            });
-        }
-
-        private void BindColor(string name, Func<Color> getter, Action<Color> setter)
-        {
-            var field = this.Q<ColorField>(name);
-            if (field == null)
-            {
-                return;
-            }
+            var field = this.Q<TField>(name);
+            if (field == null) return;
             field.SetValueWithoutNotify(getter());
             field.RegisterValueChangedCallback(evt =>
             {

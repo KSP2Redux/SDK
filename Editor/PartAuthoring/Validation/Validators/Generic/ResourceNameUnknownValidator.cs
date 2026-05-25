@@ -29,7 +29,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Generic
                 yield break;
             }
             var known = new HashSet<string>(ResourceNameCatalog.GetKnownResources(), StringComparer.Ordinal);
-            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<ResourceNameAttribute>(context.Modules))
+            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<ResourceNameAttribute>(context.ModuleDatas))
             {
                 if (string.IsNullOrEmpty(fieldRef.Value))
                 {

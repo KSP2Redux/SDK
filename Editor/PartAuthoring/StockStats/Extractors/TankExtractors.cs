@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -11,6 +11,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// </remarks>
     internal sealed class TankCapacityExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             var containers = part?.Data?.resourceContainers;
@@ -41,6 +42,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// </remarks>
     internal sealed class TankResourcePercentExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             PartDataMirror data = part?.Data;

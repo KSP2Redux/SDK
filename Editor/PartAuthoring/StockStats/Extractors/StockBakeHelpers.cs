@@ -13,6 +13,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
         /// hierarchy. Callers ask for "the engine module data" by type and skip string
         /// matching on module names.
         /// </remarks>
+        /// <typeparam name="T">Concrete mirror type to look up.</typeparam>
+        /// <param name="part">Part record to search.</param>
+        /// <returns>The first matching DataObject, or null when none is present.</returns>
         public static T FindModuleData<T>(StockBakePartCore part) where T : DataObjectMirror
         {
             List<ModuleEnvelopeMirror> modules = part?.Data?.serializedPartModules;
@@ -49,6 +52,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
         /// bake samples (atm 0 and atm 1), so linear interpolation between adjacent keys is a
         /// fine approximation. Returns NaN when the curve is empty.
         /// </remarks>
+        /// <param name="curve">Curve to sample.</param>
+        /// <param name="time">Time at which to evaluate the curve.</param>
+        /// <returns>The interpolated value, or <see cref="float.NaN" /> when the curve has no keys.</returns>
         public static float EvaluateAt(CurveMirror curve, float time)
         {
             List<KeyMirror> keys = curve?.fCurve?.keys;

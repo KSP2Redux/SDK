@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using KSP;
 using KSP.OAB;
 using KSP.Sim.Definitions;
@@ -45,6 +46,22 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private string _addressableEntryGuid;
         private AddressableAssetGroup _addressableEntryGroup;
 
+        /// <summary>
+        /// Creates a new <see cref="PartFolderScaffold" /> bound to the chosen archetype and authoring inputs.
+        /// </summary>
+        /// <param name="archetype">The archetype that drives default modules, attach nodes, and seeded values.</param>
+        /// <param name="parentFolder">The Assets-relative parent folder under which the part folder is created.</param>
+        /// <param name="partName">The part's slug, used as the folder, prefab, and json name.</param>
+        /// <param name="size">The size category written into the part data.</param>
+        /// <param name="bucket">The resolved (family, size) bucket the archetype reads when seeding defaults.</param>
+        /// <param name="enabledModules">The archetype default-module types to actually add, or null to add every module the archetype declares.</param>
+        /// <param name="valueOverrides">Per-stock-field author overrides applied after the archetype seeds defaults, or null for no overrides.</param>
+        /// <param name="meshChoice">How the new part's visual mesh is sourced.</param>
+        /// <param name="sourcePrefab">The existing prefab instantiated under model/ when <paramref name="meshChoice" /> is <see cref="SourceMeshChoice.ExistingPrefab" />.</param>
+        /// <param name="sourceFbxAsset">The FBX asset instantiated under model/ when <paramref name="meshChoice" /> is <see cref="SourceMeshChoice.FBX" />.</param>
+        /// <param name="tagDragCubeMesh">When true, every renderer under model/ is tagged with the DragCubeMesh tag.</param>
+        /// <param name="fbxAutoScale">When true and the FBX path is chosen, scales the imported instance by 100x.</param>
+        /// <param name="fbxAutoRotate">When true and the FBX path is chosen, rotates the imported instance by -90 degrees on X.</param>
         public PartFolderScaffold(
             IPartArchetype archetype,
             string parentFolder,
@@ -254,8 +271,28 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 {
                     continue;
                 }
-                root.AddComponent(moduleType);
+                var component = root.AddComponent(moduleType);
+                HydrateDataModules(component);
             }
+        }
+
+        /// <summary>
+        /// Invokes the module's <c>AddDataModules</c> hook so its DataModules dictionary is populated
+        /// before <see cref="IPartArchetype.SeedDefaults" /> runs.
+        /// </summary>
+        /// <remarks>
+        /// Module_X subclasses populate DataModules in <c>AddDataModules</c>, which runs at runtime
+        /// during the load flow. Freshly-added editor components have an empty DataModules until
+        /// something invokes that hook. Mirrors the same hydration done by
+        /// <c>ModulesTab.AddModule</c> when an author adds a module via the picker.
+        /// </remarks>
+        private static void HydrateDataModules(Component component)
+        {
+            if (component == null) return;
+            var addMethod =
+                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
+            addMethod?.Invoke(component, Array.Empty<object>());
         }
 
         private void AddAttachNodesToData(CorePartData core)

@@ -48,18 +48,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
         private static IReadOnlyList<ModuleCatalogEntry> _cached;
 
         /// <summary>
-        /// Returns the catalog, building it lazily on first call. Re-uses the same instance for
-        /// every subsequent call until the type cache is invalidated.
+        /// Returns the catalog, building it lazily on first call.
         /// </summary>
+        /// <remarks>
+        /// Reuses the same instance for every subsequent call until the type cache is invalidated.
+        /// </remarks>
+        /// <returns>The cached catalog of pickable <c>Module_*</c> types.</returns>
         public static IReadOnlyList<ModuleCatalogEntry> GetEntries()
         {
             return _cached ??= Build();
         }
 
         /// <summary>
-        /// Returns the catalog grouped by category, with categories sorted alphabetically except
-        /// "Uncategorized" which sorts last.
+        /// Returns the catalog grouped by category, with categories sorted alphabetically except "Uncategorized" which sorts last.
         /// </summary>
+        /// <returns>The catalog entries grouped and ordered by category.</returns>
         public static IReadOnlyList<IGrouping<string, ModuleCatalogEntry>> GetEntriesByCategory()
         {
             return GetEntries()
@@ -67,14 +70,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
                 .OrderBy(g => g.Key == UNCATEGORIZED ? 1 : 0)
                 .ThenBy(g => g.Key)
                 .ToList();
-        }
-
-        /// <summary>
-        /// Drops the cached catalog. Used by editor reload paths.
-        /// </summary>
-        public static void Invalidate()
-        {
-            _cached = null;
         }
 
         private static IReadOnlyList<ModuleCatalogEntry> Build()

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -12,12 +12,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Universal resource container - holds any single resource selected at flight time.</summary>
     public sealed class UniversalContainerArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Utility";
+        /// <inheritdoc />
         public override string Family => "UniversalContainer";
+        /// <inheritdoc />
         public override string DisplayName => "Universal container";
+        /// <inheritdoc />
         public override string Description => "Generic container that can store any single resource.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_UniversalContainer),
@@ -26,8 +32,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => Array.Empty<AttachNodeTemplate>();
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

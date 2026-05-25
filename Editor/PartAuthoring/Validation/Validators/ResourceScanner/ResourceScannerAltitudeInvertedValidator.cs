@@ -10,7 +10,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.ResourceScan
     /// <remarks>
     /// The runtime tests whether the vessel altitude falls within the configured window. An
     /// inverted range produces a window that no altitude satisfies - the scanner can never engage.
-    /// The -1 sentinel value disables the bound entirely; only inverted-and-both-set rows fail.
+    /// The -1 sentinel value disables the bound entirely, so only inverted-and-both-set rows fail.
     /// </remarks>
     public sealed class ResourceScannerAltitudeInvertedValidator : IPartValidator
     {
@@ -20,7 +20,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.ResourceScan
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(PartValidationContext context)
         {
-            var modules = context?.Modules;
+            var modules = context?.ModuleDatas;
             if (modules == null)
             {
                 yield break;

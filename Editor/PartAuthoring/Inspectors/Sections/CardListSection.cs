@@ -24,18 +24,51 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
     /// </remarks>
     internal static class CardListSection
     {
+        /// <summary>
+        /// Caller-supplied configuration for one card-list section.
+        /// </summary>
         public sealed class Config
         {
+            /// <summary>
+            /// Gets or sets the section title rendered in the count-header.
+            /// </summary>
             public string Title { get; set; }
+            /// <summary>
+            /// Gets or sets the label shown on the add button.
+            /// </summary>
             public string AddButtonText { get; set; }
+            /// <summary>
+            /// Gets or sets the relative property name used as the identity field on each card.
+            /// </summary>
             public string IdentityFieldName { get; set; }
+            /// <summary>
+            /// Gets or sets an optional identity-field builder. When null, the section renders a delayed TextField bound to the identity property.
+            /// </summary>
             public Func<SerializedProperty, VisualElement> BuildIdentityField { get; set; }
+            /// <summary>
+            /// Gets or sets the optional relative property name backing the summary chip in each card header.
+            /// </summary>
             public string ChipFieldName { get; set; }
+            /// <summary>
+            /// Gets or sets the optional formatter that turns the chip property into a display string. Return null or empty to hide the chip.
+            /// </summary>
             public Func<SerializedProperty, string> ChipFormatter { get; set; }
+            /// <summary>
+            /// Gets or sets the body builder invoked once per card with the array element's SerializedProperty and the card's body container.
+            /// </summary>
             public Action<SerializedProperty, VisualElement> BuildBody { get; set; }
+            /// <summary>
+            /// Gets or sets the optional seed callback invoked after the add button appends a new element. Receives the new entry's SerializedProperty and its index.
+            /// </summary>
             public Action<SerializedProperty, int> OnAddSeed { get; set; }
         }
 
+        /// <summary>
+        /// Builds the card-list section for the given array SerializedProperty.
+        /// </summary>
+        /// <param name="arrayProp">The array SerializedProperty to render.</param>
+        /// <param name="config">Section configuration.</param>
+        /// <returns>The built section element.</returns>
         public static VisualElement Build(SerializedProperty arrayProp, Config config)
         {
             var outer = new VisualElement();
@@ -90,65 +123,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 
         private static VisualElement BuildCard(SerializedProperty arrayProp, int initialIndex, VisualElement container, Config config, Action updateCount)
         {
-            var card = new VisualElement();
-            card.AddToClassList("data-editor-card");
+            var card = CardShell.Build(out var slots);
 
-            var headerRow = new VisualElement();
-            headerRow.AddToClassList("data-editor-card-header");
-
-            var disclosure = new Button { text = "▼" };
-            disclosure.AddToClassList("data-editor-card-disclosure");
-            headerRow.Add(disclosure);
-
-            var idSlot = new VisualElement { style = { flexGrow = 1f, flexShrink = 1f } };
+            var idSlot = new VisualElement();
             idSlot.AddToClassList("data-editor-card-name-field");
-            headerRow.Add(idSlot);
+            slots.Header.Add(idSlot);
 
-            var chipSlot = new VisualElement { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
-            headerRow.Add(chipSlot);
+            var chipSlot = new VisualElement();
+            chipSlot.AddToClassList("data-editor-card-chip-slot");
+            slots.Header.Add(chipSlot);
 
-            VisualElement cardRef = card;
-            var removeBtn = new Button(() =>
-            {
-                int currentIndex = container.IndexOf(cardRef);
-                if (currentIndex < 0)
-                {
-                    return;
-                }
-                arrayProp.serializedObject.Update();
-                if (currentIndex >= arrayProp.arraySize)
-                {
-                    return;
-                }
-                arrayProp.DeleteArrayElementAtIndex(currentIndex);
-                arrayProp.serializedObject.ApplyModifiedProperties();
-                container.Remove(cardRef);
-                arrayProp.serializedObject.Update();
-                // Rebind subsequent cards to their new indexes.
-                for (int i = currentIndex; i < container.childCount; i++)
-                {
-                    if (container.ElementAt(i).userData is Action<int> rebind)
-                    {
-                        rebind(i);
-                    }
-                }
-                updateCount?.Invoke();
-            }) { text = "X" };
-            removeBtn.AddToClassList("data-editor-card-remove-btn");
-            headerRow.Add(removeBtn);
-
-            card.Add(headerRow);
-
-            var body = new VisualElement();
-            body.AddToClassList("data-editor-card-body");
-            card.Add(body);
+            slots.Header.Add(CardShell.BuildRemoveButton(card, container, arrayProp, updateCount));
 
             void Bind(int index)
             {
-                if (index < 0 || index >= arrayProp.arraySize)
-                {
-                    return;
-                }
+                if (index < 0 || index >= arrayProp.arraySize) return;
                 var entry = arrayProp.GetArrayElementAtIndex(index);
 
                 idSlot.Clear();
@@ -192,21 +181,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                     }
                 }
 
-                body.Clear();
-                config.BuildBody?.Invoke(entry, body);
+                slots.Body.Clear();
+                config.BuildBody?.Invoke(entry, slots.Body);
             }
 
             card.userData = (Action<int>)Bind;
             Bind(initialIndex);
-
-            var expanded = true;
-            body.style.display = DisplayStyle.Flex;
-            disclosure.clicked += () =>
-            {
-                expanded = !expanded;
-                body.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-                disclosure.text = expanded ? "▼" : "▶";
-            };
 
             return card;
         }

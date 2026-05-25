@@ -10,10 +10,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
     /// picker button.
     /// </summary>
     /// <remarks>
-    /// The PropertyField uses Unity's stock drawer for the value type (three FloatField inputs for
-    /// Vector3, three DoubleField inputs for Vector3d). The button toggles a
-    /// <see cref="SceneHandlePicker" /> session on the field; while engaged a Unity Handle is
-    /// drawn in the SceneView and dragged updates the field's value.
+    /// The PropertyField uses Unity's stock drawer for the value type (three FloatField inputs for Vector3, three DoubleField inputs for Vector3d). The button toggles a <see cref="SceneHandlePicker" /> session on the field. While engaged, a Unity Handle is drawn in the SceneView and dragging updates the field's value.
     /// </remarks>
     public sealed class VectorHandleField : VisualElement
     {

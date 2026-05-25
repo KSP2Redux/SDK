@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Engine peak thrust per mode keyed by propellant, in kN.</summary>
     internal sealed class EngineMaxThrustExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             EngineDataObjectMirror engine = ModuleResolver.FindModuleData<EngineDataObjectMirror>(part);
@@ -32,6 +33,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Vacuum Isp per mode keyed by propellant, in seconds.</summary>
     internal sealed class EngineIspVacExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             EngineDataObjectMirror engine = ModuleResolver.FindModuleData<EngineDataObjectMirror>(part);
@@ -63,6 +65,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Sea-level Isp per mode keyed by propellant, in seconds.</summary>
     internal sealed class EngineIspSlExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             EngineDataObjectMirror engine = ModuleResolver.FindModuleData<EngineDataObjectMirror>(part);
@@ -100,6 +103,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     {
         private const float G0 = 9.80665f;
 
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             EngineDataObjectMirror engine = ModuleResolver.FindModuleData<EngineDataObjectMirror>(part);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -12,12 +12,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Landing wheel with brakes, steering, and suspension.</summary>
     public sealed class LandingWheelArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Ground";
+        /// <inheritdoc />
         public override string Family => "0440-Wheel";
+        /// <inheritdoc />
         public override string DisplayName => "Landing wheel";
+        /// <inheritdoc />
         public override string Description => "Steerable landing wheel with brakes and suspension.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_WheelBase),
@@ -29,11 +35,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
             new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, MetaAssemblySizeFilterType.XS)
         };
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

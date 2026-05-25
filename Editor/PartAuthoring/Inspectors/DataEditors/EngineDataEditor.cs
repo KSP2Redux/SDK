@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using KSP.Modules;
 using KSP.Sim.Definitions;
@@ -78,7 +77,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             var emissiveNamesProp = dataProp.FindPropertyRelative("EmissiveMaterialNames");
             if (emissiveNamesProp != null)
             {
-                section.Add(BuildEmissiveMaterialNamesBlock(emissiveNamesProp));
+                section.Add(InlineStringListBlock.Build(emissiveNamesProp, "Emissive Material Names"));
             }
 
             AddTopLevelField(section, dataProp, "EmissiveTemperatureCurve");
@@ -87,41 +86,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             AddTopLevelField(section, dataProp, "DeployedModeAnimationStateShortName");
 
             return section;
-        }
-
-        private VisualElement BuildEmissiveMaterialNamesBlock(SerializedProperty arrayProp)
-        {
-            return InlineListBlock.Build(
-                arrayProp,
-                titleFormat: "Emissive Material Names ({0})",
-                addButtonText: "+ Add",
-                emptyHint: "(none)",
-                rowBuilder: BuildEmissiveMaterialNameRow);
-        }
-
-        private VisualElement BuildEmissiveMaterialNameRow(SerializedProperty entry, int index, Action onDelete)
-        {
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
-            row.style.marginBottom = 2f;
-
-            var textField = new TextField { value = entry.stringValue, isDelayed = true };
-            textField.style.flexGrow = 1f;
-            textField.style.marginRight = 4f;
-            textField.RegisterValueChangedCallback(evt =>
-            {
-                entry.serializedObject.Update();
-                entry.stringValue = evt.newValue ?? string.Empty;
-                entry.serializedObject.ApplyModifiedProperties();
-            });
-            row.Add(textField);
-
-            var removeBtn = new Button(onDelete) { text = "X" };
-            removeBtn.AddToClassList("data-editor-card-remove-btn");
-            row.Add(removeBtn);
-
-            return row;
         }
 
         private static void AddTopLevelField(VisualElement parent, SerializedProperty dataProp, string fieldName)

@@ -41,7 +41,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Generic
                 }
             }
 
-            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<AttachNodeIdAttribute>(context.Modules))
+            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<AttachNodeIdAttribute>(context.ModuleDatas))
             {
                 if (string.IsNullOrEmpty(fieldRef.Value))
                 {

@@ -15,6 +15,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     internal sealed class DataObjectMirrorAttribute : Attribute
     {
+        /// <summary>
+        /// Creates a new mirror attribute bound to the given JSON type discriminator.
+        /// </summary>
+        /// <param name="typeDiscriminator">Type-name portion of the JSON <c>$type</c> string, without the assembly part.</param>
         public DataObjectMirrorAttribute(string typeDiscriminator)
         {
             TypeDiscriminator = typeDiscriminator;

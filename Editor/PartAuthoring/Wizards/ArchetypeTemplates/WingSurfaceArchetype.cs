@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -12,12 +12,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Aerodynamic wing surface for atmospheric flight.</summary>
     public sealed class WingSurfaceArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Aerodynamics";
+        /// <inheritdoc />
         public override string Family => "0380-Wing";
+        /// <inheritdoc />
         public override string DisplayName => "Wing surface";
+        /// <inheritdoc />
         public override string Description => "Fixed wing that generates lift in atmosphere.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_LiftingSurface),
@@ -25,11 +31,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
             new AttachNodeTemplate("surface", new Vector3(0f, 0f, 0.1f), Vector3.forward, MetaAssemblySizeFilterType.S)
         };
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

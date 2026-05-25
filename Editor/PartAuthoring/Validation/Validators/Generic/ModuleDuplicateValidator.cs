@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Generic
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(PartValidationContext context)
         {
-            var modules = context?.Modules;
+            var modules = context?.ModuleDatas;
             if (modules == null || modules.Count < 2)
             {
                 yield break;

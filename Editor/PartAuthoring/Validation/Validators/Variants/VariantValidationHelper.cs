@@ -15,11 +15,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Variants
         /// </summary>
         public static Data_PartSwitch FindData(PartValidationContext context)
         {
-            if (context?.Modules == null)
+            if (context?.ModuleDatas == null)
             {
                 return null;
             }
-            foreach (var moduleData in context.Modules)
+            foreach (var moduleData in context.ModuleDatas)
             {
                 if (moduleData is Data_PartSwitch ps)
                 {

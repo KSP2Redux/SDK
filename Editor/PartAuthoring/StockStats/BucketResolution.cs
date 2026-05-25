@@ -28,6 +28,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// </summary>
         public IReadOnlyList<StockBucket> FamilyFallback { get; }
 
+        /// <summary>
+        /// Creates a new bucket resolution result.
+        /// </summary>
+        /// <param name="family">Family that was requested.</param>
+        /// <param name="size">Size that was requested.</param>
+        /// <param name="inBucket">The exact (family, size) bucket, or null when none exists.</param>
+        /// <param name="adjacent">Same-family buckets one step smaller and one step larger.</param>
+        /// <param name="familyFallback">Same-family buckets sorted by size distance, for fallback display.</param>
         public BucketResolution(
             string family,
             MetaAssemblySizeFilterType size,

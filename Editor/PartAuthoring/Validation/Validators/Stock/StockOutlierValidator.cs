@@ -12,11 +12,10 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Stock
 {
     /// <summary>
-    /// Warns when an authored field falls outside the corresponding stock bucket's
-    /// observed range. Threshold is the bucket's literal [Min, Max] — i.e. "what stock
-    /// actually does in this family-and-size bucket."
+    /// Warns when an authored field falls outside the corresponding stock bucket's observed range.
     /// </summary>
     /// <remarks>
+    /// Threshold is the bucket's literal [Min, Max] - what stock actually does in this family-and-size bucket.
     /// Reads from <see cref="StockStatsLookup" /> baked under the package's <c>Assets/</c>
     /// subfolder. One validator class yields multiple issues with distinct per-field codes
     /// so the validation report can filter by field shape. Each issue ships a "Use median"

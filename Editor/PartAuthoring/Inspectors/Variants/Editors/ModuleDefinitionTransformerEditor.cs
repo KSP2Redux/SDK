@@ -25,6 +25,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
         private const BindingFlags FIELD_FLAGS =
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
+        /// <inheritdoc />
         public VisualElement Build(ITransformer transformer, SerializedProperty transformerProp, TransformerEditorContext context)
         {
             var outer = new VisualElement();

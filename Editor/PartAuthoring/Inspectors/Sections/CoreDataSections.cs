@@ -107,14 +107,22 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             var foldout = MakeSectionFoldout("Attachment");
             foldout.Add(BuildAttachRulesField(so));
 
-            var listBuilder = new AttachNodesListBuilder(so, target);
-            foldout.Add(listBuilder.Build());
+            var holder = new VisualElement();
+            foldout.Add(holder);
+
+            void Rebuild()
+            {
+                holder.Clear();
+                var attachNodesProp = so.FindProperty("core.data.attachNodes");
+                if (attachNodesProp != null) holder.Add(AttachNodesList.Build(attachNodesProp, target));
+            }
+            Rebuild();
 
             var autoBtn = new Button(() =>
             {
                 AttachNodeAutoGenerator.RegenerateFromHierarchy(target);
                 so.Update();
-                listBuilder.Refresh();
+                Rebuild();
             })
             {
                 text = "Auto-detect from GO",
@@ -187,6 +195,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// Builds the Centers and Buoyancy section (CoM / CoL / CoP / buoyancy / displacement offsets and toggles).
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <param name="target">The CorePartData instance, used by the SceneView handle fields.</param>
         /// <returns>A bound Foldout with the section's PropertyFields.</returns>
         public static VisualElement BuildCentersBuoyancy(SerializedObject so, CorePartData target)
         {

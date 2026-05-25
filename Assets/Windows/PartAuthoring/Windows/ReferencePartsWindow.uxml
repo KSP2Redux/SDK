@@ -14,8 +14,6 @@
 
         <engine:VisualElement name="buckets-container" class="reference-parts-buckets-container" />
 
-        <engine:VisualElement name="staleness-slot" />
-
     </engine:ScrollView>
 
 </engine:UXML>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using KSP;
 using Ksp2UnityTools.Editor.PartAuthoring.Windows;
 using Ksp2UnityTools.Editor.Widgets;
@@ -35,7 +36,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private Label _matchCountLabel;
         private VisualElement _emptyStateSlot;
         private VisualElement _bucketsContainer;
-        private VisualElement _stalenessSlot;
 
         private StockStatsLookup _lookup;
         private CorePartData _activePart;
@@ -43,6 +43,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private string _familyKey;
         private string _sizeKey;
 
+        /// <summary>
+        /// Opens or focuses the Reference Parts window.
+        /// </summary>
         [MenuItem(PartAuthoringWindows.MENU_ROOT + "Reference Parts %#r", priority = PartAuthoringWindows.PRIORITY_REFERENCE_PARTS)]
         public static void ShowWindow()
         {
@@ -77,7 +80,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             _matchCountLabel = root.Q<Label>("match-count-label");
             _emptyStateSlot = root.Q<VisualElement>("empty-state-slot");
             _bucketsContainer = root.Q<VisualElement>("buckets-container");
-            _stalenessSlot = root.Q<VisualElement>("staleness-slot");
 
             _familyField = new AutocompleteField(
                 initialValue: string.Empty,
@@ -210,7 +212,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private void Refresh()
         {
             ClearEmptyState();
-            ClearStalenessWarning();
             _bucketsContainer.Clear();
 
             if (_lookup == null)
@@ -223,7 +224,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             {
                 _matchCountLabel.text = "0 matching buckets";
                 ShowEmptyState("No buckets match the current filter. Clear a field to broaden the search, or type something different.", HelpBoxMessageType.Info);
-                MaybeRenderStaleness();
                 return;
             }
 
@@ -235,7 +235,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             {
                 _bucketsContainer.Add(BuildBucketBlock(bucket));
             }
-            MaybeRenderStaleness();
         }
 
         private VisualElement BuildBucketBlock(StockBucket bucket)
@@ -429,8 +428,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private void RenderGrouped(
             VisualElement parent,
             int count,
-            System.Func<int, string> moduleOf,
-            System.Func<int, string> subKeyOf,
+            Func<int, string> moduleOf,
+            Func<int, string> subKeyOf,
             System.Func<int, VisualElement> renderRow)
         {
             var basePart = new List<int>();
@@ -468,7 +467,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             }
             foreach (var kvp in byModule)
             {
-                if (System.Array.IndexOf(_moduleRenderOrder, kvp.Key) >= 0)
+                if (Array.IndexOf(_moduleRenderOrder, kvp.Key) >= 0)
                 {
                     continue;
                 }
@@ -487,7 +486,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private void RenderModuleSubGroups(
             VisualElement parent,
             List<int> indices,
-            System.Func<int, string> subKeyOf,
+            Func<int, string> subKeyOf,
             System.Func<int, VisualElement> renderRow)
         {
             foreach (int i in indices)
@@ -599,28 +598,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             return char.ToUpperInvariant(key[0]) + key.Substring(1);
         }
 
-        private void MaybeRenderStaleness()
-        {
-            if (_lookup == null || string.IsNullOrEmpty(_lookup.SourceHash))
-            {
-                return;
-            }
-            string sourceDir = EditorPrefs.GetString("Ksp2UnityTools.StockStats.SourceDir", string.Empty);
-            if (string.IsNullOrEmpty(sourceDir) || !System.IO.Directory.Exists(sourceDir))
-            {
-                return;
-            }
-            string currentHash = StockStatsBaker.ComputeSourceHash(sourceDir);
-            if (string.IsNullOrEmpty(currentHash) || currentHash == _lookup.SourceHash)
-            {
-                return;
-            }
-            var help = new HelpBox(
-                "Source changed since the last bake. Open Stock Stats Bake to refresh the lookup.",
-                HelpBoxMessageType.Warning);
-            _stalenessSlot.Add(help);
-        }
-
         private void DoCopy(StockFieldEntry entry, float value)
         {
             if (entry?.Copier == null || _activePart == null)
@@ -652,14 +629,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
             _emptyStateSlot?.Clear();
         }
 
-        private void ClearStalenessWarning()
-        {
-            _stalenessSlot?.Clear();
-        }
-
         private static string FormatValue(float value, StockFieldEntry entry)
         {
-            string number = string.Format(System.Globalization.CultureInfo.InvariantCulture, entry.Format ?? "{0:0.00}", value);
+            string number = string.Format(CultureInfo.InvariantCulture, entry.Format ?? "{0:0.00}", value);
             return number + (entry.UnitsSuffix ?? string.Empty);
         }
     }

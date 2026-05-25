@@ -45,6 +45,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
         /// <summary>
         /// Returns the catalog, building it lazily on first call.
         /// </summary>
+        /// <returns>The cached catalog of pickable transformer types.</returns>
         public static IReadOnlyList<TransformerCatalogEntry> GetEntries()
         {
             return _cached ??= Build();
@@ -53,6 +54,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
         /// <summary>
         /// Returns the catalog grouped by category, with categories sorted alphabetically except "Uncategorized" which sorts last.
         /// </summary>
+        /// <returns>The catalog entries grouped and ordered by category.</returns>
         public static IReadOnlyList<IGrouping<string, TransformerCatalogEntry>> GetEntriesByCategory()
         {
             return GetEntries()
@@ -60,14 +62,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
                 .OrderBy(g => g.Key == UNCATEGORIZED ? 1 : 0)
                 .ThenBy(g => g.Key)
                 .ToList();
-        }
-
-        /// <summary>
-        /// Drops the cached catalog. Used by editor reload paths.
-        /// </summary>
-        public static void Invalidate()
-        {
-            _cached = null;
         }
 
         private static IReadOnlyList<TransformerCatalogEntry> Build()

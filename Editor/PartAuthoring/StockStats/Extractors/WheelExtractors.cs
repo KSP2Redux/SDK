@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Max brake torque from Data_WheelBrakes, in kN·m.</summary>
     internal sealed class WheelBrakeTorqueExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             WheelBrakesDataObjectMirror w = ModuleResolver.FindModuleData<WheelBrakesDataObjectMirror>(part);
@@ -20,6 +21,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Suspension travel distance from Data_WheelSuspension, in m.</summary>
     internal sealed class WheelSuspensionExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             WheelSuspensionDataObjectMirror w = ModuleResolver.FindModuleData<WheelSuspensionDataObjectMirror>(part);

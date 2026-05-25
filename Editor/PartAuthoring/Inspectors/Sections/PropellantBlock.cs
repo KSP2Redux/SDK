@@ -25,6 +25,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// </summary>
         /// <param name="propellantProp">The <c>PropellantDefinition</c> SerializedProperty.</param>
         /// <param name="title">Title shown above the block. Pass null or empty for "Propellant".</param>
+        /// <returns>The built block element.</returns>
         public static VisualElement Build(SerializedProperty propellantProp, string title = null)
         {
             var outer = new VisualElement();
@@ -78,16 +79,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         private static VisualElement BuildIngredientOverrideRow(SerializedProperty entry, int index, Action onDelete)
         {
             var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.alignItems = Align.Center;
-            row.style.marginBottom = 2f;
+            row.AddToClassList("data-editor-inline-row");
 
             var nameProp = entry.FindPropertyRelative("name");
             VisualElement nameField;
             if (nameProp != null)
             {
                 nameField = new ResourceNameField(nameProp, string.Empty);
-                nameField.style.flexGrow = 1f;
+                nameField.AddToClassList("data-editor-inline-row__grow");
             }
             else
             {
@@ -97,9 +96,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 
             var unitsProp = entry.FindPropertyRelative("unitsPerRecipeUnit");
             var unitsField = new DoubleField { value = unitsProp?.doubleValue ?? 0.0, isDelayed = true };
-            unitsField.style.width = 80f;
-            unitsField.style.marginLeft = 4f;
-            unitsField.style.marginRight = 4f;
+            unitsField.AddToClassList("data-editor-inline-row__cell-units");
             if (unitsProp != null)
             {
                 unitsField.RegisterValueChangedCallback(evt =>
@@ -115,8 +112,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             if (flowProp != null)
             {
                 var flowField = new EnumField((ResourceFlowMode)flowProp.enumValueIndex);
-                flowField.style.width = 110f;
-                flowField.style.marginRight = 4f;
+                flowField.AddToClassList("data-editor-inline-row__cell-flow");
                 flowField.RegisterValueChangedCallback(evt =>
                 {
                     flowProp.serializedObject.Update();

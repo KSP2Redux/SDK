@@ -28,19 +28,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         /// <param name="target">The part to regenerate attach nodes for.</param>
         public static void RegenerateFromHierarchy(CorePartData target)
         {
-            if (target == null || target.Core == null)
-            {
-                return;
-            }
+            if (target == null || target.Core == null) return;
 
             target.Core.data.attachNodes.Clear();
-            foreach (AttachmentNode attachmentNode in target.gameObject.GetComponentsInChildren<AttachmentNode>())
+            foreach (var attachmentNode in target.gameObject.GetComponentsInChildren<AttachmentNode>())
             {
-                GameObject obj = attachmentNode.gameObject;
-                Vector3 pos = target.transform.InverseTransformPoint(obj.transform.position);
-                Vector3 dir = Quaternion.Euler(
-                    target.transform.InverseTransformDirection(obj.transform.rotation.eulerAngles)
-                ) * Vector3.forward;
+                var obj = attachmentNode.gameObject;
+                var pos = target.transform.InverseTransformPoint(obj.transform.position);
+                var dir = target.transform.InverseTransformDirection(obj.transform.forward);
                 var newDefinition = new AttachNodeDefinition
                 {
                     nodeID = obj.name,

@@ -21,14 +21,28 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
     /// </remarks>
     public abstract class PartArchetypeBase : IPartArchetype
     {
+        /// <inheritdoc />
         public abstract string Category { get; }
+
+        /// <inheritdoc />
         public abstract string Family { get; }
+
+        /// <inheritdoc />
         public abstract string DisplayName { get; }
+
+        /// <inheritdoc />
         public abstract string Description { get; }
+
+        /// <inheritdoc />
         public abstract MetaAssemblySizeFilterType DefaultSize { get; }
+
+        /// <inheritdoc />
         public abstract IReadOnlyList<Type> DefaultModules { get; }
+
+        /// <inheritdoc />
         public abstract IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes { get; }
 
+        /// <inheritdoc />
         public abstract void SeedDefaults(CorePartData part, BucketResolution bucket);
 
         /// <summary>
@@ -88,20 +102,22 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
         /// <summary>
         /// Finds the <typeparamref name="T" /> module-data instance on the part's
-        /// <c>Core.modules</c> list, or null if the part has no such module.
+        /// <see cref="PartBehaviourModule" /> components, or null if no module owns one.
         /// </summary>
+        /// <remarks>
+        /// Walks every <see cref="PartBehaviourModule" /> on the part's GameObject and inspects
+        /// its <c>DataModules</c> dictionary. <c>PartCore.modules</c> is only populated by the
+        /// runtime JSON loader; at scaffold time it is empty.
+        /// </remarks>
         protected static T FindModuleData<T>(CorePartData part) where T : class
         {
-            var modules = part?.Core?.modules;
-            if (modules == null)
+            if (part == null || part.gameObject == null) return null;
+            foreach (var module in part.gameObject.GetComponents<PartBehaviourModule>())
             {
-                return null;
-            }
-            foreach (var module in modules)
-            {
-                if (module is T match)
+                if (module == null || module.DataModules == null) continue;
+                foreach (var data in module.DataModules.Values)
                 {
-                    return match;
+                    if (data is T match) return match;
                 }
             }
             return null;
@@ -132,6 +148,36 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 ResourceName = "ElectricCharge",
                 Rate = rate
             });
+        }
+
+        /// <summary>
+        /// Seeds the four PartData scalars every tank archetype tunes (mass, cost, crashTolerance,
+        /// maxTemp) from the bucket's medians and appends a single resource container.
+        /// </summary>
+        /// <remarks>
+        /// Standard shape used by Methalox, Monoprop, Hydrogen, Xenon, and similar fuel tanks. The
+        /// container's capacity comes from the bucket's <c>tank.capacity.{resourceName}</c> field
+        /// when present, otherwise <paramref name="defaultCapacity" />. No-op when the part has no
+        /// PartData or the bucket has no usable source.
+        /// </remarks>
+        protected static void SeedTankDefaults(
+            CorePartData part,
+            BucketResolution bucket,
+            string resourceName,
+            float defaultCapacity)
+        {
+            if (part?.Data == null) return;
+            var source = FindFirstUsableBucket(bucket);
+            if (source == null) return;
+
+            var data = part.Data;
+            TrySeedScalar(source, StockFieldNames.Mass, v => data.mass = v);
+            TrySeedScalarInt(source, StockFieldNames.Cost, v => data.cost = v);
+            TrySeedScalar(source, StockFieldNames.CrashTolerance, v => data.crashTolerance = v);
+            TrySeedScalar(source, StockFieldNames.MaxTemp, v => data.maxTemp = v);
+
+            AddResourceContainer(data, source, resourceName, defaultCapacity,
+                capacityFieldName: StockFieldNames.TankCapacity + "." + resourceName);
         }
 
         /// <summary>

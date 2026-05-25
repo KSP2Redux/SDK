@@ -29,7 +29,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Generic
             {
                 yield break;
             }
-            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<TransformPathAttribute>(context.Modules))
+            foreach (var fieldRef in ModuleFieldEnumerator.EnumerateStringFieldsWithAttribute<TransformPathAttribute>(context.ModuleDatas))
             {
                 if (string.IsNullOrEmpty(fieldRef.Value))
                 {

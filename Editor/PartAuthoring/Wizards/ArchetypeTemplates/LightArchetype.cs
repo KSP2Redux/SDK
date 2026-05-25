@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -12,12 +12,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Mountable light.</summary>
     public sealed class LightArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Utility";
+        /// <inheritdoc />
         public override string Family => "0540-Light";
+        /// <inheritdoc />
         public override string DisplayName => "Light";
+        /// <inheritdoc />
         public override string Description => "Toggleable light for illumination.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.XS;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_Light),
@@ -25,11 +31,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
             new AttachNodeTemplate("surface", new Vector3(0f, 0f, 0.1f), Vector3.forward, MetaAssemblySizeFilterType.XS)
         };
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

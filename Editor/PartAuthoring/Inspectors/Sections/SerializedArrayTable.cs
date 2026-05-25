@@ -94,6 +94,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// Creates a table directly bound to an array <see cref="SerializedProperty" />. Useful when the array's path
         /// isn't a static string on the SerializedObject (e.g., inside a polymorphic <c>[SerializeReference]</c> entry).
         /// </summary>
+        /// <param name="arrayProp">The array SerializedProperty to render.</param>
+        /// <param name="title">Optional bold title rendered above the header row. Pass null or empty to omit.</param>
+        /// <param name="addButtonText">Label for the trailing add button.</param>
+        /// <param name="columns">Column specs in left-to-right order.</param>
         public SerializedArrayTable(
             SerializedProperty arrayProp,
             string title,
@@ -110,6 +114,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// <summary>
         /// Builds the table's VisualElement tree.
         /// </summary>
+        /// <returns>The built table element.</returns>
         public VisualElement Build()
         {
             var outer = new VisualElement();

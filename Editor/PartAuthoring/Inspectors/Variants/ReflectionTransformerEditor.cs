@@ -22,6 +22,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants
         private const BindingFlags FIELD_FLAGS =
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
+        /// <summary>
+        /// Builds the fallback reflection-based editor content for a transformer's <c>[SerializeReference]</c> array entry.
+        /// </summary>
+        /// <param name="transformerProp">The array-element SerializedProperty for the transformer.</param>
+        /// <param name="context">The editing context (part, module, mark-dirty callback).</param>
+        /// <returns>A VisualElement rendering one row per author-visible field, or an info HelpBox when the transformer has no configurable fields.</returns>
         public static VisualElement Build(SerializedProperty transformerProp, TransformerEditorContext context)
         {
             var root = new VisualElement();

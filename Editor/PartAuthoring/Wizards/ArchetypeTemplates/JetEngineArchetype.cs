@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -12,12 +12,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Air-breathing jet engine - Whiplash and other turboramjets.</summary>
     public sealed class JetEngineArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Engines";
+        /// <inheritdoc />
         public override string Family => "0120-Jet Engine";
+        /// <inheritdoc />
         public override string DisplayName => "Jet engine";
+        /// <inheritdoc />
         public override string Description => "Atmospheric jet engine running on intake air.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_Engine),
@@ -28,11 +34,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
             new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, MetaAssemblySizeFilterType.S)
         };
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

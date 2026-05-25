@@ -22,7 +22,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     public sealed class DragDataEditor : IDataEditor
     {
         private const string PAINTABLE_SHADER_NAME = "KSP2/Parts/Paintable";
-        private const string PREFS_VISUALIZE_CUBES = "Ksp2UnityTools.Drag.VisualizeCubes";
         private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
 
         private static readonly string[] FACE_LABELS = { "XP", "XN", "YP", "YN", "ZP", "ZN" };
@@ -406,7 +405,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
         private VisualElement BuildDragCubeTools()
         {
             var section = new VisualElement();
-            ApplyToolsBoxStyles(section);
+            section.AddToClassList("drag-tools-box");
 
             var sectionHeader = new Label("Drag Cube Tools");
             sectionHeader.AddToClassList("data-editor-section-header");
@@ -418,19 +417,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             _rendererCountLabel = AddInfoRow(section, "DragCubeMesh Renderers", "0");
             _paintableCountLabel = AddInfoRow(section, "Paintable Renderers", "0");
             _renderRootLabel = AddInfoRow(section, "Render Root", "-");
-
-            // Visualize toggle
-            var visualize = new Toggle("Visualize Drag Cubes")
-            {
-                value = EditorPrefs.GetBool(PREFS_VISUALIZE_CUBES, false),
-            };
-            visualize.AddToClassList("unity-base-field__aligned");
-            visualize.RegisterValueChangedCallback(evt =>
-            {
-                EditorPrefs.SetBool(PREFS_VISUALIZE_CUBES, evt.newValue);
-                SceneView.RepaintAll();
-            });
-            section.Add(visualize);
 
             // Action buttons
             var tagBtn = new Button(OnClickTagPaintable) { text = "Tag Paintable Renderers" };
@@ -529,16 +515,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
         private Label AddInfoRow(VisualElement parent, string label, string value)
         {
             var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.justifyContent = Justify.SpaceBetween;
-            row.style.marginBottom = 1f;
+            row.AddToClassList("drag-info-row");
 
             var l = new Label(label);
-            l.style.color = new Color(195f / 255f, 205f / 255f, 220f / 255f);
+            l.AddToClassList("drag-info-row__label");
             row.Add(l);
 
             var v = new Label(value);
-            v.style.color = new Color(220f / 255f, 230f / 255f, 245f / 255f);
+            v.AddToClassList("drag-info-row__value");
             row.Add(v);
 
             parent.Add(row);
@@ -974,29 +958,5 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             AssetDatabase.SaveAssets();
         }
 
-        // -------------------- Inline styles (Drag-specific tools box) --------------------
-
-        private static void ApplyToolsBoxStyles(VisualElement box)
-        {
-            box.style.marginTop = 8f;
-            box.style.paddingTop = 6f;
-            box.style.paddingBottom = 6f;
-            box.style.paddingLeft = 6f;
-            box.style.paddingRight = 6f;
-            box.style.borderLeftWidth = 1f;
-            box.style.borderRightWidth = 1f;
-            box.style.borderTopWidth = 1f;
-            box.style.borderBottomWidth = 1f;
-            var c = new Color(0, 0, 0, 0.45f);
-            box.style.borderLeftColor = c;
-            box.style.borderRightColor = c;
-            box.style.borderTopColor = c;
-            box.style.borderBottomColor = c;
-            box.style.borderTopLeftRadius = 3f;
-            box.style.borderTopRightRadius = 3f;
-            box.style.borderBottomLeftRadius = 3f;
-            box.style.borderBottomRightRadius = 3f;
-            box.style.backgroundColor = new Color(255f / 255f, 255f / 255f, 255f / 255f, 0.03f);
-        }
     }
 }

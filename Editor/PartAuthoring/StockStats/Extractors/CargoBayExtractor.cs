@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Bay dimensions from <c>Data_CargoBay</c>.</summary>
     internal sealed class CargoBayExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             CargoBayDataObjectMirror bay = ModuleResolver.FindModuleData<CargoBayDataObjectMirror>(part);

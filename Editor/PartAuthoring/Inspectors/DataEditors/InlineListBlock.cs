@@ -19,6 +19,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     /// </remarks>
     public static class InlineListBlock
     {
+        /// <summary>
+        /// Builds an inline list block for the given array SerializedProperty.
+        /// </summary>
+        /// <param name="arrayProp">The array SerializedProperty to render.</param>
+        /// <param name="titleFormat">Format string for the header. The current element count is substituted at <c>{0}</c>.</param>
+        /// <param name="addButtonText">Label for the trailing add button.</param>
+        /// <param name="emptyHint">Hint label shown in place of rows when the array is empty.</param>
+        /// <param name="rowBuilder">Row builder invoked once per element with the element's SerializedProperty, its index, and a delete callback.</param>
+        /// <param name="onAdd">Optional seed callback invoked on the new entry after the add button extends the array.</param>
+        /// <returns>The built block element.</returns>
         public static VisualElement Build(
             SerializedProperty arrayProp,
             string titleFormat,
@@ -28,22 +38,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             Action<SerializedProperty> onAdd = null)
         {
             var outer = new VisualElement();
-            outer.style.marginTop = 4f;
-            outer.style.marginBottom = 4f;
+            outer.AddToClassList("data-editor-inline-list");
 
             var headerRow = new VisualElement();
-            headerRow.style.flexDirection = FlexDirection.Row;
-            headerRow.style.alignItems = Align.Center;
-            headerRow.style.marginBottom = 2f;
+            headerRow.AddToClassList("data-editor-inline-list__header");
 
             var countLabel = new Label();
             countLabel.AddToClassList("data-editor-subsection-header");
-            countLabel.style.flexGrow = 1f;
-            countLabel.style.marginBottom = 0;
+            countLabel.AddToClassList("data-editor-inline-list__count");
             headerRow.Add(countLabel);
 
             var addBtn = new Button { text = addButtonText };
-            addBtn.style.flexShrink = 0;
+            addBtn.AddToClassList("data-editor-inline-list__add-btn");
             headerRow.Add(addBtn);
             outer.Add(headerRow);
 

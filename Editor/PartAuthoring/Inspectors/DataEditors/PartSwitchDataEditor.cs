@@ -14,6 +14,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     [DataEditor(typeof(Data_PartSwitch))]
     public sealed class PartSwitchDataEditor : IDataEditor
     {
+        /// <inheritdoc />
         public VisualElement Build(SerializedProperty dataProp, PartBehaviourModule module)
         {
             return new HelpBox(

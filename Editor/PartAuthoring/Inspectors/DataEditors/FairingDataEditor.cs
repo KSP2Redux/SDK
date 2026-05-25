@@ -85,19 +85,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             outer.Add(label);
 
             var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.marginBottom = 4f;
+            row.AddToClassList("fairing-mode-bar-row");
 
             _btnPartShroud = new Button(() => SetMode(AuthoringMode.PartShroud)) { text = "Part Shroud" };
-            _btnPartShroud.style.flexGrow = 1f;
+            _btnPartShroud.AddToClassList("fairing-mode-bar-button");
             row.Add(_btnPartShroud);
 
             _btnVariableShroud = new Button(() => SetMode(AuthoringMode.VariableShroud)) { text = "Variable Shroud" };
-            _btnVariableShroud.style.flexGrow = 1f;
+            _btnVariableShroud.AddToClassList("fairing-mode-bar-button");
             row.Add(_btnVariableShroud);
 
             _btnFairing = new Button(() => SetMode(AuthoringMode.Fairing)) { text = "Fairing" };
-            _btnFairing.style.flexGrow = 1f;
+            _btnFairing.AddToClassList("fairing-mode-bar-button");
             row.Add(_btnFairing);
 
             outer.Add(row);
@@ -129,18 +128,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
 
         private static void ApplyModeButtonStyle(Button btn, bool selected)
         {
-            if (selected)
-            {
-                btn.style.backgroundColor = new Color(70f / 255f, 100f / 255f, 140f / 255f, 0.55f);
-                btn.style.color = new Color(245f / 255f, 250f / 255f, 1f);
-                btn.style.unityFontStyleAndWeight = FontStyle.Bold;
-            }
-            else
-            {
-                btn.style.backgroundColor = StyleKeyword.Null;
-                btn.style.color = StyleKeyword.Null;
-                btn.style.unityFontStyleAndWeight = FontStyle.Normal;
-            }
+            btn.EnableInClassList("fairing-mode-bar-button--active", selected);
         }
 
         private AuthoringMode GetCurrentMode()

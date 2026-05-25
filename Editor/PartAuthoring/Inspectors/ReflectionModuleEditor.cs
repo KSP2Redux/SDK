@@ -19,23 +19,16 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 {
     /// <summary>
-    /// Renders a <see cref="PartBehaviourModule" />'s <c>Data_*</c> blocks as author-facing fields,
-    /// filtered by <see cref="KSPDefinitionAttribute" /> and dispatched per the attribute vocabulary
-    /// declared in <c>Redux.Modules.Attributes</c>.
+    /// Renders a <see cref="PartBehaviourModule" />'s <c>Data_*</c> blocks as author-facing fields, filtered by <see cref="KSPDefinitionAttribute" /> and dispatched per the attribute vocabulary declared in <c>Redux.Modules.Attributes</c>.
     /// </summary>
     /// <remarks>
-    /// This is the generic editor that handles every module without a custom editor. It walks the
-    /// module's serialized fields, identifies sub-fields whose type derives from <see cref="ModuleData" />,
-    /// and renders each Data block by walking the visible properties inside it.
-    ///
-    /// Skipped fields: anything tagged <see cref="KSPStateAttribute" /> (runtime state), tagged
+    /// Generic editor that handles every module without a custom <see cref="IDataEditor" /> registered.
+    /// Walks the module's serialized fields, identifies sub-fields whose type derives from
+    /// <see cref="ModuleData" />, and renders each Data block by walking the visible properties inside
+    /// it. Skipped fields: anything tagged <see cref="KSPStateAttribute" /> (runtime state), tagged
     /// <see cref="HideInInspector" />, or missing <see cref="KSPDefinitionAttribute" /> (the include
-    /// trigger).
-    ///
-    /// Honored attributes this phase: <c>[Range]</c> (rendered as Slider by Unity's PropertyField),
-    /// <c>[Unit]</c> (suffix label after the field), <c>[Tooltip]</c> (inherited from Unity).
-    /// <c>[TransformPath]</c>, <c>[ResourceName]</c>, <c>[FoldoutSection]</c>, and <c>[Hidden]</c>
-    /// land in follow-up wedges.
+    /// trigger). Per-row dispatch (Range, Unit, Tooltip, TransformPath, ResourceName, and the
+    /// specialised widgets) is handled by <c>AttributeAwareFieldRow</c>.
     /// </remarks>
     internal static class ReflectionModuleEditor
     {
@@ -47,12 +40,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
 
         /// <summary>
-        /// Builds the editor VisualElement for the given module. Caller is expected to host the
-        /// result inside the module's card body.
+        /// Builds the editor VisualElement for the given module.
         /// </summary>
+        /// <remarks>
+        /// Caller is expected to host the result inside the module's card body.
+        /// </remarks>
         /// <param name="module">The module Component being edited.</param>
         /// <param name="corePartDataSo">A SerializedObject of the part's <see cref="CorePartData" />,
         /// used to surface per-module PAM overrides that live on <see cref="PartData" />.</param>
+        /// <returns>The module's editor VisualElement.</returns>
         public static VisualElement Build(PartBehaviourModule module, SerializedObject corePartDataSo)
         {
             var root = new VisualElement();
@@ -151,14 +147,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         }
 
         /// <summary>
-        /// Renders a single field row for the given SerializedProperty using the generic dispatch
-        /// (attribute-aware <see cref="PropertyField" />, SteppedRange slider, Unit suffix wrap, etc).
-        /// Exposed so custom <see cref="IDataEditor" /> implementations can reuse the generic field
-        /// rendering for simple fields and only custom-render the parts that need it.
+        /// Renders a single field row for the given SerializedProperty using the generic dispatch.
         /// </summary>
+        /// <remarks>
+        /// Routes through the attribute-aware <see cref="PropertyField" />, SteppedRange slider, Unit
+        /// suffix wrap, and related widgets. Exposed so custom <see cref="IDataEditor" />
+        /// implementations can reuse the generic field rendering for simple fields and only
+        /// custom-render the parts that need it.
+        /// </remarks>
+        /// <param name="prop">The SerializedProperty to render.</param>
+        /// <param name="field">The reflection FieldInfo backing <paramref name="prop" />, used for attribute lookup.</param>
+        /// <param name="partRoot">The part's root transform, used by transform-name and transform-path widgets.</param>
         /// <param name="labelOverride">If non-null, used as the row's label instead of the auto-generated
         /// <see cref="SerializedProperty.displayName" />. Useful when a custom editor strips redundant
         /// shared prefixes from labels within a group.</param>
+        /// <returns>The rendered field-row VisualElement.</returns>
         public static VisualElement BuildFieldRowForCustomEditor(SerializedProperty prop, FieldInfo field, Transform partRoot, string labelOverride = null)
         {
             return BuildFieldRow(prop, field, partRoot, labelOverride);

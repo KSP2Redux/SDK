@@ -6,13 +6,10 @@ using UnityEditor;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
 {
     /// <summary>
-    /// <see cref="AutocompleteField" /> specialised for attach-node-ID strings. Suggestions are
-    /// the IDs of attach nodes currently declared on the part's <see cref="CorePartData" />.
+    /// <see cref="AutocompleteField" /> specialised for attach-node-ID strings, with suggestions sourced from the part's <see cref="CorePartData" />.
     /// </summary>
     /// <remarks>
-    /// The suggestion list is rebuilt each time the popup opens so renames or additions to the
-    /// part's attach node list are picked up without an editor reload. Falls back to a plain
-    /// TextField when no <see cref="CorePartData" /> can be resolved.
+    /// The suggestion list is rebuilt each time the popup opens so renames or additions to the part's attach node list are picked up without an editor reload. Falls back to a plain TextField when no <see cref="CorePartData" /> can be resolved.
     /// </remarks>
     public sealed class AttachNodeIdField : AutocompleteField
     {

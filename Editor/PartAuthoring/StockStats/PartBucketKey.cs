@@ -10,6 +10,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     /// </remarks>
     public readonly struct PartBucketKey : IEquatable<PartBucketKey>
     {
+        /// <summary>
+        /// Creates a new bucket key from a family and size category.
+        /// </summary>
+        /// <param name="family">The PartData.family value.</param>
+        /// <param name="sizeCategory">The PartData.sizeCategory value.</param>
         public PartBucketKey(string family, string sizeCategory)
         {
             Family = family ?? string.Empty;
@@ -22,15 +27,19 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// <summary>The PartData.sizeCategory value, e.g. "S".</summary>
         public string SizeCategory { get; }
 
+        /// <inheritdoc />
         public bool Equals(PartBucketKey other) =>
             Family == other.Family && SizeCategory == other.SizeCategory;
 
+        /// <inheritdoc />
         public override bool Equals(object obj) =>
             obj is PartBucketKey other && Equals(other);
 
+        /// <inheritdoc />
         public override int GetHashCode() =>
             HashCode.Combine(Family, SizeCategory);
 
+        /// <inheritdoc />
         public override string ToString() => $"{Family} / {SizeCategory}";
     }
 }

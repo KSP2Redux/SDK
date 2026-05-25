@@ -15,22 +15,28 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Fields
 {
     /// <summary>
-    /// Attribute-aware field-row builder shared by <see cref="ReflectionModuleEditor" /> and
-    /// <see cref="Variants.ReflectionTransformerEditor" />. Reads decoration on <see cref="FieldInfo" />
-    /// and dispatches to the matching specialized widget, then wraps the result in a unit row when
-    /// <see cref="UnitAttribute" /> is present.
+    /// Attribute-aware field-row builder shared by <see cref="ReflectionModuleEditor" /> and <see cref="Variants.ReflectionTransformerEditor" />.
     /// </summary>
     /// <remarks>
+    /// Reads decoration on <see cref="FieldInfo" /> and dispatches to the matching specialized widget, then wraps the result in a unit row when <see cref="UnitAttribute" /> is present.
+    /// <para>
     /// Resolution order:
-    /// (1) <see cref="FieldRendererRegistry" /> hits (array-element or direct) — these are full
-    /// rows that already render their own header chrome.
-    /// (2) Per-attribute specialized widgets: TransformGroup / TransformName / TransformPath /
-    /// ResourceName / ExperimentName / AttachNodeId / SceneViewHandle / InlineStringList / SteppedRange.
+    /// (1) <see cref="FieldRendererRegistry" /> hits (array-element or direct), full rows that already render their own header chrome.
+    /// (2) Per-attribute specialized widgets: TransformGroup, TransformName, TransformPath, ResourceName, ExperimentName, AttachNodeId, SceneViewHandle, InlineStringList, SteppedRange.
     /// (3) <see cref="PropertyField" /> with aligned-label class.
     /// (4) Wrap in unit-row when <see cref="UnitAttribute" /> is present.
+    /// </para>
     /// </remarks>
     internal static class AttributeAwareFieldRow
     {
+        /// <summary>
+        /// Builds the attribute-aware field row for the given property.
+        /// </summary>
+        /// <param name="prop">The SerializedProperty to render.</param>
+        /// <param name="field">The reflected <see cref="FieldInfo" /> backing the property, used for attribute lookups.</param>
+        /// <param name="partRoot">The part root Transform used by transform-name and transform-path widgets to resolve their references.</param>
+        /// <param name="labelOverride">Optional label override. When null, the property's display name is used.</param>
+        /// <returns>A VisualElement containing the resolved widget, optionally wrapped in a unit row.</returns>
         public static VisualElement Build(
             SerializedProperty prop,
             FieldInfo field,
@@ -102,7 +108,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Fields
             }
             else if (stepped != null && prop.propertyType == SerializedPropertyType.Float)
             {
-                fieldElement = BuildSteppedSlider(prop, stepped, label);
+                fieldElement = new SteppedRangeField(prop, stepped, label);
             }
             else
             {
@@ -128,6 +134,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Fields
             return row;
         }
 
+        /// <summary>
+        /// Extracts the element type from an array or single-argument generic type.
+        /// </summary>
+        /// <param name="type">The candidate collection type.</param>
+        /// <param name="elementType">When the method returns true, the resolved element type. Otherwise null.</param>
+        /// <returns>True if an element type was resolved, false otherwise.</returns>
         public static bool TryGetArrayElementType(Type type, out Type elementType)
         {
             elementType = null;
@@ -152,43 +164,5 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Fields
             return false;
         }
 
-        private static VisualElement BuildSteppedSlider(SerializedProperty prop, SteppedRangeAttribute stepped, string label = null)
-        {
-            var slider = new Slider(label ?? prop.displayName, stepped.min, stepped.max)
-            {
-                showInputField = true,
-                tooltip = prop.tooltip,
-            };
-            slider.AddToClassList("unity-base-field__aligned");
-            slider.SetValueWithoutNotify(prop.floatValue);
-
-            slider.RegisterValueChangedCallback(evt =>
-            {
-                var snapped = Mathf.Clamp(
-                    Mathf.Round(evt.newValue / stepped.step) * stepped.step,
-                    stepped.min,
-                    stepped.max);
-                if (!Mathf.Approximately(snapped, prop.floatValue))
-                {
-                    prop.serializedObject.Update();
-                    prop.floatValue = snapped;
-                    prop.serializedObject.ApplyModifiedProperties();
-                }
-                if (!Mathf.Approximately(snapped, evt.newValue))
-                {
-                    slider.SetValueWithoutNotify(snapped);
-                }
-            });
-
-            slider.TrackPropertyValue(prop, p =>
-            {
-                if (!Mathf.Approximately(slider.value, p.floatValue))
-                {
-                    slider.SetValueWithoutNotify(p.floatValue);
-                }
-            });
-
-            return slider;
-        }
     }
 }

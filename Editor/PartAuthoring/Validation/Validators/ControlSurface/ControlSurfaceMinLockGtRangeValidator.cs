@@ -19,7 +19,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.ControlSurfa
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(PartValidationContext context)
         {
-            var modules = context?.Modules;
+            var modules = context?.ModuleDatas;
             if (modules == null)
             {
                 yield break;

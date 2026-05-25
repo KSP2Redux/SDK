@@ -10,22 +10,34 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 {
     /// <summary>Applies a value from the lookup back onto the active part.</summary>
+    /// <param name="target">Authored part to mutate.</param>
+    /// <param name="value">Value to apply.</param>
+    /// <param name="error">Receives a human-readable explanation when the copy fails.</param>
+    /// <returns>True if the value was applied, false otherwise.</returns>
     public delegate bool StockFieldCopier(CorePartData target, float value, out string error);
 
     /// <summary>Per-field display metadata and Copy behaviour.</summary>
     public sealed class StockFieldEntry
     {
+        /// <summary>Canonical field name as defined in <see cref="StockFieldNames" />.</summary>
         public string Name;
+        /// <summary>Human-readable display name for the field.</summary>
         public string DisplayName;
+        /// <summary>Sub-key for fields keyed by propellant, resource, or experiment id.</summary>
         public string SubKey;
+        /// <summary>Units suffix appended after the formatted value.</summary>
         public string UnitsSuffix;
+        /// <summary>Format string applied to the numeric value.</summary>
         public string Format;
+        /// <summary>Delegate that copies a value from the lookup back onto the active part. Null when the field is read-only.</summary>
         public StockFieldCopier Copier;
+        /// <summary>Reason surfaced to the user when <see cref="Copier" /> is null.</summary>
         public string NonCopyableReason;
         /// <summary>True when the field is computed from other authored values (e.g. Resource %, Peak Output, Fuel Flow). Surfaces should hide derived fields when showing "what will be seeded."</summary>
         public bool IsDerived;
         /// <summary>True when the underlying PartData / module field is an int. Editors should use IntegerField instead of FloatField.</summary>
         public bool IsInteger;
+        /// <summary>True when <see cref="Copier" /> is non-null.</summary>
         public bool IsCopyable => Copier != null;
     }
 
@@ -33,21 +45,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     public static class StockFieldPaths
     {
         private static readonly List<StockFieldEntry> _staticEntries = BuildStaticEntries();
+        private static readonly Dictionary<string, StockFieldEntry> _staticByName = BuildStaticIndex(_staticEntries);
 
+        /// <summary>
+        /// Returns the entry for the given canonical field name, building a dynamic entry for sub-keyed names when needed.
+        /// </summary>
+        /// <param name="name">Canonical field name.</param>
+        /// <returns>The matching entry, or null when no static or dynamic entry resolves.</returns>
         public static StockFieldEntry Find(string name)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                return null;
-            }
-            for (int i = 0; i < _staticEntries.Count; i++)
-            {
-                if (_staticEntries[i].Name == name)
-                {
-                    return _staticEntries[i];
-                }
-            }
-            return BuildDynamic(name);
+            if (string.IsNullOrEmpty(name)) return null;
+            return _staticByName.TryGetValue(name, out var entry) ? entry : BuildDynamic(name);
+        }
+
+        private static Dictionary<string, StockFieldEntry> BuildStaticIndex(List<StockFieldEntry> entries)
+        {
+            var dict = new Dictionary<string, StockFieldEntry>(entries.Count, StringComparer.Ordinal);
+            foreach (var entry in entries) dict[entry.Name] = entry;
+            return dict;
         }
 
         private static List<StockFieldEntry> BuildStaticEntries()

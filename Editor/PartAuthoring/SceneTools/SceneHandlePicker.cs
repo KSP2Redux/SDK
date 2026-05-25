@@ -8,17 +8,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
     /// Selects which inspector vector field is currently being edited via a SceneView handle.
     /// </summary>
     /// <remarks>
-    /// One active session at a time. Engaging a new field disengages whatever was previously active.
-    /// While engaged, hooks <see cref="SceneView.duringSceneGui" /> and draws a
-    /// <see cref="Handles.PositionHandle" /> or <see cref="Handles.RotationHandle" /> at the field's
-    /// world position, writing changes back through a freshly-resolved <see cref="SerializedProperty" />.
-    /// The picker stores property paths rather than property references because the inspector's
-    /// SerializedObject can be disposed across rebuilds and we'd otherwise dangle.
-    ///
-    /// The target is a <see cref="Component" /> so the picker works for properties on either the
-    /// part's <c>CorePartData</c> or on any <c>Module_*</c> that lives on the same GameObject.
-    /// World-space conversions go through <c>target.gameObject.transform</c> to avoid the KSP
-    /// shadow of <c>Component.transform</c> on PartBehaviourModule subclasses.
+    /// One active session at a time. Engaging a new field disengages whatever was previously active. While engaged, hooks <see cref="SceneView.duringSceneGui" /> and draws a <see cref="Handles.PositionHandle" /> or <see cref="Handles.RotationHandle" /> at the field's world position, writing changes back through a freshly-resolved <see cref="SerializedProperty" />. The picker stores property paths rather than property references because the inspector's SerializedObject can be disposed across rebuilds and a dangling reference would crash.
+    /// <para>
+    /// The target is a <see cref="Component" /> so the picker works for properties on either the part's <c>CorePartData</c> or on any <c>Module_*</c> that lives on the same GameObject. World-space conversions go through <c>target.gameObject.transform</c> to avoid the KSP shadow of <c>Component.transform</c> on PartBehaviourModule subclasses.
+    /// </para>
     /// </remarks>
     public static class SceneHandlePicker
     {
@@ -27,9 +20,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
         /// </summary>
         public enum HandleMode
         {
-            /// <summary>Translate-only handle. The field is the part-local position.</summary>
+            /// <summary>
+            /// Translate-only handle. The field is the part-local position.
+            /// </summary>
             Position,
-            /// <summary>Rotate-only handle. The field is a unit-length direction (forward vector).</summary>
+
+            /// <summary>
+            /// Rotate-only handle. The field is a unit-length direction (forward vector).
+            /// </summary>
             Orientation,
         }
 
@@ -59,10 +57,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
         /// <param name="anchor">Anchor position for Orientation handles. Ignored for Position handles.</param>
         public static void Engage(Component target, SerializedProperty primary, HandleMode mode, SerializedProperty anchor = null)
         {
-            if (target == null || primary == null)
-            {
-                return;
-            }
+            if (target == null || primary == null) return;
             if (_activePath == primary.propertyPath && _target == target)
             {
                 Disengage();
@@ -83,10 +78,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
         /// </summary>
         public static void Disengage()
         {
-            if (_activePath == null)
-            {
-                return;
-            }
+            if (_activePath == null) return;
             _target = null;
             _primaryPath = null;
             _anchorPath = null;
@@ -98,20 +90,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
 
         private static void EnsureHooked()
         {
-            if (_hooked)
-            {
-                return;
-            }
+            if (_hooked) return;
             SceneView.duringSceneGui += OnSceneGui;
             _hooked = true;
         }
 
         private static void UnhookIfNeeded()
         {
-            if (!_hooked)
-            {
-                return;
-            }
+            if (!_hooked) return;
             SceneView.duringSceneGui -= OnSceneGui;
             _hooked = false;
         }
@@ -174,9 +160,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.SceneTools
         }
 
         /// <summary>
-        /// Returns true when <paramref name="prop" /> is a Vector3 SerializedProperty or a Generic
-        /// SerializedProperty with x/y/z children (Vector3d and similar).
+        /// Returns true when <paramref name="prop" /> is a Vector3 SerializedProperty or a Generic SerializedProperty with x/y/z children (Vector3d and similar).
         /// </summary>
+        /// <param name="prop">The SerializedProperty to test.</param>
+        /// <returns>True if the property is vector-shaped, false otherwise.</returns>
         public static bool IsVectorProperty(SerializedProperty prop)
         {
             if (prop == null) return false;

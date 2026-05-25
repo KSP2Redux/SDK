@@ -13,15 +13,10 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
 {
     /// <summary>
-    /// Modules tab content. Lists every <see cref="PartBehaviourModule" /> Component attached to the
-    /// part's GameObject as a foldable card, with a per-card body that renders the module's serialized
-    /// fields.
+    /// Modules tab content that lists every <see cref="PartBehaviourModule" /> on the part's GameObject as a foldable card with a per-card body that renders the module's serialized fields.
     /// </summary>
     /// <remarks>
-    /// Phase 1 scaffold. Each module's body uses <see cref="InspectorElement" /> for a baseline
-    /// field-by-field render; the attribute-aware generic editor and the "Add Module" picker land
-    /// in later phases of the editor + picker wedge. The add button is intentionally disabled until
-    /// the picker is wired.
+    /// Each module's body uses <see cref="ReflectionModuleEditor" /> for a baseline field-by-field render. An "Add Module" picker is wired to insert new module Components, and a per-card remove button detaches them.
     /// </remarks>
     internal static class ModulesTab
     {
@@ -81,18 +76,31 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
 
         private static void AddModule(CorePartData target, Type moduleType, Action onListChanged)
         {
-            if (target == null || moduleType == null)
-            {
-                return;
-            }
+            if (target == null || moduleType == null) return;
             var component = Undo.AddComponent(target.gameObject, moduleType);
-            if (component == null)
-            {
-                return;
-            }
+            if (component == null) return;
             EditorUtility.SetDirty(target.gameObject);
             component.hideFlags |= HideFlags.HideInInspector;
+            HydrateDataModules(component);
             onListChanged();
+        }
+
+        /// <summary>
+        /// Invokes the module's <c>AddDataModules</c> hook so its DataModules dictionary is populated.
+        /// </summary>
+        /// <remarks>
+        /// Module_X subclasses populate DataModules in <c>AddDataModules</c>, which runs at runtime
+        /// during the load flow. In the editor, freshly-added components have an empty DataModules
+        /// until something invokes that hook. The validation context, the JSON saver, and any other
+        /// surface that reads from DataModules needs the new module's data visible immediately.
+        /// </remarks>
+        private static void HydrateDataModules(Component component)
+        {
+            if (component == null) return;
+            var addMethod =
+                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
+            addMethod?.Invoke(component, Array.Empty<object>());
         }
 
         private static VisualElement BuildModuleCard(PartBehaviourModule module, SerializedObject corePartDataSo, Action onListChanged)

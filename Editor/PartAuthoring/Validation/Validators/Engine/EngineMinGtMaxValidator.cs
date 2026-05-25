@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Engine
         public IEnumerable<ValidationIssue> Validate(PartValidationContext context)
         {
             CorePartData target = context?.Part;
-            var modules = context?.Modules;
+            var modules = context?.ModuleDatas;
             if (modules == null || target == null)
             {
                 yield break;

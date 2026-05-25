@@ -99,8 +99,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Gizmos
         }
 
         /// <summary>
-        /// Gets or sets the length, in metres, of each virtual-attached-part cylinder. Diameter is always derived from the node's sizeKey.
+        /// Gets or sets the length, in metres, of each virtual-attached-part cylinder.
         /// </summary>
+        /// <remarks>
+        /// Diameter is always derived from the node's sizeKey.
+        /// </remarks>
         public static float VirtualPartLength
         {
             get => EditorPrefs.GetFloat(PREF_KEY_VIRTUAL_PART_LENGTH, 1.0f);

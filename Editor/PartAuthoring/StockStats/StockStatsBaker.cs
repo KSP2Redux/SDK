@@ -25,21 +25,32 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// <summary>Bake settings. Currently only the verbose flag is exposed.</summary>
         public sealed class BakeOptions
         {
+            /// <summary>When true, populates <see cref="BakeResult.VerboseLog" /> with per-file diagnostic messages.</summary>
             public bool Verbose;
+            /// <summary>Default options with verbose disabled.</summary>
             public static BakeOptions Default => new();
         }
 
         /// <summary>Summary returned to the bake window for display after each run.</summary>
         public sealed class BakeResult
         {
+            /// <summary>Number of part files successfully scanned.</summary>
             public int PartsScanned;
+            /// <summary>Number of distinct (family, size) buckets produced.</summary>
             public int BucketCount;
+            /// <summary>Count of raw resource masses read from the source.</summary>
             public int RawResourcesResolved;
+            /// <summary>Count of recipes whose mass-per-unit resolved against the raw masses.</summary>
             public int RecipesResolved;
+            /// <summary>Count of recipes that could not resolve against the raw masses.</summary>
             public int UnresolvedRecipes;
+            /// <summary>Count of source files that failed to read or parse.</summary>
             public int FailedFiles;
+            /// <summary>Source-folder hash captured at bake time, used to detect later staleness.</summary>
             public string SourceHash;
+            /// <summary>Project-relative path of the asset that was written.</summary>
             public string OutputAssetPath;
+            /// <summary>Per-file verbose log lines, populated when <see cref="BakeOptions.Verbose" /> is set.</summary>
             public List<string> VerboseLog = new();
         }
 
@@ -47,6 +58,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// <param name="sourceDir">Absolute path to <c>ksp2-assets/Assets/</c>.</param>
         /// <param name="outputAssetPath">Project-relative path (under <c>Assets/...</c>) to write to.</param>
         /// <param name="options">Optional settings. Null defaults to <see cref="BakeOptions.Default" />.</param>
+        /// <returns>Summary of the bake run.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when <paramref name="sourceDir" /> is empty or does not exist.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="outputAssetPath" /> is null or empty.</exception>
         public static BakeResult Bake(string sourceDir, string outputAssetPath, BakeOptions options = null)
         {
             options ??= BakeOptions.Default;
@@ -163,6 +177,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         }
 
         /// <summary>Recomputes only the source hash. Used by the bake window to detect staleness without rebaking.</summary>
+        /// <param name="sourceDir">Absolute path to the source folder.</param>
+        /// <returns>Hex-encoded SHA-256 of the file-count, total size, and modified-time fingerprint. Empty when the folder does not exist.</returns>
         public static string ComputeSourceHash(string sourceDir)
         {
             if (string.IsNullOrEmpty(sourceDir) || !Directory.Exists(sourceDir))

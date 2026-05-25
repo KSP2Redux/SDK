@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Gimbal range and response speed from Data_Gimbal. Engine-side fields.</summary>
     internal sealed class GimbalExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             GimbalDataObjectMirror gimbal = ModuleResolver.FindModuleData<GimbalDataObjectMirror>(part);

@@ -20,17 +20,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
         public const string PartsGroupName = "Parts Data";
 
         /// <summary>
-        /// Resolves the right addressables group for a part-related asset. Prefers the owning
-        /// mod's per-mod parts group, falls back to the project-level <see cref="PartsGroupName" />
-        /// group, returns null if neither exists.
+        /// Resolves the addressables group for a part-related asset.
         /// </summary>
+        /// <remarks>
+        /// Prefers the owning mod's per-mod parts group, falls back to the project-level
+        /// <see cref="PartsGroupName" /> group, returns null if neither exists.
+        /// </remarks>
+        /// <param name="target">The part whose addressables group is being resolved.</param>
+        /// <returns>The resolved group, or null if no per-mod and no project-level group is available.</returns>
         public static AddressableAssetGroup ResolveGroup(CorePartData target)
         {
             if (KSP2UnityTools.FindParentMod(target) is { } mod && mod.partsGroup != null)
             {
                 return mod.partsGroup;
             }
-            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
             return settings?.groups.FirstOrDefault(g => g != null && g.Name == PartsGroupName);
         }
     }

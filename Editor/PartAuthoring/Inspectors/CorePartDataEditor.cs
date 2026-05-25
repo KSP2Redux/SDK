@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using KSP;
@@ -64,6 +65,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             UpdateValidationChip();
         }
 
+        // Restoration relies on OnDisable, which may not fire during a domain-reload race. The HideFlags
+        // mutation can persist on module components until the next inspector OnEnable rewrites it.
         private void HideModuleComponentEditors()
         {
             _originalModuleHideFlags = new Dictionary<PartBehaviourModule, HideFlags>();
@@ -114,6 +117,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             PopulateIdentityRow();
             PopulateIcon();
             PopulateReadinessChips();
+            WireValidationChip();
             WireQuickToolsChips();
             WireGizmoSettings();
 
@@ -219,17 +223,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             UpdateValidationChip();
         }
 
+        private void WireValidationChip()
+        {
+            var validChip = _root?.Q<Button>("readiness-chip-valid");
+            if (validChip == null) return;
+            validChip.clicked += () => PartValidationReportWindow.Open(target as CorePartData);
+            validChip.tooltip = "Open the Part Validation Report.";
+            _root.TrackSerializedObjectValue(serializedObject, _ => UpdateValidationChip());
+        }
+
         private void UpdateValidationChip()
         {
-            if (_root == null)
-            {
-                return;
-            }
+            if (_root == null) return;
             var validChip = _root.Q<Button>("readiness-chip-valid");
-            if (validChip == null)
-            {
-                return;
-            }
+            if (validChip == null) return;
             var cpd = target as CorePartData;
             if (cpd == null)
             {
@@ -238,11 +245,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 return;
             }
 
-            PartValidationReport cheap = PartValidationReport.Run(new PartValidationContext(cpd), ValidatorCost.Cheap);
-            IReadOnlyList<ValidationIssue> expensive = PartValidationExpensiveCache.Get(cpd);
-            int errors = cheap.ErrorCount;
-            int warnings = cheap.WarningCount;
-            int info = cheap.InfoCount;
+            var cheap = PartValidationReport.Run(new PartValidationContext(cpd), ValidatorCost.Cheap);
+            var expensive = PartValidationExpensiveCache.Get(cpd);
+            var errors = cheap.ErrorCount;
+            var warnings = cheap.WarningCount;
+            var info = cheap.InfoCount;
             foreach (var issue in expensive)
             {
                 switch (issue.Severity)
@@ -263,17 +270,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 validChip.text = $"✕ {errors}  ·  ⚠ {warnings}  ·  ⓘ {info}";
                 SetReadinessState(validChip, errors > 0 ? "is-error" : "is-warn");
             }
-
-            if (!_validationChipWired)
-            {
-                _validationChipWired = true;
-                validChip.clicked += () => PartValidationReportWindow.Open(target as CorePartData);
-                validChip.tooltip = "Open the Part Validation Report.";
-                _root.TrackSerializedObjectValue(serializedObject, _ => UpdateValidationChip());
-            }
         }
-
-        private bool _validationChipWired;
 
         private static void SetReadinessState(VisualElement chip, string stateClass)
         {
@@ -326,7 +323,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             WireChip("chip-open-reference-parts", Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows.ReferencePartsWindow.ShowWindow);
         }
 
-        private void WireChip(string name, System.Action onClick)
+        private void WireChip(string name, Action onClick)
         {
             var btn = _root.Q<Button>(name);
             if (btn != null)
@@ -358,80 +355,47 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             }
         }
 
+        private sealed class GizmoPillBinding
+        {
+            public string PillName { get; }
+            public Type GatingModule { get; }
+            public Func<bool> Get { get; }
+            public Action<bool> Set { get; }
+
+            public GizmoPillBinding(string pillName, Type gatingModule, Func<bool> get, Action<bool> set)
+            {
+                PillName = pillName;
+                GatingModule = gatingModule;
+                Get = get;
+                Set = set;
+            }
+        }
+
+        private static readonly GizmoPillBinding[] _gizmoPills =
+        {
+            new("gizmo-pill-com",              null,                          () => PartAuthoringGizmoSettings.ShowCenterOfMass,             v => PartAuthoringGizmoSettings.ShowCenterOfMass = v),
+            new("gizmo-pill-col",              null,                          () => PartAuthoringGizmoSettings.ShowCenterOfLift,             v => PartAuthoringGizmoSettings.ShowCenterOfLift = v),
+            new("gizmo-pill-attach",           null,                          () => PartAuthoringGizmoSettings.ShowAttachNodes,              v => PartAuthoringGizmoSettings.ShowAttachNodes = v),
+            new("gizmo-pill-virtual-parts",    null,                          () => PartAuthoringGizmoSettings.ShowVirtualAttachedParts,     v => PartAuthoringGizmoSettings.ShowVirtualAttachedParts = v),
+            new("gizmo-pill-engine-thrust",    typeof(Module_Engine),         () => PartAuthoringGizmoSettings.ShowEngineThrustTransforms,   v => PartAuthoringGizmoSettings.ShowEngineThrustTransforms = v),
+            new("gizmo-pill-gimbal-cone",      typeof(Module_Gimbal),         () => PartAuthoringGizmoSettings.ShowGimbalCone,               v => PartAuthoringGizmoSettings.ShowGimbalCone = v),
+            new("gizmo-pill-rcs-thrusters",    typeof(Module_RCS),            () => PartAuthoringGizmoSettings.ShowRCSThrusters,             v => PartAuthoringGizmoSettings.ShowRCSThrusters = v),
+            new("gizmo-pill-drag-cubes",       typeof(Module_Drag),           () => PartAuthoringGizmoSettings.ShowDragCubes,                v => PartAuthoringGizmoSettings.ShowDragCubes = v),
+            new("gizmo-pill-fairing-preview",  typeof(Module_Fairing),        () => PartAuthoringGizmoSettings.ShowFairingPreview,           v => PartAuthoringGizmoSettings.ShowFairingPreview = v),
+            new("gizmo-pill-lift-arrow",       typeof(Module_LiftingSurface), () => PartAuthoringGizmoSettings.ShowLiftSurfaceArrow,         v => PartAuthoringGizmoSettings.ShowLiftSurfaceArrow = v),
+            new("gizmo-pill-control-arc",      typeof(Module_ControlSurface), () => PartAuthoringGizmoSettings.ShowControlSurfaceArc,        v => PartAuthoringGizmoSettings.ShowControlSurfaceArc = v),
+            new("gizmo-pill-cargo-volume",     typeof(Module_CargoBay),       () => PartAuthoringGizmoSettings.ShowCargoBayVolume,           v => PartAuthoringGizmoSettings.ShowCargoBayVolume = v),
+            new("gizmo-pill-fairing-ejection", typeof(Module_Fairing),        () => PartAuthoringGizmoSettings.ShowFairingEjection,          v => PartAuthoringGizmoSettings.ShowFairingEjection = v),
+            new("gizmo-pill-decouple-split",   typeof(Module_Decouple),       () => PartAuthoringGizmoSettings.ShowDecoupleSplit,            v => PartAuthoringGizmoSettings.ShowDecoupleSplit = v),
+            new("gizmo-pill-docking-frame",    typeof(Module_DockingNode),    () => PartAuthoringGizmoSettings.ShowDockingFrame,             v => PartAuthoringGizmoSettings.ShowDockingFrame = v),
+            new("gizmo-pill-solar-incidence",  typeof(Module_SolarPanel),     () => PartAuthoringGizmoSettings.ShowSolarPanelIncidence,      v => PartAuthoringGizmoSettings.ShowSolarPanelIncidence = v),
+            new("gizmo-pill-intake-direction", typeof(Module_ResourceIntake), () => PartAuthoringGizmoSettings.ShowResourceIntakeDirection,  v => PartAuthoringGizmoSettings.ShowResourceIntakeDirection = v),
+            new("gizmo-pill-radiator-surface", typeof(Module_ActiveRadiator), () => PartAuthoringGizmoSettings.ShowActiveRadiatorSurface,    v => PartAuthoringGizmoSettings.ShowActiveRadiatorSurface = v),
+        };
+
         private void WireGizmoSettings()
         {
-            BindGizmoPill(
-                "gizmo-pill-com",
-                () => PartAuthoringGizmoSettings.ShowCenterOfMass,
-                v => PartAuthoringGizmoSettings.ShowCenterOfMass = v);
-            BindGizmoPill(
-                "gizmo-pill-col",
-                () => PartAuthoringGizmoSettings.ShowCenterOfLift,
-                v => PartAuthoringGizmoSettings.ShowCenterOfLift = v);
-            BindGizmoPill(
-                "gizmo-pill-attach",
-                () => PartAuthoringGizmoSettings.ShowAttachNodes,
-                v => PartAuthoringGizmoSettings.ShowAttachNodes = v);
-            BindGizmoPill(
-                "gizmo-pill-virtual-parts",
-                () => PartAuthoringGizmoSettings.ShowVirtualAttachedParts,
-                v => PartAuthoringGizmoSettings.ShowVirtualAttachedParts = v);
-            BindGizmoPill(
-                "gizmo-pill-engine-thrust",
-                () => PartAuthoringGizmoSettings.ShowEngineThrustTransforms,
-                v => PartAuthoringGizmoSettings.ShowEngineThrustTransforms = v);
-            BindGizmoPill(
-                "gizmo-pill-gimbal-cone",
-                () => PartAuthoringGizmoSettings.ShowGimbalCone,
-                v => PartAuthoringGizmoSettings.ShowGimbalCone = v);
-            BindGizmoPill(
-                "gizmo-pill-rcs-thrusters",
-                () => PartAuthoringGizmoSettings.ShowRCSThrusters,
-                v => PartAuthoringGizmoSettings.ShowRCSThrusters = v);
-            BindGizmoPill(
-                "gizmo-pill-drag-cubes",
-                () => PartAuthoringGizmoSettings.ShowDragCubes,
-                v => PartAuthoringGizmoSettings.ShowDragCubes = v);
-            BindGizmoPill(
-                "gizmo-pill-fairing-preview",
-                () => PartAuthoringGizmoSettings.ShowFairingPreview,
-                v => PartAuthoringGizmoSettings.ShowFairingPreview = v);
-            BindGizmoPill(
-                "gizmo-pill-lift-arrow",
-                () => PartAuthoringGizmoSettings.ShowLiftSurfaceArrow,
-                v => PartAuthoringGizmoSettings.ShowLiftSurfaceArrow = v);
-            BindGizmoPill(
-                "gizmo-pill-control-arc",
-                () => PartAuthoringGizmoSettings.ShowControlSurfaceArc,
-                v => PartAuthoringGizmoSettings.ShowControlSurfaceArc = v);
-            BindGizmoPill(
-                "gizmo-pill-cargo-volume",
-                () => PartAuthoringGizmoSettings.ShowCargoBayVolume,
-                v => PartAuthoringGizmoSettings.ShowCargoBayVolume = v);
-            BindGizmoPill(
-                "gizmo-pill-fairing-ejection",
-                () => PartAuthoringGizmoSettings.ShowFairingEjection,
-                v => PartAuthoringGizmoSettings.ShowFairingEjection = v);
-            BindGizmoPill(
-                "gizmo-pill-decouple-split",
-                () => PartAuthoringGizmoSettings.ShowDecoupleSplit,
-                v => PartAuthoringGizmoSettings.ShowDecoupleSplit = v);
-            BindGizmoPill(
-                "gizmo-pill-docking-frame",
-                () => PartAuthoringGizmoSettings.ShowDockingFrame,
-                v => PartAuthoringGizmoSettings.ShowDockingFrame = v);
-            BindGizmoPill(
-                "gizmo-pill-solar-incidence",
-                () => PartAuthoringGizmoSettings.ShowSolarPanelIncidence,
-                v => PartAuthoringGizmoSettings.ShowSolarPanelIncidence = v);
-            BindGizmoPill(
-                "gizmo-pill-intake-direction",
-                () => PartAuthoringGizmoSettings.ShowResourceIntakeDirection,
-                v => PartAuthoringGizmoSettings.ShowResourceIntakeDirection = v);
-            BindGizmoPill(
-                "gizmo-pill-radiator-surface",
-                () => PartAuthoringGizmoSettings.ShowActiveRadiatorSurface,
-                v => PartAuthoringGizmoSettings.ShowActiveRadiatorSurface = v);
+            foreach (var binding in _gizmoPills) BindGizmoPill(binding.PillName, binding.Get, binding.Set);
             UpdateModuleScopedPillVisibility();
             _root.TrackSerializedObjectValue(serializedObject, _ => UpdateModuleScopedPillVisibility());
         }
@@ -439,25 +403,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private void UpdateModuleScopedPillVisibility()
         {
             var part = target as CorePartData;
-            SetPillVisible("gizmo-pill-engine-thrust", HasModule<Module_Engine>(part));
-            SetPillVisible("gizmo-pill-gimbal-cone", HasModule<Module_Gimbal>(part));
-            SetPillVisible("gizmo-pill-rcs-thrusters", HasModule<Module_RCS>(part));
-            SetPillVisible("gizmo-pill-drag-cubes", HasModule<Module_Drag>(part));
-            SetPillVisible("gizmo-pill-fairing-preview", HasModule<Module_Fairing>(part));
-            SetPillVisible("gizmo-pill-lift-arrow", HasModule<Module_LiftingSurface>(part));
-            SetPillVisible("gizmo-pill-control-arc", HasModule<Module_ControlSurface>(part));
-            SetPillVisible("gizmo-pill-cargo-volume", HasModule<Module_CargoBay>(part));
-            SetPillVisible("gizmo-pill-fairing-ejection", HasModule<Module_Fairing>(part));
-            SetPillVisible("gizmo-pill-decouple-split", HasModule<Module_Decouple>(part));
-            SetPillVisible("gizmo-pill-docking-frame", HasModule<Module_DockingNode>(part));
-            SetPillVisible("gizmo-pill-solar-incidence", HasModule<Module_SolarPanel>(part));
-            SetPillVisible("gizmo-pill-intake-direction", HasModule<Module_ResourceIntake>(part));
-            SetPillVisible("gizmo-pill-radiator-surface", HasModule<Module_ActiveRadiator>(part));
-        }
-
-        private static bool HasModule<T>(CorePartData part) where T : Component
-        {
-            return part != null && part.GetComponent<T>() != null;
+            foreach (var binding in _gizmoPills)
+            {
+                if (binding.GatingModule == null) continue;
+                SetPillVisible(binding.PillName, part != null && part.GetComponent(binding.GatingModule) != null);
+            }
         }
 
         private void SetPillVisible(string name, bool visible)

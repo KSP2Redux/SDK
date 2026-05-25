@@ -33,21 +33,53 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private const string USS_PATH = "/Assets/Windows/PartAuthoring/Windows/NewPartWizard.uss";
 
         // --- State ---
+
+        /// <summary>The selected archetype the new part is scaffolded from.</summary>
         public IPartArchetype Archetype;
+
+        /// <summary>The selected size category for the new part.</summary>
         public MetaAssemblySizeFilterType Size = MetaAssemblySizeFilterType.S;
+
+        /// <summary>The resolved bucket for (family, size) used to seed defaults.</summary>
         public BucketResolution Bucket;
+
+        /// <summary>The part's slug name, used for the prefab, json, and folder name.</summary>
         public string PartName = string.Empty;
+
+        /// <summary>The author string written into the part's data.</summary>
         public string Author = string.Empty;
+
+        /// <summary>Category override applied when the chosen archetype is the Empty archetype.</summary>
         public string CategoryOverride = string.Empty;
+
+        /// <summary>Family override applied when the chosen archetype is the Empty archetype.</summary>
         public string FamilyOverride = string.Empty;
+
+        /// <summary>The resolved parent folder under which the new part folder is created.</summary>
         public string DestinationFolder;
+
+        /// <summary>How the new part's visual mesh is sourced.</summary>
         public SourceMeshChoice MeshChoice = SourceMeshChoice.Skip;
+
+        /// <summary>The existing prefab used as the source mesh, when <see cref="MeshChoice" /> is <see cref="SourceMeshChoice.ExistingPrefab" />.</summary>
         public GameObject SourcePrefab;
+
+        /// <summary>The FBX asset used as the source mesh, when <see cref="MeshChoice" /> is <see cref="SourceMeshChoice.FBX" />.</summary>
         public GameObject SourceFbxAsset;
+
+        /// <summary>When true and the FBX path is chosen, scales the imported instance by 100x.</summary>
         public bool FbxAutoScale = true;
+
+        /// <summary>When true and the FBX path is chosen, rotates the imported instance by -90 degrees on X.</summary>
         public bool FbxAutoRotate = true;
+
+        /// <summary>When true, tags every renderer under the model root with the DragCubeMesh tag.</summary>
         public bool FbxTagDragCubeMesh = true;
+
+        /// <summary>The set of archetype default-module types currently enabled in the wizard's checkboxes.</summary>
         public readonly HashSet<Type> EnabledModules = new();
+
+        /// <summary>Per-stock-field author overrides keyed by field name, applied after the archetype seeds defaults.</summary>
         public readonly Dictionary<string, float> ValueOverrides = new();
 
         // Folder picker state - persists across Identity step rebuilds.
@@ -79,9 +111,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             ("Review and create",   w => w.BuildReviewStep(),      _ => true),
         };
 
+        /// <summary>Opens the wizard from the main menu without capturing the Project window selection.</summary>
         [MenuItem(PartAuthoringWindows.MENU_ROOT + "New Part %#n", priority = PartAuthoringWindows.PRIORITY_NEW_PART_WIZARD)]
         public static void ShowWindow() => ShowWindowInternal(captureSelection: false);
 
+        /// <summary>Opens the wizard from the Assets context menu and captures the selected folder as the default destination.</summary>
         [MenuItem("Assets/Redux SDK/Part Authoring/Create New Part", priority = KSP2UnityTools.MenuPriority)]
         public static void ShowWindowFromAssets() => ShowWindowInternal(captureSelection: true);
 
@@ -1419,8 +1453,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
     /// <summary>Choice of how the new part's visual mesh is sourced.</summary>
     public enum SourceMeshChoice
     {
+        /// <summary>The author will import the mesh later. The scaffold leaves model/ empty.</summary>
         Skip,
+
+        /// <summary>An existing prefab is instantiated under the part's model/ subtree.</summary>
         ExistingPrefab,
+
+        /// <summary>An imported FBX asset is instantiated under model/ with optional auto-scale and auto-rotate.</summary>
         FBX
     }
 }

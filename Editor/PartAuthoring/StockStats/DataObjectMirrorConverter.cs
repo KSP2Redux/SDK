@@ -20,11 +20,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         private static readonly Lazy<Dictionary<string, Type>> _registry =
             new(BuildRegistry, isThreadSafe: true);
 
+        /// <inheritdoc />
         public override bool CanConvert(Type objectType) =>
             typeof(DataObjectMirror).IsAssignableFrom(objectType);
 
+        /// <inheritdoc />
         public override bool CanWrite => false;
 
+        /// <inheritdoc />
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
@@ -47,6 +50,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             return new UnknownDataObjectMirror { TypeDiscriminator = rawDiscriminator };
         }
 
+        /// <inheritdoc />
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             throw new NotSupportedException("DataObjectMirror is read-only.");

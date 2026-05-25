@@ -6,10 +6,11 @@ using VSwift.Modules.Transformers;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Variants
 {
     /// <summary>
-    /// Info-level note when an <see cref="AttachNodeAdder" /> entry's nodeID matches a node already on the part. The runtime treats matching IDs as the "reposition existing" path (per the field's own tooltip), so a collision isn't an error - but the type name reads as strictly additive, so flagging the dual-semantics case is worth a glance.
+    /// Info-level note when an <see cref="AttachNodeAdder" /> entry's nodeID matches a node already on the part.
     /// </summary>
     /// <remarks>
-    /// No auto-fix: the right action depends on author intent. If they wanted to add a brand-new node, they should rename; if they wanted to reposition, <see cref="AttachNodeMover" /> reads more clearly. Either way it's an authoring call, not a mechanical one.
+    /// The runtime treats matching IDs as the "reposition existing" path per the field's own tooltip, so a collision is not an error. The type name reads as strictly additive, so flagging the dual-semantics case is worth a glance.
+    /// No auto-fix: the right action depends on author intent. If the author wanted to add a brand-new node, the entry should be renamed. If the author wanted to reposition, <see cref="AttachNodeMover" /> reads more clearly. Either way it is an authoring call, not a mechanical one.
     /// </remarks>
     public sealed class TransformerNodeNameCollisionValidator : IPartValidator
     {

@@ -36,6 +36,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public int PartsScanned;
 
         /// <summary>Looks up the resource's recipe-resolved mass per unit. Returns false if the bake didn't resolve it (or the asset predates the schema).</summary>
+        /// <param name="resourceName">Resource name to look up.</param>
+        /// <param name="massPerUnit">Receives the mass per unit when the lookup succeeds, otherwise zero.</param>
+        /// <returns>True if the resource mass is known, false otherwise.</returns>
         public bool TryGetResourceMass(string resourceName, out float massPerUnit)
         {
             massPerUnit = 0f;
@@ -56,6 +59,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         }
 
         /// <summary>Returns the bucket matching the given family / size, or null if none exists.</summary>
+        /// <param name="family">Family value to match.</param>
+        /// <param name="sizeCategory">Size-category value to match.</param>
+        /// <returns>The matching bucket, or null when none exists.</returns>
         public StockBucket FindBucket(string family, string sizeCategory)
         {
             if (Buckets == null)
@@ -79,10 +85,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// a closest-family fallback used when the exact match is missing.
         /// </summary>
         /// <remarks>
-        /// Adjacency walks the natural size order (XS- through 6XL) using <see cref="_orderedSizes" />.
+        /// Adjacency walks the natural size order (XS- through 6XL) using <c>_orderedSizes</c>.
         /// The enum's numeric order is not natural size order, so callers must not arithmetic the enum
         /// values directly.
         /// </remarks>
+        /// <param name="family">Family to look up.</param>
+        /// <param name="size">Size to look up.</param>
+        /// <returns>A populated resolution describing the in-bucket, adjacent, and fallback rows.</returns>
         public BucketResolution ResolveBucket(string family, MetaAssemblySizeFilterType size)
         {
             string sizeKey = size.ToString();
@@ -195,6 +204,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public List<StockPartRef> ContributingParts = new();
 
         /// <summary>Returns the field with the given canonical name, or null if not tracked here.</summary>
+        /// <param name="name">Canonical field name.</param>
+        /// <returns>The matching field, or null when not tracked in this bucket.</returns>
         public StockField FindField(string name)
         {
             if (Fields == null)
@@ -247,6 +258,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public List<StockPartFieldValue> FieldValues = new();
 
         /// <summary>Returns the value this part contributed for <paramref name="fieldName" />, or NaN if absent.</summary>
+        /// <param name="fieldName">Canonical field name.</param>
+        /// <returns>The contributed value, or <see cref="float.NaN" /> when this part did not supply the field.</returns>
         public float GetValue(string fieldName)
         {
             if (FieldValues == null)
@@ -269,7 +282,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     [Serializable]
     public sealed class StockPartFieldValue
     {
+        /// <summary>Canonical field name.</summary>
         public string Name;
+        /// <summary>Value contributed for this field.</summary>
         public float Value;
     }
 
@@ -277,7 +292,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     [Serializable]
     public sealed class ResourceMassEntry
     {
+        /// <summary>Resource name.</summary>
         public string Name;
+        /// <summary>Mass per unit, recipe-resolved against the raw resources.</summary>
         public float MassPerUnit;
     }
 

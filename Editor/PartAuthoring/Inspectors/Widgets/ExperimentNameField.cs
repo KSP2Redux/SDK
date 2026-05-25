@@ -4,10 +4,11 @@ using UnityEditor;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
 {
     /// <summary>
-    /// <see cref="AutocompleteField" /> specialised for science experiment IDs. Suggestions
-    /// come from <see cref="ExperimentNameCatalog" />, which loads addressables labelled
-    /// <c>"scienceExperiment"</c>.
+    /// <see cref="AutocompleteField" /> specialised for science experiment IDs.
     /// </summary>
+    /// <remarks>
+    /// Suggestions come from <see cref="ExperimentNameCatalog" />, which loads addressables labelled <c>"scienceExperiment"</c>.
+    /// </remarks>
     public sealed class ExperimentNameField : AutocompleteField
     {
         /// <summary>

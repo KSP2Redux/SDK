@@ -18,6 +18,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
     [TransformerEditor(typeof(ResourceContainerRemover))]
     public sealed class ResourceContainerRemoverEditor : ITransformerEditor
     {
+        /// <inheritdoc />
         public VisualElement Build(ITransformer transformer, SerializedProperty transformerProp, TransformerEditorContext context)
         {
             var outer = new VisualElement();
@@ -43,19 +44,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
 
         private static VisualElement BuildRow(SerializedProperty entry, Action onDelete, List<string> choices)
         {
-            var row = new VisualElement
-            {
-                style =
-                {
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Center,
-                    marginBottom = 2f,
-                }
-            };
+            var row = new VisualElement();
+            row.AddToClassList("data-editor-inline-row");
 
             var dropdown = new DropdownField();
-            dropdown.style.flexGrow = 1f;
-            dropdown.style.marginRight = 4f;
+            dropdown.AddToClassList("data-editor-inline-row__grow");
 
             if (choices.Count == 0)
             {

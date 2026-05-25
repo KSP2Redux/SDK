@@ -102,6 +102,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Windows
 
             _useActiveButton.clicked += UseActivePart;
             _runQuickButton.clicked += () => Run(ValidatorCost.Cheap);
+            // Null cost filter runs both cheap + expensive and writes the expensive results into
+            // PartValidationExpensiveCache. The cache's Changed event then routes back through
+            // OnExpensiveCacheChanged to refresh this window's UI (and the inspector chip).
             _runFullButton.clicked += () => Run(null);
             _applyAllFixesButton.clicked += ApplyAllAutoFixes;
             _exportButton.clicked += ExportReport;

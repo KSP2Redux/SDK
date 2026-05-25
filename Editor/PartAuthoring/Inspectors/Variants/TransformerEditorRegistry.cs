@@ -26,15 +26,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants
         public static bool TryCreate(Type transformerType, out ITransformerEditor editor)
         {
             editor = null;
-            if (transformerType == null)
-            {
-                return false;
-            }
+            if (transformerType == null) return false;
             EnsureBuilt();
-            if (!_editorTypeByTransformerType.TryGetValue(transformerType, out var editorType))
-            {
-                return false;
-            }
+            if (!_editorTypeByTransformerType.TryGetValue(transformerType, out var editorType)) return false;
             try
             {
                 editor = Activator.CreateInstance(editorType) as ITransformerEditor;
@@ -47,34 +41,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants
             }
         }
 
-        /// <summary>
-        /// Drops the cached lookup. Next call rebuilds.
-        /// </summary>
-        public static void Invalidate()
-        {
-            _editorTypeByTransformerType = null;
-        }
-
         private static void EnsureBuilt()
         {
-            if (_editorTypeByTransformerType != null)
-            {
-                return;
-            }
+            if (_editorTypeByTransformerType != null) return;
             _editorTypeByTransformerType = new Dictionary<Type, Type>();
             foreach (var editorType in ReduxTypeCache.GetTypesWithAttribute<TransformerEditorAttribute>())
             {
                 if (!typeof(ITransformerEditor).IsAssignableFrom(editorType))
                 {
                     Debug.LogWarning(
-                        $"[TransformerEditorRegistry] {editorType.FullName} carries [TransformerEditor] but does not implement ITransformerEditor; ignored.");
+                        $"[TransformerEditorRegistry] {editorType.FullName} carries [TransformerEditor] but does not implement ITransformerEditor. Ignored.");
                     continue;
                 }
                 var attr = editorType.GetCustomAttribute<TransformerEditorAttribute>();
-                if (attr?.TransformerType == null)
-                {
-                    continue;
-                }
+                if (attr?.TransformerType == null) continue;
                 if (_editorTypeByTransformerType.TryGetValue(attr.TransformerType, out var existing))
                 {
                     Debug.LogWarning(

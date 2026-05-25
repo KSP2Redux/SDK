@@ -14,6 +14,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
     [TransformerEditor(typeof(PartScalarTransformer))]
     public sealed class PartScalarTransformerEditor : ITransformerEditor
     {
+        /// <inheritdoc />
         public VisualElement Build(ITransformer transformer, SerializedProperty transformerProp, TransformerEditorContext context)
         {
             var outer = new VisualElement();

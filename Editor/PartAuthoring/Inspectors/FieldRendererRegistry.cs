@@ -7,10 +7,12 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 {
     /// <summary>
-    /// Discovers and creates <see cref="IFieldRenderer" /> implementations registered via
-    /// <see cref="FieldRendererAttribute" />. Keyed by (target type, <see cref="FieldRendererKind" />)
-    /// so a single registry serves both array-element and direct-field dispatch.
+    /// Discovers and creates <see cref="IFieldRenderer" /> implementations registered via <see cref="FieldRendererAttribute" />.
     /// </summary>
+    /// <remarks>
+    /// Keyed by (target type, <see cref="FieldRendererKind" />) so a single registry serves both
+    /// array-element and direct-field dispatch.
+    /// </remarks>
     public static class FieldRendererRegistry
     {
         private readonly struct Key : IEquatable<Key>
@@ -34,18 +36,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         /// <summary>
         /// Attempts to create a fresh renderer instance for the given target type and kind.
         /// </summary>
+        /// <param name="type">The field type (or array element type) to look up.</param>
+        /// <param name="kind">Whether the lookup is for a direct-typed field or an array element.</param>
+        /// <param name="renderer">The instantiated renderer, if registered.</param>
+        /// <returns>True if a renderer exists, false otherwise.</returns>
         public static bool TryCreate(Type type, FieldRendererKind kind, out IFieldRenderer renderer)
         {
             renderer = null;
-            if (type == null)
-            {
-                return false;
-            }
+            if (type == null) return false;
             EnsureBuilt();
-            if (!_rendererTypeByKey.TryGetValue(new Key(type, kind), out var rendererType))
-            {
-                return false;
-            }
+            if (!_rendererTypeByKey.TryGetValue(new Key(type, kind), out var rendererType)) return false;
             try
             {
                 renderer = Activator.CreateInstance(rendererType) as IFieldRenderer;
@@ -58,34 +58,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             }
         }
 
-        /// <summary>
-        /// Drops the cached lookup. Next call rebuilds.
-        /// </summary>
-        public static void Invalidate()
-        {
-            _rendererTypeByKey = null;
-        }
-
         private static void EnsureBuilt()
         {
-            if (_rendererTypeByKey != null)
-            {
-                return;
-            }
+            if (_rendererTypeByKey != null) return;
             _rendererTypeByKey = new Dictionary<Key, Type>();
             foreach (var rendererType in ReduxTypeCache.GetTypesWithAttribute<FieldRendererAttribute>())
             {
                 if (!typeof(IFieldRenderer).IsAssignableFrom(rendererType))
                 {
                     Debug.LogWarning(
-                        $"[FieldRendererRegistry] {rendererType.FullName} carries [FieldRenderer] but does not implement IFieldRenderer; ignored.");
+                        $"[FieldRendererRegistry] {rendererType.FullName} carries [FieldRenderer] but does not implement IFieldRenderer. Ignored.");
                     continue;
                 }
                 var attr = rendererType.GetCustomAttribute<FieldRendererAttribute>();
-                if (attr?.Type == null)
-                {
-                    continue;
-                }
+                if (attr?.Type == null) continue;
                 var key = new Key(attr.Type, attr.Kind);
                 if (_rendererTypeByKey.TryGetValue(key, out var existing))
                 {

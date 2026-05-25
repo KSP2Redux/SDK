@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Parachute deployment, drag area, pressure threshold, and chute max temp from Data_Parachute.</summary>
     internal sealed class ParachuteExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             ParachuteDataObjectMirror p = ModuleResolver.FindModuleData<ParachuteDataObjectMirror>(part);

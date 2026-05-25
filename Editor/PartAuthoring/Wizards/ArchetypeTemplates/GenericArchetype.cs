@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -14,20 +14,28 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// </summary>
     public sealed class GenericArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Empty";
+        /// <inheritdoc />
         public override string Family => string.Empty;
+        /// <inheritdoc />
         public override string DisplayName => "Generic";
+        /// <inheritdoc />
         public override string Description => "Basic part with drag and color modules. Pick your own category and family.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_Drag),
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => Array.Empty<AttachNodeTemplate>();
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)

@@ -1,4 +1,4 @@
-#if REDUX
+﻿#if REDUX
 using System.Collections.Generic;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
@@ -6,6 +6,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors
     /// <summary>Pitch / yaw / roll torque from Data_ReactionWheel, in kN·m.</summary>
     internal sealed class ReactionWheelExtractor : IStockFieldExtractor
     {
+        /// <inheritdoc />
         public IEnumerable<(string Name, float Value)> Extract(StockBakePartCore part, BakeContext ctx)
         {
             ReactionWheelDataObjectMirror rw = ModuleResolver.FindModuleData<ReactionWheelDataObjectMirror>(part);

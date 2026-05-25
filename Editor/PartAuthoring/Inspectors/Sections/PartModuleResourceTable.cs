@@ -21,6 +21,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// </summary>
         /// <param name="arrayProp">A SerializedProperty pointing at a <c>List&lt;PartModuleResourceSetting&gt;</c>.</param>
         /// <param name="title">Title shown above the table. Pass null or empty to omit.</param>
+        /// <returns>The built table element.</returns>
         public static VisualElement Build(SerializedProperty arrayProp, string title)
         {
             var table = new SerializedArrayTable(

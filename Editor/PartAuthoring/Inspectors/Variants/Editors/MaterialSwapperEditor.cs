@@ -20,6 +20,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
         private const string MATERIAL_INSTANCE_SUFFIX = " (Instance)";
         private const string MATERIAL_CLONE_SUFFIX = " (Clone)";
 
+        /// <inheritdoc />
         public VisualElement Build(ITransformer transformer, SerializedProperty transformerProp, TransformerEditorContext context)
         {
             var outer = new VisualElement();

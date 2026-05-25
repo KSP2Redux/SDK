@@ -16,6 +16,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     {
         private const float G0 = 9.80665f;
 
+        /// <summary>
+        /// Reads the current value of a tracked stock field from an in-memory authored part.
+        /// </summary>
+        /// <param name="fieldName">Name of the tracked field, as defined in <see cref="StockFieldNames" />.</param>
+        /// <param name="target">Authored part to read from.</param>
+        /// <param name="value">Receives the read value when the call succeeds, otherwise zero.</param>
+        /// <returns>True if the field was found and read, false otherwise.</returns>
         public static bool TryRead(string fieldName, CorePartData target, out float value)
         {
             value = 0f;

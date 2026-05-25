@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Ksp2UnityTools.Editor.Reflection;
-using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
@@ -13,43 +12,23 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
     /// <remarks>
     /// Discovery is backed by <see cref="ReduxTypeCache" /> so the registry stays correct across
     /// SDK-mode and plugin-side assemblies that <c>UnityEditor.TypeCache</c> mishandles under
-    /// ThunderKit. Cache rebuilds on every domain reload.
+    /// ThunderKit. The static cache zeros on domain reload, so the next call rebuilds.
     /// </remarks>
-    [InitializeOnLoad]
     public static class ArchetypeRegistry
     {
         private static List<IPartArchetype> _instances;
 
-        static ArchetypeRegistry()
-        {
-            AssemblyReloadEvents.afterAssemblyReload += Invalidate;
-        }
-
         /// <summary>Returns one instance per concrete archetype, sorted alphabetically by type name.</summary>
-        public static IReadOnlyList<IPartArchetype> GetAll()
-        {
-            if (_instances != null)
-            {
-                return _instances;
-            }
-            _instances = Build();
-            return _instances;
-        }
+        public static IReadOnlyList<IPartArchetype> GetAll() => _instances ??= Build();
 
         /// <summary>Returns the cached instance of <paramref name="archetypeType" />, or null if not registered.</summary>
         public static IPartArchetype Find(Type archetypeType)
         {
-            if (archetypeType == null)
+            if (archetypeType == null) return null;
+            var all = GetAll();
+            for (var i = 0; i < all.Count; i++)
             {
-                return null;
-            }
-            IReadOnlyList<IPartArchetype> all = GetAll();
-            for (int i = 0; i < all.Count; i++)
-            {
-                if (all[i].GetType() == archetypeType)
-                {
-                    return all[i];
-                }
+                if (all[i].GetType() == archetypeType) return all[i];
             }
             return null;
         }
@@ -57,15 +36,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private static List<IPartArchetype> Build()
         {
             var list = new List<IPartArchetype>();
-            foreach (Type t in ReduxTypeCache.GetTypesDerivedFrom<IPartArchetype>())
+            foreach (var t in ReduxTypeCache.GetTypesDerivedFrom<IPartArchetype>())
             {
-                if (t.IsAbstract || t.IsInterface)
-                {
-                    continue;
-                }
+                if (t.IsAbstract || t.IsInterface) continue;
                 if (t.GetConstructor(Type.EmptyTypes) == null)
                 {
-                    Debug.LogWarning($"[ArchetypeRegistry] Skipping {t.FullName}: no public parameterless constructor.");
+                    Debug.LogWarning($"[ArchetypeRegistry] Skipping {t.FullName}. No public parameterless constructor.");
                     continue;
                 }
                 try
@@ -79,11 +55,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             }
             list.Sort((a, b) => StringComparer.OrdinalIgnoreCase.Compare(a.GetType().Name, b.GetType().Name));
             return list;
-        }
-
-        private static void Invalidate()
-        {
-            _instances = null;
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -12,12 +12,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
     /// <summary>Monopropellant engine - Spider, Ant, Spark.</summary>
     public sealed class MonopropEngineArchetype : PartArchetypeBase
     {
+        /// <inheritdoc />
         public override string Category => "Engines";
+        /// <inheritdoc />
         public override string Family => "0130-Monopropellant";
+        /// <inheritdoc />
         public override string DisplayName => "Monoprop engine";
+        /// <inheritdoc />
         public override string Description => "Small thruster running on monopropellant.";
+        /// <inheritdoc />
         public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.XS;
 
+        /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_Engine),
@@ -26,11 +32,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             typeof(Module_Color)
         };
 
+        /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
             new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, MetaAssemblySizeFilterType.XS)
         };
 
+        /// <inheritdoc />
         public override void SeedDefaults(CorePartData part, BucketResolution bucket)
         {
             if (part?.Data == null)
