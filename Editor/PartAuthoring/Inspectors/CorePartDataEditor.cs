@@ -25,8 +25,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
     /// </summary>
     /// <remarks>
     /// Header chrome above the tab bar surfaces identity (part name, family, size category), the
-    /// Quick Tools chip row, and a Gizmo Settings foldout. Tabs are Core, Modules, Variants,
-    /// Interacts.
+    /// Quick Tools chip row, and a Gizmo Settings foldout. Tabs are Core, Modules, Variants.
     /// </remarks>
     [CustomEditor(typeof(CorePartData))]
     public sealed class CorePartDataEditor : UnityEditor.Editor
@@ -38,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private const string DEFAULT_TAB = "core";
         private const string TAB_ACTIVE_CLASS = "part-tab--active";
 
-        private static readonly string[] TAB_IDS = { "core", "modules", "variants", "interacts" };
+        private static readonly string[] TAB_IDS = { "core", "modules", "variants" };
 
         private VisualElement _root;
         private VisualElement _tabContent;
@@ -543,18 +542,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 case "variants":
                     _tabContent.Add(VariantsTab.Build((CorePartData)target));
                     break;
-                case "interacts":
-                    _tabContent.Add(BuildPlaceholder());
-                    break;
                 default:
-                    _tabContent.Add(BuildPlaceholder());
+                    _tabContent.Add(new HelpBox($"Unknown tab '{_activeTab}'.", HelpBoxMessageType.Error));
                     break;
             }
-        }
-
-        private static HelpBox BuildPlaceholder()
-        {
-            return new HelpBox("Coming soon.", HelpBoxMessageType.Info);
         }
     }
 }

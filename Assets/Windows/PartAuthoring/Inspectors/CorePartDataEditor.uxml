@@ -69,7 +69,6 @@
             <engine:Button name="tab-core"      text="Core"      class="part-tab" />
             <engine:Button name="tab-modules"   text="Modules"   class="part-tab" />
             <engine:Button name="tab-variants"  text="Variants"  class="part-tab" />
-            <engine:Button name="tab-interacts" text="Interacts" class="part-tab" />
         </engine:VisualElement>
 
         <engine:VisualElement name="part-tab-content" class="part-tab-content" />
