@@ -42,9 +42,24 @@
             <engine:VisualElement class="part-inspector-gizmos-row">
                 <engine:Label text="Gizmos:" class="part-inspector-section-label" />
                 <engine:VisualElement class="part-inspector-gizmo-pill-row">
-                    <engine:Button name="gizmo-pill-com"    text="Center of Mass" class="part-inspector-gizmo-pill" />
-                    <engine:Button name="gizmo-pill-col"    text="Center of Lift" class="part-inspector-gizmo-pill" />
-                    <engine:Button name="gizmo-pill-attach" text="Attach Nodes"   class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-com"           text="Center of Mass"         class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-col"           text="Center of Lift"         class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-attach"        text="Attach Nodes"           class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-virtual-parts" text="Virtual Attached Parts" class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-engine-thrust" text="Engine Thrust"            class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-gimbal-cone"   text="Gimbal Range"             class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-rcs-thrusters" text="RCS Thrusters"            class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-drag-cubes"      text="Drag Cubes"               class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-fairing-preview" text="Fairing Preview"          class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-lift-arrow"        text="Lift Direction"           class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-control-arc"       text="Control Surface Arc"      class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-cargo-volume"      text="Cargo Bay Volume"         class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-fairing-ejection"  text="Fairing Ejection"         class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-decouple-split"    text="Decouple Split"           class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-docking-frame"     text="Docking Frame"            class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-solar-incidence"   text="Solar Incidence"          class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-intake-direction"  text="Intake Direction"         class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-radiator-surface"  text="Radiator Surface"         class="part-inspector-gizmo-pill" />
                 </engine:VisualElement>
             </engine:VisualElement>
 

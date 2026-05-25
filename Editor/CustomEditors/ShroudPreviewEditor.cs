@@ -4,6 +4,7 @@ using System.Reflection;
 using KSP;
 using KSP.Modules;
 using KSP.OAB;
+using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -49,9 +50,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         [DrawGizmo(GizmoType.Active | GizmoType.Selected)]
         private static void DrawGizmoForFairing(Module_Fairing module, GizmoType gizmoType)
         {
-            if (module == null ||
-                !SettingsByModule.TryGetValue(module.GetInstanceID(), out var settings) ||
-                !settings.Enabled)
+            if (module == null || !PartAuthoringGizmoSettings.ShowFairingPreview)
             {
                 return;
             }
@@ -62,9 +61,12 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 return;
             }
 
+            SettingsByModule.TryGetValue(module.GetInstanceID(), out var settings);
+            string targetKey = settings?.TargetSizeKey ?? GetDefaultTargetKey(module, fairing);
+
             var moduleTransform = module.gameObject.transform;
             var modelTransform = GetPreviewModelTransform(moduleTransform);
-            var metrics = CalculateMetrics(fairing, settings.TargetSizeKey, modelTransform);
+            var metrics = CalculateMetrics(fairing, targetKey, modelTransform);
             DrawFrustum(modelTransform != null ? modelTransform : moduleTransform, fairing, metrics);
         }
 

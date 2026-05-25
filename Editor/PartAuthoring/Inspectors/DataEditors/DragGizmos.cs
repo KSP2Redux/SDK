@@ -1,17 +1,16 @@
 using System.Globalization;
 using KSP.Modules;
+using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
 {
     /// <summary>
-    /// SceneView gizmo renderer for <see cref="Module_Drag" />'s drag cubes. Toggled by the
-    /// "Visualize Drag Cubes" checkbox in the drag-cube tools section (stored in EditorPrefs).
+    /// SceneView gizmo renderer for <see cref="Module_Drag" />'s drag cubes. Toggled by the unified "Drag Cubes" pill in the Core inspector's gizmo row (backed by <see cref="PartAuthoringGizmoSettings.ShowDragCubes" />).
     /// </summary>
     public static class DragGizmos
     {
-        private const string PREFS_VISUALIZE_CUBES = "Ksp2UnityTools.Drag.VisualizeCubes";
         private const float DRAG_FACE_PANEL_ALPHA = 0.45f;
         private const float DRAG_FACE_LINE_ALPHA = 0.9f;
         private const float DRAG_FACE_OFFSET = 0.015f;
@@ -21,7 +20,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
         [DrawGizmo(GizmoType.Active | GizmoType.Selected)]
         private static void DrawGizmosForDrag(Module_Drag moduleDrag, GizmoType gizmoType)
         {
-            if (!EditorPrefs.GetBool(PREFS_VISUALIZE_CUBES, false))
+            if (!PartAuthoringGizmoSettings.ShowDragCubes)
             {
                 return;
             }

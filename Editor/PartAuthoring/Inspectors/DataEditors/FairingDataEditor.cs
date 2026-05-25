@@ -566,15 +566,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
 
             var settings = ShroudPreviewEditor.GetOrCreateSettings(fairingModule, fairing);
 
-            var showToggle = new Toggle("Show Scene Preview") { value = settings.Enabled };
-            showToggle.AddToClassList("unity-base-field__aligned");
-            showToggle.RegisterValueChangedCallback(evt =>
-            {
-                settings.Enabled = evt.newValue;
-                SceneView.RepaintAll();
-            });
-            foldout.Add(showToggle);
-
             // Target Part Size popup. Index-based so display label and stored key stay linked.
             var sizeDefs = PartSizeRegistry.Definitions;
             var sizeOptions = new List<string>(sizeDefs.Count);
