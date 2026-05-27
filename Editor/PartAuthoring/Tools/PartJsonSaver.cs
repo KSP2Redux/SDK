@@ -42,7 +42,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             var prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
             if (string.IsNullOrEmpty(prefabPath)) return;
 
-            var path = Path.GetDirectoryName(prefabPath) + $"/{target.name}.json";
+            // Use the canonical partName from the data so scene-instance renames don't fragment exports
+            // into new files. Matches the addressable key constructed below.
+            var partName = !string.IsNullOrEmpty(target.Core.data.partName) ? target.Core.data.partName : target.name;
+            var path = Path.GetDirectoryName(prefabPath) + $"/{partName}.json";
 
             if (!_initialized)
             {
