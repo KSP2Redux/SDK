@@ -186,6 +186,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         {
             var row = new VisualElement();
             row.AddToClassList("serialized-array-table__row");
+            if ((index & 1) == 1)
+            {
+                row.AddToClassList("serialized-array-table__row--alt");
+            }
 
             var element = _arrayProp.GetArrayElementAtIndex(index);
 

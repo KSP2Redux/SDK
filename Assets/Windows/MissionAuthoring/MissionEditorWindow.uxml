@@ -4,6 +4,7 @@
         <VisualElement name="header" class="mission-editor-header">
             <Label name="missionTitle" text="Mission: ..." />
             <Button name="bake-json-chip" text="Bake JSON" class="mission-editor-action-chip mission-editor-readiness-chip mission-editor-readiness-chip--clickable" />
+            <Button name="export-localizations-chip" text="Export Localizations" class="mission-editor-action-chip mission-editor-readiness-chip mission-editor-readiness-chip--clickable" />
             <Button name="readiness-chip-valid" class="mission-editor-readiness-chip mission-editor-readiness-chip--clickable" />
         </VisualElement>
         <VisualElement name="stripHost" class="mission-editor-strip-host" />

@@ -9,6 +9,7 @@ using KSP.Rendering.Planets;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.IO;
+using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Windows;
@@ -81,6 +82,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             WireQuickToolButton(root, "quick-preview-controls", PreviewControlsWindow.ShowWindow);
             WireQuickToolButton(root, "quick-landmark-manager", PlanetAuthoringWindows.ShowLandmarkManager);
+            WireQuickToolButton(root, "quick-export-localizations", () => LocExportFlow.RunForAsset(TargetObject));
 
             BuildSaveSection(root.Q<VisualElement>("save-section-content"));
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));

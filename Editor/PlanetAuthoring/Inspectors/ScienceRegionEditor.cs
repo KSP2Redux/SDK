@@ -142,7 +142,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
         }
 
-        // ----- Source map section -------------------------------------------
+        #region Source map section
 
         private void RefreshSourceMapSection()
         {
@@ -170,7 +170,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _sourceMapWarnings.Add(label);
         }
 
-        // ----- Regions section ----------------------------------------------
+        #endregion
+
+        #region Regions section
 
         private void RefreshRegionsSection()
         {
@@ -236,7 +238,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             {
                 value = def.Id,
                 isDelayed = true,
-                tooltip = "Region identifier. Matches ScienceRegionId on discoverables and the localization key under Science/Regions/.",
+                tooltip = "Region identifier. Matches ScienceRegionId on discoverables and the localization key under Science/Regions/. Stock convention concatenates body name and region name (e.g. Minmus + BalancingRock -> MinmusBalancingRock) so Ids are unique across bodies.",
                 style = { flexGrow = 1f, flexShrink = 1f, minWidth = 60f },
             };
             idField.RegisterValueChangedCallback(evt => OnRegionIdChanged(index, evt.newValue));
@@ -282,6 +284,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 var warn = new Label($"Color within {ColorCollisionTolerance:0.00} of '{all[collisionIdx].Id}' (MapId {all[collisionIdx].MapId}). Bake may misclassify boundary pixels.");
                 warn.AddToClassList("science-region-region-row-warning");
                 row.Add(warn);
+            }
+
+            var bodyName = Target?.information?.BodyName;
+            if (!string.IsNullOrEmpty(def.Id) && !string.IsNullOrEmpty(bodyName)
+                && !def.Id.StartsWith(bodyName, StringComparison.OrdinalIgnoreCase))
+            {
+                var conventionWarn = new Label($"Id doesn't start with body name '{bodyName}'. Stock convention concatenates body + region for unique localization keys.");
+                conventionWarn.AddToClassList("science-region-region-row-warning");
+                row.Add(conventionWarn);
             }
             return row;
         }
@@ -407,9 +418,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
             var next = new ScienceRegionData.ExtendedScienceRegionDefinition[defs.Length + 1];
             Array.Copy(defs, next, defs.Length);
+            var bodyName = Target?.information?.BodyName;
+            var newId = string.IsNullOrEmpty(bodyName)
+                ? $"Region {defs.Length + 1}"
+                : $"{bodyName}Region{defs.Length + 1}";
             next[^1] = new ScienceRegionData.ExtendedScienceRegionDefinition
             {
-                Id = $"Region {defs.Length + 1}",
+                Id = newId,
                 MapId = nextMapId,
                 AtmosphereScalar = 1f,
                 SplashedScalar = 1f,
@@ -429,7 +444,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             EditorUtility.SetDirty(Target);
         }
 
-        // ----- Discoverables section ----------------------------------------
+        #endregion
+
+        #region Discoverables section
 
         private void RefreshDiscoverablesSection()
         {
@@ -539,7 +556,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             {
                 value = region.Id,
                 isDelayed = true,
-                tooltip = "Discoverable name (also the region's Id, used as the localization key under Science/Regions/). Renaming cascades to every position that references this discoverable.",
+                tooltip = "Discoverable name (also the region's Id, used as the localization key under Science/Regions/). Renaming cascades to every position that references this discoverable. Stock convention concatenates body name and discoverable name (e.g. Minmus + BalancingRock -> MinmusBalancingRock) so Ids are unique across bodies.",
                 style = { flexGrow = 1f, minWidth = 60f },
             };
             nameField.RegisterValueChangedCallback(evt => OnDiscoverableRegionRenamed(regionIndex, evt.previousValue, evt.newValue));
@@ -928,7 +945,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             RefreshDiscoverablesSection();
         }
 
-        // ----- Bake section -------------------------------------------------
+        #endregion
+
+        #region Bake section
 
         private void RefreshBakeStatus()
         {
@@ -1000,7 +1019,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             LandmarkManagerWindow.ShowWindow();
         }
 
-        // ----- Scene-view discoverable handles + orbs -----------------------
+        #endregion
+
+        #region Scene-view discoverable handles and orbs
 
         private VisualElement BuildShowOrbsToggle()
         {
@@ -1086,6 +1107,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             Handles.EndGUI();
         }
 
+        #endregion
     }
 
     /// <summary>

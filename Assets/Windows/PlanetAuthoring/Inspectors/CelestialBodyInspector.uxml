@@ -21,6 +21,7 @@
         <engine:Foldout text="Quick Tools" value="true" class="body-inspector-section body-inspector-quick-tools">
             <engine:Button name="quick-preview-controls" text="Preview Controls" />
             <engine:Button name="quick-landmark-manager" text="Landmark Manager" />
+            <engine:Button name="quick-export-localizations" text="Export Localizations" tooltip="Export this body's loc keys (incl. sibling science region keys) to a CSV." />
         </engine:Foldout>
 
         <engine:VisualElement class="body-inspector-body-data">

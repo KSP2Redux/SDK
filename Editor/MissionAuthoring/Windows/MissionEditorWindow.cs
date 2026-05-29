@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using KSP.Game.Missions.Definitions;
+using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.MissionAuthoring.StageStrip;
 using Ksp2UnityTools.Editor.MissionAuthoring.Validation;
 using Ksp2UnityTools.Editor.Validation;
@@ -25,6 +26,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Windows
         private Label _missionTitleLabel;
         private Button _validationChip;
         private Button _bakeJsonChip;
+        private Button _exportLocalizationsChip;
 
         [OnOpenAsset]
         private static bool OnOpenMissionAsset(int instanceID, int line)
@@ -93,6 +95,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Windows
             _missionTitleLabel = rootVisualElement.Q<Label>("missionTitle");
             _validationChip = rootVisualElement.Q<Button>("readiness-chip-valid");
             _bakeJsonChip = rootVisualElement.Q<Button>("bake-json-chip");
+            _exportLocalizationsChip = rootVisualElement.Q<Button>("export-localizations-chip");
             var stripHost = rootVisualElement.Q<VisualElement>("stripHost");
 
             _stripView = new StageStripView();
@@ -109,10 +112,21 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Windows
                 _bakeJsonChip.clicked += OnBakeJsonChipClicked;
                 _bakeJsonChip.tooltip = "Bake the current mission to JSON and register it as an addressable using the mission's ID.";
             }
+            if (_exportLocalizationsChip != null)
+            {
+                _exportLocalizationsChip.clicked += OnExportLocalizationsChipClicked;
+                _exportLocalizationsChip.tooltip = "Export this mission's loc keys (incl. per-stage keys) to a CSV.";
+            }
             MissionValidationExpensiveCache.Changed += OnExpensiveCacheChanged;
 
             if (_boundMission != null) BindMission(_boundMission);
             else UpdateValidationChip();
+        }
+
+        private void OnExportLocalizationsChipClicked()
+        {
+            if (_boundMission == null) return;
+            LocExportFlow.RunForAsset(_boundMission);
         }
 
         private void OnDisable()

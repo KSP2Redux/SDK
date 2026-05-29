@@ -5,6 +5,7 @@ using KSP;
 using KSP.Modules;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.IO;
+using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs;
@@ -322,6 +323,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             WireChip("chip-reexport-json", () => PartJsonSaver.Save((CorePartData)target));
             WireChip("chip-open-prefab", OpenPrefab);
             WireChip("chip-open-reference-parts", Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows.ReferencePartsWindow.ShowWindow);
+            WireChip("chip-export-localizations", () => LocExportFlow.RunForAsset(((CorePartData)target).gameObject));
         }
 
         private void WireChip(string name, Action onClick)
