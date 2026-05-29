@@ -1,3 +1,4 @@
+using System.Linq;
 using Ksp2UnityTools.Editor;
 using Ksp2UnityTools.Editor.PlanetAuthoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors;
@@ -65,6 +66,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
             if (tree != null)
                 tree.CloneTree(this);
+
+            // BaseField(label, null) still adds an empty .unity-base-field__input sibling that competes
+            // with the cloned UXML's __input for row space. Remove it so the cloned wrapper owns the input slot.
+            this.Children()
+                .FirstOrDefault(c => c.ClassListContains("unity-base-field__input") && c.childCount == 0)
+                ?.RemoveFromHierarchy();
 
             var styles = AssetDatabase.LoadAssetAtPath<StyleSheet>(SDKConfiguration.BasePath + UssPath);
             if (styles != null)
