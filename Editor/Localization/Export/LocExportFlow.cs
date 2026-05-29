@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using KSP;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Localization.Windows;
@@ -15,6 +16,16 @@ namespace Ksp2UnityTools.Editor.Localization.Export
     /// </summary>
     public static class LocExportFlow
     {
+        private const string PartsFilename = "parts_loc.csv";
+        private const string CelestialBodyFilename = "celestialbody_loc.csv";
+        private const string MissionsFilename = "missions_loc.csv";
+        private const string ModSubpath = "Copied/localizations";
+        private const string ProjectLocFolder = "Assets/ReduxAssets/Localizations";
+
+        /// <summary>
+        /// Dispatches the asset to the matching extractor and opens the export modal with the result.
+        /// </summary>
+        /// <param name="asset">The selected asset to export localization keys for.</param>
         public static void RunForAsset(Object asset)
         {
             if (asset == null)
@@ -31,18 +42,18 @@ namespace Ksp2UnityTools.Editor.Localization.Export
                 if (go.TryGetComponent<CorePartData>(out var corePart))
                 {
                     entries = PartLocalizationExtractor.Extract(corePart);
-                    defaultFilename = "parts_loc.csv";
+                    defaultFilename = PartsFilename;
                 }
                 else if (go.TryGetComponent<CoreCelestialBodyData>(out var coreBody))
                 {
                     entries = CelestialBodyLocalizationExtractor.Extract(coreBody);
-                    defaultFilename = "celestialbody_loc.csv";
+                    defaultFilename = CelestialBodyFilename;
                 }
             }
             else if (asset is Mission mission)
             {
                 entries = MissionLocalizationExtractor.Extract(mission);
-                defaultFilename = "missions_loc.csv";
+                defaultFilename = MissionsFilename;
             }
 
             if (entries == null || defaultFilename == null)
@@ -58,11 +69,19 @@ namespace Ksp2UnityTools.Editor.Localization.Export
         private static string ResolveDefaultTargetPath(Object asset, string filename)
         {
             var mod = KSP2UnityTools.FindParentMod(asset);
-            if (mod != null && !string.IsNullOrEmpty(mod.id))
+            if (mod != null)
             {
-                return $"Assets/{mod.id}/Copied/localizations/{filename}";
+                var modAssetPath = AssetDatabase.GetAssetPath(mod);
+                if (!string.IsNullOrEmpty(modAssetPath))
+                {
+                    var modFolder = Path.GetDirectoryName(modAssetPath)?.Replace('\\', '/');
+                    if (!string.IsNullOrEmpty(modFolder))
+                    {
+                        return $"{modFolder}/{ModSubpath}/{filename}";
+                    }
+                }
             }
-            return "Assets/ReduxAssets/Localizations/" + filename;
+            return $"{ProjectLocFolder}/{filename}";
         }
     }
 }

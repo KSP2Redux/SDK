@@ -10,14 +10,19 @@ namespace Ksp2UnityTools.Editor.Localization.Export
     /// </summary>
     public static class MissionLocalizationExtractor
     {
+        /// <summary>
+        /// Extracts the top-level and per-stage localization keys for the given mission asset.
+        /// </summary>
+        /// <param name="mission">The mission asset to scan.</param>
+        /// <returns>The collected localization key entries, or an empty list when the asset is missing mission data.</returns>
         public static List<LocalizationKeyEntry> Extract(Mission mission)
         {
             var entries = new List<LocalizationKeyEntry>();
-            if (mission == null || mission.missionData == null) return entries;
+            if (mission?.missionData == null) return entries;
             var data = mission.missionData;
             var missionId = string.IsNullOrEmpty(data.ID) ? mission.name : data.ID;
             var assetPath = AssetDatabase.GetAssetPath(mission);
-            var sourceHint = $"Mission: {missionId} ({assetPath})";
+            var sourceHint = LocalizationSourceHint.Format(nameof(Mission), missionId, assetPath);
 
             if (!string.IsNullOrEmpty(data.name))
             {

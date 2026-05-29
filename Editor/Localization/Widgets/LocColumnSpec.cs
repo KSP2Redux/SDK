@@ -1,15 +1,6 @@
 namespace Ksp2UnityTools.Editor.Localization.Widgets
 {
     /// <summary>
-    /// Cell widget kinds supported by <see cref="LocTableView" />.
-    /// </summary>
-    public enum LocCellKind
-    {
-        /// <summary>Single-line string cell backed by a <see cref="UnityEngine.UIElements.TextField" />.</summary>
-        Text,
-    }
-
-    /// <summary>
     /// Per-column spec used to lay out and persist <see cref="LocTableView" /> columns.
     /// </summary>
     /// <remarks>
@@ -30,9 +21,6 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
 
         /// <summary>Minimum cell width in pixels. The resize handle clamps to this value.</summary>
         public float MinWidth = 60f;
-
-        /// <summary>Cell widget kind.</summary>
-        public LocCellKind Kind = LocCellKind.Text;
 
         /// <summary>When true, this column is rendered in the sticky-left frozen area.</summary>
         public bool Frozen;

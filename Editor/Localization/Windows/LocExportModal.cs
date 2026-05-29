@@ -32,6 +32,11 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
         private RadioButton _appendRadio;
         private RadioButton _refreshRadio;
 
+        /// <summary>
+        /// Opens the modal preloaded with the given entries and a default target CSV path.
+        /// </summary>
+        /// <param name="entries">The localization key entries to export.</param>
+        /// <param name="defaultTargetPath">The initial target CSV path to populate the path field with.</param>
         public static void Open(List<LocalizationKeyEntry> entries, string defaultTargetPath)
         {
             var window = CreateInstance<LocExportModal>();
@@ -76,7 +81,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
         private void OnBrowse()
         {
-            var current = _pathField.value ?? string.Empty;
+            var current = _pathField.value?.Trim() ?? string.Empty;
             var startDir = string.IsNullOrEmpty(current) ? "Assets/ReduxAssets/Localizations" : Path.GetDirectoryName(current);
             var startName = string.IsNullOrEmpty(current) ? "loc.csv" : Path.GetFileName(current);
             var picked = EditorUtility.SaveFilePanel("Choose target CSV", startDir, startName, "csv");
@@ -103,23 +108,17 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
         private string BuildPreviewText()
         {
-            var path = _pathField.value;
+            var path = _pathField.value?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(path)) return "(no target path)";
             if (_entries == null || _entries.Count == 0) return "(no entries to export)";
 
-            Dictionary<string, LocRow> existing = null;
+            IEnumerable<LocRow> existingRows = null;
             if (File.Exists(path))
             {
                 try
                 {
                     var text = File.ReadAllText(path);
-                    var parsed = LocCsvReader.Parse(text, path);
-                    existing = new Dictionary<string, LocRow>(StringComparer.Ordinal);
-                    foreach (var row in parsed.Rows)
-                    {
-                        var k = row.Get("Key");
-                        if (!string.IsNullOrEmpty(k)) existing[k] = row;
-                    }
+                    existingRows = LocCsvReader.Parse(text, path).Rows;
                 }
                 catch (Exception e)
                 {
@@ -127,54 +126,32 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
                 }
             }
 
-            var newKeys = new List<string>();
-            var descUpdates = new List<string>();
-            int unchanged = 0;
-
-            foreach (var entry in _entries)
-            {
-                if (string.IsNullOrEmpty(entry.Key)) continue;
-                if (existing != null && existing.TryGetValue(entry.Key, out var row))
-                {
-                    if (_mode == MergeMode.RefreshDescriptions && row.Get("Desc") != entry.Description)
-                    {
-                        descUpdates.Add(entry.Key);
-                    }
-                    else
-                    {
-                        unchanged++;
-                    }
-                }
-                else
-                {
-                    newKeys.Add(entry.Key);
-                }
-            }
+            var classification = CsvMergeWriter.Classify(_entries, existingRows, _mode);
 
             var sb = new StringBuilder();
             sb.AppendLine("Will write: " + path);
             sb.AppendLine();
-            sb.AppendLine($"New rows ({newKeys.Count}):");
-            AppendCapped(sb, newKeys, "+ ");
+            sb.AppendLine($"New rows ({classification.NewKeys.Count}):");
+            AppendCapped(sb, classification.NewKeys, "+ ");
             sb.AppendLine();
-            sb.AppendLine($"Description updates ({descUpdates.Count}):");
-            if (_mode == MergeMode.AppendOnly && descUpdates.Count == 0)
+            sb.AppendLine($"Description updates ({classification.DescUpdates.Count}):");
+            if (_mode == MergeMode.AppendOnly && classification.DescUpdates.Count == 0)
             {
                 sb.AppendLine("  (none - append-only mode)");
             }
             else
             {
-                AppendCapped(sb, descUpdates, "~ ");
+                AppendCapped(sb, classification.DescUpdates, "~ ");
             }
             sb.AppendLine();
-            sb.AppendLine("Unchanged: " + unchanged);
+            sb.AppendLine("Unchanged: " + classification.Unchanged);
             return sb.ToString();
         }
 
         private static void AppendCapped(StringBuilder sb, List<string> items, string prefix)
         {
-            int cap = items.Count < PreviewLimit ? items.Count : PreviewLimit;
-            for (int i = 0; i < cap; i++)
+            var cap = Math.Min(items.Count, PreviewLimit);
+            for (var i = 0; i < cap; i++)
             {
                 sb.Append("  ").Append(prefix).AppendLine(items[i]);
             }
@@ -186,7 +163,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
         private void OnExport()
         {
-            var path = _pathField.value;
+            var path = _pathField.value?.Trim() ?? string.Empty;
             if (string.IsNullOrEmpty(path))
             {
                 _previewLabel.text = "Pick a target CSV first.";

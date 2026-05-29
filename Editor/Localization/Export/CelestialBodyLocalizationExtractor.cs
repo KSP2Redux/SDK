@@ -12,17 +12,22 @@ namespace Ksp2UnityTools.Editor.Localization.Export
     /// </summary>
     public static class CelestialBodyLocalizationExtractor
     {
+        /// <summary>
+        /// Extracts the display, description, and science region localization keys for the given celestial body asset.
+        /// </summary>
+        /// <param name="coreBody">The celestial body data asset to scan.</param>
+        /// <returns>The collected localization key entries, or an empty list when the asset is missing data or a body name.</returns>
         public static List<LocalizationKeyEntry> Extract(CoreCelestialBodyData coreBody)
         {
             var entries = new List<LocalizationKeyEntry>();
-            if (coreBody == null || coreBody.Data == null) return entries;
+            if (coreBody?.Data == null) return entries;
 
             var body = coreBody.Data;
             var bodyName = body.bodyName;
             if (string.IsNullOrEmpty(bodyName)) return entries;
 
             var assetPath = AssetDatabase.GetAssetPath(coreBody);
-            var sourceHint = $"CoreCelestialBodyData: {bodyName} ({assetPath})";
+            var sourceHint = LocalizationSourceHint.Format(nameof(CoreCelestialBodyData), bodyName, assetPath);
 
             var displayKey = string.IsNullOrEmpty(body.bodyDisplayName)
                 ? "CelestialBody/" + bodyName

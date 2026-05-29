@@ -11,10 +11,11 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.Localization.Windows
 {
     /// <summary>
-    /// Editor window that opens an I2-format localization CSV, mounts it in a <see cref="LocTableView" />,
-    /// and writes edits back to disk via <see cref="LocCsvWriter" />. Hijacks double-click on matching
-    /// CSV TextAssets through <see cref="UnityEditor.Callbacks.OnOpenAssetAttribute" />.
+    /// Editor window that opens an I2-format localization CSV, mounts it in a <see cref="LocTableView" />, and writes edits back to disk via <see cref="LocCsvWriter" />.
     /// </summary>
+    /// <remarks>
+    /// Hijacks double-click on matching CSV TextAssets through <see cref="UnityEditor.Callbacks.OnOpenAssetAttribute" />.
+    /// </remarks>
     public sealed class LocCsvEditorWindow : EditorWindow
     {
         private const string UxmlPath = "/Assets/Windows/Localization/Windows/LocCsvEditorWindow.uxml";
@@ -27,7 +28,6 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
         private List<LocColumnSpec> _columns;
         private List<LocRow> _rows;
-        private string _lineEnding = "\n";
         private bool _hasTrailingNewline = true;
         private bool _dirty;
         private DateTime _lastDiskModTime;
@@ -46,6 +46,12 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
         #region Open hooks
 
+        /// <summary>
+        /// Intercepts double-click on a CSV asset and opens it in this window when the file's first line matches the I2 header signature.
+        /// </summary>
+        /// <param name="instanceID">The Unity instance ID of the asset being opened.</param>
+        /// <param name="line">The target line number requested by the caller. Unused.</param>
+        /// <returns>True if the asset was handled by this window, false otherwise.</returns>
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceID, int line)
         {
@@ -66,6 +72,9 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             return true;
         }
 
+        /// <summary>
+        /// Prompts the user to pick a CSV file through the standard open-file panel and opens it in this window.
+        /// </summary>
         [MenuItem("Modding/Localization/Open CSV Editor...")]
         public static void OpenFromMenu()
         {
@@ -75,12 +84,15 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             Open(path);
         }
 
+        /// <summary>
+        /// Opens or focuses the editor window and loads the CSV at the given path.
+        /// </summary>
+        /// <param name="path">Path to the CSV file. Project-relative paths under <c>Assets/</c> import through the asset database after save.</param>
         public static void Open(string path)
         {
             var window = GetWindow<LocCsvEditorWindow>();
             window.minSize = new Vector2(700, 320);
             window._filePath = path;
-            window.LoadFile();
             window.Show();
             window.Focus();
         }
@@ -128,7 +140,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             _statusLabel = _rootHost.Q<Label>("status");
 
             _columnsBtn.clicked += OnColumnsClicked;
-            _saveBtn.clicked += OnSaveClicked;
+            _saveBtn.clicked += WriteToDisk;
             _validateBtn.clicked += OnValidateClicked;
             _saveBtn.SetEnabled(false);
             _columnsBtn.SetEnabled(false);
@@ -199,7 +211,6 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             var parsed = LocCsvReader.Parse(text, _filePath);
             _columns = parsed.Columns;
             _rows = parsed.Rows;
-            _lineEnding = parsed.LineEnding;
             _hasTrailingNewline = parsed.HasTrailingNewline;
             _lastDiskModTime = File.GetLastWriteTime(_filePath);
             _dirty = false;
@@ -209,7 +220,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
             MountTable();
             UpdateTitle();
-            UpdateStatus();
+            RefreshStatus();
             _saveBtn.SetEnabled(false);
             _columnsBtn.SetEnabled(true);
         }
@@ -233,13 +244,8 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             if (_dirty) return;
             _dirty = true;
             UpdateTitle();
-            UpdateStatus();
+            RefreshStatus();
             _saveBtn.SetEnabled(true);
-        }
-
-        private void OnSaveClicked()
-        {
-            WriteToDisk();
         }
 
         private void WriteToDisk()
@@ -247,7 +253,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             if (string.IsNullOrEmpty(_filePath) || _columns == null || _rows == null) return;
             try
             {
-                LocCsvWriter.Write(_filePath, _columns, _rows, _lineEnding, _hasTrailingNewline);
+                LocCsvWriter.Write(_filePath, _columns, _rows, _hasTrailingNewline);
             }
             catch (Exception e)
             {
@@ -262,7 +268,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             }
             _dirty = false;
             UpdateTitle();
-            UpdateStatus($"Saved at {DateTime.Now:HH:mm:ss}.");
+            SetStatus($"Saved at {DateTime.Now:HH:mm:ss}.");
             _saveBtn.SetEnabled(false);
         }
 
@@ -275,13 +281,13 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             var issues = ValidateAll();
             if (issues.Count == 0)
             {
-                UpdateStatus("Validation passed.");
+                SetStatus("Validation passed.");
                 return;
             }
-            int preview = issues.Count > 3 ? 3 : issues.Count;
-            string head = string.Join(" | ", issues.GetRange(0, preview));
-            string suffix = issues.Count > preview ? $" (+{issues.Count - preview} more)" : string.Empty;
-            UpdateStatus($"Validation: {issues.Count} issue(s). {head}{suffix}");
+            var preview = issues.Count > 3 ? 3 : issues.Count;
+            var head = string.Join(" | ", issues.GetRange(0, preview));
+            var suffix = issues.Count > preview ? $" (+{issues.Count - preview} more)" : string.Empty;
+            SetStatus($"Validation: {issues.Count} issue(s). {head}{suffix}");
         }
 
         private List<string> ValidateAll()
@@ -289,7 +295,6 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             var issues = new List<string>();
             if (_rows == null || _columns == null) return issues;
 
-            var headerCount = _columns.Count;
             var seenKeys = new HashSet<string>();
             for (int i = 0; i < _rows.Count; i++)
             {
@@ -348,13 +353,13 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             titleContent = new GUIContent(prefix + (string.IsNullOrEmpty(fileName) ? "Loc Editor" : fileName));
         }
 
-        private void UpdateStatus(string overrideText = null)
+        private void SetStatus(string text)
         {
-            if (overrideText != null)
-            {
-                _statusLabel.text = overrideText;
-                return;
-            }
+            _statusLabel.text = text;
+        }
+
+        private void RefreshStatus()
+        {
             if (_rows == null || _columns == null)
             {
                 _statusLabel.text = string.Empty;

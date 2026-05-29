@@ -17,6 +17,13 @@ namespace Ksp2UnityTools.Editor.Localization.Export
         /// <summary>Free-form provenance string for debugging and preview diffs.</summary>
         public string SourceHint { get; }
 
+        /// <summary>
+        /// Constructs an immutable localization key entry. Null inputs are normalized to empty strings.
+        /// </summary>
+        /// <param name="key">The loc key string.</param>
+        /// <param name="defaultEnglish">The suggested English default value.</param>
+        /// <param name="description">The translator-facing context.</param>
+        /// <param name="sourceHint">The free-form provenance string.</param>
         public LocalizationKeyEntry(string key, string defaultEnglish, string description, string sourceHint)
         {
             Key = key ?? string.Empty;

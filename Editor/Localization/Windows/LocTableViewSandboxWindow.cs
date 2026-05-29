@@ -18,7 +18,6 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
     public sealed class LocTableViewSandboxWindow : EditorWindow
     {
         private const string SandboxPersistenceKey = "__sandbox__";
-        private const string UssPath = "/Assets/Windows/Localization/Widgets/LocTableView.uss";
 
         private static readonly string[] LanguageColumns =
         {
@@ -34,6 +33,9 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
         private LocTableView _table;
         private VisualElement _tableHost;
 
+        /// <summary>
+        /// Opens or focuses the sandbox window populated with mock localization data.
+        /// </summary>
         [MenuItem("Modding/Localization/(dev) LocTableView Sandbox")]
         public static void Open()
         {
@@ -45,7 +47,6 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
 
         private void CreateGUI()
         {
-            Ksp2UnityToolsStyles.Apply(rootVisualElement, UssPath);
             rootVisualElement.style.flexGrow = 1f;
 
             var toolbar = BuildToolbar();
@@ -75,7 +76,7 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
                 },
             };
 
-            var columnsBtn = new Button() { text = "Columns" };
+            var columnsBtn = new Button { text = "Columns" };
             columnsBtn.clicked += () => _table?.OpenColumnsMenu(columnsBtn);
             bar.Add(columnsBtn);
 
@@ -98,22 +99,16 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
         {
             _columns = new List<LocColumnSpec>
             {
-                new() { Id = "Key", HeaderLabel = "Key", DefaultWidth = 220f, MinWidth = 80f, Frozen = true },
-                new() { Id = "Type", HeaderLabel = "Type", DefaultWidth = 60f, MinWidth = 50f },
-                new() { Id = "Desc", HeaderLabel = "Desc", DefaultWidth = 220f, MinWidth = 80f },
+                BuildColumn("Key", frozen: true),
+                BuildColumn("Type"),
+                BuildColumn("Desc"),
             };
             foreach (var lang in LanguageColumns)
             {
-                _columns.Add(new LocColumnSpec
-                {
-                    Id = lang,
-                    HeaderLabel = lang,
-                    DefaultWidth = 140f,
-                    MinWidth = 60f,
-                });
+                _columns.Add(BuildColumn(lang));
             }
-            _columns.Add(new LocColumnSpec { Id = "$Context", HeaderLabel = "$Context", DefaultWidth = 80f, MinWidth = 50f });
-            _columns.Add(new LocColumnSpec { Id = "$Status", HeaderLabel = "$Status", DefaultWidth = 90f, MinWidth = 50f });
+            _columns.Add(BuildColumn("$Context"));
+            _columns.Add(BuildColumn("$Status"));
 
             _rows = new List<LocRow>();
             AppendMockRows(10);
@@ -132,12 +127,24 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
             }
         }
 
+        private static LocColumnSpec BuildColumn(string id, bool frozen = false)
+        {
+            return new LocColumnSpec
+            {
+                Id = id,
+                HeaderLabel = id,
+                DefaultWidth = LocColumnSpecDefaults.WidthFor(id),
+                MinWidth = LocColumnSpecDefaults.MinWidthFor(id),
+                Frozen = frozen,
+            };
+        }
+
         private void AppendMockRows(int count)
         {
-            int baseIdx = _rows.Count;
-            for (int i = 0; i < count; i++)
+            var baseIdx = _rows.Count;
+            for (var i = 0; i < count; i++)
             {
-                int n = baseIdx + i + 1;
+                var n = baseIdx + i + 1;
                 var row = new LocRow();
                 row.Set("Key", "Sandbox/Row/" + n);
                 row.Set("Type", "Text");

@@ -10,15 +10,20 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
 {
     /// <summary>
     /// Resizable, hideable spreadsheet-style table for displaying and editing localization rows.
-    /// Supports a sticky-left frozen column and persists column widths and hidden state via EditorPrefs.
     /// </summary>
     /// <remarks>
-    /// Wedge A scope: layout, drag-to-resize, hide via Columns dropdown, frozen column, horizontal
-    /// scroll synced between header and body, EditorPrefs persistence. Cell editing mutates the row
-    /// model in place. CSV I/O, search, validation and save flow land in later wedges.
+    /// Renders a header row plus a virtualized body backed by a <see cref="ListView" />, with a sticky-left
+    /// frozen column and a horizontal scroller that keeps header and body in sync. Columns can be
+    /// drag-resized at their right edge, hidden through the Columns dropdown, renamed inline (non-protected
+    /// columns only), and inserted or deleted through the header context menu. Rows can be inserted or
+    /// deleted through the row context menu. Cell edits mutate the row model in place and raise
+    /// <see cref="RowEdited" />. Column widths and hidden state persist per-file via EditorPrefs.
     /// </remarks>
     public sealed class LocTableView : VisualElement
     {
+        /// <summary>
+        /// Raised after a cell edit has been committed to the row model.
+        /// </summary>
         public event Action<LocRow> RowEdited;
 
         private const float ResizeHandleWidth = 4f;
@@ -27,7 +32,6 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
         private const string PrefsKeyPrefix = "Redux.Localization.TableLayout.";
         private const int ProtectedColumnCount = 3;
         private const string StyleSheetPath = "/Assets/Windows/Localization/Widgets/LocTableView.uss";
-        private static readonly HashSet<string> TrailingMetaColumnIds = new() { "$Context", "$Status" };
         private static StyleSheet _cachedStyleSheet;
 
         private readonly List<LocColumnSpec> _columns;
@@ -79,7 +83,12 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
             RegisterCallback<GeometryChangedEvent>(_ => OnGeometryChanged());
         }
 
-        /// <summary>Re-binds visible rows. Call after row data changes outside the table.</summary>
+        /// <summary>
+        /// Rebuilds the visible rows from the backing list.
+        /// </summary>
+        /// <remarks>
+        /// Call after row data changes outside the table.
+        /// </remarks>
         public void Refresh()
         {
             _bodyListView?.Rebuild();
@@ -269,14 +278,14 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
 
         private void InsertColumnAt(int index)
         {
-            string name = GenerateUniqueColumnName();
+            var name = GenerateUniqueColumnName();
             var col = new LocColumnSpec
             {
                 Id = name,
                 HeaderLabel = name,
-                DefaultWidth = 140f,
-                MinWidth = 60f,
-                CurrentWidth = 140f,
+                DefaultWidth = LocColumnSpecDefaults.WidthFor(name),
+                MinWidth = LocColumnSpecDefaults.MinWidthFor(name),
+                CurrentWidth = LocColumnSpecDefaults.WidthFor(name),
             };
             _columns.Insert(index, col);
             RebuildHeader();
@@ -294,7 +303,7 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
 
         private void DeleteColumn(LocColumnSpec col)
         {
-            int columnIndex = _columns.IndexOf(col);
+            var columnIndex = _columns.IndexOf(col);
             if (columnIndex < ProtectedColumnCount) return;
             _columns.Remove(col);
             foreach (var row in _rows)
@@ -311,30 +320,19 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
 
         private string GenerateUniqueColumnName()
         {
-            int n = 1;
-            while (true)
-            {
-                string candidate = "Column " + n;
-                bool used = false;
-                foreach (var c in _columns)
-                {
-                    if (c.Id == candidate)
-                    {
-                        used = true;
-                        break;
-                    }
-                }
-                if (!used) return candidate;
-                n++;
-            }
+            var existingIds = new HashSet<string>(_columns.Count);
+            foreach (var c in _columns) existingIds.Add(c.Id);
+            var n = 1;
+            while (existingIds.Contains("Column " + n)) n++;
+            return "Column " + n;
         }
 
         private void InsertRowAt(int index)
         {
             _rows.Insert(index, new LocRow());
             _bodyListView?.Rebuild();
-            ApplyAllColumnVisibility();
-            ApplyAllColumnWidths();
+            ApplyAllColumnWidthsToBody();
+            ApplyAllColumnVisibilityToBody();
             SchedulePersist();
         }
 
@@ -430,8 +428,8 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
         {
             _rows.Remove(row);
             _bodyListView?.Rebuild();
-            ApplyAllColumnVisibility();
-            ApplyAllColumnWidths();
+            ApplyAllColumnWidthsToBody();
+            ApplyAllColumnVisibilityToBody();
             SchedulePersist();
         }
 
@@ -490,12 +488,25 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
         {
             ApplyColumnWidthToHeader(col);
             if (_bodyListView == null) return;
-            // Iterate every currently mounted row element. ListView recycles rows so this is bounded.
             var rows = _bodyListView.Query<VisualElement>(className: "loctable__row").ToList();
             foreach (var row in rows)
             {
                 ApplyColumnWidthToRow(row, col);
             }
+        }
+
+        private void ApplyAllColumnWidthsToBody()
+        {
+            if (_bodyListView == null) return;
+            var rows = _bodyListView.Query<VisualElement>(className: "loctable__row").ToList();
+            foreach (var row in rows)
+            {
+                foreach (var col in _columns)
+                {
+                    ApplyColumnWidthToRow(row, col);
+                }
+            }
+            UpdateScrollRange();
         }
 
         private void ApplyColumnWidthToHeader(LocColumnSpec col)
@@ -558,6 +569,20 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
             {
                 ApplyColumnVisibilityToRow(row, col);
             }
+        }
+
+        private void ApplyAllColumnVisibilityToBody()
+        {
+            if (_bodyListView == null) return;
+            var rows = _bodyListView.Query<VisualElement>(className: "loctable__row").ToList();
+            foreach (var row in rows)
+            {
+                foreach (var col in _columns)
+                {
+                    ApplyColumnVisibilityToRow(row, col);
+                }
+            }
+            UpdateScrollRange();
         }
 
         private void ApplyColumnVisibilityToHeader(LocColumnSpec col)
@@ -667,6 +692,10 @@ namespace Ksp2UnityTools.Editor.Localization.Widgets
 
         #region Columns dropdown
 
+        /// <summary>
+        /// Opens the Columns dropdown beneath the given anchor, listing non-frozen columns as toggleable visibility entries.
+        /// </summary>
+        /// <param name="anchor">The element below which the dropdown anchors.</param>
         public void OpenColumnsMenu(VisualElement anchor)
         {
             if (anchor == null) return;

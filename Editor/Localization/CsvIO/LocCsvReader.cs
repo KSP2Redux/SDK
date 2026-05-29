@@ -5,40 +5,59 @@ using Ksp2UnityTools.Editor.Localization.Widgets;
 namespace Ksp2UnityTools.Editor.Localization.CsvIO
 {
     /// <summary>
-    /// Parsed result of an I2-format localization CSV file, with enough format metadata for
-    /// <see cref="LocCsvWriter" /> to reproduce the original line-ending convention and trailing-newline
-    /// state on save.
+    /// Parsed result of an I2-format localization CSV file.
     /// </summary>
+    /// <remarks>
+    /// Records the trailing-newline state so <see cref="LocCsvWriter" /> can reproduce it on save
+    /// for a byte-stable round-trip on unmodified files. Line endings are normalized to <c>\n</c>
+    /// on read because the I2 runtime CSV parser (LocalizationReader.ParseCSVline) only treats
+    /// <c>\n</c> as a row break.
+    /// </remarks>
     public sealed class LocCsvParseResult
     {
-        /// <summary>Column specs derived from the header row.</summary>
+        /// <summary>
+        /// Column specs derived from the header row.
+        /// </summary>
         public List<LocColumnSpec> Columns = new();
 
-        /// <summary>Data rows, keyed by column Id.</summary>
+        /// <summary>
+        /// Data rows, keyed by column Id.
+        /// </summary>
         public List<LocRow> Rows = new();
 
-        /// <summary>Detected line ending of the source file ("\n" or "\r\n").</summary>
-        public string LineEnding = "\n";
-
-        /// <summary>Whether the source file ends with a trailing newline.</summary>
+        /// <summary>
+        /// True if the source file ends with a trailing newline, false otherwise.
+        /// </summary>
         public bool HasTrailingNewline = true;
 
-        /// <summary>Source file path, for round-trip context.</summary>
+        /// <summary>
+        /// Source file path, for round-trip context.
+        /// </summary>
         public string FilePath;
     }
 
     /// <summary>
-    /// Standard CSV parser tuned for the I2 localization format. Quote-aware, handles doubled
-    /// quote escapes, and records line-ending metadata so writes round-trip byte-stably.
+    /// Standard CSV parser tuned for the I2 localization format.
     /// </summary>
+    /// <remarks>
+    /// Quote-aware and handles doubled quote escapes. Line endings are normalized to <c>\n</c> on
+    /// read so a write-back round-trip always emits the line-ending convention the runtime parser
+    /// expects.
+    /// </remarks>
     public static class LocCsvReader
     {
+        /// <summary>
+        /// Parses CSV text into a <see cref="LocCsvParseResult" />.
+        /// </summary>
+        /// <param name="text">The raw CSV text to parse.</param>
+        /// <param name="filePath">The source file path recorded on the result for round-trip context.</param>
+        /// <returns>The parsed result, or an empty result if <paramref name="text" /> is null.</returns>
         public static LocCsvParseResult Parse(string text, string filePath = null)
         {
             var result = new LocCsvParseResult { FilePath = filePath };
             if (text == null) return result;
 
-            result.LineEnding = text.Contains("\r\n") ? "\r\n" : "\n";
+            text = text.Replace("\r\n", "\n").Replace("\r", "\n");
             result.HasTrailingNewline = text.EndsWith("\n");
 
             var raw = ParseRowsRaw(text);
@@ -101,20 +120,13 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                     continue;
                 }
 
-                if (c == '\r' || c == '\n')
+                if (c == '\n')
                 {
                     currentRow.Add(field.ToString());
                     field.Clear();
                     rows.Add(currentRow);
                     currentRow = new List<string>();
-                    if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n')
-                    {
-                        i += 2;
-                    }
-                    else
-                    {
-                        i++;
-                    }
+                    i++;
                     continue;
                 }
 
@@ -147,25 +159,12 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                 {
                     Id = id,
                     HeaderLabel = id,
-                    DefaultWidth = DefaultWidthFor(id),
-                    MinWidth = 60f,
+                    DefaultWidth = LocColumnSpecDefaults.WidthFor(id),
+                    MinWidth = LocColumnSpecDefaults.MinWidthFor(id),
                     Frozen = i == 0,
                 });
             }
             return columns;
-        }
-
-        private static float DefaultWidthFor(string id)
-        {
-            return id switch
-            {
-                "Key" => 220f,
-                "Type" => 60f,
-                "Desc" => 220f,
-                "$Context" => 80f,
-                "$Status" => 90f,
-                _ => 140f,
-            };
         }
     }
 }

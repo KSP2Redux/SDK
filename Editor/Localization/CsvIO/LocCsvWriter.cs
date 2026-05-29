@@ -6,15 +6,24 @@ using Ksp2UnityTools.Editor.Localization.Widgets;
 namespace Ksp2UnityTools.Editor.Localization.CsvIO
 {
     /// <summary>
-    /// Serializes column specs and rows back to I2-format CSV text. Quote-escape rules match
-    /// <see cref="LocCsvReader" /> so a read-then-write cycle on an unmodified file is byte-stable.
+    /// Serializes column specs and rows back to I2-format CSV text.
     /// </summary>
+    /// <remarks>
+    /// Always emits LF line endings because the I2 runtime CSV parser only treats <c>\n</c> as a
+    /// row break. Quote-escape rules match <see cref="LocCsvReader" />.
+    /// </remarks>
     public static class LocCsvWriter
     {
+        /// <summary>
+        /// Serializes the given columns and rows to a CSV string.
+        /// </summary>
+        /// <param name="columns">The column specs whose ids form the header row and field order.</param>
+        /// <param name="rows">The data rows to emit, looked up by column id.</param>
+        /// <param name="addTrailingNewline">True to append a trailing newline after the final row, false otherwise.</param>
+        /// <returns>The serialized CSV text.</returns>
         public static string Write(
             IList<LocColumnSpec> columns,
             IList<LocRow> rows,
-            string lineEnding = "\n",
             bool addTrailingNewline = true)
         {
             var sb = new StringBuilder();
@@ -24,7 +33,7 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                 if (i > 0) sb.Append(',');
                 sb.Append(QuoteIfNeeded(columns[i].Id));
             }
-            sb.Append(lineEnding);
+            sb.Append('\n');
 
             for (int r = 0; r < rows.Count; r++)
             {
@@ -37,20 +46,26 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                 bool isLast = r == rows.Count - 1;
                 if (!isLast || addTrailingNewline)
                 {
-                    sb.Append(lineEnding);
+                    sb.Append('\n');
                 }
             }
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Serializes the given columns and rows and writes the result to a file as UTF-8 without BOM.
+        /// </summary>
+        /// <param name="path">The destination file path.</param>
+        /// <param name="columns">The column specs whose ids form the header row and field order.</param>
+        /// <param name="rows">The data rows to emit, looked up by column id.</param>
+        /// <param name="addTrailingNewline">True to append a trailing newline after the final row, false otherwise.</param>
         public static void Write(
             string path,
             IList<LocColumnSpec> columns,
             IList<LocRow> rows,
-            string lineEnding = "\n",
             bool addTrailingNewline = true)
         {
-            var text = Write(columns, rows, lineEnding, addTrailingNewline);
+            var text = Write(columns, rows, addTrailingNewline);
             File.WriteAllText(path, text, new UTF8Encoding(false));
         }
 
@@ -58,9 +73,8 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
             bool needs = false;
-            for (int i = 0; i < value.Length; i++)
+            foreach (var c in value)
             {
-                char c = value[i];
                 if (c == ',' || c == '"' || c == '\n' || c == '\r')
                 {
                     needs = true;

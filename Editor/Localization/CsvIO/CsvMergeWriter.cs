@@ -8,29 +8,86 @@ using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.Localization.CsvIO
 {
+    /// <summary>
+    /// Strategy controlling how <see cref="CsvMergeWriter.Merge" /> reconciles incoming entries
+    /// against existing rows.
+    /// </summary>
     public enum MergeMode
     {
+        /// <summary>
+        /// Adds only entries whose key is not already present, leaving existing rows untouched.
+        /// </summary>
         AppendOnly,
+
+        /// <summary>
+        /// Adds new entries and also refreshes the description on existing rows when the incoming
+        /// description differs.
+        /// </summary>
         RefreshDescriptions,
     }
 
     /// <summary>
-    /// Result summary returned by <see cref="CsvMergeWriter.Merge" /> for preview / status reporting.
+    /// Classification of incoming entries relative to an existing-row lookup.
+    /// </summary>
+    /// <remarks>
+    /// Used by both the preview pane and the merge writer so they cannot drift on what counts as
+    /// new vs refreshed vs unchanged.
+    /// </remarks>
+    public sealed class MergeClassification
+    {
+        /// <summary>
+        /// Keys of entries that have no matching existing row.
+        /// </summary>
+        public List<string> NewKeys = new();
+
+        /// <summary>
+        /// Keys of existing rows whose Desc column differs from the incoming entry.
+        /// </summary>
+        public List<string> DescUpdates = new();
+
+        /// <summary>
+        /// Count of entries that match an existing row with no Desc difference.
+        /// </summary>
+        public int Unchanged;
+    }
+
+    /// <summary>
+    /// Result summary returned by <see cref="CsvMergeWriter.Merge" /> for preview and status reporting.
     /// </summary>
     public sealed class MergeResult
     {
+        /// <summary>
+        /// Keys appended as new rows during the merge.
+        /// </summary>
         public List<string> NewKeys = new();
+
+        /// <summary>
+        /// Keys whose Desc column was refreshed against the incoming entry.
+        /// </summary>
         public List<string> RefreshedDescs = new();
+
+        /// <summary>
+        /// Count of entries that matched an existing row with no change.
+        /// </summary>
         public int Unchanged;
     }
 
     /// <summary>
     /// Reads an existing localization CSV, merges incoming entries by key according to
     /// <see cref="MergeMode" />, and writes back via <see cref="LocCsvWriter" />.
-    /// Round-trip preserves line endings, trailing newline, and column order from the source.
     /// </summary>
+    /// <remarks>
+    /// Round-trip preserves trailing newline and column order from the source.
+    /// </remarks>
     public static class CsvMergeWriter
     {
+        /// <summary>
+        /// Merges <paramref name="entries" /> into the CSV at <paramref name="targetPath" /> and writes the result.
+        /// </summary>
+        /// <param name="targetPath">The path to the CSV file to merge into. Created if missing.</param>
+        /// <param name="entries">The incoming entries to merge by key.</param>
+        /// <param name="mode">The merge strategy controlling how existing rows are reconciled.</param>
+        /// <returns>A summary of new, refreshed, and unchanged keys.</returns>
         public static MergeResult Merge(string targetPath, IList<LocalizationKeyEntry> entries, MergeMode mode)
         {
             var result = new MergeResult();
@@ -38,8 +95,7 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
 
             List<LocColumnSpec> columns;
             List<LocRow> rows;
-            string lineEnding = "\n";
-            bool hasTrailingNewline = true;
+            var hasTrailingNewline = true;
 
             if (File.Exists(targetPath))
             {
@@ -47,7 +103,6 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                 var parsed = LocCsvReader.Parse(text, targetPath);
                 columns = parsed.Columns;
                 rows = parsed.Rows;
-                lineEnding = parsed.LineEnding;
                 hasTrailingNewline = parsed.HasTrailingNewline;
             }
             else
@@ -57,39 +112,28 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                 Directory.CreateDirectory(Path.GetDirectoryName(targetPath) ?? ".");
             }
 
-            var byKey = new Dictionary<string, LocRow>(StringComparer.Ordinal);
-            foreach (var row in rows)
+            var classification = Classify(entries, rows, mode);
+            result.NewKeys = classification.NewKeys;
+            result.RefreshedDescs = classification.DescUpdates;
+            result.Unchanged = classification.Unchanged;
+
+            if (result.NewKeys.Count == 0 && result.RefreshedDescs.Count == 0) return result;
+
+            var entriesByKey = BuildEntryLookup(entries);
+            var rowsByKey = BuildRowLookup(rows);
+
+            foreach (var key in classification.DescUpdates)
             {
-                var k = row.Get("Key");
-                if (!string.IsNullOrEmpty(k)) byKey[k] = row;
+                if (rowsByKey.TryGetValue(key, out var row) && entriesByKey.TryGetValue(key, out var entry))
+                {
+                    row.Set("Desc", entry.Description);
+                }
             }
 
             var defaultValueColumnId = ResolveDefaultValueColumn(columns);
-
-            foreach (var entry in entries)
+            foreach (var key in classification.NewKeys)
             {
-                if (string.IsNullOrEmpty(entry.Key)) continue;
-                if (byKey.TryGetValue(entry.Key, out var existing))
-                {
-                    if (mode == MergeMode.RefreshDescriptions)
-                    {
-                        var oldDesc = existing.Get("Desc");
-                        if (oldDesc != entry.Description)
-                        {
-                            existing.Set("Desc", entry.Description);
-                            result.RefreshedDescs.Add(entry.Key);
-                        }
-                        else
-                        {
-                            result.Unchanged++;
-                        }
-                    }
-                    else
-                    {
-                        result.Unchanged++;
-                    }
-                    continue;
-                }
+                if (!entriesByKey.TryGetValue(key, out var entry)) continue;
                 var row = new LocRow();
                 row.Set("Key", entry.Key);
                 row.Set("Type", "Text");
@@ -99,11 +143,9 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
                     row.Set(defaultValueColumnId, entry.DefaultEnglish);
                 }
                 rows.Add(row);
-                byKey[entry.Key] = row;
-                result.NewKeys.Add(entry.Key);
             }
 
-            LocCsvWriter.Write(targetPath, columns, rows, lineEnding, hasTrailingNewline);
+            LocCsvWriter.Write(targetPath, columns, rows, hasTrailingNewline);
             if (targetPath.StartsWith("Assets/", StringComparison.Ordinal))
             {
                 AssetDatabase.ImportAsset(targetPath);
@@ -111,34 +153,95 @@ namespace Ksp2UnityTools.Editor.Localization.CsvIO
             return result;
         }
 
+        /// <summary>
+        /// Categorizes each entry in <paramref name="entries" /> as new, desc-refresh, or unchanged
+        /// against <paramref name="existingRows" />.
+        /// </summary>
+        /// <remarks>
+        /// Pure with no mutations to the inputs.
+        /// </remarks>
+        /// <param name="entries">The incoming entries to classify.</param>
+        /// <param name="existingRows">The existing rows to compare keys and descriptions against.</param>
+        /// <param name="mode">The merge strategy controlling whether desc differences register as refreshes.</param>
+        /// <returns>The classification of each entry as new, desc-refresh, or unchanged.</returns>
+        public static MergeClassification Classify(IList<LocalizationKeyEntry> entries, IEnumerable<LocRow> existingRows, MergeMode mode)
+        {
+            var classification = new MergeClassification();
+            if (entries == null) return classification;
+            var rowsByKey = BuildRowLookup(existingRows);
+            foreach (var entry in entries)
+            {
+                if (string.IsNullOrEmpty(entry.Key)) continue;
+                if (rowsByKey.TryGetValue(entry.Key, out var row))
+                {
+                    if (mode == MergeMode.RefreshDescriptions && row.Get("Desc") != entry.Description)
+                    {
+                        classification.DescUpdates.Add(entry.Key);
+                    }
+                    else
+                    {
+                        classification.Unchanged++;
+                    }
+                }
+                else
+                {
+                    classification.NewKeys.Add(entry.Key);
+                }
+            }
+            return classification;
+        }
+
+        private static Dictionary<string, LocRow> BuildRowLookup(IEnumerable<LocRow> rows)
+        {
+            var byKey = new Dictionary<string, LocRow>(StringComparer.Ordinal);
+            if (rows == null) return byKey;
+            foreach (var row in rows)
+            {
+                var k = row.Get("Key");
+                if (!string.IsNullOrEmpty(k)) byKey[k] = row;
+            }
+            return byKey;
+        }
+
+        private static Dictionary<string, LocalizationKeyEntry> BuildEntryLookup(IEnumerable<LocalizationKeyEntry> entries)
+        {
+            var byKey = new Dictionary<string, LocalizationKeyEntry>(StringComparer.Ordinal);
+            if (entries == null) return byKey;
+            foreach (var entry in entries)
+            {
+                if (!string.IsNullOrEmpty(entry.Key)) byKey[entry.Key] = entry;
+            }
+            return byKey;
+        }
+
         private static List<LocColumnSpec> DefaultColumns()
         {
             return new List<LocColumnSpec>
             {
-                new() { Id = "Key", HeaderLabel = "Key", DefaultWidth = 220f, MinWidth = 80f, Frozen = true },
-                new() { Id = "Type", HeaderLabel = "Type", DefaultWidth = 60f, MinWidth = 50f },
-                new() { Id = "Desc", HeaderLabel = "Desc", DefaultWidth = 220f, MinWidth = 80f },
-                new() { Id = "English", HeaderLabel = "English", DefaultWidth = 140f, MinWidth = 60f },
+                BuildDefault("Key", frozen: true),
+                BuildDefault("Type"),
+                BuildDefault("Desc"),
+                BuildDefault("English"),
+            };
+        }
+
+        private static LocColumnSpec BuildDefault(string id, bool frozen = false)
+        {
+            return new LocColumnSpec
+            {
+                Id = id,
+                HeaderLabel = id,
+                DefaultWidth = LocColumnSpecDefaults.WidthFor(id),
+                MinWidth = LocColumnSpecDefaults.MinWidthFor(id),
+                Frozen = frozen,
             };
         }
 
         private static string ResolveDefaultValueColumn(List<LocColumnSpec> columns)
         {
             if (columns.Any(c => c.Id == "English")) return "English";
-            int descIndex = -1;
-            for (int i = 0; i < columns.Count; i++)
-            {
-                if (columns[i].Id == "Desc")
-                {
-                    descIndex = i;
-                    break;
-                }
-            }
-            if (descIndex >= 0 && descIndex + 1 < columns.Count)
-            {
-                return columns[descIndex + 1].Id;
-            }
-            return null;
+            var descIndex = columns.FindIndex(c => c.Id == "Desc");
+            return descIndex >= 0 && descIndex + 1 < columns.Count ? columns[descIndex + 1].Id : null;
         }
     }
 }
