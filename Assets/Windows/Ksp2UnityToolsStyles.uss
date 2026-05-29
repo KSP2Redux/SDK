@@ -388,6 +388,10 @@
     position: relative;
 }
 
+.autocomplete-field > .unity-base-field {
+    margin: 0;
+}
+
 .autocomplete-field__suggestions {
     position: absolute;
     max-height: 140px;

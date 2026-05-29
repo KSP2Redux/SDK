@@ -98,6 +98,7 @@ namespace Ksp2UnityTools.Editor.Widgets
 
             _textField = new TextField(label) { value = initialValue };
             _textField.AddToClassList("unity-base-field__aligned");
+            _textField.style.flexGrow = 1f;
             _textField.RegisterValueChangedCallback(OnTextChanged);
             _textField.RegisterCallback<FocusInEvent>(OnFocusIn);
             _textField.RegisterCallback<FocusOutEvent>(OnFocusOut);

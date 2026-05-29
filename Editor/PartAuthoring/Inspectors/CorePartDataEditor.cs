@@ -12,6 +12,7 @@ using Ksp2UnityTools.Editor.PartAuthoring.Tools;
 using Ksp2UnityTools.Editor.PartAuthoring.Validation;
 using Ksp2UnityTools.Editor.PartAuthoring.Windows;
 using Ksp2UnityTools.Editor.Validation;
+using Ksp2UnityTools.Editor.Widgets;
 using Redux.VFX.ReentryMeshGeneration;
 using UnityEditor;
 using UnityEditor.SceneManagement;

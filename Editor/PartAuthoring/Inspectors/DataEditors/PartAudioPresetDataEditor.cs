@@ -1,6 +1,5 @@
 using System.Reflection;
 using KSP.Sim.Definitions;
-using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.Widgets;
 using Redux.Audio;
 using Redux.Modules;
@@ -21,7 +20,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
         private const BindingFlags FIELD_FLAGS =
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
-        private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
+        private const string USS_PATH = "/Assets/Windows/DataEditors.uss";
 
         private Transform _partRoot;
 

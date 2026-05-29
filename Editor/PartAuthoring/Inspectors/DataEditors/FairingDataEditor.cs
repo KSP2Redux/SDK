@@ -25,7 +25,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     [DataEditor(typeof(Data_Fairing))]
     public sealed class FairingDataEditor : IDataEditor
     {
-        private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
+        private const string USS_PATH = "/Assets/Windows/DataEditors.uss";
 
         private enum AuthoringMode { PartShroud, VariableShroud, Fairing }
 

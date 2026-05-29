@@ -1,0 +1,664 @@
+/* Mission Editor window - overrides on top of Ksp2UnityToolsStyles.uss.
+ * Section header, hint, and accent colors come from the shared sheet. This
+ * file contributes the strip + stage card layout. */
+
+.mission-editor-root {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.mission-editor-header {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(70, 100, 140, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 4px;
+    margin-top: 4px;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: 6px;
+}
+
+.mission-editor-header > #missionTitle {
+    -unity-font-style: bold;
+    color: rgb(245, 248, 255);
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+    white-space: normal;
+}
+
+.mission-editor-readiness-chip {
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    font-size: 11px;
+    background-color: rgba(60, 70, 85, 0.30);
+    color: rgb(195, 205, 220);
+    -unity-text-align: middle-center;
+}
+
+.mission-editor-readiness-chip.is-ok {
+    background-color: rgba(80, 160, 90, 0.40);
+    color: rgb(225, 245, 225);
+}
+
+.mission-editor-readiness-chip.is-warn {
+    background-color: rgba(210, 165, 80, 0.40);
+    color: rgb(250, 240, 220);
+}
+
+.mission-editor-readiness-chip.is-error {
+    background-color: rgba(210, 90, 80, 0.40);
+    color: rgb(250, 220, 215);
+}
+
+.mission-editor-action-chip {
+    background-color: rgba(95, 150, 210, 0.40);
+    color: rgb(225, 235, 250);
+}
+
+.mission-editor-readiness-chip--clickable {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.25);
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+    border-left-color: rgba(255, 255, 255, 0.25);
+    border-right-color: rgba(255, 255, 255, 0.25);
+}
+
+.mission-editor-readiness-chip--clickable:hover {
+    border-top-color: rgba(255, 255, 255, 0.65);
+    border-bottom-color: rgba(255, 255, 255, 0.65);
+    border-left-color: rgba(255, 255, 255, 0.65);
+    border-right-color: rgba(255, 255, 255, 0.65);
+}
+
+.mission-editor-strip-host {
+    flex-grow: 1;
+    background-color: rgb(28, 28, 28);
+}
+
+/* ----- Stage strip ----- */
+
+.stage-strip {
+    flex-grow: 1;
+}
+
+.stage-strip-scroll {
+    flex-grow: 1;
+}
+
+.stage-strip-row-label {
+    -unity-font-style: bold;
+    color: rgb(190, 200, 220);
+    font-size: 11px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    padding-left: 12px;
+}
+
+.stage-strip-row {
+    flex-direction: row;
+    align-items: flex-start;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.stage-strip-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.10);
+    margin-top: 12px;
+    margin-bottom: 4px;
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+.content-branch-card {
+    margin-right: 8px;
+}
+
+.content-branch-card-title-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.content-branch-card-id-field {
+    flex-grow: 1;
+    margin-right: 4px;
+}
+
+.content-branch-card-action-section {
+    padding: 6px;
+}
+
+.stage-strip-scroll > .unity-scroll-view__content-container {
+    flex-direction: column;
+    padding-top: 8px;
+    padding-bottom: 16px;
+}
+
+/* ----- Stage card ----- */
+
+.stage-card {
+    align-self: flex-start;
+    width: 400px;
+    min-height: 100px;
+    background-color: rgb(48, 48, 48);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(255, 255, 255, 0.12);
+    border-right-color: rgba(255, 255, 255, 0.12);
+    border-top-color: rgba(255, 255, 255, 0.12);
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding: 8px;
+    margin-right: 4px;
+}
+
+.stage-card-title {
+    -unity-font-style: bold;
+    color: rgb(245, 248, 255);
+    background-color: rgba(70, 100, 140, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: normal;
+}
+
+.stage-card-title-row {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(70, 100, 140, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 6px;
+    padding-right: 2px;
+}
+
+.stage-card-title-row > .stage-card-title {
+    background-color: rgba(0, 0, 0, 0);
+    padding: 0;
+}
+
+.stage-card-title-word {
+    margin-right: 4px;
+}
+
+.stage-card-id-field {
+    width: 64px;
+}
+
+.stage-card-id-field > .unity-base-field__input {
+    background-color: rgba(0, 0, 0, 0.25);
+    border-left-color: rgba(255, 255, 255, 0.1);
+    border-right-color: rgba(255, 255, 255, 0.1);
+    border-top-color: rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.stage-card-title-spacer {
+    flex-grow: 1;
+}
+
+.stage-card-control-button {
+    min-width: 22px;
+    height: 18px;
+    margin-left: 2px;
+    margin-right: 0;
+    padding: 0 4px;
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.stage-strip-add-card {
+    width: 80px;
+    min-height: 80px;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-color: rgba(255, 255, 255, 0.18);
+    border-right-color: rgba(255, 255, 255, 0.18);
+    border-top-color: rgba(255, 255, 255, 0.18);
+    border-bottom-color: rgba(255, 255, 255, 0.18);
+    border-left-style: dashed;
+    border-right-style: dashed;
+    border-top-style: dashed;
+    border-bottom-style: dashed;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.stage-strip-add-card:hover {
+    background-color: rgba(95, 150, 210, 0.12);
+    border-left-color: rgb(95, 150, 210);
+    border-right-color: rgb(95, 150, 210);
+    border-top-color: rgb(95, 150, 210);
+    border-bottom-color: rgb(95, 150, 210);
+}
+
+.stage-strip-add-label {
+    -unity-font-style: bold;
+    font-size: 22px;
+    color: rgb(180, 200, 230);
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+.stage-card-name {
+    -unity-font-style: italic;
+    color: rgb(153, 153, 153);
+    padding-top: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: normal;
+}
+
+.stage-card-body {
+    padding-top: 8px;
+    padding-left: 6px;
+    padding-right: 6px;
+    min-height: 24px;
+}
+
+.stage-card-field {
+    margin-top: 2px;
+}
+
+/* ----- Mission card ----- */
+
+.mission-card {
+    width: auto;
+    min-width: 320px;
+    max-width: 520px;
+    border-left-color: rgba(95, 150, 210, 0.55);
+    border-right-color: rgba(95, 150, 210, 0.55);
+    border-top-color: rgba(95, 150, 210, 0.55);
+    border-bottom-color: rgba(95, 150, 210, 0.55);
+}
+
+.mission-card-field {
+    margin-top: 4px;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.mission-card-branch-section {
+    padding-top: 8px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+/* ----- Mission card sections ----- */
+
+.mission-card-section {
+    margin-top: 6px;
+}
+
+.mission-card-section-header {
+    -unity-font-style: bold;
+    color: rgb(190, 200, 220);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+/* ----- Branch section ----- */
+
+/* ----- Condition tree editor ----- */
+
+.condition-tree-editor {
+    margin-top: 6px;
+}
+
+.condition-tree-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.condition-tree-title {
+    -unity-font-style: bold;
+    color: rgb(190, 200, 220);
+    font-size: 11px;
+    margin-right: 6px;
+    flex-grow: 1;
+}
+
+.condition-tree-add-btn {
+    font-size: 14px;
+    -unity-font-style: bold;
+    width: 22px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+}
+
+.condition-tree-content {
+    flex-direction: column;
+}
+
+.condition-tree-empty-hint {
+    -unity-font-style: italic;
+    color: rgb(153, 153, 153);
+    font-size: 11px;
+    padding: 2px 4px;
+}
+
+.condition-row {
+    margin-bottom: 4px;
+}
+
+.condition-row-property-card {
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.10);
+    border-left-width: 2px;
+    border-left-color: rgba(95, 150, 210, 0.40);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    padding-right: 4px;
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+.condition-row-card-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.condition-row-card-title {
+    -unity-font-style: bold;
+    color: rgb(190, 200, 220);
+    font-size: 11px;
+}
+
+.condition-row-header-spacer {
+    flex-grow: 1;
+}
+
+.condition-row-property-body {
+    flex-direction: column;
+}
+
+.picker-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 1px;
+}
+
+.picker-row__button {
+    flex-grow: 1;
+    margin: 0;
+    padding: 2px 8px;
+    -unity-text-align: middle-left;
+    color: rgb(225, 235, 250);
+    -unity-font-style: bold;
+}
+
+.picker-row__button.is-unset {
+    color: rgb(170, 170, 170);
+    -unity-font-style: italic;
+}
+
+.condition-set-child {
+    flex-grow: 1;
+    margin-top: 2px;
+}
+
+.condition-row-field {
+    margin-top: 1px;
+}
+
+.condition-row-threshold-slot,
+.condition-row-input-slot {
+    flex-direction: column;
+}
+
+.condition-row-reorder-btn {
+    min-width: 20px;
+    height: 18px;
+    margin: 0 2px 0 0;
+    padding: 0;
+    font-size: 9px;
+    -unity-text-align: middle-center;
+}
+
+.condition-row-wrap-btn {
+    height: 18px;
+    margin: 0 2px 0 0;
+    padding: 0 6px;
+    font-size: 10px;
+}
+
+.condition-row-delete-btn {
+    min-width: 22px;
+    height: 18px;
+    margin: 0;
+    padding: 0 4px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(220, 220, 220);
+}
+
+.condition-set-unwrap-btn {
+    align-self: flex-start;
+    height: 18px;
+    margin-top: 4px;
+    padding: 0 8px;
+    font-size: 10px;
+}
+
+.condition-row-script-warning {
+    background-color: rgb(72, 56, 24);
+    color: rgb(255, 220, 130);
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    -unity-font-style: bold;
+    font-size: 11px;
+    border-left-width: 2px;
+    border-left-color: rgb(220, 170, 70);
+    white-space: normal;
+}
+
+/* ----- Action list section ----- */
+
+.action-list-section {
+    margin-top: 6px;
+}
+
+.action-list-card {
+    margin-top: 2px;
+}
+
+.action-row-complex-field-hint {
+    color: rgb(170, 170, 170);
+    -unity-font-style: italic;
+    font-size: 10px;
+    padding: 2px 4px;
+    white-space: normal;
+}
+
+.action-row-section-header {
+    -unity-font-style: bold;
+    color: rgb(190, 200, 220);
+    font-size: 11px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.action-row-nested-section {
+    flex-direction: column;
+    margin-top: 2px;
+}
+
+.action-row-list-primitive-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.action-row-list-primitive-row > .condition-row-field {
+    flex-grow: 1;
+}
+
+.stage-card-action-section {
+    margin-top: 6px;
+}
+
+/* ----- Branch cards ----- */
+
+.branch-card {
+    margin-bottom: 4px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: rgba(120, 120, 120, 0.10);
+    border-left-color: rgba(120, 120, 120, 0.5);
+    border-right-color: rgba(120, 120, 120, 0.5);
+    border-top-color: rgba(120, 120, 120, 0.5);
+    border-bottom-color: rgba(120, 120, 120, 0.5);
+}
+
+.branch-card-exception {
+    background-color: rgba(220, 100, 80, 0.10);
+    border-left-color: rgba(220, 100, 80, 0.5);
+    border-right-color: rgba(220, 100, 80, 0.5);
+    border-top-color: rgba(220, 100, 80, 0.5);
+    border-bottom-color: rgba(220, 100, 80, 0.5);
+}
+
+.branch-card-prerequisite {
+    background-color: rgba(220, 200, 80, 0.10);
+    border-left-color: rgba(220, 200, 80, 0.5);
+    border-right-color: rgba(220, 200, 80, 0.5);
+    border-top-color: rgba(220, 200, 80, 0.5);
+    border-bottom-color: rgba(220, 200, 80, 0.5);
+}
+
+.branch-card-header {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(70, 100, 140, 0.18);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.branch-card-disclosure {
+    width: 18px;
+    height: 18px;
+    margin: 0 4px 0 0;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    color: rgb(220, 230, 245);
+    -unity-text-align: middle-center;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.branch-card-condition-dot {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(95, 150, 210);
+    margin-right: 3px;
+    padding: 0;
+}
+
+.branch-card-arrow {
+    font-size: 11px;
+    color: rgb(230, 230, 230);
+    margin-right: 2px;
+    padding: 0;
+}
+
+.branch-card-target-field {
+    width: 56px;
+    margin: 0;
+}
+
+.branch-card-header-spacer {
+    flex-grow: 1;
+}
+
+.branch-card-move-btn {
+    min-width: 22px;
+    height: 18px;
+    margin: 0 2px 0 0;
+    padding: 0 4px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    flex-shrink: 0;
+}
+
+.branch-card-remove-btn {
+    margin: 0 0 0 4px;
+    padding: 0 4px;
+    min-width: 22px;
+    height: 18px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    color: rgb(220, 220, 220);
+}
+
+.branch-card-body {
+    padding-top: 4px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+    min-height: 4px;
+}
+
+/* ----- Implicit progression arrow ----- */
+
+.stage-strip-arrow {
+    align-self: flex-start;
+    -unity-text-align: middle-center;
+    color: rgb(153, 153, 153);
+    font-size: 20px;
+    width: 28px;
+    margin-right: 4px;
+    margin-top: 14px;
+}

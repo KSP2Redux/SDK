@@ -1,5 +1,6 @@
 using KSP;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;

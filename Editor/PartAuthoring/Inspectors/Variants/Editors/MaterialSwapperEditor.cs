@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using KSP;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;

@@ -4,6 +4,7 @@ using KSP;
 using KSP.Game;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -22,7 +23,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
     internal static class VariantsTab
     {
         private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/Tabs/VariantsTab.uss";
-        private const string DataEditorsUssPath = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
+        private const string DataEditorsUssPath = "/Assets/Windows/DataEditors.uss";
         private const string ModulesTabUssPath = "/Assets/Windows/PartAuthoring/Inspectors/Tabs/ModulesTab.uss";
 
         private const string PartSwitchComponentModuleName = "PartComponentModule_PartSwitch";

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root validation-report-root">
+
+        <engine:Foldout text="Mission" value="true" class="sdk-section">
+            <editor:ObjectField name="mission-field" label="Mission" tooltip="Mission to validate. Drag a Mission asset here, or pick from the project picker." class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="use-active-button" text="Use active mission" tooltip="Target the mission the ActiveMissionTracker currently focuses on." class="sdk-action-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Run" value="true" class="sdk-section">
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="run-quick-button" text="Run quick" tooltip="Run cheap validators only. Milliseconds." />
+                <engine:Button name="run-full-button" text="Run all" tooltip="Run cheap + expensive validators. May take a second or two on a project with many missions." />
+                <engine:Button name="apply-all-fixes-button" text="Apply all auto-fixes" tooltip="Apply the first fix on every issue that ships one. Wrapped in a single Undo group." />
+                <engine:Button name="export-button" text="Export report" tooltip="Save the current report to a markdown file." />
+            </engine:VisualElement>
+            <engine:Label name="summary-label" class="validation-report-summary-label" />
+            <engine:Label name="last-run-label" class="validation-report-last-run-label" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Filters" value="true" class="sdk-section">
+            <engine:VisualElement class="validation-report-filters">
+                <engine:Toggle name="show-errors-toggle" label="Errors" value="true" />
+                <engine:Toggle name="show-warnings-toggle" label="Warnings" value="true" />
+                <engine:Toggle name="show-info-toggle" label="Info" value="true" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Issues" value="true" class="sdk-section">
+            <engine:VisualElement name="empty-state" class="validation-report-empty">
+                <engine:Label text="No issues found." class="validation-report-empty-label" />
+            </engine:VisualElement>
+            <engine:VisualElement name="issues-container" class="validation-report-issues" />
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

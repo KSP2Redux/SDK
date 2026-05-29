@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     public sealed class DragDataEditor : IDataEditor
     {
         private const string PAINTABLE_SHADER_NAME = "KSP2/Parts/Paintable";
-        private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
+        private const string USS_PATH = "/Assets/Windows/DataEditors.uss";
 
         private static readonly string[] FACE_LABELS = { "XP", "XN", "YP", "YN", "ZP", "ZN" };
 

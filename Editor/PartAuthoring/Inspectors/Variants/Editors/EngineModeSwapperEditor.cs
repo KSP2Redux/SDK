@@ -1,6 +1,6 @@
 using System.Globalization;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors;
-using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
