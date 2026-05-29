@@ -477,7 +477,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             {
                 case "core":
                     var cpd = (CorePartData)target;
-                    _tabContent.Add(CoreDataSections.BuildIdentity(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildIdentity(serializedObject, cpd));
                     _tabContent.Add(new IconPreviewSection(cpd));
                     _tabContent.Add(CoreDataSections.BuildMassCostCrew(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildBreakageThermal(serializedObject));
