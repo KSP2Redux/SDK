@@ -143,7 +143,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "Child of Body",
                 "Child of Galactic Origin",
                 "Force None",
+                "Force",
             };
+
+            const int forceIndex = (int)SphereOfInfluenceCalculationType.Force;
 
             int initial = Mathf.Clamp(prop.intValue, 0, labels.Count - 1);
             var dropdown = new DropdownField("SOI Calculation Type", labels, initial)
@@ -151,18 +154,37 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 tooltip = "Method used to compute this body's sphere of influence. " +
                           "Child of Body: standard SOI relative to the parent body. " +
                           "Child of Galactic Origin: SOI extends to one light-year (use for system primaries). " +
-                          "Force None: SOI is zero (no gravitational capture).",
+                          "Force None: SOI is zero (no gravitational capture). " +
+                          "Force: SOI is the custom override value set below.",
             };
             dropdown.AddToClassList("unity-base-field__aligned");
+
+            SerializedProperty forcedProp = serializedObject.FindProperty("core.data.ForcedSphereOfInfluence");
+            var forcedField = new DoubleField("Forced SOI (m)")
+            {
+                tooltip = "Custom sphere of influence in meters, used when SOI Calculation Type is Force.",
+                value = forcedProp?.doubleValue ?? 0.0,
+            };
+            forcedField.AddToClassList("unity-base-field__aligned");
+            forcedField.style.display = initial == forceIndex ? DisplayStyle.Flex : DisplayStyle.None;
+            forcedField.RegisterValueChangedCallback(evt =>
+            {
+                if (forcedProp == null) return;
+                forcedProp.doubleValue = evt.newValue;
+                serializedObject.ApplyModifiedProperties();
+            });
+
             dropdown.RegisterValueChangedCallback(evt =>
             {
                 int idx = labels.IndexOf(evt.newValue);
                 if (idx < 0) return;
                 prop.intValue = idx;
                 serializedObject.ApplyModifiedProperties();
+                forcedField.style.display = idx == forceIndex ? DisplayStyle.Flex : DisplayStyle.None;
             });
 
             slot.Add(dropdown);
+            slot.Add(forcedField);
         }
 
         private void BuildMineDustColorField(VisualElement slot)
