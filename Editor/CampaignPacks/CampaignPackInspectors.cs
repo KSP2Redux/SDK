@@ -19,14 +19,17 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
             var root = CampaignPackInspectorUi.CreateRoot(serializedObject, target);
             var catalog = CampaignPackEditorDatabase.BuildCatalog();
 
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id", () => catalog.PackIds));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id",
+                () => catalog.PackIds));
             root.Add(new PropertyField(serializedObject.FindProperty("nameLocKey")));
             root.Add(new PropertyField(serializedObject.FindProperty("descriptionLocKey")));
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("galaxyDefinitionKey"), "Galaxy Definition Key", () => catalog.GalaxyKeys));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("galaxyDefinitionKey"),
+                "Galaxy Definition Key", () => catalog.GalaxyKeys));
             root.Add(new PropertyField(serializedObject.FindProperty("techTreeSet")));
             root.Add(new PropertyField(serializedObject.FindProperty("missionSet")));
             root.Add(new PropertyField(serializedObject.FindProperty("scienceSet")));
             root.Add(new PropertyField(serializedObject.FindProperty("extensions")));
+            
             CampaignPackInspectorUi.AddValidation(root, CampaignPackValidator.Validate((CampaignPack)target, catalog));
             return root;
         }
@@ -43,8 +46,12 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
         {
             var root = CampaignPackInspectorUi.CreateRoot(serializedObject, target);
             var catalog = CampaignPackEditorDatabase.BuildCatalog();
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id", () => catalog.TechTreeSetIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("techNodeIds"), "Tech Nodes", "Add Tech Node", () => catalog.TechNodeIds));
+
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id",
+                () => catalog.TechTreeSetIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("techNodeIds"), "Tech Nodes",
+                "Add Tech Node", () => catalog.TechNodeIds));
+            
             CampaignPackInspectorUi.AddValidation(root, CampaignPackValidator.Validate((TechTreeSet)target, catalog));
             return root;
         }
@@ -61,8 +68,12 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
         {
             var root = CampaignPackInspectorUi.CreateRoot(serializedObject, target);
             var catalog = CampaignPackEditorDatabase.BuildCatalog();
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id", () => catalog.MissionSetIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("missionIds"), "Missions", "Add Mission", () => catalog.MissionIds));
+            
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id",
+                () => catalog.MissionSetIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("missionIds"), "Missions",
+                "Add Mission", () => catalog.MissionIds));
+            
             CampaignPackInspectorUi.AddValidation(root, CampaignPackValidator.Validate((MissionSet)target, catalog));
             return root;
         }
@@ -79,10 +90,16 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
         {
             var root = CampaignPackInspectorUi.CreateRoot(serializedObject, target);
             var catalog = CampaignPackEditorDatabase.BuildCatalog();
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id", () => catalog.ScienceSetIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("experimentIds"), "Experiments", "Add Experiment", () => catalog.ExperimentIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("scienceRegionIds"), "Science Regions", "Add Science Region", () => catalog.ScienceRegionIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("discoverableIds"), "Discoverables", "Add Discoverable", () => catalog.DiscoverableIds));
+
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id",
+                () => catalog.ScienceSetIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("experimentIds"), "Experiments",
+                "Add Experiment", () => catalog.ExperimentIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("scienceRegionIds"),
+                "Science Regions", "Add Science Region", () => catalog.ScienceRegionIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("discoverableIds"),
+                "Discoverables", "Add Discoverable", () => catalog.DiscoverableIds));
+            
             CampaignPackInspectorUi.AddValidation(root, CampaignPackValidator.Validate((ScienceSet)target, catalog));
             return root;
         }
@@ -100,22 +117,37 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
             var root = CampaignPackInspectorUi.CreateRoot(serializedObject, target);
             var catalog = CampaignPackEditorDatabase.BuildCatalog();
 
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id", () => Array.Empty<string>()));
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetCampaignPackId"), "Target Campaign Pack", () => catalog.PackIds));
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetTechTreeSetId"), "Target Tech Tree Set", () => catalog.TechTreeSetIds));
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetMissionSetId"), "Target Mission Set", () => catalog.MissionSetIds));
-            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetScienceSetId"), "Target Science Set", () => catalog.ScienceSetIds));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("id"), "Id",
+                Array.Empty<string>));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetCampaignPackId"),
+                "Target Campaign Pack", () => catalog.PackIds));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetTechTreeSetId"),
+                "Target Tech Tree Set", () => catalog.TechTreeSetIds));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetMissionSetId"),
+                "Target Mission Set", () => catalog.MissionSetIds));
+            root.Add(CampaignPackInspectorUi.Autocomplete(serializedObject.FindProperty("targetScienceSetId"),
+                "Target Science Set", () => catalog.ScienceSetIds));
 
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addTechNodeIds"), "Add Tech Nodes", "Add Tech Node", () => catalog.TechNodeIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeTechNodeIds"), "Remove Tech Nodes", "Add Tech Node", () => catalog.TechNodeIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addMissionIds"), "Add Missions", "Add Mission", () => catalog.MissionIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeMissionIds"), "Remove Missions", "Add Mission", () => catalog.MissionIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addExperimentIds"), "Add Experiments", "Add Experiment", () => catalog.ExperimentIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeExperimentIds"), "Remove Experiments", "Add Experiment", () => catalog.ExperimentIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addScienceRegionIds"), "Add Science Regions", "Add Science Region", () => catalog.ScienceRegionIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeScienceRegionIds"), "Remove Science Regions", "Add Science Region", () => catalog.ScienceRegionIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addDiscoverableIds"), "Add Discoverables", "Add Discoverable", () => catalog.DiscoverableIds));
-            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeDiscoverableIds"), "Remove Discoverables", "Add Discoverable", () => catalog.DiscoverableIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addTechNodeIds"),
+                "Add Tech Nodes", "Add Tech Node", () => catalog.TechNodeIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeTechNodeIds"),
+                "Remove Tech Nodes", "Add Tech Node", () => catalog.TechNodeIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addMissionIds"), "Add Missions",
+                "Add Mission", () => catalog.MissionIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeMissionIds"),
+                "Remove Missions", "Add Mission", () => catalog.MissionIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addExperimentIds"),
+                "Add Experiments", "Add Experiment", () => catalog.ExperimentIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeExperimentIds"),
+                "Remove Experiments", "Add Experiment", () => catalog.ExperimentIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addScienceRegionIds"),
+                "Add Science Regions", "Add Science Region", () => catalog.ScienceRegionIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeScienceRegionIds"),
+                "Remove Science Regions", "Add Science Region", () => catalog.ScienceRegionIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("addDiscoverableIds"),
+                "Add Discoverables", "Add Discoverable", () => catalog.DiscoverableIds));
+            root.Add(CampaignPackInspectorUi.StringList(serializedObject.FindProperty("removeDiscoverableIds"),
+                "Remove Discoverables", "Add Discoverable", () => catalog.DiscoverableIds));
 
             CampaignPackInspectorUi.AddValidation(root, CampaignPackValidator.Validate((CampaignPackExtension)target, catalog));
             return root;
@@ -168,6 +200,18 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
             list.AddToClassList("data-editor-section-list");
             outer.Add(list);
 
+            add.clicked += () =>
+            {
+                arrayProp.serializedObject.Update();
+                arrayProp.arraySize++;
+                arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1).stringValue = string.Empty;
+                arrayProp.serializedObject.ApplyModifiedProperties();
+                Rebuild();
+            };
+
+            Rebuild();
+            return outer;
+
             void Rebuild()
             {
                 arrayProp.serializedObject.Update();
@@ -192,22 +236,13 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
                         arrayProp.DeleteArrayElementAtIndex(index);
                         arrayProp.serializedObject.ApplyModifiedProperties();
                         Rebuild();
-                    }) { text = "X" });
+                    })
+                    {
+                        text = "X"
+                    });
                     list.Add(row);
                 }
             }
-
-            add.clicked += () =>
-            {
-                arrayProp.serializedObject.Update();
-                arrayProp.arraySize++;
-                arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1).stringValue = string.Empty;
-                arrayProp.serializedObject.ApplyModifiedProperties();
-                Rebuild();
-            };
-
-            Rebuild();
-            return outer;
         }
 
         public static void AddValidation(VisualElement root, IReadOnlyList<CampaignPackIssue> issues)
