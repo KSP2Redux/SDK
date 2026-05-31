@@ -30442,6 +30442,8 @@ MonoBehaviour:
   ResourceMasses:
   - Name: Ablator
     MassPerUnit: 1
+  - Name: ElectricCharge
+    MassPerUnit: 0
   - Name: EVAPropellant
     MassPerUnit: 1
   - Name: Hydrogen

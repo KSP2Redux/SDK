@@ -24,6 +24,17 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         /// <param name="settings">The render settings to use. The caller's instance is cloned, not mutated.</param>
         public static void Bake(CorePartData target, PartIconRenderSettings settings)
         {
+            Bake(target, settings, true);
+        }
+
+        /// <summary>
+        /// Bakes the icon for <paramref name="target" /> using the supplied render settings.
+        /// </summary>
+        /// <param name="target">The part to render.</param>
+        /// <param name="settings">The render settings to use. The caller's instance is cloned, not mutated.</param>
+        /// <param name="showDialog">When true, shows the usual completion/failure dialogs.</param>
+        public static void Bake(CorePartData target, PartIconRenderSettings settings, bool showDialog)
+        {
             if (target == null || target.Core == null || settings == null)
             {
                 return;
@@ -50,11 +61,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             );
             if (texture == null)
             {
-                EditorUtility.DisplayDialog(
-                    "Icon Export Failed",
-                    "No renderable meshes were found for this part.",
-                    "OK"
-                );
+                if (showDialog)
+                {
+                    EditorUtility.DisplayDialog(
+                        "Icon Export Failed",
+                        "No renderable meshes were found for this part.",
+                        "OK"
+                    );
+                }
                 return;
             }
 
@@ -74,11 +88,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             ConfigureIconTextureImporter(path);
 
             bool madeAddressable = false;
-            if (KSP2UnityTools.FindParentMod(target) is { } mod)
+            var group = PartAuthoringAddressables.ResolveIconGroup(target);
+            if (group != null)
             {
                 madeAddressable = true;
                 AddressablesTools.MakeAddressable(
-                    mod.partsGroup,
+                    group,
                     path,
                     $"{partName}_icon.png"
                 );
@@ -86,13 +101,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
 
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
-            EditorUtility.DisplayDialog(
-                "Part Icon Exported",
-                !madeAddressable
-                    ? $"Icon is at: {path}, you need to manually make it addressable"
-                    : $"Icon is at: {path}",
-                "OK"
-            );
+            if (showDialog)
+            {
+                EditorUtility.DisplayDialog(
+                    "Part Icon Exported",
+                    !madeAddressable
+                        ? $"Icon is at: {path}, you need to manually make it addressable"
+                        : $"Icon is at: {path}",
+                    "OK"
+                );
+            }
         }
 
         /// <summary>
@@ -106,6 +124,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                 return;
             }
             Bake(target, PartIconRenderSettings.CreateDefault(target.Core));
+        }
+
+        /// <summary>
+        /// Bakes the icon for <paramref name="target" /> using default render settings.
+        /// </summary>
+        /// <param name="target">The part to render.</param>
+        /// <param name="showDialog">When true, shows the usual completion/failure dialogs.</param>
+        public static void Bake(CorePartData target, bool showDialog)
+        {
+            if (target == null || target.Core == null)
+            {
+                return;
+            }
+            Bake(target, PartIconRenderSettings.CreateDefault(target.Core), showDialog);
         }
 
         private static string ResolvePartName(CorePartData target)

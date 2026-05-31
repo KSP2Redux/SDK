@@ -39,6 +39,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private const string TAB_ACTIVE_CLASS = "part-tab--active";
 
         private static readonly string[] TAB_IDS = { "core", "modules", "variants" };
+        private static readonly List<Dictionary<PartBehaviourModule, HideFlags>> PendingModuleHideFlagRestores = new();
+        private static bool _restorePendingModuleHideFlagsRegistered;
 
         private VisualElement _root;
         private VisualElement _tabContent;
@@ -48,7 +50,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private void OnEnable()
         {
             _activeTab = SessionState.GetString(SESSION_STATE_KEY_ACTIVE_TAB, DEFAULT_TAB);
-            HideModuleComponentEditors();
+            if (CanMutateInspectorState())
+            {
+                HideModuleComponentEditors();
+            }
             PartValidationExpensiveCache.Changed += OnExpensiveCacheChanged;
         }
 
@@ -60,6 +65,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private void OnExpensiveCacheChanged(CorePartData part)
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             if (_root == null) return;
             if (part != null && part != target) return;
             UpdateValidationChip();
@@ -87,20 +93,96 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             {
                 return;
             }
-            foreach (var pair in _originalModuleHideFlags)
+
+            var originalHideFlags = _originalModuleHideFlags;
+            _originalModuleHideFlags = null;
+            RestoreModuleComponentEditors(originalHideFlags);
+        }
+
+        private static void RestoreModuleComponentEditors(Dictionary<PartBehaviourModule, HideFlags> originalHideFlags)
+        {
+            if (originalHideFlags == null)
+            {
+                return;
+            }
+            if (!CanMutateInspectorState())
+            {
+                PendingModuleHideFlagRestores.Add(originalHideFlags);
+                RegisterPendingModuleHideFlagRestore();
+                return;
+            }
+
+            RestoreModuleComponentEditorsNow(originalHideFlags);
+        }
+
+        private static void RestoreModuleComponentEditorsNow(Dictionary<PartBehaviourModule, HideFlags> originalHideFlags)
+        {
+            foreach (var pair in originalHideFlags)
             {
                 if (pair.Key != null)
                 {
                     pair.Key.hideFlags = pair.Value;
                 }
             }
-            _originalModuleHideFlags = null;
+        }
+
+        private static void RegisterPendingModuleHideFlagRestore()
+        {
+            if (_restorePendingModuleHideFlagsRegistered)
+            {
+                return;
+            }
+            EditorApplication.playModeStateChanged += OnPlayModeStateChangedForPendingRestore;
+            EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
+            _restorePendingModuleHideFlagsRegistered = true;
+        }
+
+        private static void OnPlayModeStateChangedForPendingRestore(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
+            }
+        }
+
+        private static void FlushPendingModuleHideFlagRestores()
+        {
+            if (!CanMutateInspectorState())
+            {
+                if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
+                }
+                return;
+            }
+
+            foreach (var originalHideFlags in PendingModuleHideFlagRestores)
+            {
+                RestoreModuleComponentEditorsNow(originalHideFlags);
+            }
+            PendingModuleHideFlagRestores.Clear();
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChangedForPendingRestore;
+            _restorePendingModuleHideFlagsRegistered = false;
+        }
+
+        private static bool CanMutateInspectorState()
+        {
+            return !EditorApplication.isPlayingOrWillChangePlaymode &&
+                   !EditorApplication.isCompiling &&
+                   !EditorApplication.isUpdating;
         }
 
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
         {
             _root = new VisualElement();
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                _root.Add(new HelpBox(
+                    "Part authoring controls are disabled while Unity is entering or leaving Play Mode.",
+                    HelpBoxMessageType.Info));
+                return _root;
+            }
 
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UXML_PATH);
             if (tree == null)
@@ -234,6 +316,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private void UpdateValidationChip()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             if (_root == null) return;
             var validChip = _root.Q<Button>("readiness-chip-valid");
             if (validChip == null) return;

@@ -54,11 +54,25 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         /// <returns>A status line describing the generated groups, or a failure message.</returns>
         public static string Bake(CorePartData target)
         {
+            return Bake(target, null, true);
+        }
+
+        /// <summary>
+        /// Runs the reentry-mesh generator against the part and saves the generated meshes alongside the prefab.
+        /// </summary>
+        /// <param name="target">The part to bake.</param>
+        /// <param name="prefabPathOverride">Optional prefab path for callers editing loaded prefab contents.</param>
+        /// <param name="savePrefabChanges">When true, saves prefab hierarchy changes before returning.</param>
+        /// <returns>A status line describing the generated groups, or a failure message.</returns>
+        public static string Bake(CorePartData target, string prefabPathOverride, bool savePrefabChanges)
+        {
             if (target == null)
             {
                 return string.Empty;
             }
-            string prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
+            string prefabPath = string.IsNullOrWhiteSpace(prefabPathOverride)
+                ? PathUtils.GetPrefabOrAssetPath(target, target.gameObject)
+                : prefabPathOverride;
             if (string.IsNullOrEmpty(prefabPath))
             {
                 return "Open or select a prefab-backed part to generate reentry meshes.";
@@ -97,7 +111,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                 EditorUtility.DisplayProgressBar(
                     $"Generating reentry meshes for {partName}", "Saving generated meshes", 0.95f);
                 SaveGeneratedReentryMeshAssets(result, prefabPath, partName);
-                SavePrefabChanges(target.gameObject, prefabPath);
+                if (savePrefabChanges)
+                {
+                    SavePrefabChanges(target.gameObject, prefabPath);
+                }
             }
             finally
             {

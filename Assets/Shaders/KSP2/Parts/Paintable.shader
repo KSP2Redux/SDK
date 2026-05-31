@@ -37,7 +37,7 @@ Shader "KSP2/Parts/Paintable"
         [Header(Paint)]
         _PaintA ("Accent Paint", Color) = (0.4418,0.4431,0.5176,1)
         _PaintB ("Base Paint", Color) = (0.6549,0.6667,0.6863,1)
-        [NoScaleOffset] _PaintMaskGlossMap ("Paint Mask / Paint Smoothness", 2D) = "white" {}
+        [NoScaleOffset] _PaintMaskGlossMap ("Paint Mask / Paint Smoothness", 2D) = "black" {}
         _PaintGlossMapScale ("Paint Smoothness Strength", Range(0, 1)) = 1
         _PaintSmoothnessDamping ("Paint Matte Damping", Range(0, 1)) = 0.85
         [Toggle] _SmoothnessOverride ("Use Paint Mask Smoothness", Float) = 0

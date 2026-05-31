@@ -15,6 +15,7 @@
     <ui:Button text="Create Assembly Definition" display-tooltip-when-elided="true" name="AddCodeButton" />
     <ui:Button text="Refresh Addressables Groups" display-tooltip-when-elided="true" name="RefreshAddressablesButton" />
     <ui:Button text="Refresh Thunderkit Pipelines" display-tooltip-when-elided="true" name="RefreshThunderkitButton" />
+    <ui:Button text="Convert KSP1 Part Mod" display-tooltip-when-elided="true" name="ConvertKsp1PartsButton" />
     <ui:VisualElement style="flex-grow: 0; background-color: rgb(47, 47, 47); height: 1px;" />
     <ui:Label tabindex="-1" text="Deployment And Testing" display-tooltip-when-elided="true" />
     <ui:Button text="Test In Editor" display-tooltip-when-elided="true" name="TestInEditorButton" />

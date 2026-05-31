@@ -86,8 +86,8 @@ Material:
     - _TdotVScale: 3
     - _TextureOffsetX: 0.11522087
     - _TextureOffsetY: 0.8284408
-    - _TextureScaleX: 1
-    - _TextureScaleY: 3
+    - _TextureScaleX: 3
+    - _TextureScaleY: 3.18
     - _TopGradientFalloff: 0
     - _TopGradientPosOffset: 0
     - _TracesAmount: 0
@@ -98,7 +98,7 @@ Material:
     - _TracesTopFalloffGradient: 0
     - _TracesTopPosOffset: 0
     - _UVSec: 0
-    - _VertexDispContrast: 0.8
+    - _VertexDispContrast: 2.99
     - _VertexDispFalloffGradient: 0.3
     - _VertexDispPosOffset: 0
     - _VertexDispScale: 0.2

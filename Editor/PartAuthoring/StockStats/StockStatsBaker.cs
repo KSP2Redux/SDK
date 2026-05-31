@@ -271,7 +271,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             if (!string.IsNullOrEmpty(resourceName) && data["massPerUnit"] != null)
             {
                 StockBakeResourceDef def = SafeDeserialize<StockBakeResourceDef>(top);
-                if (def?.Data?.name != null && def.Data.massPerUnit > 0f)
+                if (def?.Data?.name != null && def.Data.massPerUnit >= 0f)
                 {
                     rawMass[def.Data.name] = def.Data.massPerUnit;
                 }

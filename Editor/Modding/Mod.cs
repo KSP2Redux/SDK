@@ -23,15 +23,8 @@ namespace Ksp2UnityTools.Editor.Modding
 {
     public class Mod : TextAssetGenerator
     {
+        private const string Ksp2PackageReferenceDirectory = "Packages/KSP2_x64";
         private static string[] _precompiledReferences;
-
-        static Mod()
-        {
-            _precompiledReferences = Directory.GetFiles("Packages/KSP2_x64", "*.dll", SearchOption.TopDirectoryOnly)
-                .Select(Path.GetFileName)
-                .Append("Newtonsoft.Json.dll")
-                .ToArray();
-        }
 
         // The basic information needed for a mod
         public override string PathInMod => "swinfo.json";
@@ -65,6 +58,21 @@ namespace Ksp2UnityTools.Editor.Modding
         [Tooltip("A repository that contains the source code for this mod")]
         public string source = "";
 
+        public string PickerDisplayName
+        {
+            get
+            {
+                string displayName = string.IsNullOrWhiteSpace(name) ? id : name;
+                string displayId = string.IsNullOrWhiteSpace(id) ? "no id" : id;
+                if (string.Equals(displayName, displayId, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return displayId;
+                }
+
+                return $"{displayName} [{displayId}]";
+            }
+        }
+
         public string Folder => Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
         public string AssemblyPath => Folder + $"/Code/{id}.asmdef";
         public string MainPluginPath => Folder + $"/Code/{id}Plugin.cs";
@@ -75,9 +83,10 @@ namespace Ksp2UnityTools.Editor.Modding
         [HideInInspector] public AddressableAssetGroup celestialBodiesGroup;
         [HideInInspector] public AddressableAssetGroup scienceExperimentGroup;
         [HideInInspector] public AddressableAssetGroup techNodeDataGroup;
+        [HideInInspector] public AddressableAssetGroup resourcesGroup;
 
         public AddressableAssetGroup[] AllGroups => new[]
-            { allGroup, partsGroup, missionsGroup, celestialBodiesGroup, scienceExperimentGroup, techNodeDataGroup };
+            { allGroup, partsGroup, missionsGroup, celestialBodiesGroup, scienceExperimentGroup, techNodeDataGroup, resourcesGroup };
 
         [HideInInspector] public string addressablesProfileId;
 
@@ -97,6 +106,34 @@ namespace Ksp2UnityTools.Editor.Modding
         {
         };
 
+
+        public bool SyncPickerDisplayName()
+        {
+            if (!ModPickerDisplayNameSync.CanTouchAssets())
+            {
+                return false;
+            }
+
+            string desiredName = PickerDisplayName;
+            if (string.Equals(((Object)this).name, desiredName, System.StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            ((Object)this).name = desiredName;
+            EditorUtility.SetDirty(this);
+            return true;
+        }
+
+        private void OnEnable()
+        {
+            SyncPickerDisplayName();
+        }
+
+        private void OnValidate()
+        {
+            SyncPickerDisplayName();
+        }
 
         public override string Generate()
         {
@@ -359,7 +396,7 @@ namespace %MOD%
                 ["references"] = { },
                 ["allowUnsafeCode"] = true,
                 ["overrideReferences"] = true,
-                ["precompiledReferences"] = new JArray(_precompiledReferences),
+                ["precompiledReferences"] = new JArray(GetPrecompiledReferences()),
                 ["autoReferenced"] = true,
                 ["defineConstants"] = { },
                 ["versionDefines"] = { },
@@ -370,13 +407,47 @@ namespace %MOD%
             AssetDatabase.Refresh();
         }
 
+        private static string[] GetPrecompiledReferences()
+        {
+            if (_precompiledReferences != null)
+            {
+                return _precompiledReferences;
+            }
+
+            List<string> references = new();
+            if (Directory.Exists(Ksp2PackageReferenceDirectory))
+            {
+                references.AddRange(
+                    Directory.GetFiles(Ksp2PackageReferenceDirectory, "*.dll", SearchOption.TopDirectoryOnly)
+                        .Select(Path.GetFileName)
+                        .Where(name => !string.IsNullOrWhiteSpace(name))
+                );
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"KSP2UnityTools: optional reference package '{Ksp2PackageReferenceDirectory}' was not found. " +
+                    "Mod assembly generation will use only editor-available references."
+                );
+            }
+
+            if (!references.Contains("Newtonsoft.Json.dll"))
+            {
+                references.Add("Newtonsoft.Json.dll");
+            }
+
+            _precompiledReferences = references.ToArray();
+            return _precompiledReferences;
+        }
+
         private static string[] _usedLabels =
         {
             "parts_data",
             "celestial_bodies",
             "scienceExperiment",
             "missions",
-            "techNodeData"
+            "techNodeData",
+            "resources"
         };
 
         public void CreateAddressablesGroups()
@@ -447,6 +518,8 @@ namespace %MOD%
                 settings.CreateGroup($"{id}_experiments", false, false, false, settings.DefaultGroup.Schemas);
             techNodeDataGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_tech_nodes") ??
                 settings.CreateGroup($"{id}_tech_nodes", false, false, false, settings.DefaultGroup.Schemas);
+            resourcesGroup = settings.groups.FirstOrDefault(x => x.name == $"{id}_resources") ??
+                settings.CreateGroup($"{id}_resources", false, false, false, settings.DefaultGroup.Schemas);
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
         }

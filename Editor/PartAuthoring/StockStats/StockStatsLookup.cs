@@ -49,7 +49,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             for (int i = 0; i < ResourceMasses.Count; i++)
             {
                 ResourceMassEntry entry = ResourceMasses[i];
-                if (entry != null && string.Equals(entry.Name, resourceName, StringComparison.Ordinal))
+                if (entry != null && string.Equals(entry.Name, resourceName, StringComparison.OrdinalIgnoreCase))
                 {
                     massPerUnit = entry.MassPerUnit;
                     return true;

@@ -1,4 +1,5 @@
 ﻿using System;
+using Ksp2UnityTools.Editor.PartAuthoring;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -23,6 +24,8 @@ namespace Ksp2UnityTools.Editor.Modding
             refreshAddressables.clicked += () => { (target as Mod)?.CreateAddressablesGroups(); };
             var refreshThunderkit = root.Q<Button>("RefreshThunderkitButton");
             refreshThunderkit.clicked += () => { (target as Mod)?.RefreshPipelines(); };
+            var convertKsp1Parts = root.Q<Button>("ConvertKsp1PartsButton");
+            convertKsp1Parts.clicked += () => { Ksp1ModConverterWindow.Open((Mod)target); };
             var testInEditor = root.Q<Button>("TestInEditorButton");
             testInEditor.clicked += async () => { await KSP2UnityToolsManager.TestModsInPlayMode((Mod)target); };
             var testInPlayer = root.Q<Button>("TestInPlayerButton");

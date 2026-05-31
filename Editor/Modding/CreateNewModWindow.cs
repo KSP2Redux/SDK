@@ -60,7 +60,9 @@ namespace Ksp2UnityTools.Editor.Modding
 
             var info = CreateInstance<Mod>();
             info.id = id;
-            AssetDatabase.CreateAsset(info, $"Assets/{id}/swinfo.asset");
+            info.name = id;
+            info.SyncPickerDisplayName();
+            AssetDatabase.CreateAsset(info, $"Assets/{id}/{id}.asset");
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             if (addAssembly)

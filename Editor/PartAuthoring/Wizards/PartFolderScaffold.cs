@@ -341,7 +341,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 );
                 return;
             }
-            AddressablesTools.MakeAddressable(group, prefabPath, _partName);
+            AddressablesTools.MakeAddressable(group, prefabPath, PartAuthoringAddressables.GetPrefabAddress(_partName));
             _addressableEntryGroup = group;
             _addressableEntryGuid = AssetDatabase.AssetPathToGUID(prefabPath);
         }

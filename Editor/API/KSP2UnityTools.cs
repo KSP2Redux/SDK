@@ -56,19 +56,46 @@ namespace Ksp2UnityTools.Editor.API
         public static Mod FindParentMod(Object thisAsset)
         {
             string path = AssetDatabase.GetAssetPath(thisAsset);
-            try
-            {
-                // Now we want to find the folder immediately after assets
-                int assetsStart = path.IndexOf("Assets/");
-                int trueStart = path.IndexOf('/', assetsStart + "Assets/".Length);
-                string truePath = path[..trueStart];
-                var mod = AssetDatabase.LoadAssetAtPath<Mod>(truePath + "/swinfo.asset");
-                return mod;
-            }
-            catch (Exception)
+            if (string.IsNullOrEmpty(path))
             {
                 return null;
             }
+
+            path = path.Replace('\\', '/');
+            if (!path.StartsWith("Assets/", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            int trueStart = path.IndexOf('/', "Assets/".Length);
+            if (trueStart < 0)
+            {
+                return null;
+            }
+
+            string truePath = path[..trueStart];
+            var legacyMod = AssetDatabase.LoadAssetAtPath<Mod>(truePath + "/swinfo.asset");
+            if (legacyMod != null)
+            {
+                return legacyMod;
+            }
+
+            foreach (string guid in AssetDatabase.FindAssets("t:Mod", new[] { truePath }))
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
+                if (!string.Equals(Path.GetDirectoryName(assetPath)?.Replace('\\', '/'), truePath, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var mod = AssetDatabase.LoadAssetAtPath<Mod>(assetPath);
+                if (mod != null)
+                {
+                    return mod;
+                }
+            }
+
+            return null;
         }
 
         public static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)

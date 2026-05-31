@@ -38,5 +38,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Windows
         /// Menu priority for the Stock Stats Bake window.
         /// </summary>
         public const int PRIORITY_STOCK_STATS_BAKE = 140;
+
+        /// <summary>
+        /// Menu priority for the KSP1 part-mod converter.
+        /// </summary>
+        public const int PRIORITY_KSP1_MOD_CONVERTER = 150;
     }
 }
