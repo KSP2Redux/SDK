@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -164,7 +165,11 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
             var row = new VisualElement();
             row.AddToClassList("data-editor-inline-row");
             row.Add(new Button(() => CampaignPackAuthoringActions.BakeToJson(target)) { text = "Bake to JSON" });
-            row.Add(new Button(() => CampaignPackBrowserWindow.Open()) { text = "Open Browser" });
+            row.Add(new Button(CampaignPackBrowserWindow.Open) { text = "Open Browser" });
+            if (target is CampaignPack)
+            {
+                row.Add(new Button(() => LocExportFlow.RunForAsset(target)) { text = "Export Localizations" });
+            }
             root.Add(row);
 
             root.Bind(serializedObject);
@@ -200,19 +205,47 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
             list.AddToClassList("data-editor-section-list");
             outer.Add(list);
 
-            add.clicked += () =>
-            {
-                arrayProp.serializedObject.Update();
-                arrayProp.arraySize++;
-                arrayProp.GetArrayElementAtIndex(arrayProp.arraySize - 1).stringValue = string.Empty;
-                arrayProp.serializedObject.ApplyModifiedProperties();
-                Rebuild();
-            };
+            add.clicked += () => InsertBlank(arrayProp.arraySize, true);
 
             Rebuild();
             return outer;
 
-            void Rebuild()
+            void InsertBlank(int insertIndex, bool focusNewField)
+            {
+                arrayProp.serializedObject.Update();
+                if (insertIndex < 0 || insertIndex > arrayProp.arraySize)
+                {
+                    insertIndex = arrayProp.arraySize;
+                }
+
+                if (insertIndex == arrayProp.arraySize)
+                {
+                    arrayProp.arraySize++;
+                }
+                else
+                {
+                    arrayProp.InsertArrayElementAtIndex(insertIndex);
+                }
+
+                arrayProp.GetArrayElementAtIndex(insertIndex).stringValue = string.Empty;
+                arrayProp.serializedObject.ApplyModifiedProperties();
+                Rebuild(focusNewField ? insertIndex : -1);
+            }
+
+            void DeleteAt(int deleteIndex)
+            {
+                arrayProp.serializedObject.Update();
+                if (deleteIndex < 0 || deleteIndex >= arrayProp.arraySize)
+                {
+                    return;
+                }
+
+                arrayProp.DeleteArrayElementAtIndex(deleteIndex);
+                arrayProp.serializedObject.ApplyModifiedProperties();
+                Rebuild(Math.Min(deleteIndex, arrayProp.arraySize - 1));
+            }
+
+            void Rebuild(int focusIndex = -1)
             {
                 arrayProp.serializedObject.Update();
                 list.Clear();
@@ -229,18 +262,18 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
                             flexGrow = 1f
                         }
                     };
+                    field.SubmitRequested += _ => InsertBlank(index + 1, true);
+                    field.DeleteRequested += () => DeleteAt(index);
                     row.Add(field);
-                    row.Add(new Button(() =>
-                    {
-                        arrayProp.serializedObject.Update();
-                        arrayProp.DeleteArrayElementAtIndex(index);
-                        arrayProp.serializedObject.ApplyModifiedProperties();
-                        Rebuild();
-                    })
+                    row.Add(new Button(() => DeleteAt(index))
                     {
                         text = "X"
                     });
                     list.Add(row);
+                    if (index == focusIndex)
+                    {
+                        field.schedule.Execute(field.FocusInput);
+                    }
                 }
             }
         }
