@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using KSP;
 using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.CampaignPacks;
 using Ksp2UnityTools.Editor.Localization.Windows;
 using Ksp2UnityTools.Editor.MissionAuthoring;
 using UnityEditor;
@@ -19,6 +20,7 @@ namespace Ksp2UnityTools.Editor.Localization.Export
         private const string PartsFilename = "parts_loc.csv";
         private const string CelestialBodyFilename = "celestialbody_loc.csv";
         private const string MissionsFilename = "missions_loc.csv";
+        private const string CampaignPacksFilename = "campaign_packs_loc.csv";
         private const string ModSubpath = "Copied/localizations";
         private const string ProjectLocFolder = "Assets/ReduxAssets/Localizations";
 
@@ -34,8 +36,8 @@ namespace Ksp2UnityTools.Editor.Localization.Export
                 return;
             }
 
-            List<LocalizationKeyEntry> entries = null;
-            string defaultFilename = null;
+            List<LocalizationKeyEntry>? entries = null;
+            string? defaultFilename = null;
 
             if (asset is GameObject go)
             {
@@ -54,6 +56,11 @@ namespace Ksp2UnityTools.Editor.Localization.Export
             {
                 entries = MissionLocalizationExtractor.Extract(mission);
                 defaultFilename = MissionsFilename;
+            }
+            else if (asset is CampaignPack campaignPack)
+            {
+                entries = CampaignPackLocalizationExtractor.Extract(campaignPack);
+                defaultFilename = CampaignPacksFilename;
             }
 
             if (entries == null || defaultFilename == null)
