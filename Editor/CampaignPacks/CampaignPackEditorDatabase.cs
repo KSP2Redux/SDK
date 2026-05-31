@@ -14,6 +14,13 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
     /// </summary>
     public static class CampaignPackEditorDatabase
     {
+        private const string DefaultGalaxyDefinitionKey = "GalaxyDefinition_Default";
+        private const string DefinitionsRoot = "Assets/ReduxAssets/Definitions";
+        private const string TechNodesFolder = DefinitionsRoot + "/TechNodes";
+        private const string MissionsFolder = DefinitionsRoot + "/Missions";
+        private const string ExperimentsFolder = DefinitionsRoot + "/Experiments";
+        private const string CelestialBodiesFolder = DefinitionsRoot + "/CelestialBodies";
+
         /// <summary>
         /// Finds all campaign pack assets in the Unity project.
         /// </summary>
@@ -51,16 +58,16 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
         public static CampaignPackCatalog BuildCatalog()
         {
             var catalog = new CampaignPackCatalog();
+            Add(catalog.GalaxyKeys, DefaultGalaxyDefinitionKey);
             foreach (var pack in FindCampaignPacks()) Add(catalog.PackIds, pack.id);
             foreach (var set in FindTechTreeSets()) Add(catalog.TechTreeSetIds, set.id);
             foreach (var set in FindMissionSets()) Add(catalog.MissionSetIds, set.id);
             foreach (var set in FindScienceSets()) Add(catalog.ScienceSetIds, set.id);
 
             foreach (var path in AssetDatabase.FindAssets("t:TextAsset")
-                         .Select(AssetDatabase.GUIDToAssetPath)
-                         .Where(path => path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+                         .Select(AssetDatabase.GUIDToAssetPath))
             {
-                ReadJsonCatalogEntry(path, catalog);
+                ReadTextAssetCatalogEntry(path, catalog);
             }
 
             foreach (var mission in FindAssets<Mission>())
@@ -98,11 +105,16 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
                 .ToList();
         }
 
-        private static void ReadJsonCatalogEntry(string path, CampaignPackCatalog catalog)
+        private static void ReadTextAssetCatalogEntry(string path, CampaignPackCatalog catalog)
         {
             if (Path.GetFileNameWithoutExtension(path).StartsWith("GalaxyDefinition_", StringComparison.Ordinal))
             {
                 Add(catalog.GalaxyKeys, Path.GetFileNameWithoutExtension(path));
+            }
+
+            if (!path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
             }
 
             JObject root;
@@ -115,44 +127,59 @@ namespace Ksp2UnityTools.Editor.CampaignPacks
                 return;
             }
 
-            var id = root.Value<string>("ID");
-            if (string.IsNullOrWhiteSpace(id)) id = root.Value<string>("Id");
-
-            if (path.IndexOf("TechNodes", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                root["RequiredSciencePoints"] != null ||
-                root["UnlockedPartsIDs"] != null)
+            if (IsUnderFolder(path, TechNodesFolder))
             {
-                Add(catalog.TechNodeIds, id);
+                Add(catalog.TechNodeIds, ReadId(root));
+                return;
             }
 
-            if (path.IndexOf("Missions", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                root["missionStages"] != null ||
-                root["GameModeFeatureId"] != null)
+            if (IsUnderFolder(path, MissionsFolder))
             {
-                Add(catalog.MissionIds, id);
+                Add(catalog.MissionIds, ReadId(root));
+                return;
             }
 
-            var experimentId = root.Value<string>("ExperimentID") ??
+            if (IsUnderFolder(path, ExperimentsFolder))
+            {
+                Add(catalog.ExperimentIds, ReadExperimentId(root));
+                return;
+            }
+
+            if (IsUnderFolder(path, CelestialBodiesFolder))
+            {
+                ReadScienceCatalogEntry(root, catalog);
+            }
+        }
+
+        private static void ReadScienceCatalogEntry(JObject root, CampaignPackCatalog catalog)
+        {
+            foreach (var region in root["Regions"]?.Children<JObject>() ?? Enumerable.Empty<JObject>())
+            {
+                Add(catalog.ScienceRegionIds, ReadId(region));
+            }
+
+            foreach (var discoverable in root["Discoverables"]?.Children<JObject>() ?? Enumerable.Empty<JObject>())
+            {
+                Add(catalog.DiscoverableIds, ReadId(discoverable));
+            }
+        }
+
+        private static string? ReadId(JObject root)
+        {
+            return root.Value<string>("ID") ?? root.Value<string>("Id");
+        }
+
+        private static string? ReadExperimentId(JObject root)
+        {
+            return root.Value<string>("ExperimentID") ??
                 root.SelectToken("data.ExperimentID")?.Value<string>() ??
-                id;
-            if (path.IndexOf("Experiments", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                root["ExperimentID"] != null ||
-                root.SelectToken("data.ExperimentID") != null)
-            {
-                Add(catalog.ExperimentIds, experimentId);
-            }
+                ReadId(root);
+        }
 
-            if (path.IndexOf("ScienceRegion", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                path.IndexOf("ScienceRegions", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                Add(catalog.ScienceRegionIds, id ?? Path.GetFileNameWithoutExtension(path));
-            }
-
-            if (path.IndexOf("Discoverable", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                path.IndexOf("Discoverables", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                Add(catalog.DiscoverableIds, id ?? Path.GetFileNameWithoutExtension(path));
-            }
+        private static bool IsUnderFolder(string path, string folder)
+        {
+            return path.StartsWith(folder + "/", StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith(folder + "\\", StringComparison.OrdinalIgnoreCase);
         }
 
         private static void Add(HashSet<string> values, string? value)
