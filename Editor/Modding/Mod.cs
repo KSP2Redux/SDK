@@ -376,7 +376,12 @@ namespace %MOD%
             "celestial_bodies",
             "scienceExperiment",
             "missions",
-            "techNodeData"
+            "techNodeData",
+            "campaign_packs",
+            "campaign_pack_tech_tree_sets",
+            "campaign_pack_mission_sets",
+            "campaign_pack_science_sets",
+            "campaign_pack_extensions"
         };
 
         public void CreateAddressablesGroups()
