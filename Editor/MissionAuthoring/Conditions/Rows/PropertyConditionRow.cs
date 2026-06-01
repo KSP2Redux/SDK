@@ -12,7 +12,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
     /// Card-style editor for a <see cref="PropertyCondition" />.
     /// </summary>
     /// <remarks>
-    /// Bold "Property Condition" header with delete on the right, followed by aligned labeled rows for the watcher picker, operator, threshold, and optional input string. Mirrors the Propellant card pattern used in part-authoring.
+    /// Bold "Property Condition" header with delete on the right, followed by aligned labeled rows for the watcher picker, operator, threshold, current-value requirement, and optional input string. Mirrors the Propellant card pattern used in part-authoring.
     /// </remarks>
     public sealed class PropertyConditionRow : ConditionRowBase
     {
@@ -88,6 +88,16 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
             _thresholdSlot.AddToClassList("condition-row-threshold-slot");
             _body.Add(_thresholdSlot);
 
+            var requireCurrentValueToggle = new Toggle("Require Current Value")
+            {
+                value = _condition.RequireCurrentValue,
+                tooltip = "When enabled, the condition must still be true when evaluated instead of staying complete after it was met once.",
+            };
+            requireCurrentValueToggle.AddToClassList("condition-row-field");
+            requireCurrentValueToggle.AddToClassList("unity-base-field__aligned");
+            requireCurrentValueToggle.RegisterValueChangedCallback(OnRequireCurrentValueChanged);
+            _body.Add(requireCurrentValueToggle);
+
             _inputSlot = new VisualElement();
             _inputSlot.AddToClassList("condition-row-input-slot");
             _body.Add(_inputSlot);
@@ -138,6 +148,14 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
             if (op == _condition.propOperator) return;
             Undo.RecordObject(Mission, "Edit condition operator");
             _condition.propOperator = op;
+            EditorUtility.SetDirty(Mission);
+            NotifyChanged?.Invoke();
+        }
+
+        private void OnRequireCurrentValueChanged(ChangeEvent<bool> evt)
+        {
+            Undo.RecordObject(Mission, "Edit current value requirement");
+            _condition.RequireCurrentValue = evt.newValue;
             EditorUtility.SetDirty(Mission);
             NotifyChanged?.Invoke();
         }
