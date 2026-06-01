@@ -1,8 +1,12 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <ui:TextField picking-mode="Ignore" label="Mod Id" value="filler text" />
-    <ui:Toggle label="Add Code To Mod" />
-    <ui:VisualElement style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
-        <ui:Button text="Create" display-tooltip-when-elided="true" name="Create" style="width: 48%; margin-left: 1%; margin-right: 1%; margin-top: 1%; margin-bottom: 1%; flex-shrink: 1;" />
-        <ui:Button text="Cancel" display-tooltip-when-elided="true" name="Cancel" style="width: 48%; margin-left: 1%; margin-right: 1%; margin-top: 1%; margin-bottom: 1%; flex-shrink: 1;" />
+    <ui:VisualElement class="sdk-root">
+        <ui:Label text="New Mod" class="sdk-section-header" />
+        <ui:TextField picking-mode="Ignore" label="Mod Id" name="ModIdField" class="unity-base-field__aligned" />
+        <ui:VisualElement name="ModIdHelpSlot" />
+        <ui:Toggle label="Add Code To Mod" name="AddCodeToggle" class="unity-base-field__aligned" />
+        <ui:VisualElement class="sdk-button-row">
+            <ui:Button text="Create" name="Create" class="sdk-action-button" />
+            <ui:Button text="Cancel" name="Cancel" class="sdk-action-button" />
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

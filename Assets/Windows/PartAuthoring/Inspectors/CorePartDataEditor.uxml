@@ -36,6 +36,7 @@
                     <engine:Button name="chip-reexport-json"        text="Re-export JSON"    class="part-inspector-chip" />
                     <engine:Button name="chip-open-prefab"          text="Open Prefab"       class="part-inspector-chip" />
                     <engine:Button name="chip-open-reference-parts" text="Reference Parts"   class="part-inspector-chip" tooltip="Open the Reference Parts window, scoped to this part's bucket." />
+                    <engine:Button name="chip-export-localizations" text="Export Localizations" class="part-inspector-chip" tooltip="Export this part's loc keys (incl. variants) to a CSV." />
                 </engine:VisualElement>
             </engine:VisualElement>
 

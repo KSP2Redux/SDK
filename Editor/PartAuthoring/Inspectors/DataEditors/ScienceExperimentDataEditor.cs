@@ -2,8 +2,8 @@ using System.Globalization;
 using System.Reflection;
 using KSP.Modules;
 using KSP.Sim.Definitions;
-using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
         private const BindingFlags FIELD_FLAGS =
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
 
-        private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
+        private const string USS_PATH = "/Assets/Windows/DataEditors.uss";
 
         private Transform _partRoot;
 

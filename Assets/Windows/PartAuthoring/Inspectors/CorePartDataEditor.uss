@@ -368,7 +368,7 @@
     padding-bottom: 4px;
     padding-left: 6px;
     padding-right: 6px;
-    border-right-width: 2px;
+    border-right-width: 1px;
     border-right-color: rgba(0, 0, 0, 0.55);
 }
 
@@ -384,8 +384,10 @@
     align-items: stretch;
     padding-top: 0;
     padding-bottom: 0;
-    border-bottom-width: 2px;
-    border-bottom-color: rgba(0, 0, 0, 0.55);
+}
+
+.serialized-array-table__row--alt {
+    background-color: rgba(255, 255, 255, 0.04);
 }
 
 .serialized-array-table__cell {
@@ -397,7 +399,7 @@
     padding-bottom: 2px;
     padding-left: 6px;
     padding-right: 6px;
-    border-right-width: 2px;
+    border-right-width: 1px;
     border-right-color: rgba(0, 0, 0, 0.55);
     justify-content: center;
 }

@@ -14,6 +14,7 @@ namespace Ksp2UnityTools.Editor.Modding
                 SDKConfiguration.BasePath + "/Assets/Windows/ModEditor.uxml"
             );
             TemplateContainer root = gui.CloneTree();
+            Ksp2UnityToolsStyles.Apply(root);
             var addCode = root.Q<Button>("AddCodeButton");
             addCode.clicked += () =>
             {

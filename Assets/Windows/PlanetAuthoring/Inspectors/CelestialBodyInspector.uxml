@@ -21,6 +21,7 @@
         <engine:Foldout text="Quick Tools" value="true" class="body-inspector-section body-inspector-quick-tools">
             <engine:Button name="quick-preview-controls" text="Preview Controls" />
             <engine:Button name="quick-landmark-manager" text="Landmark Manager" />
+            <engine:Button name="quick-export-localizations" text="Export Localizations" tooltip="Export this body's loc keys (incl. sibling science region keys) to a CSV." />
         </engine:Foldout>
 
         <engine:VisualElement class="body-inspector-body-data">
@@ -48,7 +49,7 @@
                 <editor:PropertyField binding-path="core.data.hasOcean" label="Has Ocean" tooltip="Body has a liquid ocean layer. The ocean is rendered separately from atmosphere and uses Ocean Altitude and Ocean Density below." />
                 <editor:PropertyField binding-path="core.data.HasLocalSpace" label="Has Local Space" tooltip="Body renders in local (close-up) space, with full PQS detail and physics interaction. Disable for bodies that should only ever appear at scaled-space distance." />
                 <editor:PropertyField binding-path="core.data.radius" label="Radius (m)" tooltip="Body radius in meters, measured from the center of mass to sea level." />
-                <editor:PropertyField binding-path="core.data.gravityASL" label="Surface Gravity (g)" tooltip="Acceleration due to gravity at sea level, in meters per second squared." />
+                <editor:PropertyField binding-path="core.data.gravityASL" label="Surface Gravity (g)" tooltip="Acceleration due to gravity at sea level, in g (multiples of Earth's standard gravity, where 1 g = 9.80665 m/s²)." />
                 <editor:PropertyField binding-path="core.data.oceanAltitude" label="Ocean Altitude (m)" tooltip="Altitude of the ocean surface above the body radius, in meters. Negative values place the ocean below mean radius." />
                 <editor:PropertyField binding-path="core.data.oceanDensity" label="Ocean Density" tooltip="Density of the ocean liquid. Used for buoyancy and drag calculations." />
                 <editor:PropertyField binding-path="core.data.MinTerrainHeight" label="Min Terrain Height (m)" tooltip="Lowest elevation reached by the heightmap, in meters relative to sea level. Used for camera and physics range calculations." />

@@ -7,9 +7,9 @@ using KSP.Game;
 using KSP.Sim;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Fields;
-using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
+using Ksp2UnityTools.Editor.Widgets;
 using Redux.Modules.Attributes;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private const string DATA_TYPE_PREFIX = "Data_";
 
-        private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/DataEditors/DataEditors.uss";
+        private const string USS_PATH = "/Assets/Windows/DataEditors.uss";
 
         /// <summary>
         /// Builds the editor VisualElement for the given module.

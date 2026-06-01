@@ -7,3 +7,22 @@ Toggle > VisualElement {
     flex-shrink: 1;
     flex-grow: 0;
 }
+
+.modding-mods-scroll {
+    flex-grow: 1;
+    flex-shrink: 0;
+    background-color: rgb(32, 32, 32);
+    border-left-color: rgb(32, 32, 32);
+    border-right-color: rgb(32, 32, 32);
+    border-top-color: rgb(32, 32, 32);
+    border-bottom-color: rgb(32, 32, 32);
+    border-left-width: 3px;
+    border-right-width: 3px;
+    border-top-width: 3px;
+    border-bottom-width: 3px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-bottom: 6px;
+}

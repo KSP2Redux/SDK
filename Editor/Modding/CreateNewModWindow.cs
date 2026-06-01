@@ -23,10 +23,48 @@ namespace Ksp2UnityTools.Editor.Modding
                 )
                 .Instantiate();
             rootVisualElement.Add(doc);
-            var field = rootVisualElement.Q<TextField>();
-            var addCode = rootVisualElement.Q<Toggle>();
+            Ksp2UnityToolsStyles.Apply(rootVisualElement);
+
+            var field = rootVisualElement.Q<TextField>("ModIdField");
+            var addCode = rootVisualElement.Q<Toggle>("AddCodeToggle");
+            var helpSlot = rootVisualElement.Q<VisualElement>("ModIdHelpSlot");
             var create = rootVisualElement.Q<Button>("Create");
             var cancel = rootVisualElement.Q<Button>("Cancel");
+
+            var help = new HelpBox(string.Empty, HelpBoxMessageType.Error);
+            help.style.display = DisplayStyle.None;
+            helpSlot.Add(help);
+
+            void Refresh()
+            {
+                string id = (field.value ?? string.Empty).Normalize();
+                if (string.IsNullOrEmpty(id))
+                {
+                    help.style.display = DisplayStyle.None;
+                    create.SetEnabled(false);
+                    return;
+                }
+                if (!IsValidIdentifier(id))
+                {
+                    help.text = "Mod ID is not a valid C# identifier.";
+                    help.style.display = DisplayStyle.Flex;
+                    create.SetEnabled(false);
+                    return;
+                }
+                if (Directory.Exists($"Assets/{id}"))
+                {
+                    help.text = $"Folder 'Assets/{id}' already exists.";
+                    help.style.display = DisplayStyle.Flex;
+                    create.SetEnabled(false);
+                    return;
+                }
+                help.style.display = DisplayStyle.None;
+                create.SetEnabled(true);
+            }
+
+            field.RegisterValueChangedCallback(_ => Refresh());
+            Refresh();
+
             create.clicked += () =>
             {
                 CreateMod(field.value, addCode.value);
@@ -38,18 +76,6 @@ namespace Ksp2UnityTools.Editor.Modding
         private static void CreateMod(string id, bool addAssembly)
         {
             id = id.Normalize();
-            if (!IsValidIdentifier(id))
-            {
-                EditorUtility.DisplayDialog("Error", "Mod ID is not a valid C# identifier", "OK");
-                return;
-            }
-
-            if (Directory.Exists($"Assets/{id}"))
-            {
-                EditorUtility.DisplayDialog("Error", "The folder already exists.", "OK");
-                return;
-            }
-
             Directory.CreateDirectory($"Assets/{id}");
             Directory.CreateDirectory($"Assets/{id}/Copied");
             Directory.CreateDirectory($"Assets/{id}/Copied/localizations");

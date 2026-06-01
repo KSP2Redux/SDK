@@ -27,9 +27,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
         private readonly Dictionary<TEntry, VisualElement> _rowByEntry = new();
 
         /// <summary>
-        /// USS class-name prefix applied to every element built by this picker, used to scope styles per subclass.
+        /// USS class-name prefix applied to every element built by this picker. Defaults to
+        /// the shared <c>"picker-window"</c> chrome - subclasses only override when they
+        /// genuinely need divergent styling.
         /// </summary>
-        protected abstract string ClassPrefix { get; }
+        protected virtual string ClassPrefix => "picker-window";
 
         /// <summary>
         /// Placeholder hint shown inside the empty search field.
@@ -37,9 +39,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
         protected abstract string SearchHintText { get; }
 
         /// <summary>
-        /// SDK-relative path to the picker's USS stylesheet.
+        /// SDK-relative path to the picker's USS stylesheet. Defaults to the shared chrome
+        /// at <c>/Assets/Windows/PickerWindow.uss</c>.
         /// </summary>
-        protected abstract string UssPath { get; }
+        protected virtual string UssPath => "/Assets/Windows/PickerWindow.uss";
 
         /// <summary>
         /// Returns the catalog entries grouped and ordered for display.
@@ -93,7 +96,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
 
         private void CreateGUI()
         {
-            rootVisualElement.AddToClassList($"{ClassPrefix}-picker");
+            rootVisualElement.AddToClassList(ClassPrefix);
             Ksp2UnityToolsStyles.Apply(rootVisualElement, UssPath);
 
             var searchField = new TextField { value = string.Empty };

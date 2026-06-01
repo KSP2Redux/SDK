@@ -27,9 +27,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
             OpenWindow<AddTransformerPicker>("Add Transformer", onConfirm);
         }
 
-        protected override string ClassPrefix => "add-transformer";
         protected override string SearchHintText => "Search transformers...";
-        protected override string UssPath => "/Assets/Windows/PartAuthoring/Inspectors/Picker/AddTransformerPicker.uss";
 
         protected override IEnumerable<IGrouping<string, TransformerCatalogEntry>> GetEntriesByCategory()
             => TransformerCatalog.GetEntriesByCategory();

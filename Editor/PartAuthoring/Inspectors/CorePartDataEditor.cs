@@ -5,6 +5,7 @@ using KSP;
 using KSP.Modules;
 using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.IO;
+using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs;
@@ -12,6 +13,7 @@ using Ksp2UnityTools.Editor.PartAuthoring.Tools;
 using Ksp2UnityTools.Editor.PartAuthoring.Validation;
 using Ksp2UnityTools.Editor.PartAuthoring.Windows;
 using Ksp2UnityTools.Editor.Validation;
+using Ksp2UnityTools.Editor.Widgets;
 using Redux.VFX.ReentryMeshGeneration;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -404,6 +406,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             WireChip("chip-reexport-json", () => PartJsonSaver.Save((CorePartData)target));
             WireChip("chip-open-prefab", OpenPrefab);
             WireChip("chip-open-reference-parts", Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows.ReferencePartsWindow.ShowWindow);
+            WireChip("chip-export-localizations", () => LocExportFlow.RunForAsset(((CorePartData)target).gameObject));
         }
 
         private void WireChip(string name, Action onClick)
@@ -557,7 +560,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             {
                 case "core":
                     var cpd = (CorePartData)target;
-                    _tabContent.Add(CoreDataSections.BuildIdentity(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildIdentity(serializedObject, cpd));
                     _tabContent.Add(new IconPreviewSection(cpd));
                     _tabContent.Add(CoreDataSections.BuildMassCostCrew(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildBreakageThermal(serializedObject));

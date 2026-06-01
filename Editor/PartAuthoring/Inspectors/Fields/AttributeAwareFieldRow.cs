@@ -6,6 +6,7 @@ using Ksp2UnityTools.Editor.PartAuthoring.Inspectors;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
+using Ksp2UnityTools.Editor.Widgets;
 using Redux.Modules.Attributes;
 using UnityEditor;
 using UnityEditor.UIElements;

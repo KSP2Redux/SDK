@@ -22,11 +22,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// Builds the Identity section (partName, author, category, family, sizeKey, sizeCategory, tags, isCompound).
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <param name="target">The CorePartData instance, used by the partName change tracker to sync addresses.</param>
         /// <returns>A bound Foldout with the section's PropertyFields.</returns>
-        public static VisualElement BuildIdentity(SerializedObject so)
+        public static VisualElement BuildIdentity(SerializedObject so, CorePartData target)
         {
             var foldout = MakeSectionFoldout("Identity");
-            AddField(foldout, so, "core.data.partName");
+            AddPartNameField(foldout, so, target);
             AddField(foldout, so, "core.data.author");
             AddField(foldout, so, "core.data.category");
             AddFamilyField(foldout, so);
@@ -35,6 +36,34 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             AddField(foldout, so, "core.data.tags");
             AddField(foldout, so, "core.data.isCompound");
             return Bound(foldout, so);
+        }
+
+        private static void AddPartNameField(VisualElement parent, SerializedObject so, CorePartData target)
+        {
+            var prop = so.FindProperty("core.data.partName");
+            if (prop == null) return;
+            var field = new TextField(prop.displayName) { isDelayed = true };
+            field.AddToClassList("unity-base-field__aligned");
+            field.BindProperty(prop);
+            parent.Add(field);
+
+            string lastSeen = prop.stringValue;
+            field.TrackPropertyValue(prop, p =>
+            {
+                var current = p.stringValue;
+                if (current == lastSeen) return;
+                var previous = lastSeen;
+                lastSeen = current;
+                if (target == null) return;
+                var plan = PartAddressRenameHelper.PlanRename(target, previous, current);
+                if (!plan.HasWork) return;
+                if (!PartAddressRenameHelper.ConfirmAndApply(plan))
+                {
+                    p.stringValue = previous;
+                    p.serializedObject.ApplyModifiedProperties();
+                    lastSeen = previous;
+                }
+            });
         }
 
         /// <summary>

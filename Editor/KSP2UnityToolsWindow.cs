@@ -25,10 +25,7 @@ namespace Ksp2UnityTools.Editor
                 SDKConfiguration.BasePath + "/Assets/Windows/KSP2UnityTools.uxml"
             );
             rootVisualElement.Add(asset.Instantiate());
-            foreach (StyleSheet stylesheet in asset.stylesheets)
-            {
-                rootVisualElement.styleSheets.Add(stylesheet);
-            }
+            Ksp2UnityToolsStyles.Apply(rootVisualElement, "/Assets/Windows/KSP2UnityTools.uss");
 
             var refreshButton = rootVisualElement.Q<Button>("RefreshModsButton");
             refreshButton.clicked += RefreshModList;

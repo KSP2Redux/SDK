@@ -1,5 +1,6 @@
 using System.Reflection;
 using KSP.Modules;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;

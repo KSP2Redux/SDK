@@ -27,9 +27,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
             OpenWindow<AddModulePicker>("Add Module", onConfirm);
         }
 
-        protected override string ClassPrefix => "add-module";
         protected override string SearchHintText => "Search modules...";
-        protected override string UssPath => "/Assets/Windows/PartAuthoring/Inspectors/Picker/AddModulePicker.uss";
 
         protected override IEnumerable<IGrouping<string, ModuleCatalogEntry>> GetEntriesByCategory()
             => PartModuleCatalog.GetEntriesByCategory();
