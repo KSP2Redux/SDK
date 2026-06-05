@@ -11,6 +11,7 @@ namespace Ksp2UnityTools.Editor.Drawers
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var attr = (FilePathFieldAttribute)attribute;
+            bool browseClicked = false;
 
             EditorGUI.BeginProperty(position, label, property);
 
@@ -25,7 +26,11 @@ namespace Ksp2UnityTools.Editor.Drawers
                 property.stringValue = newVal;
             }
 
-            if (GUI.Button(btnRect, "Browse"))
+            browseClicked = GUI.Button(btnRect, "Browse");
+
+            EditorGUI.EndProperty();
+
+            if (browseClicked)
             {
                 string startDir = "Assets";
                 if (!string.IsNullOrEmpty(property.stringValue))
@@ -38,7 +43,11 @@ namespace Ksp2UnityTools.Editor.Drawers
 
                     if (File.Exists(path))
                     {
-                        startDir = Path.GetDirectoryName(path);
+                        string directoryName = Path.GetDirectoryName(path);
+                        if (!string.IsNullOrEmpty(directoryName))
+                        {
+                            startDir = directoryName;
+                        }
                     }
                 }
 
@@ -58,8 +67,6 @@ namespace Ksp2UnityTools.Editor.Drawers
                     }
                 }
             }
-
-            EditorGUI.EndProperty();
         }
     }
 }
