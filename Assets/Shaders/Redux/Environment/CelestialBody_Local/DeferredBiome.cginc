@@ -677,14 +677,26 @@ BiomeAggResult ProcessBiomeAdditive(
             baseTriU, baseTriV, triN, triWeight, triSign, triN_zPositive, cascadeT)
 #endif
 
-    if (biomeActive && mat.biome.x >= 0.0 && heightWeight.x > 0.0)
+    if (mat.biome.x >= 0.0)
+    {
         r1 = _PROC_LAYER(0, tint1, brightness.x);
-    if (biomeActive && mat.biome.y >= 0.0 && heightWeight.y > 0.0)
+        if (!(biomeActive && heightWeight.x > 0.0)) r1 = (BiomeLayerResult)0;
+    }
+    if (mat.biome.y >= 0.0)
+    {
         r2 = _PROC_LAYER(1, tint2, brightness.y);
-    if (biomeActive && mat.biome.z >= 0.0 && heightWeight.z > 0.0)
+        if (!(biomeActive && heightWeight.y > 0.0)) r2 = (BiomeLayerResult)0;
+    }
+    if (mat.biome.z >= 0.0)
+    {
         r3 = _PROC_LAYER(2, tint3, brightness.z);
-    if (biomeActive && mat.biome.w >= 0.0 && heightWeight.w > 0.0)
+        if (!(biomeActive && heightWeight.z > 0.0)) r3 = (BiomeLayerResult)0;
+    }
+    if (mat.biome.w >= 0.0)
+    {
         r4 = _PROC_LAYER(3, tint4, brightness.w);
+        if (!(biomeActive && heightWeight.w > 0.0)) r4 = (BiomeLayerResult)0;
+    }
 #undef _PROC_LAYER
 
     // ------- Per-layer height-blend weights -----------------------------
