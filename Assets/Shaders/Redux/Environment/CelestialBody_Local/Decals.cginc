@@ -61,10 +61,11 @@ float ComputeDecalFade(float cameraDist)
 // by decalBlendFactor) and `nrmAccum` (blend against decalQuatRotated or
 // decalWorldNrm scaled by NormalOpacity*decalFade).
 //
-// The quat-rotate math below has a deliberate operator-precedence quirk: only
-// the second cross-product term is divided by decalQuatLen.  Do NOT replace
-// the inline math with Common.cginc::RotateByHalfArcQuat -- the "corrected"
-// version produces a visibly different result.
+// The quat-rotate math below mirrors stock's inline half-arc quaternion,
+// verified op-for-op against the RAW DXBC decompile
+// (KSP2Shaders/CelestialBody_Local/variants/Pass14_.../variant_NONE.hlsl):
+// the ENTIRE cross(surfTangent, decalWorldNrm) is divided by decalQuatLen, and
+// the decal normal contribution is scaled by the scalar decalMaskFinal.
 void ApplyOneDecal(
     uint slot, float3 localPos, float decalFade, float3 surfTangent,
     inout HmDiffs diffs, inout float3 nrmAccum)
@@ -111,12 +112,12 @@ void ApplyOneDecal(
     float3 decalTbnNrm   = mul(decalDecNrm, float3x3(decal.DecalRight, decal.DecalForward, decal.DecalUp));
     float3 decalWorldNrm = normalize(mul((float3x3)_PQSToWorld, decalTbnNrm));
 
-    // Half-arc quaternion blend.  The operator precedence on the cross
-    // expression is intentional: only the second term divides by quatLen.
+    // Half-arc quaternion: qXYZ = cross(surfTangent, decalWorldNrm) / quatLen.
+    // The WHOLE cross is divided by decalQuatLen -- the parens are load-bearing.
     float  decalQuatDot1   = dot(surfTangent, decalWorldNrm) + 1.0;
     float  decalQuatLen    = sqrt(decalQuatDot1 + decalQuatDot1);
-    float3 decalQuatCross  = surfTangent.yzx * decalWorldNrm.zxy
-                           - decalWorldNrm.yzx * surfTangent.zxy / decalQuatLen;
+    float3 decalQuatCross  = (surfTangent.yzx * decalWorldNrm.zxy
+                           -  decalWorldNrm.yzx * surfTangent.zxy) / decalQuatLen;
     float  decalQuatW      = decalQuatDot1 / decalQuatLen;
     float  decalQuatDiag   = decalQuatW * decalQuatW - dot(decalQuatCross, decalQuatCross);
     float  decalQuatNdotP  = dot(decalQuatCross, nrmAccum);
@@ -124,8 +125,10 @@ void ApplyOneDecal(
     float3 decalQuatRotated = (decalQuatW + decalQuatW) * cross(decalQuatCross, nrmAccum)
                             + nrmAccum * decalQuatDiag
                             + (decalQuatNdotP + decalQuatNdotP) * decalQuatCross;
-    float3 decalDirNrm     = (decalMaskFinal * decalUseWorldNrm) ? decalWorldNrm : decalQuatRotated;
-    float3 decalBlendedNrm = decal.NormalOpacity * decalDirNrm * decalFade + nrmAccum;
+    // Stock selects world-vs-quat normal purely on NormalBlend, then scales the
+    // decal contribution by decalMaskFinal (a scalar weight, not a select term).
+    float3 decalDirNrm     = decalUseWorldNrm ? decalWorldNrm : decalQuatRotated;
+    float3 decalBlendedNrm = decal.NormalOpacity * (decalMaskFinal * decalDirNrm) * decalFade + nrmAccum;
 
     diffs.aux   = lerp(diffs.aux,   decalAlbedoDiff, decalBlendFactor);
     diffs.large = lerp(diffs.large, decalAlbedoDiff, decalBlendFactor);
