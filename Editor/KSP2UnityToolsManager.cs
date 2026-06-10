@@ -17,6 +17,8 @@ namespace Ksp2UnityTools.Editor
     [InitializeOnLoad]
     public static class KSP2UnityToolsManager
     {
+        private const string BootKspSceneFileName = "boot-ksp.unity";
+        private const string PreferredBootKspScenePath = "Assets/boot-ksp.unity";
         public static readonly KSP2UnityToolsSettings Settings;
 
         static KSP2UnityToolsManager()
@@ -34,11 +36,11 @@ namespace Ksp2UnityTools.Editor
 
 #if !REDUX
 
-            if (!File.Exists("Assets/boot-ksp.unity"))
+            if (ResolveBootKspScenePath() == null)
             {
                 File.Copy(
                     SDKConfiguration.BasePath + "/Assets/Scenes/boot-ksp.unity",
-                    "Assets/boot-ksp.unity"
+                    PreferredBootKspScenePath
                 );
             }
 
@@ -99,8 +101,29 @@ namespace Ksp2UnityTools.Editor
             }
 
             // ReSharper disable once AccessToStaticMemberViaDerivedType
-            EditorSceneManager.OpenScene("Assets/boot-ksp.unity");
+            string bootScenePath = ResolveBootKspScenePath();
+            if (bootScenePath == null)
+            {
+                throw new FileNotFoundException($"Could not find {BootKspSceneFileName} in the project.");
+            }
+
+            EditorSceneManager.OpenScene(bootScenePath);
             EditorApplication.EnterPlaymode();
+        }
+
+        private static string ResolveBootKspScenePath()
+        {
+            if (File.Exists(PreferredBootKspScenePath))
+            {
+                return PreferredBootKspScenePath;
+            }
+
+            return AssetDatabase.FindAssets(Path.GetFileNameWithoutExtension(BootKspSceneFileName), new[] { "Assets" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(path => Path.GetFileName(path) == BootKspSceneFileName)
+                .OrderBy(path => path.Length)
+                .ThenBy(path => path)
+                .FirstOrDefault();
         }
 
         public static async Task TestModsInBuiltGame(params Mod[] mods)
