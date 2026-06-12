@@ -80,23 +80,27 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
                 report.Warn($"Part '{core.data.partName}' was saved but no parts addressables group was available.");
             }
 
-            CorePartData savedCore = savedPrefab.GetComponent<CorePartData>();
-            if (savedCore != null)
+            var savedCore = savedPrefab.GetComponent<CorePartData>();
+            if (savedCore == null)
             {
-                string iconPath = $"{partFolder}/{core.data.partName}_icon.png";
-                if (Ksp1EditorAssetUtility.CanWrite(iconPath, manifest, overwriteGenerated, report))
-                {
-                    PartIconBaker.Bake(savedCore, false);
-                    manifest.MarkGenerated(iconPath);
-                }
-
-                string reentryStatus = BakeReentryMeshesInPrefabContents(prefabPath);
-                if (!string.IsNullOrWhiteSpace(reentryStatus))
-                {
-                    report.Info($"Part '{core.data.partName}' reentry mesh bake: {reentryStatus}");
-                    MarkGeneratedReentryMeshes(partFolder, core.data.partName, manifest);
-                }
+                return;
             }
+
+            string iconPath = $"{partFolder}/{core.data.partName}_icon.png";
+            if (Ksp1EditorAssetUtility.CanWrite(iconPath, manifest, overwriteGenerated, report))
+            {
+                PartIconBaker.Bake(savedCore, false);
+                manifest.MarkGenerated(iconPath);
+            }
+
+            string reentryStatus = BakeReentryMeshesInPrefabContents(prefabPath);
+            if (string.IsNullOrWhiteSpace(reentryStatus))
+            {
+                return;
+            }
+
+            report.Info($"Part '{core.data.partName}' reentry mesh bake: {reentryStatus}");
+            MarkGeneratedReentryMeshes(partFolder, core.data.partName, manifest);
         }
 
         public static void ImportResources(
@@ -226,7 +230,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             try
             {
                 contents = PrefabUtility.LoadPrefabContents(prefabPath);
-                CorePartData core = contents.GetComponent<CorePartData>();
+                var core = contents.GetComponent<CorePartData>();
                 if (core == null)
                 {
                     return string.Empty;
@@ -285,7 +289,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             }
 
             string path = $"{textureFolder}/{BlankPaintMaskName}.asset";
-            Texture2D mask = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            var mask = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (mask == null)
             {
                 mask = new Texture2D(1, 1, TextureFormat.RGBA32, false, true)
@@ -312,7 +316,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
 
             string safeName = Ksp1EditorAssetUtility.SanitizePathSegment(string.IsNullOrWhiteSpace(name) ? asset.GetType().Name : name);
             string path = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{safeName}.{extension}");
+            ClearPersistenceBlockingHideFlags(asset);
             AssetDatabase.CreateAsset(asset, path);
+        }
+
+        private static void ClearPersistenceBlockingHideFlags(Object asset)
+        {
+            asset.hideFlags = HideFlags.None;
         }
     }
 
@@ -366,12 +376,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
 
         public static string FormatJson(string rawJson)
         {
-            if (string.IsNullOrWhiteSpace(rawJson))
-            {
-                return "";
-            }
-
-            return JObject.Parse(rawJson).ToString(Formatting.Indented);
+            return string.IsNullOrWhiteSpace(rawJson) ? "" : JObject.Parse(rawJson).ToString(Formatting.Indented);
         }
 
         public static string SanitizePathSegment(string value)
