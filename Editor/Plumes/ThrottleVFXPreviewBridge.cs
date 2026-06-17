@@ -498,7 +498,7 @@ namespace KSP.Editor
             unchecked
             {
                 int hash = 17;
-                hash = hash * 31 + manager.GetInstanceID();
+                hash = hash * 31 + manager.GetEntityId().GetHashCode();
                 hash = hash * 31 + _previewEngineMode;
                 hash = hash * 31 + (int)_previewModeEvent;
                 hash = hash * 31 + Mathf.RoundToInt(_previewThrottle * 1000f);

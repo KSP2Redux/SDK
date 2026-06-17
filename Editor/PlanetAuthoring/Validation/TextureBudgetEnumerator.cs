@@ -16,7 +16,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
     /// </summary>
     /// <remarks>
     /// Sizes come from <see cref="Profiler.GetRuntimeMemorySizeLong" /> which handles compressed formats and
-    /// Texture2DArray slice counts. Textures are deduped by instance ID so the same Texture2DArray referenced
+    /// Texture2DArray slice counts. Textures are deduped by entity ID so the same Texture2DArray referenced
     /// from both the surface material and a buffer binding is counted once. The enumerator surfaces a per-category
     /// breakdown and a top-N list so the artist sees what is heavy. Streaming-mip-map state is reported but not
     /// adjusted away from the upper-bound number.
@@ -44,7 +44,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
             }
         }
 
-        /// <summary>Per-texture entries deduped by instance ID.</summary>
+        /// <summary>Per-texture entries deduped by entity ID.</summary>
         public List<Entry> Entries { get; } = new();
         /// <summary>Aggregate VRAM in bytes across every entry.</summary>
         public long TotalBytes { get; private set; }
@@ -55,7 +55,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
         /// <summary>Number of entries with <c>Texture2D.streamingMipmaps</c> enabled.</summary>
         public int StreamingMipsCount { get; private set; }
 
-        private readonly HashSet<int> _seen = new();
+        private readonly HashSet<EntityId> _seen = new();
 
         /// <summary>
         /// Builds a fresh enumeration for <paramref name="body" />.
@@ -164,7 +164,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
             {
                 Texture2D src = sources[i];
                 if (src == null) continue;
-                if (!_seen.Add(src.GetInstanceID())) continue;
+                if (!_seen.Add(src.GetEntityId())) continue;
                 int biome = i / 4;
                 int layer = i % 4 + 1;
                 string detail = $"Biome {PlanetAuthoringNaming.BiomeChannels[biome]} Layer {layer}";
@@ -180,7 +180,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
             {
                 Texture2D src = sources[i];
                 if (src == null) continue;
-                if (!_seen.Add(src.GetInstanceID())) continue;
+                if (!_seen.Add(src.GetEntityId())) continue;
                 int tier = i < 4 ? 3 : 4;
                 int biome = i % 4;
                 string detail = $"Subzone {tier} Biome {PlanetAuthoringNaming.BiomeChannels[biome]}";
@@ -193,7 +193,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
             Texture2DArray array = FindArraySubasset(pqsData, arrayName);
             if (array == null) return 0;
             // Mark the array as already accounted for so the surface-material walk doesn't add it back.
-            _seen.Add(array.GetInstanceID());
+            _seen.Add(array.GetEntityId());
             int sliceCount = array.depth;
             long arrayBytes = Profiler.GetRuntimeMemorySizeLong(array);
             return sliceCount > 0 ? arrayBytes / sliceCount : 0;
@@ -294,7 +294,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
             // Skip runtime-allocated render targets - they're not authored content and the artist can't
             // act on them from the breakdown.
             if (tex is RenderTexture) return;
-            int id = tex.GetInstanceID();
+            EntityId id = tex.GetEntityId();
             if (!_seen.Add(id)) return;
             long bytes = Profiler.GetRuntimeMemorySizeLong(tex);
             AddEntry(tex, category, bytes, detail);

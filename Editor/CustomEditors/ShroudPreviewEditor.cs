@@ -39,7 +39,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             public float GeneratedHeight;
         }
 
-        private static readonly Dictionary<int, ShroudPreviewSettings> SettingsByModule = new();
+        private static readonly Dictionary<EntityId, ShroudPreviewSettings> SettingsByModule = new();
 
         private static readonly FieldInfo FairingDataField =
             typeof(Module_Fairing).GetField("_dataFairing", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -61,7 +61,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 return;
             }
 
-            SettingsByModule.TryGetValue(module.GetInstanceID(), out var settings);
+            SettingsByModule.TryGetValue(module.GetEntityId(), out var settings);
             string targetKey = settings?.TargetSizeKey ?? GetDefaultTargetKey(module, fairing);
 
             var moduleTransform = module.gameObject.transform;
@@ -79,8 +79,8 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
         internal static ShroudPreviewSettings GetOrCreateSettings(Module_Fairing module, Data_Fairing fairing)
         {
-            var instanceId = module.GetInstanceID();
-            if (SettingsByModule.TryGetValue(instanceId, out var settings))
+            var moduleId = module.GetEntityId();
+            if (SettingsByModule.TryGetValue(moduleId, out var settings))
             {
                 if (!PartSizeRegistry.IsValidKey(settings.TargetSizeKey))
                 {
@@ -92,7 +92,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             {
                 TargetSizeKey = GetDefaultTargetKey(module, fairing),
             };
-            SettingsByModule[instanceId] = settings;
+            SettingsByModule[moduleId] = settings;
             return settings;
         }
 

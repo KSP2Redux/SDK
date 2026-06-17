@@ -1485,13 +1485,13 @@ namespace KSP.Editor
 
         private static string GetParamLockKey(ThrottleBlendshapeData data, string paramGroup, string shaderParam)
         {
-            return ParamLockPrefix + data.GetInstanceID() + "." + SanitizeKeyFragment(paramGroup) + "." +
+            return ParamLockPrefix + data.GetEntityId() + "." + SanitizeKeyFragment(paramGroup) + "." +
                 SanitizeKeyFragment(shaderParam);
         }
 
         private string GetPrefKey(string suffix)
         {
-            return "ThrottleBlendshapeDataEditor." + target.GetInstanceID() + "." + suffix;
+            return "ThrottleBlendshapeDataEditor." + target.GetEntityId() + "." + suffix;
         }
 
         private readonly struct ValidationReport

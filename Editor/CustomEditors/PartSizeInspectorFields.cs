@@ -324,7 +324,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         {
             return property == null
                 ? string.Empty
-                : property.serializedObject.targetObject.GetInstanceID() + ":" + property.propertyPath;
+                : property.serializedObject.targetObject.GetEntityId() + ":" + property.propertyPath;
         }
 
         private static string GetMetaCategoryName(string key)

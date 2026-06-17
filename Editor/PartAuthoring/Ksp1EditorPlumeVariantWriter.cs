@@ -75,7 +75,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
 
                 foreach (Transform parent in FindChildrenRecursive(partPrefab.transform, instancePlan.ParentTransformName))
                 {
-                    string key = instancePlan.ModeIndex + "|" + instancePlan.ParentTransformName + "|" + parent.GetInstanceID();
+                    string key = instancePlan.ModeIndex + "|" + instancePlan.ParentTransformName + "|" + parent.GetEntityId();
                     if (!placed.Add(key))
                     {
                         continue;
@@ -127,7 +127,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             {
                 foreach (Transform parent in FindChildrenRecursive(partPrefab.transform, instancePlan.ParentTransformName))
                 {
-                    string key = instancePlan.ParentTransformName + "|" + parent.GetInstanceID();
+                    string key = instancePlan.ParentTransformName + "|" + parent.GetEntityId();
                     if (!placed.Add(key))
                     {
                         continue;

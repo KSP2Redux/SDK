@@ -35,10 +35,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// </remarks>
     public static class SceneViewFraming
     {
-        // PQS instance ID -> last (lat, lon) framed by a lat/lon-bearing call. SessionInitialFraming
+        // PQS entity ID -> last (lat, lon) framed by a lat/lon-bearing call. SessionInitialFraming
         // reads this on session start so re-entering preview returns to the artist's last view
         // instead of snapping back to (0, 0). In-memory only - lost on domain reload, which is acceptable.
-        private static readonly Dictionary<int, (double lat, double lon)> LastLatLon = new();
+        private static readonly Dictionary<EntityId, (double lat, double lon)> LastLatLon = new();
 
         /// <summary>
         /// Reads the last (lat, lon) framed for this PQS via a lat/lon-bearing call.
@@ -49,7 +49,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// <returns>True if a record exists for this PQS, false otherwise.</returns>
         public static bool TryGetLastLatLon(PQS pqs, out double lat, out double lon)
         {
-            if (pqs != null && LastLatLon.TryGetValue(pqs.GetInstanceID(), out var entry))
+            if (pqs != null && LastLatLon.TryGetValue(pqs.GetEntityId(), out var entry))
             {
                 lat = entry.lat;
                 lon = entry.lon;
@@ -74,7 +74,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             var distanceFromCenter = CurrentDistanceFromCenter(ctx, mode);
             ApplyPqsRotation(ctx, localDir, mode);
             PositionCameraAtDistance(ctx, mode, distanceFromCenter);
-            LastLatLon[ctx.Pqs.GetInstanceID()] = (latitudeDegrees, longitudeDegrees);
+            LastLatLon[ctx.Pqs.GetEntityId()] = (latitudeDegrees, longitudeDegrees);
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             var localDir = LatLon.GetRelSurfaceNVector(latitudeDegrees, longitudeDegrees);
             ApplyPqsRotation(ctx, localDir, mode);
             PositionCameraAtAltitude(ctx, mode, localDir, altitudeAboveSurfaceMeters);
-            LastLatLon[ctx.Pqs.GetInstanceID()] = (latitudeDegrees, longitudeDegrees);
+            LastLatLon[ctx.Pqs.GetEntityId()] = (latitudeDegrees, longitudeDegrees);
         }
 
         /// <summary>

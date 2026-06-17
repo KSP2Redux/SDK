@@ -116,14 +116,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 
             var landmarks = pqs.GetComponentsInChildren<SurfaceLandmark>(true);
             var allSpawners = pqs.GetComponentsInChildren<PrefabSpawner>(true);
-            var landmarkSpawnerIds = new HashSet<int>();
+            var landmarkSpawnerIds = new HashSet<EntityId>();
             var landmarkRegionIds = new HashSet<string>(StringComparer.Ordinal);
             foreach (var landmark in landmarks)
             {
                 if (landmark == null) continue;
                 if (landmark.ManagedSpawner != null)
                 {
-                    landmarkSpawnerIds.Add(landmark.ManagedSpawner.GetInstanceID());
+                    landmarkSpawnerIds.Add(landmark.ManagedSpawner.GetEntityId());
                 }
                 if (!string.IsNullOrEmpty(landmark.DiscoverableRegionId))
                 {
@@ -134,7 +134,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             foreach (var spawner in allSpawners)
             {
                 if (spawner == null) continue;
-                if (landmarkSpawnerIds.Contains(spawner.GetInstanceID())) continue;
+                if (landmarkSpawnerIds.Contains(spawner.GetEntityId())) continue;
                 standaloneSpawners.Add(spawner);
             }
 
@@ -490,14 +490,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 foreach (var d in decals)
                 {
                     if (d == null) { sb.Append('|'); continue; }
-                    sb.Append(d.GetInstanceID()).Append(',').Append(d.LatLong.x.ToString("0.0000")).Append(',').Append(d.LatLong.y.ToString("0.0000")).Append('|');
+                    sb.Append(d.GetEntityId().ToString()).Append(',').Append(d.LatLong.x.ToString("0.0000")).Append(',').Append(d.LatLong.y.ToString("0.0000")).Append('|');
                 }
             }
             sb.Append(";");
             foreach (var s in spawners)
             {
                 if (s == null) continue;
-                sb.Append(s.GetInstanceID()).Append(',').Append(s.transform.position.x.ToString("0.0")).Append(',').Append(s.transform.position.y.ToString("0.0")).Append(',').Append(s.transform.position.z.ToString("0.0")).Append('|');
+                sb.Append(s.GetEntityId().ToString()).Append(',').Append(s.transform.position.x.ToString("0.0")).Append(',').Append(s.transform.position.y.ToString("0.0")).Append(',').Append(s.transform.position.z.ToString("0.0")).Append('|');
             }
             sb.Append(";");
             foreach (var d in discoverables)
@@ -509,7 +509,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             foreach (var l in landmarks)
             {
                 if (l == null) continue;
-                sb.Append(l.GetInstanceID()).Append(',').Append(l.SmoothingRadius.ToString("0.0")).Append(',').Append(l.EnableDecal ? '1' : '0').Append(l.EnablePrefab ? '1' : '0').Append(l.EnableDiscoverable ? '1' : '0').Append('|');
+                sb.Append(l.GetEntityId().ToString()).Append(',').Append(l.SmoothingRadius.ToString("0.0")).Append(',').Append(l.EnableDecal ? '1' : '0').Append(l.EnablePrefab ? '1' : '0').Append(l.EnableDiscoverable ? '1' : '0').Append('|');
             }
             return sb.ToString();
         }

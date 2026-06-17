@@ -49,13 +49,13 @@ namespace Ksp2UnityTools.Editor.Localization.Windows
         /// <summary>
         /// Intercepts double-click on a CSV asset and opens it in this window when the file's first line matches the I2 header signature.
         /// </summary>
-        /// <param name="instanceID">The Unity instance ID of the asset being opened.</param>
+        /// <param name="assetId">The Unity editor asset handle supplied by the open-asset callback.</param>
         /// <param name="line">The target line number requested by the caller. Unused.</param>
         /// <returns>True if the asset was handled by this window, false otherwise.</returns>
         [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceID, int line)
+        public static bool OnOpenAsset(EntityId assetId, int line)
         {
-            var path = AssetDatabase.GetAssetPath(instanceID);
+            var path = AssetDatabase.GetAssetPath(assetId);
             if (string.IsNullOrEmpty(path)) return false;
             if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) return false;
             string head;

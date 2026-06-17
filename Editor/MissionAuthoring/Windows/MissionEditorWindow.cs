@@ -29,10 +29,12 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Windows
         private Button _exportLocalizationsChip;
 
         [OnOpenAsset]
-        private static bool OnOpenMissionAsset(int instanceID, int line)
+        private static bool OnOpenMissionAsset(EntityId assetId, int line)
         {
-            var obj = EditorUtility.InstanceIDToObject(instanceID);
-            if (obj is not Mission mission) return false;
+            string path = AssetDatabase.GetAssetPath(assetId);
+            if (string.IsNullOrEmpty(path)) return false;
+            Mission mission = AssetDatabase.LoadAssetAtPath<Mission>(path);
+            if (mission == null) return false;
             OpenFor(mission);
             return true;
         }
