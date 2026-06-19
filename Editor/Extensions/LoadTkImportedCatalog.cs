@@ -9,6 +9,9 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Ksp2UnityTools.Editor.Extensions
 {
+#if TK_ADDRESSABLE
+    [InitializeOnLoad]
+#endif
     public class LoadTkImportedCatalog : AssetPostprocessor
     {
         // This must be the same as the output of the ImportKsp2ToEditor pipeline.
@@ -18,6 +21,31 @@ namespace Ksp2UnityTools.Editor.Extensions
         private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
 
 #if TK_ADDRESSABLE
+        static LoadTkImportedCatalog()
+        {
+            // The imported catalog locators are normally registered after a domain reload (see
+            // OnPostprocessAllAssets). Entering Play Mode re-runs Addressables'
+            // FastModeInitializationOperation, which rebuilds the resource locators from the project's
+            // AddressableAssetSettings and drops the imported catalog. With Domain Reload enabled the
+            // play-mode reload re-fires the postprocessor and re-registers it; with Reload Domain
+            // disabled that never happens, so on the second Play Mode enter base-game content registered
+            // only in the imported catalog (e.g. the kspFlow.unity scene) becomes unresolvable
+            // ("No Location found for Key=kspFlow.unity"). Re-register on entering Play Mode to restore
+            // the domain-reload behavior. Unsubscribe first so a domain reload can't double-subscribe.
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
+            // startup flow loads kspFlow.unity (via GameManager's LoadingFlow), so this is in time.
+            if (state == PlayModeStateChange.EnteredPlayMode)
+            {
+                EnsureImportedCatalogsLoaded();
+            }
+        }
+
         /// <summary>
         /// Loads an addressable catalog into a resource locator after domain reload.
         /// This makes the path identifiers in the catalog accessible in the editor,
@@ -31,8 +59,20 @@ namespace Ksp2UnityTools.Editor.Extensions
             bool didDomainReload
         )
         {
+            if (!didDomainReload)
+            {
+                return;
+            }
+
+            EnsureImportedCatalogsLoaded();
+        }
+
+        // Registers the ThunderKit-imported content catalog(s) with Addressables if they are not already
+        // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
+        private static void EnsureImportedCatalogsLoaded()
+        {
             string ksp2CatalogFullPath = Path.Join(Application.dataPath, loadTkImportedCatalogPath);
-            if (!didDomainReload || !File.Exists(ksp2CatalogFullPath))
+            if (!File.Exists(ksp2CatalogFullPath))
             {
                 return;
             }

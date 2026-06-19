@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1 &217272697655189677
 GameObject:
@@ -5568,10 +5568,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5597,10 +5597,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5626,10 +5626,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.5
     PreviouslyRenderedValue: 4.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5655,10 +5655,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5684,10 +5684,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0.22
     PreviouslyRenderedValue: 0.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5713,10 +5713,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5742,10 +5742,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.6
     PreviouslyRenderedValue: 0.6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5771,10 +5771,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5800,10 +5800,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 0.12
     PreviouslyRenderedValue: 0.12
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5829,10 +5829,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5858,10 +5858,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.0372223
     PreviouslyRenderedValue: 1.0372223
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5887,10 +5887,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 6
     PreviouslyRenderedValue: 6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5916,10 +5916,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5945,10 +5945,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -5974,10 +5974,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6003,10 +6003,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6032,10 +6032,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6061,10 +6061,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6090,10 +6090,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6119,10 +6119,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6148,10 +6148,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0.6
     PreviouslyRenderedValue: 0.6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6177,10 +6177,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0.15
     PreviouslyRenderedValue: 0.15
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6206,10 +6206,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6235,10 +6235,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6264,10 +6264,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6293,10 +6293,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0.43863854
     PreviouslyRenderedValue: 0.43863854
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6322,10 +6322,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6351,10 +6351,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6380,10 +6380,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6409,10 +6409,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6438,10 +6438,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6467,10 +6467,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6496,10 +6496,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6525,10 +6525,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -6555,10 +6555,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1.3760512, g: 2.1405241, b: 4.867144, a: 1}
     PreviouslyRenderedValue: {r: 1.3760512, g: 2.1405241, b: 4.867144, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 1.3760512, g: 2.1405241, b: 4.867144, a: 1}
@@ -6590,10 +6590,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0.21374744, g: 0.27949163, b: 0.5188679, a: 1}
     PreviouslyRenderedValue: {r: 0.21374744, g: 0.27949163, b: 0.5188679, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.21374744, g: 0.27949163, b: 0.5188679, a: 1}
@@ -6625,10 +6625,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.40945762, g: 0.45847437, b: 0.6320754, a: 1}
     PreviouslyRenderedValue: {r: 0.40945762, g: 0.45847437, b: 0.6320754, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.40945762, g: 0.45847437, b: 0.6320754, a: 1}
@@ -6661,7 +6661,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6699,7 +6699,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6728,7 +6728,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6757,7 +6757,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6786,7 +6786,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6815,7 +6815,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6844,7 +6844,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6873,7 +6873,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6902,7 +6902,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6931,7 +6931,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6960,7 +6960,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -6989,7 +6989,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -7018,7 +7018,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -7047,7 +7047,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -7076,7 +7076,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -7106,7 +7106,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -7141,7 +7141,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -7176,7 +7176,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -22927,10 +22927,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.35
     PreviouslyRenderedValue: 0.35
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -22965,10 +22965,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -22994,10 +22994,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.3
     PreviouslyRenderedValue: 4.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23023,10 +23023,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23052,10 +23052,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23081,10 +23081,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23110,10 +23110,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23139,10 +23139,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23168,10 +23168,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23197,10 +23197,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0.37880808
     PreviouslyRenderedValue: 0.37880808
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23226,10 +23226,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.22
     PreviouslyRenderedValue: 1.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23255,10 +23255,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23284,10 +23284,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23313,10 +23313,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23342,10 +23342,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23371,10 +23371,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23400,10 +23400,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23429,10 +23429,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23458,10 +23458,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23487,10 +23487,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0.05
     PreviouslyRenderedValue: 0.05
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23516,10 +23516,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23545,10 +23545,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23574,10 +23574,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23603,10 +23603,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23632,10 +23632,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23661,10 +23661,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23690,10 +23690,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23719,10 +23719,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23748,10 +23748,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23777,10 +23777,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23806,10 +23806,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23835,10 +23835,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23864,10 +23864,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23893,10 +23893,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -23923,10 +23923,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -23958,10 +23958,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0, g: 0, b: 0, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0, g: 0, b: 0, a: 1}
@@ -23993,10 +23993,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -24029,7 +24029,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24058,7 +24058,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24087,7 +24087,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24116,7 +24116,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24145,7 +24145,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24174,7 +24174,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24203,7 +24203,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24232,7 +24232,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24261,7 +24261,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24290,7 +24290,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24319,7 +24319,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24348,7 +24348,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24377,7 +24377,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24406,7 +24406,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24435,7 +24435,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -24465,7 +24465,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -24500,7 +24500,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -24535,7 +24535,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -30033,10 +30033,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.15
     PreviouslyRenderedValue: 0.15
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30062,10 +30062,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30091,10 +30091,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _RefractionAmount
-    ParamHash: 1544
+    ParamHash: 1767
     Current: 0.04
     PreviouslyRenderedValue: 0.04
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30129,10 +30129,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _BottomRefractionPosOffset
-    ParamHash: 1545
+    ParamHash: 1768
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30158,10 +30158,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _BottomRefractionFalloffGradient
-    ParamHash: 1546
+    ParamHash: 1769
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30187,10 +30187,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30216,10 +30216,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 4
     PreviouslyRenderedValue: 4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30245,10 +30245,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0.11
     PreviouslyRenderedValue: 0.11
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30274,10 +30274,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30303,10 +30303,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30332,10 +30332,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30365,7 +30365,7 @@ MonoBehaviour:
     ParamHash: 0
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 1, g: 1, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 1, g: 1, b: 1, a: 1}
@@ -30398,7 +30398,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30427,7 +30427,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30456,7 +30456,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _RefractionAmount
-    ParamHash: 1544
+    ParamHash: 1767
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30494,7 +30494,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _BottomRefractionPosOffset
-    ParamHash: 1545
+    ParamHash: 1768
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30523,7 +30523,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _BottomRefractionFalloffGradient
-    ParamHash: 1546
+    ParamHash: 1769
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30552,7 +30552,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30581,7 +30581,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30610,7 +30610,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -30898,10 +30898,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.35
     PreviouslyRenderedValue: 0.35
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30936,10 +30936,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30965,10 +30965,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.3
     PreviouslyRenderedValue: 4.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -30994,10 +30994,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31023,10 +31023,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31052,10 +31052,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31081,10 +31081,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.55
     PreviouslyRenderedValue: 0.55
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31110,10 +31110,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31139,10 +31139,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31168,10 +31168,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0.37880808
     PreviouslyRenderedValue: 0.37880808
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31197,10 +31197,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.22
     PreviouslyRenderedValue: 1.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31226,10 +31226,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31255,10 +31255,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31284,10 +31284,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31313,10 +31313,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31342,10 +31342,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31371,10 +31371,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31400,10 +31400,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31429,10 +31429,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31458,10 +31458,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0.05
     PreviouslyRenderedValue: 0.05
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31487,10 +31487,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31516,10 +31516,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31545,10 +31545,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31574,10 +31574,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31603,10 +31603,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31632,10 +31632,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31661,10 +31661,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31690,10 +31690,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31719,10 +31719,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31748,10 +31748,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31777,10 +31777,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31806,10 +31806,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31835,10 +31835,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31864,10 +31864,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -31894,10 +31894,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0, g: 0, b: 0, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0, g: 0, b: 0, a: 1}
@@ -31929,10 +31929,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -31964,10 +31964,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -32000,7 +32000,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32029,7 +32029,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32058,7 +32058,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32087,7 +32087,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32116,7 +32116,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32145,7 +32145,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32174,7 +32174,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32203,7 +32203,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32232,7 +32232,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32261,7 +32261,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32290,7 +32290,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32319,7 +32319,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32348,7 +32348,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32377,7 +32377,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32406,7 +32406,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -32436,7 +32436,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -32471,7 +32471,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -32506,7 +32506,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -43330,10 +43330,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.35
     PreviouslyRenderedValue: 0.35
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43368,10 +43368,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43397,10 +43397,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.3
     PreviouslyRenderedValue: 4.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43426,10 +43426,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43455,10 +43455,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43484,10 +43484,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43513,10 +43513,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43542,10 +43542,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43571,10 +43571,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43600,10 +43600,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0.37880808
     PreviouslyRenderedValue: 0.37880808
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43629,10 +43629,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.22
     PreviouslyRenderedValue: 1.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43658,10 +43658,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43687,10 +43687,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43716,10 +43716,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43745,10 +43745,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43774,10 +43774,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43803,10 +43803,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43832,10 +43832,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43861,10 +43861,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43890,10 +43890,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0.05
     PreviouslyRenderedValue: 0.05
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43919,10 +43919,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43948,10 +43948,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -43977,10 +43977,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44006,10 +44006,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44035,10 +44035,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44064,10 +44064,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44093,10 +44093,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44122,10 +44122,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44151,10 +44151,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44180,10 +44180,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44209,10 +44209,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44238,10 +44238,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44267,10 +44267,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44296,10 +44296,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -44326,10 +44326,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -44361,10 +44361,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0, g: 0, b: 0, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0, g: 0, b: 0, a: 1}
@@ -44396,10 +44396,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0, g: 0, b: 0, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0, g: 0, b: 0, a: 1}
@@ -44432,7 +44432,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44461,7 +44461,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44490,7 +44490,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44519,7 +44519,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44548,7 +44548,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44577,7 +44577,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44606,7 +44606,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44635,7 +44635,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44664,7 +44664,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44693,7 +44693,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44722,7 +44722,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44751,7 +44751,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44780,7 +44780,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44809,7 +44809,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44838,7 +44838,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -44868,7 +44868,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -44903,7 +44903,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -44938,7 +44938,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -55792,10 +55792,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55821,10 +55821,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55850,10 +55850,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.3
     PreviouslyRenderedValue: 4.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55879,10 +55879,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55908,10 +55908,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55937,10 +55937,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.6
     PreviouslyRenderedValue: 0.6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55966,10 +55966,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.08353561
     PreviouslyRenderedValue: 0.08353561
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -55995,10 +55995,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0.05
     PreviouslyRenderedValue: 0.05
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56024,10 +56024,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56053,10 +56053,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0.063951224
     PreviouslyRenderedValue: 0.063951224
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56082,10 +56082,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.22
     PreviouslyRenderedValue: 1.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56111,10 +56111,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56140,10 +56140,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56169,10 +56169,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56198,10 +56198,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56227,10 +56227,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56256,10 +56256,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56285,10 +56285,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56314,10 +56314,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56343,10 +56343,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56372,10 +56372,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0.45
     PreviouslyRenderedValue: 0.45
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56401,10 +56401,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56430,10 +56430,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56459,10 +56459,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56488,10 +56488,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56517,10 +56517,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56546,10 +56546,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56575,10 +56575,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56604,10 +56604,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56633,10 +56633,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56662,10 +56662,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56691,10 +56691,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56720,10 +56720,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56749,10 +56749,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -56779,10 +56779,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0.27843142, g: 0.434634, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.27843142, g: 0.434634, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.27843142, g: 0.434634, b: 1, a: 1}
@@ -56814,10 +56814,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0.9245283, g: 0.4495063, b: 0.25792095, a: 1}
     PreviouslyRenderedValue: {r: 0.9245283, g: 0.4495063, b: 0.25792095, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.9245283, g: 0.4495063, b: 0.25792095, a: 1}
@@ -56849,10 +56849,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 1}
     PreviouslyRenderedValue: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 1}
@@ -56885,7 +56885,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -56923,7 +56923,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -56952,7 +56952,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -56981,7 +56981,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57010,7 +57010,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57039,7 +57039,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57068,7 +57068,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57097,7 +57097,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57126,7 +57126,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57155,7 +57155,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57184,7 +57184,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57213,7 +57213,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57242,7 +57242,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57271,7 +57271,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57300,7 +57300,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -57330,7 +57330,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -57365,7 +57365,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -57400,7 +57400,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -73152,10 +73152,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73181,10 +73181,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73210,10 +73210,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.3
     PreviouslyRenderedValue: 6.8800006
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73239,10 +73239,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73268,10 +73268,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73297,10 +73297,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.6
     PreviouslyRenderedValue: 0.6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73326,10 +73326,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.08353561
     PreviouslyRenderedValue: 0.08353561
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73355,10 +73355,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0.25
     PreviouslyRenderedValue: 0.25
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73384,10 +73384,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 0.25
     PreviouslyRenderedValue: 0.25
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73413,10 +73413,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0.06291363
     PreviouslyRenderedValue: 0.06291363
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73442,10 +73442,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.22
     PreviouslyRenderedValue: 1.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73471,10 +73471,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73500,10 +73500,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 4
     PreviouslyRenderedValue: 4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73529,10 +73529,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73558,10 +73558,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 1.56
     PreviouslyRenderedValue: 1.56
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73587,10 +73587,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73616,10 +73616,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73645,10 +73645,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73674,10 +73674,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73703,10 +73703,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73732,10 +73732,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0.45
     PreviouslyRenderedValue: 0.45
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73761,10 +73761,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73790,10 +73790,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73819,10 +73819,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73848,10 +73848,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73877,10 +73877,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73906,10 +73906,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73935,10 +73935,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73964,10 +73964,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -73993,10 +73993,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -74022,10 +74022,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -74051,10 +74051,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -74080,10 +74080,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -74109,10 +74109,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -74139,10 +74139,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0.40251565, g: 0.53240335, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.40251565, g: 0.53240335, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.40251565, g: 0.53240335, b: 1, a: 1}
@@ -74174,10 +74174,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0.7372549, g: 0.50980395, b: 0.7647059, a: 1}
     PreviouslyRenderedValue: {r: 0.7372549, g: 0.50980395, b: 0.7647059, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.7372549, g: 0.50980395, b: 0.7647059, a: 1}
@@ -74209,10 +74209,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
     PreviouslyRenderedValue: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
@@ -74245,7 +74245,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74283,7 +74283,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74312,7 +74312,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1.6
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74341,7 +74341,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74370,7 +74370,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74399,7 +74399,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74428,7 +74428,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74457,7 +74457,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74486,7 +74486,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74515,7 +74515,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74544,7 +74544,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74573,7 +74573,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74602,7 +74602,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74631,7 +74631,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74660,7 +74660,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -74690,7 +74690,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -74725,7 +74725,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -74760,7 +74760,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -80123,10 +80123,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80161,10 +80161,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80190,10 +80190,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 2.7
     PreviouslyRenderedValue: 2.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80219,10 +80219,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80248,10 +80248,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80277,10 +80277,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.6
     PreviouslyRenderedValue: 0.6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80306,10 +80306,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.19464219
     PreviouslyRenderedValue: 0.19464219
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80335,10 +80335,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80364,10 +80364,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80393,10 +80393,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80422,10 +80422,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.25
     PreviouslyRenderedValue: 1.25
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80451,10 +80451,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80480,10 +80480,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80509,10 +80509,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80538,10 +80538,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80567,10 +80567,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.5622709
     PreviouslyRenderedValue: 0.5622709
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80596,10 +80596,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80625,10 +80625,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80654,10 +80654,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80683,10 +80683,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0.5
     PreviouslyRenderedValue: 0.5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80712,10 +80712,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80741,10 +80741,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80770,10 +80770,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.22
     PreviouslyRenderedValue: 0.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80799,10 +80799,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0.6
     PreviouslyRenderedValue: 0.6
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80828,10 +80828,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80857,10 +80857,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80886,10 +80886,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.65
     PreviouslyRenderedValue: 0.65
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80915,10 +80915,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80944,10 +80944,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -80973,10 +80973,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -81002,10 +81002,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -81031,10 +81031,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -81060,10 +81060,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -81089,10 +81089,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -81119,10 +81119,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0.27843142, g: 0.434634, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.27843142, g: 0.434634, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.27843142, g: 0.434634, b: 1, a: 1}
@@ -81154,10 +81154,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0.9245283, g: 0.4495063, b: 0.25792095, a: 1}
     PreviouslyRenderedValue: {r: 0.9245283, g: 0.4495063, b: 0.25792095, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.9245283, g: 0.4495063, b: 0.25792095, a: 1}
@@ -81189,10 +81189,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.33333334, g: 0.33333334, b: 0.33333334, a: 1}
     PreviouslyRenderedValue: {r: 0.33333334, g: 0.33333334, b: 0.33333334, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.33333334, g: 0.33333334, b: 0.33333334, a: 1}
@@ -81225,7 +81225,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81263,7 +81263,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81292,7 +81292,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81321,7 +81321,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81350,7 +81350,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81379,7 +81379,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81408,7 +81408,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81437,7 +81437,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81466,7 +81466,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81495,7 +81495,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81533,7 +81533,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81562,7 +81562,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81591,7 +81591,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81629,7 +81629,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81658,7 +81658,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -81688,7 +81688,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -81723,7 +81723,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -81758,7 +81758,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -82016,10 +82016,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   AtmoVac_Float_ShaderParameters:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 0.35
     PreviouslyRenderedValue: 0.35
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82054,10 +82054,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 0.2
     PreviouslyRenderedValue: 0.2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82083,10 +82083,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 4.3
     PreviouslyRenderedValue: 4.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82112,10 +82112,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82141,10 +82141,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82170,10 +82170,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82199,10 +82199,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82228,10 +82228,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 0.1
     PreviouslyRenderedValue: 0.1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82257,10 +82257,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82286,10 +82286,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseAmount
-    ParamHash: 1489
+    ParamHash: 1389
     Current: 0.37880808
     PreviouslyRenderedValue: 0.37880808
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82315,10 +82315,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _NoiseStrength
-    ParamHash: 1490
+    ParamHash: 1390
     Current: 1.22
     PreviouslyRenderedValue: 1.22
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82344,10 +82344,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleX
-    ParamHash: 1493
+    ParamHash: 1393
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82373,10 +82373,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TextureScaleY
-    ParamHash: 1494
+    ParamHash: 1394
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82402,10 +82402,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TdotVScale
-    ParamHash: 1499
+    ParamHash: 1399
     Current: 3
     PreviouslyRenderedValue: 3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82431,10 +82431,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuter
-    ParamHash: 1500
+    ParamHash: 1400
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82460,10 +82460,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelOuterBeneath
-    ParamHash: 1501
+    ParamHash: 1401
     Current: 0.7
     PreviouslyRenderedValue: 0.7
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82489,10 +82489,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInner
-    ParamHash: 1505
+    ParamHash: 1405
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82518,10 +82518,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _FresnelInnerBeneath
-    ParamHash: 1506
+    ParamHash: 1406
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82547,10 +82547,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientPosOffset
-    ParamHash: 1507
+    ParamHash: 1407
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82576,10 +82576,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TopGradientFalloff
-    ParamHash: 1508
+    ParamHash: 1408
     Current: 0.05
     PreviouslyRenderedValue: 0.05
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82605,10 +82605,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82634,10 +82634,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82663,10 +82663,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 0.4
     PreviouslyRenderedValue: 0.4
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82692,10 +82692,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82721,10 +82721,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispContrast
-    ParamHash: 1513
+    ParamHash: 1413
     Current: 0.8
     PreviouslyRenderedValue: 0.8
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82750,10 +82750,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82779,10 +82779,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 0.3
     PreviouslyRenderedValue: 0.3
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82808,10 +82808,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesAmount
-    ParamHash: 1520
+    ParamHash: 1420
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82837,10 +82837,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesLength
-    ParamHash: 1521
+    ParamHash: 1421
     Current: 1
     PreviouslyRenderedValue: 1
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82866,10 +82866,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesCount
-    ParamHash: 1522
+    ParamHash: 1422
     Current: 5
     PreviouslyRenderedValue: 5
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82895,10 +82895,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesThickness
-    ParamHash: 1523
+    ParamHash: 1423
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82924,10 +82924,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesStrength
-    ParamHash: 1524
+    ParamHash: 1424
     Current: 2
     PreviouslyRenderedValue: 2
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82953,10 +82953,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopPosOffset
-    ParamHash: 1525
+    ParamHash: 1425
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -82982,10 +82982,10 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _TracesTopFalloffGradient
-    ParamHash: 1526
+    ParamHash: 1426
     Current: 0
     PreviouslyRenderedValue: 0
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxCurve:
       serializedVersion: 2
       m_Curve:
@@ -83012,10 +83012,10 @@ MonoBehaviour:
       m_RotationOrder: 4
   AtmoVac_Color_ShaderParameters:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -83047,10 +83047,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 0, g: 0, b: 0, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0, g: 0, b: 0, a: 1}
@@ -83082,10 +83082,10 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
-    hasRendererd: 1
+    hasRendererd: 0
     MinMaxGradient:
       serializedVersion: 2
       key0: {r: 0.6289308, g: 0.7533749, b: 1, a: 1}
@@ -83118,7 +83118,7 @@ MonoBehaviour:
       m_NumAlphaKeys: 2
   Throttle_Float_ShaderMultipliers:
   - ShaderParamName: _Alpha
-    ParamHash: 1477
+    ParamHash: 1377
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83147,7 +83147,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedX
-    ParamHash: 1478
+    ParamHash: 1378
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83176,7 +83176,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ScrollSpeedY
-    ParamHash: 1479
+    ParamHash: 1379
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83205,7 +83205,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintBoost
-    ParamHash: 1480
+    ParamHash: 1380
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83234,7 +83234,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintFalloff
-    ParamHash: 1485
+    ParamHash: 1385
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83263,7 +83263,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintOffset
-    ParamHash: 1484
+    ParamHash: 1384
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83292,7 +83292,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintMiddlePos
-    ParamHash: 1486
+    ParamHash: 1386
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83321,7 +83321,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndOffset
-    ParamHash: 1487
+    ParamHash: 1387
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83350,7 +83350,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ColorTintEndGradient
-    ParamHash: 1488
+    ParamHash: 1388
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83379,7 +83379,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionAmount
-    ParamHash: 1509
+    ParamHash: 1409
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83408,7 +83408,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionPosOffset
-    ParamHash: 1510
+    ParamHash: 1410
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83437,7 +83437,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _ErosionFalloffGradient
-    ParamHash: 1511
+    ParamHash: 1411
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83466,7 +83466,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispScale
-    ParamHash: 1512
+    ParamHash: 1412
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83495,7 +83495,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispPosOffset
-    ParamHash: 1514
+    ParamHash: 1414
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83524,7 +83524,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   - ShaderParamName: _VertexDispFalloffGradient
-    ParamHash: 1515
+    ParamHash: 1415
     Current: 1
     PreviouslyRenderedValue: 0
     hasRendererd: 0
@@ -83554,7 +83554,7 @@ MonoBehaviour:
       m_RotationOrder: 4
   Throttle_Color_ShaderMultipliers:
   - ShaderParamName: _ColorTintStart
-    ParamHash: 1481
+    ParamHash: 1381
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -83589,7 +83589,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintMiddle
-    ParamHash: 1482
+    ParamHash: 1382
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
@@ -83624,7 +83624,7 @@ MonoBehaviour:
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
   - ShaderParamName: _ColorTintEnd
-    ParamHash: 1483
+    ParamHash: 1383
     Current: {r: 1, g: 1, b: 1, a: 1}
     PreviouslyRenderedValue: {r: 0, g: 0, b: 0, a: 0}
     hasRendererd: 0
