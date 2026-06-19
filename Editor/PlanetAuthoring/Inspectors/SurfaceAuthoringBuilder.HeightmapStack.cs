@@ -1,4 +1,6 @@
+using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Fields;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -203,11 +205,32 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 "Blend falloff",
                 "Falloff softness for the decal's blend with surrounding terrain."
             ));
-            parent.Add(BindPropertyField(
+            var heightOffsetRow = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            var heightOffsetField = BindPropertyField(
                 pqsDataSO, $"{pathPrefix}.HeightOffset",
                 "Height offset",
-                "Vertical offset added to elevation inside the decal radius."
-            ));
+                "Absolute terrain elevation in meters that the decal centre forces. " +
+                "Should match what the heightmap would produce at the pole if there were no UV singularity. " +
+                "Use Auto to compute from the body's heightmap combination."
+            );
+            heightOffsetField.style.flexGrow = 1;
+            heightOffsetRow.Add(heightOffsetField);
+            bool isNorth = poleName == "north";
+            var autoBtn = new Button(() =>
+            {
+                if (pqsDataSO.targetObject is not PQSData pqsData) return;
+                if (!PoleHeightAutoCalc.TryComputeHeightAtPole(pqsData, isNorth, out float meters)) return;
+                SerializedProperty prop = pqsDataSO.FindProperty($"{pathPrefix}.HeightOffset");
+                if (prop == null) return;
+                prop.floatValue = meters;
+                pqsDataSO.ApplyModifiedProperties();
+            })
+            {
+                text = "Auto",
+                tooltip = "Compute the height offset by sampling the body's global heightmap, biome mask, and per-channel large/medium layers at the pole row.",
+            };
+            heightOffsetRow.Add(autoBtn);
+            parent.Add(heightOffsetRow);
             parent.Add(BindPropertyField(
                 pqsDataSO, $"{pathPrefix}.NoiseScale",
                 "Noise scale",
