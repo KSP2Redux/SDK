@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 // ReSharper disable once CheckNamespace
@@ -252,5 +253,16 @@ namespace UitkForKsp2.Controls
         public static string UssValueLabelClassName = UssClassName + "__input-label";
         public static string UssNextButtonClassName = UssClassName + "__input-next-button";
         public static string UssToEndButtonClassName = UssClassName + "__input-to-end-button";
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            UssClassName = "selector";
+            UssToStartButtonClassName = UssClassName + "__input-to-start-button";
+            UssPreviousButtonClassName = UssClassName + "__input-previous-button";
+            UssValueLabelClassName = UssClassName + "__input-label";
+            UssNextButtonClassName = UssClassName + "__input-next-button";
+            UssToEndButtonClassName = UssClassName + "__input-to-end-button";
+        }
     }
 }
