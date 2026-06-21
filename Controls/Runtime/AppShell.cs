@@ -35,6 +35,7 @@ namespace UitkForKsp2.Controls
         private string _iconAddress = string.Empty;
         private Texture2D _iconTexture;
         private Sprite _iconSprite;
+        private StyleBackground? _pendingIcon;
         private bool _uppercaseTitle = true;
         private bool _showCloseButton = true;
         private AppShellTitleSpacing _titleSpacing = AppShellTitleSpacing.Normal;
@@ -75,6 +76,7 @@ namespace UitkForKsp2.Controls
             UpdateIcon();
 
             RegisterCallback<DetachFromPanelEvent>(_ => ReleaseIconHandle());
+            RegisterCallback<AttachToPanelEvent>(_ => ReapplyIcon());
         }
 
         public event Action CloseClicked;
@@ -259,6 +261,7 @@ namespace UitkForKsp2.Controls
         private void UpdateIcon()
         {
             ReleaseIconHandle();
+            _pendingIcon = null;
             _icon.style.display = DisplayStyle.None;
             _icon.style.backgroundImage = StyleKeyword.Null;
 
@@ -307,15 +310,33 @@ namespace UitkForKsp2.Controls
             }
         }
 
-        private void SetIconBackground(Texture2D texture)
+        private void SetIconBackground(Texture2D texture) => ApplyIconBackground(new StyleBackground(texture));
+
+        private void SetIconBackground(Sprite sprite) => ApplyIconBackground(new StyleBackground(sprite));
+
+        private void ApplyIconBackground(StyleBackground background)
         {
-            _icon.style.backgroundImage = new StyleBackground(texture);
+            // The icon load can complete (via Addressables' deferred LateUpdate) after the window has been hidden or
+            // destroyed, leaving _icon detached or its native data released. Cache the icon and only set the style
+            // while attached; ReapplyIcon restores it if/when the element re-attaches.
+            _pendingIcon = background;
+            if (_icon is not { panel: not null })
+            {
+                return;
+            }
+
+            _icon.style.backgroundImage = background;
             _icon.style.display = DisplayStyle.Flex;
         }
 
-        private void SetIconBackground(Sprite sprite)
+        private void ReapplyIcon()
         {
-            _icon.style.backgroundImage = new StyleBackground(sprite);
+            if (_pendingIcon is not { } background || _icon == null)
+            {
+                return;
+            }
+
+            _icon.style.backgroundImage = background;
             _icon.style.display = DisplayStyle.Flex;
         }
 
