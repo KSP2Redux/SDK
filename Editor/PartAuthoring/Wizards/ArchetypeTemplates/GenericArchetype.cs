@@ -42,13 +42,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             {
                 return;
             }
-            StockBucket source = FindFirstUsableBucket(bucket);
+            var source = FindFirstUsableBucket(bucket);
             if (source == null)
             {
                 return;
             }
 
-            PartData data = part.Data;
+            var data = part.Data;
             TrySeedScalar(source, StockFieldNames.Mass, v => data.mass = v);
             TrySeedScalarInt(source, StockFieldNames.Cost, v => data.cost = v);
             TrySeedScalar(source, StockFieldNames.CrashTolerance, v => data.crashTolerance = v);

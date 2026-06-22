@@ -49,7 +49,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// Returns the first bucket that should drive seeded defaults: the exact in-bucket match if
         /// present, otherwise the closest family fallback, otherwise null.
         /// </summary>
-        protected static StockBucket FindFirstUsableBucket(BucketResolution bucket)
+        protected static StockBucket? FindFirstUsableBucket(BucketResolution bucket)
         {
             if (bucket == null)
             {
@@ -59,11 +59,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             {
                 return bucket.InBucket;
             }
-            if (bucket.FamilyFallback != null && bucket.FamilyFallback.Count > 0)
-            {
-                return bucket.FamilyFallback[0];
-            }
-            return null;
+            return bucket.FamilyFallback is { Count: > 0 } ? bucket.FamilyFallback[0] : null;
         }
 
         /// <summary>

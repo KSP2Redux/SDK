@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using KSP;
 using KSP.OAB;
@@ -261,7 +262,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
         private void AddModules(GameObject root)
         {
-            foreach (Type moduleType in _archetype.DefaultModules)
+            foreach (var moduleType in _archetype.DefaultModules)
             {
                 if (_enabledModules != null && !_enabledModules.Contains(moduleType))
                 {
@@ -275,7 +276,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 HydrateDataModules(component);
             }
         }
+        
+        // A simple hydration cache meant to get all the serialized fields of that are of module data
+        private static Dictionary<Type, List<(FieldInfo, Type)>> _moduleDataFields = new();
+        
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearModuleDataFields() => _moduleDataFields.Clear();
 
+        
         /// <summary>
         /// Invokes the module's <c>AddDataModules</c> hook so its DataModules dictionary is populated
         /// before <see cref="IPartArchetype.SeedDefaults" /> runs.
@@ -289,6 +297,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private static void HydrateDataModules(Component component)
         {
             if (component == null) return;
+            
+            // Okay, first we actually need to add all the ModuleData
+            var t = component.GetType();
+
+            if (!_moduleDataFields.TryGetValue(t, out var fields))
+            {
+                _moduleDataFields[t] = fields = t
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(field => field.GetCustomAttribute<SerializeField>() != null)
+                    .Select(field => (field, field.FieldType))
+                    .Where(x => x.FieldType.IsSubclassOf(typeof(ModuleData))).ToList();
+            }
+
+            foreach (var (field, fieldType) in fields)
+            {
+                field.SetValue(component, Activator.CreateInstance(fieldType));
+            }
+            
             var addMethod =
                 component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
                 component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
