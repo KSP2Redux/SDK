@@ -62,7 +62,12 @@ namespace Ksp2UnityTools.Editor.Widgets
             /// <summary>
             /// Gets or sets the optional seed callback invoked after the add button appends a new element. Receives the new entry's SerializedProperty and its index.
             /// </summary>
-            public Action<SerializedProperty, int> OnAddSeed { get; set; }
+            public Action<SerializedProperty, int> ApplyDefaultsToNew { get; set; }
+
+            /// <summary>
+            /// Gets or sets the optional callback for adding an item to the list
+            /// </summary>
+            public Func<object> GenerateNew { get; set; }
         }
 
         /// <summary>
@@ -109,10 +114,10 @@ namespace Ksp2UnityTools.Editor.Widgets
                 var newIndex = arrayProp.arraySize;
                 arrayProp.arraySize++;
                 arrayProp.serializedObject.ApplyModifiedProperties();
-                if (config.OnAddSeed != null)
+                if (config.ApplyDefaultsToNew != null)
                 {
                     arrayProp.serializedObject.Update();
-                    config.OnAddSeed(arrayProp.GetArrayElementAtIndex(newIndex), newIndex);
+                    config.ApplyDefaultsToNew(arrayProp.GetArrayElementAtIndex(newIndex), newIndex);
                     arrayProp.serializedObject.ApplyModifiedProperties();
                 }
                 arrayProp.serializedObject.Update();

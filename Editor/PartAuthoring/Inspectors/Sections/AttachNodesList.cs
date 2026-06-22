@@ -1,4 +1,5 @@
 using KSP;
+using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
@@ -33,6 +34,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                 AddButtonText = "+ Add Attach Node",
                 IdentityFieldName = "nodeID",
                 BuildBody = (entry, body) => BuildAttachNodeBody(entry, body, target),
+                ApplyDefaultsToNew = (entry, i) =>
+                {
+                    var orientation = entry.FindPropertyRelative("orientation")!;
+                    var x = orientation.FindPropertyRelative("x")!;
+                    x.doubleValue = 1.0;
+                    var y = orientation.FindPropertyRelative("y")!;
+                    y.doubleValue = 0.0;
+                    var z = orientation.FindPropertyRelative("z")!;
+                    z.doubleValue = 0.0;
+                }
             });
         }
 
