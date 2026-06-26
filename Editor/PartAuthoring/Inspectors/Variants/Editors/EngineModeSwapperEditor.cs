@@ -49,7 +49,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
                 ChipFieldName = "maxThrust",
                 ChipFormatter = p => $"{p.floatValue.ToString("F0", CultureInfo.InvariantCulture)} kN",
                 BuildBody = (entry, body) => EngineModeBodyBuilder.Build(body, entry, partRoot),
-                OnAddSeed = (entry, newIndex) =>
+                ApplyDefaultsToNew = (entry, newIndex) =>
                 {
                     var idProp = entry.FindPropertyRelative("engineID");
                     if (idProp != null)

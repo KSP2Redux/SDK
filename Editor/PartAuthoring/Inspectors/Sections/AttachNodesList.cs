@@ -34,8 +34,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                 AddButtonText = "+ Add Attach Node",
                 IdentityFieldName = "nodeID",
                 BuildIdentityField = idProp => new AutocompleteField(idProp, string.Empty, PartAuthoringChoiceCatalog.GetStockAttachNodeIds),
-                OnAddSeed = SeedNewAttachNode,
-                BuildBody = (entry, body) => BuildAttachNodeBody(entry, body, target),
+                ApplyDefaultsToNew = SeedNewAttachNode,
+                BuildBody = (entry, body) => BuildAttachNodeBody(entry, body, target)
             });
             section.AddToClassList("attach-nodes-container");
             return section;

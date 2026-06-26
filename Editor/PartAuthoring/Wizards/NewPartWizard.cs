@@ -360,6 +360,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             }
             catch (Exception e)
             {
+                Debug.LogException(e);
                 EditorUtility.DisplayDialog("Part creation failed",
                     $"The scaffold rolled back changes.\n\nError:\n{e.Message}", "OK");
                 return;

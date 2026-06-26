@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using KSP;
 using KSP.OAB;
 using KSP.Sim.Definitions;
@@ -264,7 +264,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
         private void AddModules(GameObject root)
         {
-            foreach (Type moduleType in _archetype.DefaultModules)
+            foreach (var moduleType in _archetype.DefaultModules)
             {
                 if (_enabledModules != null && !_enabledModules.Contains(moduleType))
                 {

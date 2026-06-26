@@ -95,7 +95,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                 AddButtonText = "+ Add",
                 IdentityFieldName = "VariantSetId",
                 BuildBody = (entry, body) => BuildVariantSetBody(entry, body),
-                OnAddSeed = (entry, index) =>
+                ApplyDefaultsToNew = (entry, index) =>
                 {
                     var idProp = entry.FindPropertyRelative("VariantSetId");
                     if (idProp != null)
@@ -145,7 +145,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                     AddButtonText = "+ Add",
                     IdentityFieldName = "VariantId",
                     BuildBody = (variantEntry, variantBody) => BuildVariantBody(variantEntry, variantBody),
-                    OnAddSeed = (variantEntry, index) =>
+                    ApplyDefaultsToNew = (variantEntry, index) =>
                     {
                         var idProp = variantEntry.FindPropertyRelative("VariantId");
                         if (idProp != null)
