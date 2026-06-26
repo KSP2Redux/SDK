@@ -81,26 +81,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
             if (component == null) return;
             EditorUtility.SetDirty(target.gameObject);
             component.hideFlags |= HideFlags.HideInInspector;
-            HydrateDataModules(component);
+            EditorModuleDataHydrator.Hydrate(component);
             onListChanged();
-        }
-
-        /// <summary>
-        /// Invokes the module's <c>AddDataModules</c> hook so its DataModules dictionary is populated.
-        /// </summary>
-        /// <remarks>
-        /// Module_X subclasses populate DataModules in <c>AddDataModules</c>, which runs at runtime
-        /// during the load flow. In the editor, freshly-added components have an empty DataModules
-        /// until something invokes that hook. The validation context, the JSON saver, and any other
-        /// surface that reads from DataModules needs the new module's data visible immediately.
-        /// </remarks>
-        private static void HydrateDataModules(Component component)
-        {
-            if (component == null) return;
-            var addMethod =
-                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
-            addMethod?.Invoke(component, Array.Empty<object>());
         }
 
         private static VisualElement BuildModuleCard(PartBehaviourModule module, SerializedObject corePartDataSo, Action onListChanged)

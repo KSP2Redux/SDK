@@ -31,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private readonly IPartArchetype _archetype;
         private readonly string _parentFolder;
         private readonly string _partName;
-        private readonly MetaAssemblySizeFilterType _size;
+        private readonly string _sizeKey;
         private readonly BucketResolution _bucket;
         private readonly HashSet<Type> _enabledModules;
         private readonly IReadOnlyDictionary<string, float> _valueOverrides;
@@ -41,6 +41,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private readonly bool _tagDragCubeMesh;
         private readonly bool _fbxAutoScale;
         private readonly bool _fbxAutoRotate;
+        private readonly bool _showSaveDialog;
 
         private readonly List<string> _createdPaths = new();
         private string _addressableEntryGuid;
@@ -62,11 +63,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// <param name="tagDragCubeMesh">When true, every renderer under model/ is tagged with the DragCubeMesh tag.</param>
         /// <param name="fbxAutoScale">When true and the FBX path is chosen, scales the imported instance by 100x.</param>
         /// <param name="fbxAutoRotate">When true and the FBX path is chosen, rotates the imported instance by -90 degrees on X.</param>
+        /// <param name="showSaveDialog">When true, JSON export shows its normal confirmation dialog.</param>
         public PartFolderScaffold(
             IPartArchetype archetype,
             string parentFolder,
             string partName,
-            MetaAssemblySizeFilterType size,
+            string sizeKey,
             BucketResolution bucket,
             HashSet<Type> enabledModules = null,
             IReadOnlyDictionary<string, float> valueOverrides = null,
@@ -75,12 +77,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             GameObject sourceFbxAsset = null,
             bool tagDragCubeMesh = true,
             bool fbxAutoScale = true,
-            bool fbxAutoRotate = true)
+            bool fbxAutoRotate = true,
+            bool showSaveDialog = true)
         {
             _archetype = archetype ?? throw new ArgumentNullException(nameof(archetype));
             _parentFolder = parentFolder ?? throw new ArgumentNullException(nameof(parentFolder));
             _partName = partName ?? throw new ArgumentNullException(nameof(partName));
-            _size = size;
+            _sizeKey = string.IsNullOrWhiteSpace(sizeKey) ? PartSizeRegistry.DefaultSizeKey : sizeKey.Trim();
             _bucket = bucket;
             _enabledModules = enabledModules;
             _valueOverrides = valueOverrides;
@@ -90,6 +93,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             _tagDragCubeMesh = tagDragCubeMesh;
             _fbxAutoScale = fbxAutoScale;
             _fbxAutoRotate = fbxAutoRotate;
+            _showSaveDialog = showSaveDialog;
         }
 
         /// <summary>Runs the full create flow. Returns the saved prefab path. On any failure, rolls back and rethrows.</summary>
@@ -117,7 +121,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 EditorUtility.SetDirty(prefabAsset);
                 AssetDatabase.SaveAssets();
 
-                PartJsonSaver.Save(prefabCore);
+                PartJsonSaver.Save(prefabCore, _showSaveDialog);
 
                 RegisterPrefabInAddressables(prefabCore, prefabPath);
 
@@ -252,9 +256,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 }
                 core.Core.data.partName = _partName;
                 core.Core.data.family = _archetype.Family ?? string.Empty;
-                core.Core.data.sizeCategory = _size;
-                core.Core.data.sizeKey = PartSizeRegistry.GetPartSizeKey(null, _size)
-                                         ?? PartSizeRegistry.DefaultSizeKey;
+                core.Core.data.sizeKey = _sizeKey;
+                core.Core.data.sizeCategory = MetaAssemblySizeFilterType.Auto;
             }
             return core;
         }
@@ -272,27 +275,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                     continue;
                 }
                 var component = root.AddComponent(moduleType);
-                HydrateDataModules(component);
+                EditorModuleDataHydrator.Hydrate(component);
             }
-        }
-
-        /// <summary>
-        /// Invokes the module's <c>AddDataModules</c> hook so its DataModules dictionary is populated
-        /// before <see cref="IPartArchetype.SeedDefaults" /> runs.
-        /// </summary>
-        /// <remarks>
-        /// Module_X subclasses populate DataModules in <c>AddDataModules</c>, which runs at runtime
-        /// during the load flow. Freshly-added editor components have an empty DataModules until
-        /// something invokes that hook. Mirrors the same hydration done by
-        /// <c>ModulesTab.AddModule</c> when an author adds a module via the picker.
-        /// </remarks>
-        private static void HydrateDataModules(Component component)
-        {
-            if (component == null) return;
-            var addMethod =
-                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                component.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
-            addMethod?.Invoke(component, Array.Empty<object>());
         }
 
         private void AddAttachNodesToData(CorePartData core)
@@ -303,14 +287,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             }
             foreach (AttachNodeTemplate template in _archetype.DefaultAttachNodes)
             {
-                string sizeKey = PartSizeRegistry.GetPartSizeKey(null, template.Size)
-                                 ?? PartSizeRegistry.DefaultSizeKey;
+                string sizeKey = string.IsNullOrWhiteSpace(template.SizeKey)
+                    ? _sizeKey
+                    : template.SizeKey.Trim();
+                PartSizeDefinition knownSize = PartSizeRegistry.TryGet(sizeKey, out PartSizeDefinition definition)
+                    ? definition
+                    : PartSizeRegistry.DefaultDefinition;
                 var def = new AttachNodeDefinition
                 {
                     nodeID = template.NodeId,
                     position = template.LocalPosition,
                     orientation = template.LocalDirection,
-                    sizeKey = sizeKey
+                    sizeKey = sizeKey,
+                    size = knownSize.LegacyAttachNodeSizeAliases.Count > 0 ? knownSize.LegacyAttachNodeSizeAliases[0] : 0,
+                    visualSize = knownSize.Diameter
                 };
                 core.Core.data.attachNodes.Add(def);
             }

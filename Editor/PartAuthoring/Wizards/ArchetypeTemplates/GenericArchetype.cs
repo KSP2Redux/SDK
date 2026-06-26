@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -23,7 +23,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Basic part with drag and color modules. Pick your own category and family.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
+        public override string DefaultSizeKey => PartSizeRegistry.Sm;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]

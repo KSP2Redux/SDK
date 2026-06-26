@@ -4,14 +4,8 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 {
     /// <summary>
-    /// Specification for a child AttachmentNode the wizard places on a newly-scaffolded part.
+    /// Specification for an attach-node definition the wizard writes into a newly-scaffolded part.
     /// </summary>
-    /// <remarks>
-    /// The scaffold creates a child GameObject named <see cref="NodeId" />, attaches an
-    /// AttachmentNode component, applies <see cref="LocalPosition" /> and <see cref="LocalDirection" />,
-    /// sets <see cref="Size" />, and lets <c>AttachNodeAutoGenerator.RegenerateFromHierarchy</c>
-    /// populate the part's <c>attachNodes</c> from the live components.
-    /// </remarks>
     public sealed class AttachNodeTemplate
     {
         /// <summary>Node ID (becomes the child GameObject name), e.g. "top" or "bottom".</summary>
@@ -23,8 +17,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// <summary>Outward-facing direction of the node, relative to the part root.</summary>
         public Vector3 LocalDirection { get; }
 
-        /// <summary>Size class assigned to the node's <c>sizeKey</c>.</summary>
-        public MetaAssemblySizeFilterType Size { get; }
+        /// <summary>Optional node size key. Null or empty means use the new part's selected size key.</summary>
+        public string SizeKey { get; }
 
         /// <summary>
         /// Creates a new <see cref="AttachNodeTemplate" />.
@@ -32,13 +26,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// <param name="nodeId">The node ID, used as the child GameObject name.</param>
         /// <param name="localPosition">The node position relative to the part root.</param>
         /// <param name="localDirection">The outward-facing direction of the node, relative to the part root.</param>
-        /// <param name="size">The size class assigned to the node.</param>
-        public AttachNodeTemplate(string nodeId, Vector3 localPosition, Vector3 localDirection, MetaAssemblySizeFilterType size)
+        /// <param name="sizeKey">Optional node size key. Null or empty means use the new part's selected size key.</param>
+        public AttachNodeTemplate(string nodeId, Vector3 localPosition, Vector3 localDirection, string sizeKey = null)
         {
             NodeId = nodeId;
             LocalPosition = localPosition;
             LocalDirection = localDirection;
-            Size = size;
+            SizeKey = sizeKey;
         }
     }
 }

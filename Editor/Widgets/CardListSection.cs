@@ -185,6 +185,7 @@ namespace Ksp2UnityTools.Editor.Widgets
 
                 slots.Body.Clear();
                 config.BuildBody?.Invoke(entry, slots.Body);
+                card.Bind(arrayProp.serializedObject);
             }
 
             card.userData = (Action<int>)Bind;

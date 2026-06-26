@@ -45,8 +45,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Stock
                 yield break;
             }
 
-            string sizeCategory = data.sizeCategory.ToString();
-            StockBucket bucket = lookup.FindBucket(data.family, sizeCategory);
+            string sizeKey = !string.IsNullOrWhiteSpace(data.sizeKey)
+                ? data.sizeKey
+                : StockStatsLookup.NormalizeSizeKey(data.sizeCategory.ToString());
+            StockBucket bucket = lookup.FindBucket(data.family, sizeKey);
             if (bucket?.Fields == null)
             {
                 yield break;

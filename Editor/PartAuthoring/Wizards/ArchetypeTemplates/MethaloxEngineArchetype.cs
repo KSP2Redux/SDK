@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -21,7 +21,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Liquid-fuel engine burning methane and oxidizer.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
+        public override string DefaultSizeKey => PartSizeRegistry.Sm;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
@@ -36,7 +36,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
-            new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, MetaAssemblySizeFilterType.S)
+            new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, PartSizeRegistry.Sm)
         };
 
         /// <inheritdoc />

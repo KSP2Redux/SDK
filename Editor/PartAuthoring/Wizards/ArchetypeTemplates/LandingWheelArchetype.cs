@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -21,7 +21,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Steerable landing wheel with brakes and suspension.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
+        public override string DefaultSizeKey => PartSizeRegistry.Sm;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
@@ -38,7 +38,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
-            new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, MetaAssemblySizeFilterType.XS)
+            new AttachNodeTemplate("top", new Vector3(0f, 0.5f, 0f), Vector3.up, PartSizeRegistry.Xs)
         };
 
         /// <inheritdoc />

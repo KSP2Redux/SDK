@@ -19,6 +19,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     {
         public string partName;
         public string family;
+        public string sizeKey;
         public string sizeCategory;
         public float mass;
         public float cost;

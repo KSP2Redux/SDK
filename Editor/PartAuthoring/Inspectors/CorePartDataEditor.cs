@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using KSP;
 using KSP.Modules;
 using KSP.Sim.Definitions;
+using Ksp2UnityTools.Editor.CustomEditors;
 using Ksp2UnityTools.Editor.IO;
 using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
@@ -42,6 +44,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private static readonly string[] TAB_IDS = { "core", "modules", "variants" };
         private static readonly List<Dictionary<PartBehaviourModule, HideFlags>> PendingModuleHideFlagRestores = new();
+        private static readonly FieldInfo ModuleDragDataField =
+            typeof(Module_Drag).GetField("dataDrag", BindingFlags.Instance | BindingFlags.NonPublic);
         private static bool _restorePendingModuleHideFlagsRegistered;
 
         private VisualElement _root;
@@ -201,6 +205,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             PopulateIdentityRow();
             PopulateIcon();
             PopulateReadinessChips();
+            _root.TrackSerializedObjectValue(serializedObject, _ => PopulateReadinessChips());
             WireValidationChip();
             WireQuickToolsChips();
             WireGizmoSettings();
@@ -244,7 +249,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             var sizeChip = _root.Q<Label>("header-size-chip");
             if (sizeChip != null)
             {
-                sizeChip.text = $"sizeCategory: {partData.sizeCategory}";
+                sizeChip.text = $"sizeKey: {(string.IsNullOrEmpty(partData.sizeKey) ? "(none)" : partData.sizeKey)}";
             }
         }
 
@@ -302,6 +307,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 bool baked = ReentryMeshBaked(cpd);
                 reentryChip.text = baked ? "Reentry baked" : "Reentry missing";
                 SetReadinessState(reentryChip, baked ? "is-ok" : "is-warn");
+            }
+
+            var dragCubeChip = _root.Q<Label>("readiness-chip-drag-cubes");
+            if (dragCubeChip != null)
+            {
+                int cubeCount = CountDragCubes(cpd);
+                bool ready = cubeCount > 0;
+                dragCubeChip.text = ready ? $"Drag cubes: {cubeCount}" : "Drag cubes missing";
+                SetReadinessState(dragCubeChip, ready ? "is-ok" : "is-warn");
             }
 
             UpdateValidationChip();
@@ -389,6 +403,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             return cpd.gameObject.GetComponentsInChildren<GeneratedReentryMeshRoot>(true).Length > 0;
         }
 
+        private static int CountDragCubes(CorePartData cpd)
+        {
+            var module = cpd.GetComponent<Module_Drag>();
+            if (module == null)
+            {
+                return 0;
+            }
+
+            if (module.DataModules.TryGetByType(out Data_Drag dataDrag) && dataDrag?.cubes != null)
+            {
+                return dataDrag.cubes.Count;
+            }
+
+            return ModuleDragDataField?.GetValue(module) is Data_Drag reflectedData && reflectedData.cubes != null
+                ? reflectedData.cubes.Count
+                : 0;
+        }
+
         private static bool JsonSidecarExists(CorePartData cpd)
         {
             string dir = TryResolvePrefabDirectory(cpd);
@@ -462,6 +494,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             new("gizmo-pill-com",              null,                          () => PartAuthoringGizmoSettings.ShowCenterOfMass,             v => PartAuthoringGizmoSettings.ShowCenterOfMass = v),
             new("gizmo-pill-col",              null,                          () => PartAuthoringGizmoSettings.ShowCenterOfLift,             v => PartAuthoringGizmoSettings.ShowCenterOfLift = v),
             new("gizmo-pill-attach",           null,                          () => PartAuthoringGizmoSettings.ShowAttachNodes,              v => PartAuthoringGizmoSettings.ShowAttachNodes = v),
+            new("gizmo-pill-colliders",        null,                          BuiltinColliderWireframeUtility.GetAllWireframesEnabled,       BuiltinColliderWireframeUtility.SetAllWireframesEnabled),
             new("gizmo-pill-virtual-parts",    null,                          () => PartAuthoringGizmoSettings.ShowVirtualAttachedParts,     v => PartAuthoringGizmoSettings.ShowVirtualAttachedParts = v),
             new("gizmo-pill-engine-thrust",    typeof(Module_Engine),         () => PartAuthoringGizmoSettings.ShowEngineThrustTransforms,   v => PartAuthoringGizmoSettings.ShowEngineThrustTransforms = v),
             new("gizmo-pill-gimbal-cone",      typeof(Module_Gimbal),         () => PartAuthoringGizmoSettings.ShowGimbalCone,               v => PartAuthoringGizmoSettings.ShowGimbalCone = v),

@@ -40,8 +40,10 @@ namespace Ksp2UnityTools.Editor.Widgets
         private readonly SerializedProperty? _prop;
         private readonly Action<string>? _onValueChanged;
         private readonly Func<IEnumerable<string>> _source;
+        private readonly Func<string, string>? _detailSource;
         private readonly int _minCharacters;
         private readonly bool _showAllOnFocus;
+        private readonly bool _preserveSourceOrderForEqualScores;
         private readonly TextField _textField;
         private readonly ScrollView _suggestionList;
         private readonly List<string> _currentSuggestions = new();
@@ -71,14 +73,18 @@ namespace Ksp2UnityTools.Editor.Widgets
         /// <param name="maxSuggestions">Maximum number of rows visible before the popup scrolls.</param>
         /// <param name="showAllOnFocus">When true, focusing an empty field opens the full suggestion list.</param>
         /// <param name="minCharacters">Minimum normalized characters required before filtering shows matches.</param>
+        /// <param name="detailSource">Optional delegate returning subdued right-side detail text for a suggestion.</param>
+        /// <param name="preserveSourceOrderForEqualScores">When true, equal-score suggestions keep source enumeration order.</param>
         public AutocompleteField(
             SerializedProperty prop,
             string? label,
             Func<IEnumerable<string>> suggestionSource,
             int maxSuggestions = DEFAULT_MAX_VISIBLE_ROWS,
             bool showAllOnFocus = true,
-            int minCharacters = 0)
-            : this(label, prop.stringValue ?? string.Empty, suggestionSource, maxSuggestions, showAllOnFocus, minCharacters)
+            int minCharacters = 0,
+            Func<string, string>? detailSource = null,
+            bool preserveSourceOrderForEqualScores = false)
+            : this(label, prop.stringValue ?? string.Empty, suggestionSource, maxSuggestions, showAllOnFocus, minCharacters, detailSource, preserveSourceOrderForEqualScores)
         {
             _prop = prop;
             _textField.TrackPropertyValue(prop, OnPropertyChanged);
@@ -96,6 +102,8 @@ namespace Ksp2UnityTools.Editor.Widgets
         /// <param name="maxSuggestions">Maximum number of rows visible before the popup scrolls.</param>
         /// <param name="showAllOnFocus">When true, focusing an empty field opens the full suggestion list.</param>
         /// <param name="minCharacters">Minimum normalized characters required before filtering shows matches.</param>
+        /// <param name="detailSource">Optional delegate returning subdued right-side detail text for a suggestion.</param>
+        /// <param name="preserveSourceOrderForEqualScores">When true, equal-score suggestions keep source enumeration order.</param>
         public AutocompleteField(
             string initialValue,
             string? label,
@@ -103,8 +111,10 @@ namespace Ksp2UnityTools.Editor.Widgets
             Action<string> onValueChanged,
             int maxSuggestions = DEFAULT_MAX_VISIBLE_ROWS,
             bool showAllOnFocus = true,
-            int minCharacters = 0)
-            : this(label, initialValue ?? string.Empty, suggestionSource, maxSuggestions, showAllOnFocus, minCharacters)
+            int minCharacters = 0,
+            Func<string, string>? detailSource = null,
+            bool preserveSourceOrderForEqualScores = false)
+            : this(label, initialValue ?? string.Empty, suggestionSource, maxSuggestions, showAllOnFocus, minCharacters, detailSource, preserveSourceOrderForEqualScores)
         {
             _onValueChanged = onValueChanged;
         }
@@ -115,12 +125,16 @@ namespace Ksp2UnityTools.Editor.Widgets
             Func<IEnumerable<string>> suggestionSource,
             int maxSuggestions,
             bool showAllOnFocus,
-            int minCharacters)
+            int minCharacters,
+            Func<string, string>? detailSource,
+            bool preserveSourceOrderForEqualScores)
         {
             _source = suggestionSource;
+            _detailSource = detailSource;
             var maxVisibleRows = maxSuggestions > 0 ? maxSuggestions : DEFAULT_MAX_VISIBLE_ROWS;
             _showAllOnFocus = showAllOnFocus;
             _minCharacters = Math.Max(0, minCharacters);
+            _preserveSourceOrderForEqualScores = preserveSourceOrderForEqualScores;
 
             AddToClassList("autocomplete-field");
 
@@ -288,17 +302,24 @@ namespace Ksp2UnityTools.Editor.Widgets
                 : null;
             var known = _source.Invoke() ?? Array.Empty<string>();
 
-            var top = known
+            var matches = known
                 .Where(n => n != null)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Select(n => new
+                .Select((n, index) => new
                 {
                     Name = n,
+                    SourceIndex = index,
                     Score = ScoreMatch(n, lower, normalizedFilter)
                 })
-                .Where(match => match.Score > 0)
-                .OrderByDescending(match => match.Score)
-                .ThenBy(match => match.Name, StringComparer.OrdinalIgnoreCase)
+                .Where(match => match.Score > 0);
+
+            List<string> top = (_preserveSourceOrderForEqualScores
+                    ? matches
+                        .OrderByDescending(match => match.Score)
+                        .ThenBy(match => match.SourceIndex)
+                    : matches
+                        .OrderByDescending(match => match.Score)
+                        .ThenBy(match => match.Name, StringComparer.OrdinalIgnoreCase))
                 .Select(match => match.Name)
                 .Take(RESULT_HARD_CAP)
                 .ToList();
@@ -430,12 +451,47 @@ namespace Ksp2UnityTools.Editor.Widgets
 
         private VisualElement BuildRow(string option, int index)
         {
-            var row = new Label(option)
+            string detail = _detailSource?.Invoke(option) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(detail))
+            {
+                var simpleRow = new Label(option)
+                {
+                    pickingMode = PickingMode.Position
+                };
+
+                ApplyRowStyles(simpleRow);
+
+                simpleRow.RegisterCallback<MouseDownEvent, string>(OnRowMouseDown, option);
+                simpleRow.RegisterCallback<MouseEnterEvent, int>(OnRowMouseEnter, index);
+
+                return simpleRow;
+            }
+
+            var row = new VisualElement
             {
                 pickingMode = PickingMode.Position
             };
-
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingLeft = 4f;
+            row.style.paddingRight = 8f;
             ApplyRowStyles(row);
+
+            var nameLabel = new Label(option)
+            {
+                pickingMode = PickingMode.Ignore
+            };
+            nameLabel.style.flexGrow = 1f;
+            row.Add(nameLabel);
+
+            var detailLabel = new Label(detail)
+            {
+                pickingMode = PickingMode.Ignore
+            };
+            detailLabel.style.color = new StyleColor(new Color(0.62f, 0.62f, 0.62f));
+            detailLabel.style.unityTextAlign = TextAnchor.MiddleRight;
+            detailLabel.style.flexShrink = 0f;
+            row.Add(detailLabel);
 
             row.RegisterCallback<MouseDownEvent, string>(OnRowMouseDown, option);
             row.RegisterCallback<MouseEnterEvent, int>(OnRowMouseEnter, index);

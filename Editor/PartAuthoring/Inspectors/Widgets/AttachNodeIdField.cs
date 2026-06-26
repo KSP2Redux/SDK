@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using KSP;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
@@ -6,10 +8,10 @@ using UnityEditor;
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
 {
     /// <summary>
-    /// <see cref="AutocompleteField" /> specialised for attach-node-ID strings, with suggestions sourced from the part's <see cref="CorePartData" />.
+    /// <see cref="AutocompleteField" /> specialised for attach-node-ID strings, with suggestions sourced from stock exports and the part's <see cref="CorePartData" />.
     /// </summary>
     /// <remarks>
-    /// The suggestion list is rebuilt each time the popup opens so renames or additions to the part's attach node list are picked up without an editor reload. Falls back to a plain TextField when no <see cref="CorePartData" /> can be resolved.
+    /// The suggestion list is rebuilt each time the popup opens so renames or additions to the part's attach node list are picked up without an editor reload.
     /// </remarks>
     public sealed class AttachNodeIdField : AutocompleteField
     {
@@ -27,16 +29,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
 
         private static IEnumerable<string> EnumerateNodeIds(CorePartData target)
         {
-            if (target == null || target.Data?.attachNodes == null)
+            var nodeIds = new HashSet<string>(PartAuthoringChoiceCatalog.GetStockAttachNodeIds(), StringComparer.OrdinalIgnoreCase);
+            if (target?.Data?.attachNodes != null)
             {
-                yield break;
-            }
-            foreach (var node in target.Data.attachNodes)
-            {
-                if (!string.IsNullOrEmpty(node.nodeID))
+                foreach (var node in target.Data.attachNodes)
                 {
-                    yield return node.nodeID;
+                    if (!string.IsNullOrEmpty(node.nodeID))
+                    {
+                        nodeIds.Add(node.nodeID);
+                    }
                 }
+            }
+
+            foreach (var nodeId in nodeIds.OrderBy(id => id, StringComparer.OrdinalIgnoreCase))
+            {
+                yield return nodeId;
             }
         }
     }

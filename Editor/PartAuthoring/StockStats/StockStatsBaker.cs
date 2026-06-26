@@ -16,7 +16,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     /// <remarks>
     /// Two-pass: first walk over all <c>.bytes</c> files classifies each as raw resource, recipe,
     /// or part. Raw masses go into a dictionary, recipes are resolved recursively against the
-    /// raw masses, parts are bucketed by (family, sizeCategory). The aggregation step then runs
+    /// raw masses, parts are bucketed by (family, sizeKey). The aggregation step then runs
     /// every <see cref="IStockFieldExtractor" /> across each bucket's parts. The lookup asset is
     /// either created fresh or updated in place so the asset GUID survives rebakes.
     /// </remarks>
@@ -128,7 +128,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 {
                     continue;
                 }
-                var key = new PartBucketKey(part.Data.family ?? string.Empty, part.Data.sizeCategory ?? string.Empty);
+                string sizeKey = !string.IsNullOrWhiteSpace(part.Data.sizeKey)
+                    ? part.Data.sizeKey
+                    : StockStatsLookup.NormalizeSizeKey(part.Data.sizeCategory);
+                var key = new PartBucketKey(part.Data.family ?? string.Empty, StockStatsLookup.NormalizeSizeKey(sizeKey));
                 if (!partsByBucket.TryGetValue(key, out var list))
                 {
                     list = new List<StockBakePartCore>();

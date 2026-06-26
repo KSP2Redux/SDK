@@ -30,11 +30,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         string Description { get; }
 
         /// <summary>
-        /// Pre-selected size when the wizard opens Step 2 for this archetype. The picker still shows
-        /// all 16 size radios as selectable. Implementations supply a sensible "typical" value, e.g.
-        /// <see cref="MetaAssemblySizeFilterType.S" /> for a methalox engine.
+        /// Pre-selected size key when the wizard opens Step 2 for this archetype. The picker suggests
+        /// known keys from <see cref="PartSizeRegistry" /> but still allows custom string keys.
         /// </summary>
-        MetaAssemblySizeFilterType DefaultSize { get; }
+        string DefaultSizeKey { get; }
 
         /// <summary>
         /// Module Component <see cref="Type" />s (subclasses of <c>PartBehaviourModule</c>) the scaffold
@@ -44,7 +43,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// </summary>
         IReadOnlyList<Type> DefaultModules { get; }
 
-        /// <summary>Attach-node templates the scaffold instantiates as child AttachmentNode components.</summary>
+        /// <summary>Attach-node templates the scaffold writes into the new part data.</summary>
         IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes { get; }
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Core
     /// KSP2's Parts Manager sorts the picker by the numeric prefix, so families without it
     /// land at the head of the picker out of order. No auto-fix: there is no safe way to guess
     /// the right four-digit prefix for an arbitrary string. Authors should use the autocomplete
-    /// in the Identity section to pick a canonical family from <see cref="PartFamilyCatalog" />.
+    /// in the Identity section to pick a canonical family from <see cref="PartAuthoringChoiceCatalog" />.
     /// </remarks>
     public sealed class PartFamilyInvalidFormatValidator : IPartValidator
     {

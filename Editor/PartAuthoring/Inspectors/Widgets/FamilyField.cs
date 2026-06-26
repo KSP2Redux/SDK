@@ -7,7 +7,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
     /// <see cref="AutocompleteField" /> specialised for the part-family string field on <see cref="KSP.Sim.Definitions.PartData" />.
     /// </summary>
     /// <remarks>
-    /// Suggestions come from <see cref="PartFamilyCatalog" />.
+    /// Suggestions come from <see cref="PartAuthoringChoiceCatalog" />.
     /// </remarks>
     public sealed class FamilyField : AutocompleteField
     {
@@ -17,7 +17,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
         /// <param name="prop">The string SerializedProperty to read/write.</param>
         /// <param name="label">The author-facing label shown to the left of the field.</param>
         public FamilyField(SerializedProperty prop, string label)
-            : base(prop, label, PartFamilyCatalog.GetKnownFamilies)
+            : base(prop, label, PartAuthoringChoiceCatalog.GetKnownFamilies)
         {
         }
     }

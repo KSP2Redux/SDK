@@ -107,7 +107,8 @@
  * content area in a bordered card, mirroring IMGUI's
  * EditorGUILayout.VerticalScope(EditorStyles.helpBox). */
 
-.sdk-section-vertical-scope > .unity-foldout__content {
+.sdk-section-vertical-scope > .unity-foldout__content,
+.attach-nodes-container {
     background-color: rgba(255, 255, 255, 0.04);
     border-left-width: 1px;
     border-right-width: 1px;

@@ -281,6 +281,167 @@
     margin-right: 0;
 }
 
+/* ----- Attach Nodes list ------------------------------------------------ */
+
+.attach-nodes-container {
+    margin-left: -8px;
+    margin-right: -4px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 10px;
+    padding-right: 8px;
+}
+
+.attach-nodes-container .data-editor-section-header-row {
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.attach-nodes-container .data-editor-section-list {
+    margin-top: 2px;
+}
+
+.attach-nodes-container .data-editor-card {
+    margin-top: 3px;
+    margin-bottom: 4px;
+    padding-bottom: 0;
+    background-color: rgba(0, 0, 0, 0.22);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(180, 200, 220, 0.30);
+    border-right-color: rgba(180, 200, 220, 0.30);
+    border-top-color: rgba(180, 200, 220, 0.30);
+    border-bottom-color: rgba(180, 200, 220, 0.30);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.attach-nodes-container .data-editor-card-header {
+    flex-direction: row;
+    align-items: center;
+    min-height: 30px;
+    margin-bottom: 0;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    background-color: rgba(70, 100, 140, 0.42);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(180, 200, 220, 0.22);
+}
+
+.attach-nodes-container .data-editor-card-disclosure {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 6px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(180, 200, 220, 0.25);
+    border-right-color: rgba(180, 200, 220, 0.25);
+    border-top-color: rgba(180, 200, 220, 0.25);
+    border-bottom-color: rgba(180, 200, 220, 0.25);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    color: rgb(220, 230, 245);
+    -unity-text-align: middle-center;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.attach-nodes-container .data-editor-card-name-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    height: 22px;
+    margin-right: 6px;
+}
+
+.attach-nodes-container .data-editor-card-name-field TextField {
+    height: 22px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.attach-nodes-container .data-editor-card-name-field .unity-text-field__input {
+    height: 22px;
+    padding-left: 6px;
+    padding-right: 6px;
+    background-color: rgba(0, 0, 0, 0.28);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(205, 220, 235, 0.28);
+    border-right-color: rgba(205, 220, 235, 0.28);
+    border-top-color: rgba(205, 220, 235, 0.28);
+    border-bottom-color: rgba(205, 220, 235, 0.28);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    color: rgb(235, 240, 248);
+    -unity-font-style: bold;
+}
+
+.attach-nodes-container .data-editor-card-name-field .unity-text-field__input:hover,
+.attach-nodes-container .data-editor-card-name-field .unity-text-field__input:focus {
+    background-color: rgba(0, 0, 0, 0.38);
+    border-left-color: rgba(160, 195, 230, 0.65);
+    border-right-color: rgba(160, 195, 230, 0.65);
+    border-top-color: rgba(160, 195, 230, 0.65);
+    border-bottom-color: rgba(160, 195, 230, 0.65);
+}
+
+.attach-nodes-container .data-editor-card-chip-slot {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.attach-nodes-container .data-editor-card-remove-btn {
+    width: 24px;
+    height: 22px;
+    min-width: 24px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.attach-nodes-container .data-editor-card-body {
+    padding-top: 6px;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: rgba(255, 255, 255, 0.025);
+}
+
 /* ----- Vector3d handle picker field ------------------------------------- */
 
 .vector3d-handle-field {

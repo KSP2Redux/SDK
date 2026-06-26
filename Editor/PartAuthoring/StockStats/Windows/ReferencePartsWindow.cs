@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using KSP;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PartAuthoring.Windows;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
@@ -90,7 +92,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
                 initialValue: string.Empty,
                 label: "Size",
                 suggestionSource: GetSizeChoices,
-                onValueChanged: OnSizeChanged);
+                onValueChanged: OnSizeChanged,
+                detailSource: PartAuthoringChoiceCatalog.GetKnownSizeKeyDetail,
+                preserveSourceOrderForEqualScores: true);
             _bucketOverrideSlot.Add(_familyField);
             _bucketOverrideSlot.Add(_sizeField);
 
@@ -126,7 +130,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private void SyncFieldsFromActivePart()
         {
             _familyKey = _activePart?.Data?.family ?? string.Empty;
-            _sizeKey = _activePart?.Data != null ? _activePart.Data.sizeCategory.ToString() : string.Empty;
+            _sizeKey = _activePart?.Data != null
+                ? !string.IsNullOrWhiteSpace(_activePart.Data.sizeKey)
+                    ? _activePart.Data.sizeKey
+                    : StockStatsLookup.NormalizeSizeKey(_activePart.Data.sizeCategory.ToString())
+                : string.Empty;
             _familyField?.SetValueWithoutNotify(_familyKey);
             _sizeField?.SetValueWithoutNotify(_sizeKey);
         }
@@ -148,7 +156,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
                 {
                     continue;
                 }
-                if (!MatchesFilter(bucket.SizeCategory, _sizeKey))
+                if (!MatchesFilter(StockStatsLookup.NormalizeSizeKey(bucket.SizeCategory), _sizeKey))
                 {
                     continue;
                 }
@@ -192,6 +200,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
                 yield break;
             }
             var seen = new HashSet<string>(StringComparer.Ordinal);
+            var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var bucket in _lookup.Buckets)
             {
                 if (bucket == null || string.IsNullOrEmpty(bucket.SizeCategory))
@@ -202,9 +211,23 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
                 {
                     continue;
                 }
-                if (seen.Add(bucket.SizeCategory))
+                string sizeKey = StockStatsLookup.NormalizeSizeKey(bucket.SizeCategory);
+                present.Add(sizeKey);
+            }
+
+            foreach (string knownKey in PartAuthoringChoiceCatalog.GetKnownSizeKeys())
+            {
+                if (present.Contains(knownKey) && seen.Add(knownKey))
                 {
-                    yield return bucket.SizeCategory;
+                    yield return knownKey;
+                }
+            }
+
+            foreach (string sizeKey in present.OrderBy(key => key, StringComparer.OrdinalIgnoreCase))
+            {
+                if (seen.Add(sizeKey))
+                {
+                    yield return sizeKey;
                 }
             }
         }
@@ -240,7 +263,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows
         private VisualElement BuildBucketBlock(StockBucket bucket)
         {
             int partCount = bucket.ContributingParts?.Count ?? 0;
-            string header = $"{bucket.Family} / {bucket.SizeCategory}  ({partCount} {(partCount == 1 ? "part" : "parts")})";
+            string header = $"{bucket.Family} / {StockStatsLookup.NormalizeSizeKey(bucket.SizeCategory)}  ({partCount} {(partCount == 1 ? "part" : "parts")})";
             var foldout = new Foldout { text = header, value = true };
             foldout.AddToClassList("reference-parts-bucket-block");
 

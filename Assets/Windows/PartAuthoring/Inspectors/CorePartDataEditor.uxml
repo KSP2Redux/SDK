@@ -24,6 +24,7 @@
                     <engine:Label name="readiness-chip-json"    class="part-inspector-readiness-chip" />
                     <engine:Label name="readiness-chip-icon"    class="part-inspector-readiness-chip" />
                     <engine:Label name="readiness-chip-reentry" class="part-inspector-readiness-chip" />
+                    <engine:Label name="readiness-chip-drag-cubes" class="part-inspector-readiness-chip" />
                     <engine:Button name="readiness-chip-valid"  class="part-inspector-readiness-chip part-inspector-readiness-chip--clickable" />
                 </engine:VisualElement>
             </engine:VisualElement>
@@ -46,6 +47,7 @@
                     <engine:Button name="gizmo-pill-com"           text="Center of Mass"         class="part-inspector-gizmo-pill" />
                     <engine:Button name="gizmo-pill-col"           text="Center of Lift"         class="part-inspector-gizmo-pill" />
                     <engine:Button name="gizmo-pill-attach"        text="Attach Nodes"           class="part-inspector-gizmo-pill" />
+                    <engine:Button name="gizmo-pill-colliders"     text="Colliders"              class="part-inspector-gizmo-pill" />
                     <engine:Button name="gizmo-pill-virtual-parts" text="Virtual Attached Parts" class="part-inspector-gizmo-pill" />
                     <engine:Button name="gizmo-pill-engine-thrust" text="Engine Thrust"            class="part-inspector-gizmo-pill" />
                     <engine:Button name="gizmo-pill-gimbal-cone"   text="Gimbal Range"             class="part-inspector-gizmo-pill" />

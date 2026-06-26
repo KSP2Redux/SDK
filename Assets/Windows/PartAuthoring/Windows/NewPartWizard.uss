@@ -286,6 +286,55 @@
     margin-left: 8px;
 }
 
+.wizard-interpolation-box {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    margin-left: 8px;
+    margin-right: 4px;
+    padding: 6px;
+    background-color: rgba(70, 100, 140, 0.16);
+    border-left-width: 2px;
+    border-left-color: rgba(120, 160, 210, 0.70);
+    border-radius: 2px;
+}
+
+.wizard-interpolation-title {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+    margin-bottom: 4px;
+}
+
+.wizard-interpolation-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.wizard-interpolation-endpoint {
+    width: 48px;
+    flex-shrink: 0;
+    color: rgb(180, 195, 215);
+    -unity-text-align: middle-center;
+}
+
+.wizard-interpolation-slider {
+    flex-grow: 1;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.wizard-interpolation-reset {
+    width: 54px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.wizard-interpolation-position {
+    color: rgb(150, 170, 200);
+    font-size: 11px;
+    margin-top: 2px;
+    margin-left: 54px;
+}
+
 .wizard-defaults-row {
     flex-direction: row;
     align-items: center;

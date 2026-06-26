@@ -1,4 +1,5 @@
 using KSP;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
@@ -27,13 +28,36 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         /// <returns>The built section element.</returns>
         public static VisualElement Build(SerializedProperty arrayProp, Component target)
         {
-            return CardListSection.Build(arrayProp, new CardListSection.Config
+            var section = CardListSection.Build(arrayProp, new CardListSection.Config
             {
                 Title = "Attach Nodes",
                 AddButtonText = "+ Add Attach Node",
                 IdentityFieldName = "nodeID",
+                BuildIdentityField = idProp => new AutocompleteField(idProp, string.Empty, PartAuthoringChoiceCatalog.GetStockAttachNodeIds),
+                OnAddSeed = SeedNewAttachNode,
                 BuildBody = (entry, body) => BuildAttachNodeBody(entry, body, target),
             });
+            section.AddToClassList("attach-nodes-container");
+            return section;
+        }
+
+        private static void SeedNewAttachNode(SerializedProperty entry, int index)
+        {
+            var sizeKeyProp = entry.FindPropertyRelative("sizeKey");
+            if (sizeKeyProp != null && string.IsNullOrWhiteSpace(sizeKeyProp.stringValue))
+            {
+                sizeKeyProp.stringValue = KSP.OAB.PartSizeRegistry.DefaultSizeKey;
+            }
+
+            var orientationProp = entry.FindPropertyRelative("orientation");
+            if (orientationProp == null)
+            {
+                return;
+            }
+
+            orientationProp.FindPropertyRelative("x").doubleValue = 1d;
+            orientationProp.FindPropertyRelative("y").doubleValue = 0d;
+            orientationProp.FindPropertyRelative("z").doubleValue = 0d;
         }
 
         private static void BuildAttachNodeBody(SerializedProperty entry, VisualElement body, Component target)
@@ -47,6 +71,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             {
                 if (SerializedProperty.EqualContents(iterator, endProp)) break;
                 if (iterator.name == "nodeID") continue;
+                if (iterator.name == "size") continue;
                 if (iterator.name == "position")
                 {
                     body.Add(new VectorHandleField(iterator.Copy(), target, SceneHandlePicker.HandleMode.Position));
@@ -55,6 +80,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
                 if (iterator.name == "orientation")
                 {
                     body.Add(new VectorHandleField(iterator.Copy(), target, SceneHandlePicker.HandleMode.Orientation, positionProp));
+                    continue;
+                }
+                if (iterator.name == "sizeKey")
+                {
+                    body.Add(new AutocompleteField(
+                        iterator.Copy(),
+                        "Size Key",
+                        PartAuthoringChoiceCatalog.GetKnownSizeKeys,
+                        detailSource: PartAuthoringChoiceCatalog.GetKnownSizeKeyDetail,
+                        preserveSourceOrderForEqualScores: true));
                     continue;
                 }
                 body.Add(new PropertyField(iterator.Copy()));

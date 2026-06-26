@@ -35,7 +35,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         /// owning prefab path cannot be resolved.
         /// </remarks>
         /// <param name="target">The part to serialise.</param>
-        public static void Save(CorePartData target)
+        public static void Save(CorePartData target, bool showDialog = true)
         {
             if (target == null || target.Core == null) return;
 
@@ -58,11 +58,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             {
                 if (child is not PartBehaviourModule partBehaviourModule) continue;
 
-                // Reflection on private AddDataModules is fragile against stock-game API changes.
-                var addMethod =
-                    child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                    child.GetType().GetMethod("AddDataModules", BindingFlags.Instance | BindingFlags.Public);
-                addMethod?.Invoke(child, Array.Empty<object>());
+                EditorModuleDataHydrator.Hydrate(child);
 
                 foreach (var data in partBehaviourModule.DataModules.Values)
                 {
@@ -99,13 +95,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
 
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
-            EditorUtility.DisplayDialog(
-                "Part Exported",
-                !madeAddressable
-                    ? $"Json is at: {path}, you need to manually make it addressable"
-                    : $"Json is at: {path}",
-                "OK"
-            );
+            if (showDialog)
+            {
+                EditorUtility.DisplayDialog(
+                    "Part Exported",
+                    !madeAddressable
+                        ? $"Json is at: {path}, you need to manually make it addressable"
+                        : $"Json is at: {path}",
+                    "OK"
+                );
+            }
         }
     }
 }

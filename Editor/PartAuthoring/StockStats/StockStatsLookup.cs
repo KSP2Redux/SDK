@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 {
     /// <summary>
-    /// Editor-only shipped lookup of base-game part statistics, grouped by (family, sizeCategory).
+    /// Editor-only shipped lookup of base-game part statistics, grouped by (family, sizeKey).
     /// </summary>
     /// <remarks>
     /// Produced by <see cref="StockStatsBaker" /> scanning the base-game asset dump and consumed
@@ -17,7 +17,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     /// </remarks>
     public sealed class StockStatsLookup : ScriptableObject
     {
-        /// <summary>One bucket per (family, sizeCategory) combination found in the source dump.</summary>
+        /// <summary>One bucket per (family, sizeKey) combination found in the source dump.</summary>
         public List<StockBucket> Buckets = new();
 
         /// <summary>Recipe-resolved mass per unit per resource, captured at bake time. Empty on legacy assets.</summary>
@@ -60,7 +60,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 
         /// <summary>Returns the bucket matching the given family / size, or null if none exists.</summary>
         /// <param name="family">Family value to match.</param>
-        /// <param name="sizeCategory">Size-category value to match.</param>
+        /// <param name="sizeCategory">Size key value to match.</param>
         /// <returns>The matching bucket, or null when none exists.</returns>
         public StockBucket FindBucket(string family, string sizeCategory)
         {
@@ -68,10 +68,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             {
                 return null;
             }
+            string normalizedSizeKey = NormalizeSizeKey(sizeCategory);
             for (int i = 0; i < Buckets.Count; i++)
             {
                 StockBucket bucket = Buckets[i];
-                if (bucket != null && bucket.Family == family && bucket.SizeCategory == sizeCategory)
+                if (bucket != null &&
+                    bucket.Family == family &&
+                    string.Equals(NormalizeSizeKey(bucket.SizeCategory), normalizedSizeKey, StringComparison.OrdinalIgnoreCase))
                 {
                     return bucket;
                 }
@@ -80,38 +83,36 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         }
 
         /// <summary>
-        /// Resolves a (<paramref name="family" />, <paramref name="size" />) query into a
+        /// Resolves a (<paramref name="family" />, <paramref name="sizeKey" />) query into a
         /// <see cref="BucketResolution" /> with the exact bucket, same-family adjacent buckets, and
         /// a closest-family fallback used when the exact match is missing.
         /// </summary>
         /// <remarks>
-        /// Adjacency walks the natural size order (XS- through 6XL) using <c>_orderedSizes</c>.
-        /// The enum's numeric order is not natural size order, so callers must not arithmetic the enum
-        /// values directly.
+        /// Adjacency walks the natural size order (XS- through 6XL) using <c>_orderedSizeKeys</c>.
         /// </remarks>
         /// <param name="family">Family to look up.</param>
-        /// <param name="size">Size to look up.</param>
+        /// <param name="sizeKey">Size key to look up.</param>
         /// <returns>A populated resolution describing the in-bucket, adjacent, and fallback rows.</returns>
-        public BucketResolution ResolveBucket(string family, MetaAssemblySizeFilterType size)
+        public BucketResolution ResolveBucket(string family, string sizeKey, float interpolationT = float.NaN)
         {
-            string sizeKey = size.ToString();
+            sizeKey = NormalizeSizeKey(sizeKey);
             StockBucket inBucket = FindBucket(family, sizeKey);
 
             var adjacent = new List<StockBucket>();
-            int rank = NaturalSizeRank(size);
+            int rank = NaturalSizeRank(sizeKey);
             if (rank >= 0)
             {
                 if (rank - 1 >= 0)
                 {
-                    StockBucket below = FindBucket(family, _orderedSizes[rank - 1].ToString());
+                    StockBucket below = FindBucket(family, _orderedSizeKeys[rank - 1]);
                     if (below != null)
                     {
                         adjacent.Add(below);
                     }
                 }
-                if (rank + 1 < _orderedSizes.Length)
+                if (rank + 1 < _orderedSizeKeys.Length)
                 {
-                    StockBucket above = FindBucket(family, _orderedSizes[rank + 1].ToString());
+                    StockBucket above = FindBucket(family, _orderedSizeKeys[rank + 1]);
                     if (above != null)
                     {
                         adjacent.Add(above);
@@ -130,37 +131,185 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                         fallback.Add(b);
                     }
                 }
-                fallback.Sort((a, b) => SizeDistance(a, size).CompareTo(SizeDistance(b, size)));
+                fallback.Sort((a, b) => SizeDistance(a, sizeKey).CompareTo(SizeDistance(b, sizeKey)));
             }
 
-            return new BucketResolution(family, size, inBucket, adjacent, fallback);
+            StockBucket interpolationLower = null;
+            StockBucket interpolationUpper = null;
+            StockBucket interpolated = null;
+            float resolvedInterpolationT = 0f;
+            if (inBucket == null &&
+                TryFindInterpolationBounds(family, sizeKey, out interpolationLower, out interpolationUpper, out float naturalT))
+            {
+                resolvedInterpolationT = float.IsNaN(interpolationT) ? naturalT : Mathf.Clamp01(interpolationT);
+                interpolated = BuildInterpolatedBucket(family, sizeKey, interpolationLower, interpolationUpper, resolvedInterpolationT);
+            }
+
+            return new BucketResolution(
+                family,
+                sizeKey,
+                inBucket,
+                adjacent,
+                fallback,
+                interpolated,
+                interpolationLower,
+                interpolationUpper,
+                resolvedInterpolationT);
         }
 
-        private static readonly MetaAssemblySizeFilterType[] _orderedSizes =
+        /// <summary>
+        /// Finds the nearest lower and upper same-family stock buckets around <paramref name="sizeKey" />.
+        /// </summary>
+        /// <param name="family">Family to search.</param>
+        /// <param name="sizeKey">Target size key.</param>
+        /// <param name="lower">Nearest lower-size bucket when found.</param>
+        /// <param name="upper">Nearest upper-size bucket when found.</param>
+        /// <param name="naturalT">Target size's natural rank position between lower and upper buckets.</param>
+        /// <returns>True when both bounds exist.</returns>
+        public bool TryFindInterpolationBounds(
+            string family,
+            string sizeKey,
+            out StockBucket lower,
+            out StockBucket upper,
+            out float naturalT)
         {
-            MetaAssemblySizeFilterType.XSMINUS,
-            MetaAssemblySizeFilterType.XS,
-            MetaAssemblySizeFilterType.XSPLUS,
-            MetaAssemblySizeFilterType.S,
-            MetaAssemblySizeFilterType.SPLUS,
-            MetaAssemblySizeFilterType.M,
-            MetaAssemblySizeFilterType.MPLUS,
-            MetaAssemblySizeFilterType.L,
-            MetaAssemblySizeFilterType.LPLUS,
-            MetaAssemblySizeFilterType.XL,
-            MetaAssemblySizeFilterType.XLPLUS,
-            MetaAssemblySizeFilterType.XXL,
-            MetaAssemblySizeFilterType.XXXL,
-            MetaAssemblySizeFilterType.XXXXL,
-            MetaAssemblySizeFilterType.XXXXXL,
-            MetaAssemblySizeFilterType.XXXXXXL
+            lower = null;
+            upper = null;
+            naturalT = 0f;
+            int targetRank = NaturalSizeRank(sizeKey);
+            if (targetRank < 0 || Buckets == null)
+            {
+                return false;
+            }
+
+            int lowerRank = int.MinValue;
+            int upperRank = int.MaxValue;
+            for (int i = 0; i < Buckets.Count; i++)
+            {
+                StockBucket bucket = Buckets[i];
+                if (bucket == null || bucket.Family != family)
+                {
+                    continue;
+                }
+                int bucketRank = BucketRank(bucket);
+                if (bucketRank < 0 || bucketRank == targetRank)
+                {
+                    continue;
+                }
+                if (bucketRank < targetRank && bucketRank > lowerRank)
+                {
+                    lowerRank = bucketRank;
+                    lower = bucket;
+                }
+                else if (bucketRank > targetRank && bucketRank < upperRank)
+                {
+                    upperRank = bucketRank;
+                    upper = bucket;
+                }
+            }
+
+            if (lower == null || upper == null || upperRank <= lowerRank)
+            {
+                return false;
+            }
+            naturalT = Mathf.InverseLerp(lowerRank, upperRank, targetRank);
+            return true;
+        }
+
+        /// <summary>
+        /// Builds a synthetic bucket by interpolating matching field medians from two stock buckets.
+        /// </summary>
+        /// <param name="family">Family to write on the synthetic bucket.</param>
+        /// <param name="sizeKey">Target size key represented by the synthetic bucket.</param>
+        /// <param name="lower">Lower stock-size bucket.</param>
+        /// <param name="upper">Upper stock-size bucket.</param>
+        /// <param name="t">Interpolation position, 0 at lower and 1 at upper.</param>
+        /// <returns>A synthetic bucket, or null if no matching fields can be interpolated.</returns>
+        public static StockBucket BuildInterpolatedBucket(
+            string family,
+            string sizeKey,
+            StockBucket lower,
+            StockBucket upper,
+            float t)
+        {
+            if (lower?.Fields == null || upper?.Fields == null)
+            {
+                return null;
+            }
+
+            t = Mathf.Clamp01(t);
+            var upperFields = new Dictionary<string, StockField>(StringComparer.Ordinal);
+            for (int i = 0; i < upper.Fields.Count; i++)
+            {
+                StockField field = upper.Fields[i];
+                if (field != null && field.Count > 0 && !string.IsNullOrEmpty(field.Name))
+                {
+                    upperFields[field.Name] = field;
+                }
+            }
+
+            var fields = new List<StockField>();
+            for (int i = 0; i < lower.Fields.Count; i++)
+            {
+                StockField lowerField = lower.Fields[i];
+                if (lowerField == null || lowerField.Count == 0 || string.IsNullOrEmpty(lowerField.Name))
+                {
+                    continue;
+                }
+                if (!upperFields.TryGetValue(lowerField.Name, out StockField upperField))
+                {
+                    continue;
+                }
+                fields.Add(new StockField
+                {
+                    Name = lowerField.Name,
+                    Min = Mathf.Lerp(lowerField.Min, upperField.Min, t),
+                    Max = Mathf.Lerp(lowerField.Max, upperField.Max, t),
+                    Mean = Mathf.Lerp(lowerField.Mean, upperField.Mean, t),
+                    Median = Mathf.Lerp(lowerField.Median, upperField.Median, t),
+                    Count = lowerField.Count + upperField.Count
+                });
+            }
+
+            if (fields.Count == 0)
+            {
+                return null;
+            }
+            return new StockBucket
+            {
+                Family = family,
+                SizeCategory = NormalizeSizeKey(sizeKey),
+                Fields = fields,
+                ContributingParts = new List<StockPartRef>()
+            };
+        }
+
+        private static readonly string[] _orderedSizeKeys =
+        {
+            PartSizeRegistry.XsMinus,
+            PartSizeRegistry.Xs,
+            PartSizeRegistry.XsPlus,
+            PartSizeRegistry.Sm,
+            PartSizeRegistry.SmPlus,
+            PartSizeRegistry.Md,
+            PartSizeRegistry.MdPlus,
+            PartSizeRegistry.Lg,
+            PartSizeRegistry.LgPlus,
+            PartSizeRegistry.Xl,
+            PartSizeRegistry.XlPlus,
+            PartSizeRegistry.TwoXl,
+            PartSizeRegistry.ThreeXl,
+            PartSizeRegistry.FourXl,
+            PartSizeRegistry.FiveXl,
+            PartSizeRegistry.SixXl
         };
 
-        private static int NaturalSizeRank(MetaAssemblySizeFilterType size)
+        private static int NaturalSizeRank(string sizeKey)
         {
-            for (int i = 0; i < _orderedSizes.Length; i++)
+            string normalized = NormalizeSizeKey(sizeKey);
+            for (int i = 0; i < _orderedSizeKeys.Length; i++)
             {
-                if (_orderedSizes[i] == size)
+                if (string.Equals(_orderedSizeKeys[i], normalized, StringComparison.OrdinalIgnoreCase))
                 {
                     return i;
                 }
@@ -168,33 +317,71 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             return -1;
         }
 
-        private static int SizeDistance(StockBucket bucket, MetaAssemblySizeFilterType target)
+        private static int SizeDistance(StockBucket bucket, string target)
         {
             int targetRank = NaturalSizeRank(target);
             if (targetRank < 0 || bucket == null)
             {
                 return int.MaxValue;
             }
-            if (Enum.TryParse(bucket.SizeCategory, ignoreCase: false, out MetaAssemblySizeFilterType actual))
+            int actualRank = BucketRank(bucket);
+            if (actualRank >= 0)
             {
-                int actualRank = NaturalSizeRank(actual);
-                if (actualRank >= 0)
-                {
-                    return Math.Abs(actualRank - targetRank);
-                }
+                return Math.Abs(actualRank - targetRank);
             }
             return int.MaxValue;
         }
+
+        private static int BucketRank(StockBucket bucket)
+        {
+            if (bucket == null)
+            {
+                return -1;
+            }
+            return NaturalSizeRank(bucket.SizeCategory);
+        }
+
+        public static string NormalizeSizeKey(string sizeKey)
+        {
+            if (string.IsNullOrWhiteSpace(sizeKey))
+            {
+                return PartSizeRegistry.DefaultSizeKey;
+            }
+
+            string trimmed = sizeKey.Trim();
+            if (PartSizeRegistry.TryGet(trimmed, out PartSizeDefinition definition))
+            {
+                return definition.Key;
+            }
+
+            return trimmed switch
+            {
+                "XSMINUS" => PartSizeRegistry.XsMinus,
+                "XSPLUS" => PartSizeRegistry.XsPlus,
+                "S" => PartSizeRegistry.Sm,
+                "SPLUS" => PartSizeRegistry.SmPlus,
+                "M" => PartSizeRegistry.Md,
+                "MPLUS" => PartSizeRegistry.MdPlus,
+                "L" => PartSizeRegistry.Lg,
+                "LPLUS" => PartSizeRegistry.LgPlus,
+                "XXL" => PartSizeRegistry.TwoXl,
+                "XXXL" => PartSizeRegistry.ThreeXl,
+                "XXXXL" => PartSizeRegistry.FourXl,
+                "XXXXXL" => PartSizeRegistry.FiveXl,
+                "XXXXXXL" => PartSizeRegistry.SixXl,
+                _ => trimmed
+            };
+        }
     }
 
-    /// <summary>One stats bucket: all stock parts that share a (family, sizeCategory) key.</summary>
+    /// <summary>One stats bucket: all stock parts that share a (family, sizeKey) key.</summary>
     [Serializable]
     public sealed class StockBucket
     {
         /// <summary>The PartData.family value, e.g. "0100-Methalox".</summary>
         public string Family;
 
-        /// <summary>The PartData.sizeCategory value, e.g. "S".</summary>
+        /// <summary>The PartData.sizeKey value, e.g. "SM".</summary>
         public string SizeCategory;
 
         /// <summary>Per-tracked-field aggregate stats across the bucket's parts.</summary>

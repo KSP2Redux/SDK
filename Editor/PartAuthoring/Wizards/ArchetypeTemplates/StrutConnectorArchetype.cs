@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -20,7 +20,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Two-point strut for structural reinforcement.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.XS;
+        public override string DefaultSizeKey => PartSizeRegistry.Xs;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]

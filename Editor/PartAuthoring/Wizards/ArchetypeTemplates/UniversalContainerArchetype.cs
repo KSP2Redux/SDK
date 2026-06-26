@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -21,7 +21,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Generic container that can store any single resource.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
+        public override string DefaultSizeKey => PartSizeRegistry.Sm;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]

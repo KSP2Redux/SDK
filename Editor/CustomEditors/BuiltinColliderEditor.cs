@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
         private void OnEnable()
         {
-            Type builtinEditorType = typeof(UnityEditor.Editor).Assembly.GetType(BuiltinEditorTypeName);
+            Type builtinEditorType = BuiltinColliderWireframeUtility.FindUnityEditorType(BuiltinEditorTypeName);
             if (builtinEditorType != null)
             {
                 _builtinEditor = CreateEditor(targets, builtinEditorType);
@@ -53,7 +53,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 if (!BuiltinColliderWireframeUtility.IsAvailable)
                 {
                     EditorGUILayout.HelpBox(
-                        "Unity did not expose the internal collider gizmo controls in this editor version.",
+                        "Collider wireframe controls are not available in this editor version.",
                         MessageType.Info
                     );
                     return;
@@ -66,7 +66,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 bool newValue = EditorGUILayout.Toggle(
                     new GUIContent(
                         "Show Collider Wireframes",
-                        "Controls Unity's built-in Scene View wireframes for all collider component types."
+                        "Controls Unity's built-in Scene View gizmos for 3D collider component types."
                     ),
                     isEnabled
                 );
@@ -78,7 +78,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 }
 
                 EditorGUILayout.HelpBox(
-                    "This is a Unity Scene View gizmo setting and applies to all built-in collider components.",
+                    "This toggles the built-in BoxCollider, CapsuleCollider, MeshCollider, SphereCollider, and WheelCollider gizmo rows.",
                     MessageType.None
                 );
             }
@@ -87,14 +87,15 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
     internal static class BuiltinColliderWireframeUtility
     {
-        private static readonly Type[] ColliderTypes =
+        private const string BUILT_IN_SCRIPT_CLASS = "";
+
+        private static readonly ColliderGizmoAnnotation[] ColliderAnnotations =
         {
-            typeof(BoxCollider),
-            typeof(SphereCollider),
-            typeof(CapsuleCollider),
-            typeof(MeshCollider),
-            typeof(WheelCollider),
-            typeof(TerrainCollider)
+            new(65, "BoxCollider"),
+            new(136, "CapsuleCollider"),
+            new(64, "MeshCollider"),
+            new(135, "SphereCollider"),
+            new(146, "WheelCollider")
         };
 
         private static readonly Type AnnotationUtilityType =
@@ -103,11 +104,20 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         private static readonly MethodInfo GetAnnotationMethod =
             AnnotationUtilityType?.GetMethod(
                 "GetAnnotation",
-                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                new[] { typeof(int), typeof(string) },
+                null
             );
 
         private static readonly MethodInfo SetGizmoEnabledMethod =
-            FindAnnotationMethod("SetGizmoEnabled", 3);
+            AnnotationUtilityType?.GetMethod(
+                "SetGizmoEnabled",
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                new[] { typeof(int), typeof(string), typeof(int), typeof(bool) },
+                null
+            );
 
         private static readonly MethodInfo SetGizmosDirtyMethod =
             AnnotationUtilityType?.GetMethod(
@@ -115,27 +125,62 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
             );
 
-        public static bool IsAvailable => GetAnnotationMethod != null && SetGizmoEnabledMethod != null;
+        public static bool IsAvailable => GetAnnotationMethod != null &&
+                                          SetGizmoEnabledMethod != null &&
+                                          HasAnyValidColliderAnnotation();
+
+        public static Type FindUnityEditorType(string typeName)
+        {
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(typeName);
+                if (type != null)
+                {
+                    return type;
+                }
+            }
+
+            return null;
+        }
 
         public static bool GetAllWireframesEnabled()
         {
-            foreach (Type colliderType in ColliderTypes)
+            bool any = false;
+            foreach (ColliderGizmoAnnotation colliderAnnotation in ColliderAnnotations)
             {
-                if (!GetWireframeEnabled(colliderType))
+                if (!TryGetAnnotation(colliderAnnotation, out object annotation))
+                {
+                    continue;
+                }
+
+                any = true;
+                if (!GetGizmoEnabled(annotation))
                 {
                     return false;
                 }
             }
 
-            return true;
+            return any;
         }
 
         public static bool HasMixedWireframeState()
         {
-            bool firstValue = GetWireframeEnabled(ColliderTypes[0]);
-            for (int i = 1; i < ColliderTypes.Length; i++)
+            bool? firstValue = null;
+            foreach (ColliderGizmoAnnotation colliderAnnotation in ColliderAnnotations)
             {
-                if (GetWireframeEnabled(ColliderTypes[i]) != firstValue)
+                if (!TryGetAnnotation(colliderAnnotation, out object annotation))
+                {
+                    continue;
+                }
+
+                bool current = GetGizmoEnabled(annotation);
+                if (firstValue == null)
+                {
+                    firstValue = current;
+                    continue;
+                }
+
+                if (current != firstValue.Value)
                 {
                     return true;
                 }
@@ -146,21 +191,66 @@ namespace Ksp2UnityTools.Editor.CustomEditors
 
         public static void SetAllWireframesEnabled(bool enabled)
         {
-            foreach (Type colliderType in ColliderTypes)
+            if (!IsAvailable)
             {
-                SetWireframeEnabled(colliderType, enabled);
+                return;
             }
+
+            foreach (ColliderGizmoAnnotation colliderAnnotation in ColliderAnnotations)
+            {
+                if (TryGetAnnotation(colliderAnnotation, out _))
+                {
+                    SetGizmoEnabled(colliderAnnotation, enabled);
+                }
+            }
+
+            SetGizmosDirtyMethod?.Invoke(null, null);
+            SceneView.RepaintAll();
         }
 
-        public static bool GetWireframeEnabled(Type colliderType)
+        private static bool HasAnyValidColliderAnnotation()
         {
-            if (!TryGetAnnotation(colliderType, out int classId, out string scriptClass, out object annotation))
+            foreach (ColliderGizmoAnnotation colliderAnnotation in ColliderAnnotations)
             {
-                return true;
+                if (TryGetAnnotation(colliderAnnotation, out _))
+                {
+                    return true;
+                }
             }
 
-            Type annotationType = annotation.GetType();
-            object value = annotationType.GetField("gizmoEnabled")?.GetValue(annotation);
+            return false;
+        }
+
+        private static bool TryGetAnnotation(ColliderGizmoAnnotation colliderAnnotation, out object annotation)
+        {
+            annotation = null;
+
+            if (GetAnnotationMethod == null)
+            {
+                return false;
+            }
+
+            annotation = GetAnnotationMethod.Invoke(
+                null,
+                new object[] { colliderAnnotation.ClassId, BUILT_IN_SCRIPT_CLASS }
+            );
+            return IsValidAnnotation(annotation, colliderAnnotation.ClassId);
+        }
+
+        private static bool IsValidAnnotation(object annotation, int expectedClassId)
+        {
+            if (annotation == null)
+            {
+                return false;
+            }
+
+            object annotationClassId = annotation.GetType().GetField("classID")?.GetValue(annotation);
+            return annotationClassId is int intClassId && intClassId == expectedClassId;
+        }
+
+        private static bool GetGizmoEnabled(object annotation)
+        {
+            object value = annotation.GetType().GetField("gizmoEnabled")?.GetValue(annotation);
             return value switch
             {
                 int intValue => intValue != 0,
@@ -169,123 +259,36 @@ namespace Ksp2UnityTools.Editor.CustomEditors
             };
         }
 
-        public static void SetWireframeEnabled(Type colliderType, bool enabled)
+        private static void SetGizmoEnabled(ColliderGizmoAnnotation colliderAnnotation, bool enabled)
         {
-            if (SetGizmoEnabledMethod == null ||
-                !TryGetAnnotation(colliderType, out int classId, out string scriptClass, out _))
+            try
             {
-                return;
+                SetGizmoEnabledMethod?.Invoke(
+                    null,
+                    new object[]
+                    {
+                        colliderAnnotation.ClassId,
+                        BUILT_IN_SCRIPT_CLASS,
+                        enabled ? 1 : 0,
+                        true
+                    }
+                );
             }
-
-            InvokeAnnotationMethod(SetGizmoEnabledMethod, classId, scriptClass, enabled);
-            SetGizmosDirtyMethod?.Invoke(null, null);
+            catch (TargetInvocationException)
+            {
+            }
         }
 
-        private static MethodInfo FindAnnotationMethod(string methodName, int minimumParameterCount)
+        private readonly struct ColliderGizmoAnnotation
         {
-            if (AnnotationUtilityType == null)
+            public readonly int ClassId;
+            public readonly string Name;
+
+            public ColliderGizmoAnnotation(int classId, string name)
             {
-                return null;
+                ClassId = classId;
+                Name = name;
             }
-
-            foreach (MethodInfo method in AnnotationUtilityType.GetMethods(
-                         BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
-                     ))
-            {
-                if (method.Name != methodName)
-                {
-                    continue;
-                }
-
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length >= minimumParameterCount &&
-                    parameters[0].ParameterType == typeof(int) &&
-                    parameters[1].ParameterType == typeof(string))
-                {
-                    return method;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool TryGetAnnotation(
-            Type componentType,
-            out int classId,
-            out string scriptClass,
-            out object annotation
-        )
-        {
-            classId = GetClassId(componentType);
-            scriptClass = string.Empty;
-            annotation = null;
-
-            if (classId == 0 || GetAnnotationMethod == null)
-            {
-                return false;
-            }
-
-            annotation = GetAnnotationMethod.Invoke(null, new object[] { classId, scriptClass });
-            return annotation != null;
-        }
-
-        private static int GetClassId(Type componentType)
-        {
-            if (componentType == typeof(MeshCollider))
-            {
-                return 64;
-            }
-
-            if (componentType == typeof(BoxCollider))
-            {
-                return 65;
-            }
-
-            if (componentType == typeof(SphereCollider))
-            {
-                return 135;
-            }
-
-            if (componentType == typeof(CapsuleCollider))
-            {
-                return 136;
-            }
-
-            if (componentType == typeof(WheelCollider))
-            {
-                return 146;
-            }
-
-            if (componentType == typeof(TerrainCollider))
-            {
-                return 154;
-            }
-
-            return 0;
-        }
-
-        private static object InvokeAnnotationMethod(
-            MethodInfo method,
-            int classId,
-            string scriptClass,
-            bool enabled
-        )
-        {
-            ParameterInfo[] parameters = method.GetParameters();
-            object[] arguments = new object[parameters.Length];
-            arguments[0] = classId;
-            arguments[1] = scriptClass;
-            if (arguments.Length > 2)
-            {
-                arguments[2] = enabled ? 1 : 0;
-            }
-
-            for (int i = 3; i < arguments.Length; i++)
-            {
-                arguments[i] = parameters[i].ParameterType == typeof(bool) ? true : Type.Missing;
-            }
-
-            return method.Invoke(null, arguments);
         }
     }
 

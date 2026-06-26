@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.Modules;
@@ -24,7 +24,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Hosts a single science experiment - author configures the experiment ID.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.XS;
+        public override string DefaultSizeKey => PartSizeRegistry.Xs;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => new[]
@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override IReadOnlyList<AttachNodeTemplate> DefaultAttachNodes => new[]
         {
-            new AttachNodeTemplate("surface", new Vector3(0f, 0f, 0.1f), Vector3.forward, MetaAssemblySizeFilterType.XS)
+            new AttachNodeTemplate("surface", new Vector3(0f, 0f, 0.1f), Vector3.forward, PartSizeRegistry.Xs)
         };
 
         /// <inheritdoc />

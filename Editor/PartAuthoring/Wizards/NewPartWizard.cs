@@ -37,8 +37,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         /// <summary>The selected archetype the new part is scaffolded from.</summary>
         public IPartArchetype Archetype;
 
-        /// <summary>The selected size category for the new part.</summary>
-        public MetaAssemblySizeFilterType Size = MetaAssemblySizeFilterType.S;
+        /// <summary>The selected size key for the new part.</summary>
+        public string SizeKey = PartSizeRegistry.DefaultSizeKey;
 
         /// <summary>The resolved bucket for (family, size) used to seed defaults.</summary>
         public BucketResolution Bucket;
@@ -81,6 +81,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
         /// <summary>Per-stock-field author overrides keyed by field name, applied after the archetype seeds defaults.</summary>
         public readonly Dictionary<string, float> ValueOverrides = new();
+
+        /// <summary>Author-selected interpolation position for missing size buckets. NaN means use the size's natural rank position.</summary>
+        public float InterpolationT = float.NaN;
 
         // Folder picker state - persists across Identity step rebuilds.
         private FolderChoice _folderChoice;
@@ -241,7 +244,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             if (archetype != null)
             {
                 window.Archetype = archetype;
-                window.Size = archetype.DefaultSize;
+                window.SizeKey = archetype.DefaultSizeKey;
                 window._startStep = 1;
             }
             window.ShowUtility();
@@ -341,13 +344,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
             StockStatsLookup lookup = GetLookup();
             string effectiveFamily = string.IsNullOrEmpty(Archetype?.Family) ? FamilyOverride : Archetype.Family;
-            BucketResolution bucket = lookup?.ResolveBucket(effectiveFamily ?? string.Empty, Size)
-                                      ?? new BucketResolution(effectiveFamily ?? string.Empty, Size, null,
+            BucketResolution bucket = lookup?.ResolveBucket(effectiveFamily ?? string.Empty, SizeKey, InterpolationT)
+                                      ?? new BucketResolution(effectiveFamily ?? string.Empty, SizeKey, null,
                                           Array.Empty<StockBucket>(), Array.Empty<StockBucket>());
 
             HashSet<Type> enabled = EnabledModules != null && EnabledModules.Count > 0 ? EnabledModules : null;
             IReadOnlyDictionary<string, float> overrides = ValueOverrides.Count > 0 ? ValueOverrides : null;
-            var scaffold = new PartFolderScaffold(Archetype, DestinationFolder, PartName, Size, bucket, enabled, overrides,
+            var scaffold = new PartFolderScaffold(Archetype, DestinationFolder, PartName, SizeKey, bucket, enabled, overrides,
                 MeshChoice, SourcePrefab, SourceFbxAsset, FbxTagDragCubeMesh, FbxAutoScale, FbxAutoRotate);
 
             string prefabPath;
@@ -441,7 +444,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                     row.RegisterCallback<ClickEvent>(_ =>
                     {
                         Archetype = captured;
-                        Size = captured.DefaultSize;
+                        SizeKey = captured.DefaultSizeKey;
+                        ResetStockDefaultsState();
                         if (currentSelectedRow != null)
                         {
                             currentSelectedRow.RemoveFromClassList("wizard-archetype-row-selected");
@@ -486,28 +490,28 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
             var archLabel = container.Q<Label>("archetype-label");
             var familyLabel = container.Q<Label>("family-label");
-            var sizeDropdown = container.Q<DropdownField>("size-dropdown");
+            var sizeSlot = container.Q<VisualElement>("size-key-field-slot");
             var refPanel = container.Q<VisualElement>("reference-panel");
 
             archLabel.text = $"Archetype: {Archetype.DisplayName}";
             familyLabel.text = $"Family: {Archetype.Family}";
 
-            var sizeChoices = SizeOrder.Select(s => s.Key).ToList();
-            sizeDropdown.choices = sizeChoices;
-            sizeDropdown.SetValueWithoutNotify(sizeChoices[FindSizeIndex(Size)]);
+            var sizeField = new AutocompleteField(
+                SizeKey,
+                "Size key",
+                GetSizeKeyChoices,
+                newValue =>
+                {
+                    SizeKey = NormalizeSizeKeyInput(newValue);
+                    ResetStockDefaultsState();
+                    ResolveAndRenderReferences(refPanel);
+                },
+                detailSource: PartAuthoringChoiceCatalog.GetKnownSizeKeyDetail,
+                preserveSourceOrderForEqualScores: true);
+            sizeField.AddToClassList("wizard-size-dropdown");
+            sizeSlot?.Add(sizeField);
 
             ResolveAndRenderReferences(refPanel);
-
-            sizeDropdown.RegisterValueChangedCallback(evt =>
-            {
-                int idx = sizeChoices.IndexOf(evt.newValue);
-                if (idx < 0 || idx >= SizeOrder.Length)
-                {
-                    return;
-                }
-                Size = SizeOrder[idx].Size;
-                ResolveAndRenderReferences(refPanel);
-            });
 
             return container;
         }
@@ -533,7 +537,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             {
                 return;
             }
-            Bucket = lookup.ResolveBucket(Archetype.Family, Size);
+            string effectiveFamily = string.IsNullOrEmpty(Archetype.Family) ? FamilyOverride : Archetype.Family;
+            Bucket = lookup.ResolveBucket(effectiveFamily ?? string.Empty, SizeKey, InterpolationT);
             RenderReferencePanel(panel, Bucket);
         }
 
@@ -549,32 +554,44 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 {
                     foreach (StockPartRef part in bucket.InBucket.ContributingParts)
                     {
-                        AddReferenceRow(panel, part.PartName, bucket.InBucket.SizeCategory);
-                    }
-                }
-            }
-            else if (bucket.FamilyFallback != null && bucket.FamilyFallback.Count > 0)
-            {
-                var header = new Label($"No stock parts at this size - closest {bucket.Family} parts:");
-                header.AddToClassList("wizard-reference-section-header");
-                panel.Add(header);
-                foreach (StockBucket fallback in bucket.FamilyFallback)
-                {
-                    if (fallback?.ContributingParts == null)
-                    {
-                        continue;
-                    }
-                    foreach (StockPartRef part in fallback.ContributingParts)
-                    {
-                        AddReferenceRow(panel, part.PartName, fallback.SizeCategory);
+                        AddReferenceRow(panel, part.PartName, StockStatsLookup.NormalizeSizeKey(bucket.InBucket.SizeCategory));
                     }
                 }
             }
             else
             {
-                var header = new Label($"No stock data for family '{bucket.Family}'. Values will be hand-authored.");
-                header.AddToClassList("wizard-reference-section-header");
-                panel.Add(header);
+                if (bucket.Interpolated != null && bucket.InterpolationLower != null && bucket.InterpolationUpper != null)
+                {
+                    int percent = Mathf.RoundToInt(bucket.InterpolationT * 100f);
+                    var interpolation = new Label(
+                        $"No stock parts at {bucket.SizeKey}; defaults interpolate {percent}% from {StockStatsLookup.NormalizeSizeKey(bucket.InterpolationLower.SizeCategory)} to {StockStatsLookup.NormalizeSizeKey(bucket.InterpolationUpper.SizeCategory)}.");
+                    interpolation.AddToClassList("wizard-reference-section-header");
+                    panel.Add(interpolation);
+                }
+
+                if (bucket.FamilyFallback != null && bucket.FamilyFallback.Count > 0)
+                {
+                    var header = new Label($"Closest {bucket.Family} parts:");
+                    header.AddToClassList("wizard-reference-section-header");
+                    panel.Add(header);
+                    foreach (StockBucket fallback in bucket.FamilyFallback)
+                    {
+                        if (fallback?.ContributingParts == null)
+                        {
+                            continue;
+                        }
+                        foreach (StockPartRef part in fallback.ContributingParts)
+                        {
+                            AddReferenceRow(panel, part.PartName, StockStatsLookup.NormalizeSizeKey(fallback.SizeCategory));
+                        }
+                    }
+                }
+                else
+                {
+                    var header = new Label($"No stock data for family '{bucket.Family}'. Values will be hand-authored.");
+                    header.AddToClassList("wizard-reference-section-header");
+                    panel.Add(header);
+                }
             }
 
             if (bucket.Adjacent != null && bucket.Adjacent.Count > 0)
@@ -587,35 +604,33 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                     {
                         continue;
                     }
-                    var subHeader = new Label($"{adj.SizeCategory} ({adj.ContributingParts.Count} parts)");
+                    var subHeader = new Label($"{StockStatsLookup.NormalizeSizeKey(adj.SizeCategory)} ({adj.ContributingParts.Count} parts)");
                     subHeader.AddToClassList("wizard-reference-section-header");
                     adjFoldout.Add(subHeader);
                     foreach (StockPartRef part in adj.ContributingParts)
                     {
-                        AddReferenceRow(adjFoldout, part.PartName, adj.SizeCategory);
+                        AddReferenceRow(adjFoldout, part.PartName, StockStatsLookup.NormalizeSizeKey(adj.SizeCategory));
                     }
                 }
                 panel.Add(adjFoldout);
             }
         }
 
-        private static void AddReferenceRow(VisualElement parent, string partName, string sizeCategory)
+        private static void AddReferenceRow(VisualElement parent, string partName, string sizeKey)
         {
-            var row = new Label($"{partName}    [{sizeCategory}]");
+            var row = new Label($"{partName}    [{sizeKey}]");
             row.AddToClassList("wizard-reference-row");
             parent.Add(row);
         }
 
-        private static int FindSizeIndex(MetaAssemblySizeFilterType size)
+        private static IEnumerable<string> GetSizeKeyChoices()
         {
-            for (int i = 0; i < SizeOrder.Length; i++)
-            {
-                if (SizeOrder[i].Size == size)
-                {
-                    return i;
-                }
-            }
-            return 0;
+            return PartSizeRegistry.Definitions.Select(definition => definition.Key);
+        }
+
+        private static string NormalizeSizeKeyInput(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? PartSizeRegistry.DefaultSizeKey : value.Trim();
         }
 
         private StockStatsLookup GetLookup()
@@ -632,26 +647,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
         private StockStatsLookup _lookup;
         private bool _lookupLoaded;
-
-        private static readonly (string Key, MetaAssemblySizeFilterType Size)[] SizeOrder =
-        {
-            ("XS-",  MetaAssemblySizeFilterType.XSMINUS),
-            ("XS",   MetaAssemblySizeFilterType.XS),
-            ("XS+",  MetaAssemblySizeFilterType.XSPLUS),
-            ("SM",   MetaAssemblySizeFilterType.S),
-            ("SM+",  MetaAssemblySizeFilterType.SPLUS),
-            ("MD",   MetaAssemblySizeFilterType.M),
-            ("MD+",  MetaAssemblySizeFilterType.MPLUS),
-            ("LG",   MetaAssemblySizeFilterType.L),
-            ("LG+",  MetaAssemblySizeFilterType.LPLUS),
-            ("XL",   MetaAssemblySizeFilterType.XL),
-            ("XL+",  MetaAssemblySizeFilterType.XLPLUS),
-            ("2XL",  MetaAssemblySizeFilterType.XXL),
-            ("3XL",  MetaAssemblySizeFilterType.XXXL),
-            ("4XL",  MetaAssemblySizeFilterType.XXXXL),
-            ("5XL",  MetaAssemblySizeFilterType.XXXXXL),
-            ("6XL",  MetaAssemblySizeFilterType.XXXXXXL),
-        };
 
         private VisualElement BuildIdentityStep()
         {
@@ -717,10 +712,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 var familyField = new AutocompleteField(
                     FamilyOverride,
                     "Family",
-                    () => PartFamilyCatalog.GetKnownFamilies(),
+                    () => PartAuthoringChoiceCatalog.GetKnownFamilies(),
                     newValue =>
                     {
                         FamilyOverride = newValue ?? string.Empty;
+                        ResetStockDefaultsState();
                         ResolveDestinationFolder();
                         defaultRadioLabel.text = "  " + (ResolveDefaultReduxFolder() ?? "(pick category and family)");
                     });
@@ -1101,30 +1097,74 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             valuesHeader.AddToClassList("wizard-defaults-section-header");
             container.Add(valuesHeader);
 
+            var interpolationHost = new VisualElement();
+            container.Add(interpolationHost);
+
+            var valuesHost = new VisualElement();
+            container.Add(valuesHost);
+
+            RenderDefaultsValues(valuesHeader, interpolationHost, valuesHost, rebuildInterpolationControls: true);
+
+            return container;
+        }
+
+        private void RenderDefaultsValues(
+            Label valuesHeader,
+            VisualElement interpolationHost,
+            VisualElement valuesHost,
+            bool rebuildInterpolationControls)
+        {
+            valuesHost.Clear();
+
             StockStatsLookup lookup = GetLookup();
             if (lookup == null)
             {
+                interpolationHost.Clear();
                 valuesHeader.text = "Default values";
                 var warn = new Label("Stock stats not baked. Values will be hand-authored.");
                 warn.AddToClassList("wizard-no-bake-warning");
-                container.Add(warn);
-                return container;
+                valuesHost.Add(warn);
+                return;
             }
 
-            BucketResolution bucket = Bucket ?? lookup.ResolveBucket(
+            BucketResolution bucket = lookup.ResolveBucket(
                 string.IsNullOrEmpty(Archetype?.Family) ? FamilyOverride : Archetype?.Family ?? string.Empty,
-                Size);
+                SizeKey,
+                InterpolationT);
+            Bucket = bucket;
 
-            StockBucket source = bucket?.InBucket ?? (bucket?.FamilyFallback != null && bucket.FamilyFallback.Count > 0 ? bucket.FamilyFallback[0] : null);
+            StockBucket source = bucket?.InBucket ??
+                                 bucket?.Interpolated ??
+                                 (bucket?.FamilyFallback != null && bucket.FamilyFallback.Count > 0
+                                     ? bucket.FamilyFallback[0]
+                                     : null);
             if (source == null || source.Fields == null || source.Fields.Count == 0)
             {
+                interpolationHost.Clear();
                 valuesHeader.text = "Default values";
-                container.Add(new Label("No stock data for this family. Values will be hand-authored."));
-                return container;
+                valuesHost.Add(new Label("No stock data for this family. Values will be hand-authored."));
+                return;
             }
 
-            int partCount = source.ContributingParts?.Count ?? 0;
-            valuesHeader.text = $"Default values from bucket {source.Family} / {source.SizeCategory} ({partCount} reference parts)";
+            bool usingInterpolation = bucket?.InBucket == null && bucket?.Interpolated != null && ReferenceEquals(source, bucket.Interpolated);
+            if (usingInterpolation)
+            {
+                valuesHeader.text = $"Default values interpolated for {source.Family} / {StockStatsLookup.NormalizeSizeKey(source.SizeCategory)}";
+                if (rebuildInterpolationControls)
+                {
+                    interpolationHost.Clear();
+                    interpolationHost.Add(BuildInterpolationControls(
+                        bucket,
+                        () => RenderDefaultsValues(valuesHeader, interpolationHost, valuesHost, rebuildInterpolationControls: false),
+                        () => RenderDefaultsValues(valuesHeader, interpolationHost, valuesHost, rebuildInterpolationControls: true)));
+                }
+            }
+            else
+            {
+                interpolationHost.Clear();
+                int partCount = source.ContributingParts?.Count ?? 0;
+                valuesHeader.text = $"Default values from bucket {source.Family} / {StockStatsLookup.NormalizeSizeKey(source.SizeCategory)} ({partCount} reference parts)";
+            }
 
             // Group fields by module section, preserving encounter order. PartData always sorts first.
             var groups = new Dictionary<string, List<StockField>>();
@@ -1164,10 +1204,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
 
                 var header = new Label(groupName);
                 header.AddToClassList("wizard-defaults-group-header");
-                container.Add(header);
+                valuesHost.Add(header);
                 foreach (StockField field in visibleFields)
                 {
-                    container.Add(BuildDefaultsRow(field));
+                    valuesHost.Add(BuildDefaultsRow(field));
                 }
             }
 
@@ -1184,6 +1224,59 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 }
                 RenderGroup(kvp.Key, kvp.Value);
             }
+        }
+
+        private VisualElement BuildInterpolationControls(BucketResolution bucket, Action onValueChanged, Action onReset)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("wizard-interpolation-box");
+
+            string lowerSize = bucket.InterpolationLower != null ? StockStatsLookup.NormalizeSizeKey(bucket.InterpolationLower.SizeCategory) : "lower";
+            string upperSize = bucket.InterpolationUpper != null ? StockStatsLookup.NormalizeSizeKey(bucket.InterpolationUpper.SizeCategory) : "upper";
+            int percent = Mathf.RoundToInt(bucket.InterpolationT * 100f);
+
+            var title = new Label($"Interpolate between {lowerSize} and {upperSize}");
+            title.AddToClassList("wizard-interpolation-title");
+            container.Add(title);
+
+            var row = new VisualElement();
+            row.AddToClassList("wizard-interpolation-row");
+
+            var lowerLabel = new Label(lowerSize);
+            lowerLabel.AddToClassList("wizard-interpolation-endpoint");
+            row.Add(lowerLabel);
+
+            var slider = new Slider(0f, 1f) { value = bucket.InterpolationT };
+            slider.AddToClassList("wizard-interpolation-slider");
+            row.Add(slider);
+
+            var upperLabel = new Label(upperSize);
+            upperLabel.AddToClassList("wizard-interpolation-endpoint");
+            row.Add(upperLabel);
+
+            var resetButton = new Button(() =>
+            {
+                InterpolationT = float.NaN;
+                Bucket = null;
+                onReset?.Invoke();
+            }) { text = "Reset", tooltip = "Reset to the natural size position" };
+            resetButton.AddToClassList("wizard-interpolation-reset");
+            row.Add(resetButton);
+
+            container.Add(row);
+
+            var positionLabel = new Label($"{percent}% toward {upperSize}");
+            positionLabel.AddToClassList("wizard-interpolation-position");
+            container.Add(positionLabel);
+
+            slider.RegisterValueChangedCallback(evt =>
+            {
+                InterpolationT = evt.newValue;
+                Bucket = null;
+                int currentPercent = Mathf.RoundToInt(evt.newValue * 100f);
+                positionLabel.text = $"{currentPercent}% toward {upperSize}";
+                onValueChanged?.Invoke();
+            });
 
             return container;
         }
@@ -1343,6 +1436,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             }
         }
 
+        private void ResetStockDefaultsState()
+        {
+            Bucket = null;
+            InterpolationT = float.NaN;
+            ValueOverrides.Clear();
+        }
+
         private VisualElement BuildReviewStep()
         {
             var container = new VisualElement();
@@ -1359,7 +1459,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 ("Archetype", Archetype?.DisplayName ?? "(none)"),
                 ("Category", effectiveCategory ?? "(none)"),
                 ("Family", effectiveFamily ?? "(none)"),
-                ("Size", Size.ToString()),
+                ("Size", SizeKey),
                 ("Part name", string.IsNullOrEmpty(PartName) ? "(empty)" : PartName),
                 ("Author", string.IsNullOrEmpty(Author) ? "(empty)" : Author),
             });

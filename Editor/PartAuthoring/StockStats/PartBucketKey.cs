@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// Creates a new bucket key from a family and size category.
         /// </summary>
         /// <param name="family">The PartData.family value.</param>
-        /// <param name="sizeCategory">The PartData.sizeCategory value.</param>
+        /// <param name="sizeCategory">The PartData.sizeKey value.</param>
         public PartBucketKey(string family, string sizeCategory)
         {
             Family = family ?? string.Empty;
@@ -24,7 +24,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// <summary>The PartData.family value, e.g. "0100-Methalox".</summary>
         public string Family { get; }
 
-        /// <summary>The PartData.sizeCategory value, e.g. "S".</summary>
+        /// <summary>The PartData.sizeKey value, e.g. "SM".</summary>
         public string SizeCategory { get; }
 
         /// <inheritdoc />

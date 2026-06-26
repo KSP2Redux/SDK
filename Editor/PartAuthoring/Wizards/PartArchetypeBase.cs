@@ -34,7 +34,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         public abstract string Description { get; }
 
         /// <inheritdoc />
-        public abstract MetaAssemblySizeFilterType DefaultSize { get; }
+        public abstract string DefaultSizeKey { get; }
 
         /// <inheritdoc />
         public abstract IReadOnlyList<Type> DefaultModules { get; }
@@ -58,6 +58,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             if (bucket.InBucket != null)
             {
                 return bucket.InBucket;
+            }
+            if (bucket.Interpolated != null)
+            {
+                return bucket.Interpolated;
             }
             if (bucket.FamilyFallback != null && bucket.FamilyFallback.Count > 0)
             {
@@ -98,6 +102,78 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             {
                 apply((int)Math.Round(field.Median));
             }
+        }
+
+        /// <summary>
+        /// Seeds the common PartData scalar fields used by most stock-derived archetypes.
+        /// </summary>
+        protected static void SeedCommonPartData(CorePartData part, StockBucket source)
+        {
+            if (part?.Data == null || source == null)
+            {
+                return;
+            }
+
+            PartData data = part.Data;
+            TrySeedScalar(source, StockFieldNames.Mass, v => data.mass = v);
+            TrySeedScalarInt(source, StockFieldNames.Cost, v => data.cost = v);
+            TrySeedScalar(source, StockFieldNames.CrashTolerance, v => data.crashTolerance = v);
+            TrySeedScalar(source, StockFieldNames.MaxTemp, v => data.maxTemp = v);
+        }
+
+        /// <summary>
+        /// Seeds common wheel brake and suspension fields from stock stats.
+        /// </summary>
+        protected static void SeedWheelDefaults(CorePartData part, StockBucket source)
+        {
+            if (part == null || source == null)
+            {
+                return;
+            }
+
+            Data_WheelBrakes brakes = FindModuleData<Data_WheelBrakes>(part);
+            if (brakes != null)
+            {
+                TrySeedScalar(source, StockFieldNames.WheelMaxBrakeTorque, v => brakes.MaxBrakeTorque = v);
+            }
+
+            Data_WheelSuspension suspension = FindModuleData<Data_WheelSuspension>(part);
+            if (suspension != null)
+            {
+                TrySeedScalar(source, StockFieldNames.WheelSuspensionDistance, v => suspension.suspensionDistance = v);
+            }
+        }
+
+        /// <summary>
+        /// Seeds common docking port acquisition and capture values from stock stats.
+        /// </summary>
+        protected static void SeedDockingDefaults(CorePartData part, StockBucket source)
+        {
+            Data_DockingNode docking = FindModuleData<Data_DockingNode>(part);
+            if (docking == null || source == null)
+            {
+                return;
+            }
+
+            TrySeedScalar(source, StockFieldNames.DockingAcquireRange, v => docking.AcquireRange = v);
+            TrySeedScalar(source, StockFieldNames.DockingAcquireForce, v => docking.AcquireForce = v);
+            TrySeedScalar(source, StockFieldNames.DockingCaptureRange, v => docking.CaptureRange = v);
+        }
+
+        /// <summary>
+        /// Seeds common control-surface values from stock stats.
+        /// </summary>
+        protected static void SeedControlSurfaceDefaults(CorePartData part, StockBucket source)
+        {
+            Data_ControlSurface controlSurface = FindModuleData<Data_ControlSurface>(part);
+            if (controlSurface == null || source == null)
+            {
+                return;
+            }
+
+            TrySeedScalar(source, StockFieldNames.ControlSurfaceRange, v => controlSurface.CtrlSurfaceRange = v);
+            TrySeedScalar(source, StockFieldNames.ControlSurfaceArea, v => controlSurface.CtrlSurfaceArea = v);
+            TrySeedScalar(source, StockFieldNames.ControlSurfaceActuatorSpeed, v => controlSurface.ActuatorSpeedNormalScale = v);
         }
 
         /// <summary>

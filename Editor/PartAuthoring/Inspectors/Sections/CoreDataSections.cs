@@ -2,6 +2,7 @@ using KSP;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
 using Ksp2UnityTools.Editor.PartAuthoring.Tools;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -13,13 +14,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
     /// </summary>
     /// <remarks>
     /// Each method returns a UI Toolkit Foldout with <c>sdk-section</c> chrome and a stack of
-    /// PropertyFields bound to the supplied SerializedObject. Sections that need extra UI -
+    /// fields bound to the supplied SerializedObject. Sections that need extra UI -
     /// Attachment's auto-detect button, Resources' future-tab notice - are special-cased inline.
     /// </remarks>
     internal static class CoreDataSections
     {
         /// <summary>
-        /// Builds the Identity section (partName, author, category, family, sizeKey, sizeCategory, tags, isCompound).
+        /// Builds the Identity section (partName, author, category, family, sizeKey, tags, isCompound).
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
         /// <param name="target">The CorePartData instance, used by the partName change tracker to sync addresses.</param>
@@ -31,8 +32,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             AddField(foldout, so, "core.data.author");
             AddField(foldout, so, "core.data.category");
             AddFamilyField(foldout, so);
-            AddField(foldout, so, "core.data.sizeKey");
-            AddField(foldout, so, "core.data.sizeCategory");
+            AddSizeKeyField(foldout, so);
             AddField(foldout, so, "core.data.tags");
             AddField(foldout, so, "core.data.isCompound");
             return Bound(foldout, so);
@@ -147,17 +147,25 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             }
             Rebuild();
 
+            var autoDetectStatus = new HelpBox(string.Empty, HelpBoxMessageType.Info)
+            {
+                style = { display = DisplayStyle.None }
+            };
+
             var autoBtn = new Button(() =>
             {
-                AttachNodeAutoGenerator.RegenerateFromHierarchy(target);
+                var result = AttachNodeAutoGenerator.RegenerateFromHierarchy(target);
                 so.Update();
                 Rebuild();
+                autoDetectStatus.text = result.ToStatusText();
+                autoDetectStatus.style.display = DisplayStyle.Flex;
             })
             {
                 text = "Auto-detect from GO",
-                tooltip = "Replace the attach-node list with one entry per AttachmentNode component found in the prefab hierarchy.",
+                tooltip = "Merge attach nodes from AttachmentNode components and empty marker transforms whose names match known attach-node IDs.",
             };
             foldout.Add(autoBtn);
+            foldout.Add(autoDetectStatus);
 
             AddField(foldout, so, "core.data.fuelCrossFeed");
             return Bound(foldout, so);
@@ -216,8 +224,17 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             AddField(foldout, so, "core.data.childStageOffset");
             AddField(foldout, so, "core.data.stageType");
             AddField(foldout, so, "core.data.inverseStageCarryover");
-            AddField(foldout, so, "core.data.stagingIconAssetAddress");
+            AddStagingIconAssetAddressField(foldout, so);
             return Bound(foldout, so);
+        }
+
+        private static void AddStagingIconAssetAddressField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.stagingIconAssetAddress");
+            if (prop != null)
+            {
+                parent.Add(new StagingIconAddressField(prop, prop.displayName));
+            }
         }
 
         /// <summary>
@@ -373,6 +390,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             if (prop != null)
             {
                 parent.Add(new Widgets.FamilyField(prop, "Family"));
+            }
+        }
+
+        private static void AddSizeKeyField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.sizeKey");
+            if (prop != null)
+            {
+                parent.Add(new AutocompleteField(
+                    prop,
+                    "Size Key",
+                    PartAuthoringChoiceCatalog.GetKnownSizeKeys,
+                    detailSource: PartAuthoringChoiceCatalog.GetKnownSizeKeyDetail,
+                    preserveSourceOrderForEqualScores: true));
             }
         }
 

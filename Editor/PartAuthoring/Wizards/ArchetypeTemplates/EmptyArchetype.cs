@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using KSP;
 using KSP.OAB;
@@ -21,7 +21,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         /// <inheritdoc />
         public override string Description => "Bare prefab. No modules, no attach nodes, no transforms.";
         /// <inheritdoc />
-        public override MetaAssemblySizeFilterType DefaultSize => MetaAssemblySizeFilterType.S;
+        public override string DefaultSizeKey => PartSizeRegistry.Sm;
 
         /// <inheritdoc />
         public override IReadOnlyList<Type> DefaultModules => Array.Empty<Type>();

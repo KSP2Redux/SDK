@@ -70,6 +70,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             {
                 return string.Empty;
             }
+            if (string.IsNullOrWhiteSpace(prefabPathOverride) && TryGetPrefabAssetPath(target, out string assetPrefabPath))
+            {
+                return BakePrefabContents(assetPrefabPath);
+            }
+
             string prefabPath = string.IsNullOrWhiteSpace(prefabPathOverride)
                 ? PathUtils.GetPrefabOrAssetPath(target, target.gameObject)
                 : prefabPathOverride;
@@ -141,6 +146,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             {
                 return string.Empty;
             }
+            if (TryGetPrefabAssetPath(target, out string assetPrefabPath))
+            {
+                return RemoveGeneratedFromPrefabContents(assetPrefabPath);
+            }
+
             string prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
             if (string.IsNullOrEmpty(prefabPath))
             {
@@ -151,6 +161,78 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             DeleteGeneratedReentryMeshAssets(prefabPath, partName);
             SavePrefabChanges(target.gameObject, prefabPath);
             return "Removed generated reentry mesh roots and generated mesh assets for this part.";
+        }
+
+        private static string BakePrefabContents(string prefabPath)
+        {
+            GameObject contents = null;
+            try
+            {
+                contents = PrefabUtility.LoadPrefabContents(prefabPath);
+                var core = contents.GetComponent<CorePartData>();
+                if (core == null)
+                {
+                    return "Selected prefab does not contain CorePartData.";
+                }
+
+                string status = Bake(core, prefabPath, false);
+                PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+                AssetDatabase.SaveAssets();
+                return status;
+            }
+            finally
+            {
+                if (contents != null)
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+            }
+        }
+
+        private static string RemoveGeneratedFromPrefabContents(string prefabPath)
+        {
+            GameObject contents = null;
+            try
+            {
+                contents = PrefabUtility.LoadPrefabContents(prefabPath);
+                var core = contents.GetComponent<CorePartData>();
+                if (core == null)
+                {
+                    return "Selected prefab does not contain CorePartData.";
+                }
+
+                string partName = ResolvePartName(core);
+                ReentryMeshGenerator.RemoveGenerated(contents);
+                DeleteGeneratedReentryMeshAssets(prefabPath, partName);
+                PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+                AssetDatabase.SaveAssets();
+                return "Removed generated reentry mesh roots and generated mesh assets for this part.";
+            }
+            finally
+            {
+                if (contents != null)
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+            }
+        }
+
+        private static bool TryGetPrefabAssetPath(CorePartData target, out string prefabPath)
+        {
+            prefabPath = null;
+            if (target == null || target.gameObject == null || !EditorUtility.IsPersistent(target.gameObject))
+            {
+                return false;
+            }
+
+            prefabPath = AssetDatabase.GetAssetPath(target.gameObject);
+            if (string.IsNullOrWhiteSpace(prefabPath))
+            {
+                prefabPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(target.gameObject);
+            }
+
+            return !string.IsNullOrWhiteSpace(prefabPath) &&
+                   prefabPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string ResolvePartName(CorePartData target)
