@@ -30,7 +30,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public string BakedAt;
 
         /// <summary>Bumped when the schema changes in a way that invalidates stored entries.</summary>
-        public int SchemaVersion = 2;
+        public int SchemaVersion = 3;
 
         /// <summary>Total parts contributing across all buckets, summarised at bake time.</summary>
         public int PartsScanned;
@@ -501,6 +501,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public const string SkinMaxTemp = "skinMaxTemp";
         public const string MaxLength = "maxLength";
         public const string Buoyancy = "buoyancy";
+        public const string AngularDrag = "angularDrag";
+        public const string CoMassOffsetX = "coMassOffset.x";
+        public const string CoMassOffsetY = "coMassOffset.y";
+        public const string CoMassOffsetZ = "coMassOffset.z";
+        public const string CoLiftOffsetX = "coLiftOffset.x";
+        public const string CoLiftOffsetY = "coLiftOffset.y";
+        public const string CoLiftOffsetZ = "coLiftOffset.z";
+        public const string CoPressureOffsetX = "coPressureOffset.x";
+        public const string CoPressureOffsetY = "coPressureOffset.y";
+        public const string CoPressureOffsetZ = "coPressureOffset.z";
 
         // Engine
         public const string EngineMaxThrust = "engine.maxThrust";

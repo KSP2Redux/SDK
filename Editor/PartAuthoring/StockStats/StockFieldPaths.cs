@@ -82,6 +82,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 ScalarEntry(StockFieldNames.SkinMaxTemp,        "Skin Max Temp",       " K",     "{0:0}",     "Copy skin max temp",       (d, v) => d.skinMaxTemp = v),
                 ScalarEntry(StockFieldNames.MaxLength,          "Max Length",          " m",     "{0:0}",     "Copy max length",          (d, v) => d.maxLength = (int)v, isInteger: true),
                 ScalarEntry(StockFieldNames.Buoyancy,           "Buoyancy",            "",       "{0:0.000}", "Copy buoyancy",            (d, v) => d.buoyancy = v),
+                ScalarEntry(StockFieldNames.AngularDrag,         "Angular Drag",        "",       "{0:0.###}", "Copy angular drag",        (d, v) => d.angularDrag = v),
+                VectorComponentEntry(StockFieldNames.CoMassOffsetX,     "CoM Offset X", "Copy coMassOffset.x",     d => d.coMassOffset,     (d, v) => d.coMassOffset = v,     0),
+                VectorComponentEntry(StockFieldNames.CoMassOffsetY,     "CoM Offset Y", "Copy coMassOffset.y",     d => d.coMassOffset,     (d, v) => d.coMassOffset = v,     1),
+                VectorComponentEntry(StockFieldNames.CoMassOffsetZ,     "CoM Offset Z", "Copy coMassOffset.z",     d => d.coMassOffset,     (d, v) => d.coMassOffset = v,     2),
+                VectorComponentEntry(StockFieldNames.CoLiftOffsetX,     "CoL Offset X", "Copy coLiftOffset.x",     d => d.coLiftOffset,     (d, v) => d.coLiftOffset = v,     0),
+                VectorComponentEntry(StockFieldNames.CoLiftOffsetY,     "CoL Offset Y", "Copy coLiftOffset.y",     d => d.coLiftOffset,     (d, v) => d.coLiftOffset = v,     1),
+                VectorComponentEntry(StockFieldNames.CoLiftOffsetZ,     "CoL Offset Z", "Copy coLiftOffset.z",     d => d.coLiftOffset,     (d, v) => d.coLiftOffset = v,     2),
+                VectorComponentEntry(StockFieldNames.CoPressureOffsetX, "CoP Offset X", "Copy coPressureOffset.x", d => d.coPressureOffset, (d, v) => d.coPressureOffset = v, 0),
+                VectorComponentEntry(StockFieldNames.CoPressureOffsetY, "CoP Offset Y", "Copy coPressureOffset.y", d => d.coPressureOffset, (d, v) => d.coPressureOffset = v, 1),
+                VectorComponentEntry(StockFieldNames.CoPressureOffsetZ, "CoP Offset Z", "Copy coPressureOffset.z", d => d.coPressureOffset, (d, v) => d.coPressureOffset = v, 2),
 
                 // Tank
                 NonCopyableEntry(StockFieldNames.TankResourcePercent, "Resource %", " %", "{0:0.0}",
@@ -383,6 +393,51 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 Format = format,
                 Copier = copier,
                 IsInteger = isInteger,
+            };
+        }
+
+        private static StockFieldEntry VectorComponentEntry(
+            string name,
+            string display,
+            string undoLabel,
+            Func<PartData, Vector3> get,
+            Action<PartData, Vector3> set,
+            int axis)
+        {
+            StockFieldCopier copier = delegate (CorePartData target, float value, out string error)
+            {
+                error = null;
+                if (target == null || target.Data == null)
+                {
+                    error = "Active part has no PartData.";
+                    return false;
+                }
+                Undo.RecordObject(target, undoLabel);
+                PartData data = target.Data;
+                Vector3 vector = get(data);
+                switch (axis)
+                {
+                    case 0:
+                        vector.x = value;
+                        break;
+                    case 1:
+                        vector.y = value;
+                        break;
+                    default:
+                        vector.z = value;
+                        break;
+                }
+                set(data, vector);
+                EditorUtility.SetDirty(target);
+                return true;
+            };
+            return new StockFieldEntry
+            {
+                Name = name,
+                DisplayName = display,
+                UnitsSuffix = " m",
+                Format = "{0:0.###}",
+                Copier = copier,
             };
         }
 

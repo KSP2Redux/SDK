@@ -34,6 +34,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 new ScalarFieldExtractor(StockFieldNames.SkinMaxTemp, d => d.skinMaxTemp),
                 new ScalarFieldExtractor(StockFieldNames.MaxLength, d => d.maxLength),
                 new ScalarFieldExtractor(StockFieldNames.Buoyancy, d => d.buoyancy),
+                new ScalarFieldExtractor(StockFieldNames.AngularDrag, d => d.angularDrag),
+                new ScalarFieldExtractor(StockFieldNames.CoMassOffsetX, d => Component(d.coMassOffset, 0)),
+                new ScalarFieldExtractor(StockFieldNames.CoMassOffsetY, d => Component(d.coMassOffset, 1)),
+                new ScalarFieldExtractor(StockFieldNames.CoMassOffsetZ, d => Component(d.coMassOffset, 2)),
+                new ScalarFieldExtractor(StockFieldNames.CoLiftOffsetX, d => Component(d.coLiftOffset, 0)),
+                new ScalarFieldExtractor(StockFieldNames.CoLiftOffsetY, d => Component(d.coLiftOffset, 1)),
+                new ScalarFieldExtractor(StockFieldNames.CoLiftOffsetZ, d => Component(d.coLiftOffset, 2)),
+                new ScalarFieldExtractor(StockFieldNames.CoPressureOffsetX, d => Component(d.coPressureOffset, 0)),
+                new ScalarFieldExtractor(StockFieldNames.CoPressureOffsetY, d => Component(d.coPressureOffset, 1)),
+                new ScalarFieldExtractor(StockFieldNames.CoPressureOffsetZ, d => Component(d.coPressureOffset, 2)),
 
                 // Engine + paired gimbal
                 new EngineMaxThrustExtractor(),
@@ -98,6 +108,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 
                 // Control surface
                 new ControlSurfaceExtractor(),
+            };
+        }
+
+        private static float Component(Vector3Mirror vector, int axis)
+        {
+            if (vector == null)
+            {
+                return 0f;
+            }
+            return axis switch
+            {
+                0 => vector.x,
+                1 => vector.y,
+                _ => vector.z
             };
         }
     }

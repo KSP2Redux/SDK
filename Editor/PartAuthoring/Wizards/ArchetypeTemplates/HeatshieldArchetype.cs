@@ -27,6 +27,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
         public override IReadOnlyList<Type> DefaultModules => new[]
         {
             typeof(Module_Heatshield),
+            typeof(Module_ResourceCapacities),
             typeof(Module_Drag),
             typeof(Module_Color)
         };
@@ -46,20 +47,39 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
                 return;
             }
             StockBucket source = FindFirstUsableBucket(bucket);
-            if (source == null)
-            {
-                return;
-            }
 
             PartData data = part.Data;
+            data.angularDrag = 2f;
+            data.coLiftOffset = new Vector3(0f, -0.255f, 0f);
+            data.coPressureOffset = new Vector3(0f, 1.05f, 0f);
+            data.crashTolerance = 20f;
+            data.maxTemp = 1700f;
             TrySeedScalar(source, StockFieldNames.Mass, v => data.mass = v);
             TrySeedScalarInt(source, StockFieldNames.Cost, v => data.cost = v);
-            TrySeedScalar(source, StockFieldNames.CrashTolerance, v => data.crashTolerance = v);
-            TrySeedScalar(source, StockFieldNames.MaxTemp, v => data.maxTemp = v);
 
             Data_Heatshield shield = FindModuleData<Data_Heatshield>(part);
             if (shield != null)
             {
+                shield.requiredResources ??= new List<PartModuleResourceSetting>();
+                shield.requiredResources.Clear();
+                shield.requiredResources.Add(new PartModuleResourceSetting
+                {
+                    Rate = 0.5f,
+                    ResourceName = "Ablator",
+                    AcceptanceThreshold = 0.001
+                });
+                shield.AblationTempThreshold = 1000.0;
+                shield.AblationMaximumOverThreshold = 50.0;
+                shield.PyrolysisLossFactor = 0.00000016;
+                shield.ShieldingScale = 1f;
+                shield.ShieldingDirection = Vector3.down;
+                shield.DisabledWhenRetracted = true;
+                shield.UseChar = true;
+                shield.CharMaterialName = data.partName;
+                shield.CharMin = 0f;
+                shield.CharMax = 1f;
+                shield.AblatorMaxValue = 1.0;
+
                 TrySeedScalar(source, StockFieldNames.HeatshieldAblationTempThreshold, v => shield.AblationTempThreshold = v);
                 TrySeedScalar(source, StockFieldNames.HeatshieldAblationMaxOverThreshold, v => shield.AblationMaximumOverThreshold = v);
                 TrySeedScalar(source, StockFieldNames.HeatshieldPyrolysisLossFactor, v => shield.PyrolysisLossFactor = v);
@@ -67,8 +87,17 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards.ArchetypeTemplates
             }
 
             // Heat shields carry an Ablator resource container; seed capacity from bake if present.
-            AddResourceContainer(data, source, "Ablator", defaultCapacity: 200f,
+            AddResourceContainer(data, source, "Ablator", defaultCapacity: 0.2f,
                 capacityFieldName: StockFieldNames.TankCapacity + ".Ablator");
+            for (int i = 0; i < data.resourceContainers.Count; i++)
+            {
+                var resource = data.resourceContainers[i];
+                if (resource?.name == "Ablator")
+                {
+                    resource.initialUnits = resource.capacityUnits;
+                    break;
+                }
+            }
         }
     }
 }

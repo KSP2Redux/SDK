@@ -33,8 +33,19 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public float skinMaxTemp;
         public float maxLength;
         public float buoyancy;
+        public float angularDrag;
+        public Vector3Mirror coMassOffset;
+        public Vector3Mirror coLiftOffset;
+        public Vector3Mirror coPressureOffset;
         public List<ResourceContainerMirror> resourceContainers;
         public List<ModuleEnvelopeMirror> serializedPartModules;
+    }
+
+    internal sealed class Vector3Mirror
+    {
+        public float x;
+        public float y;
+        public float z;
     }
 
     internal sealed class ResourceContainerMirror

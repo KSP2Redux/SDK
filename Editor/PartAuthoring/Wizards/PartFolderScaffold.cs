@@ -117,6 +117,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 CorePartData prefabCore = prefabAsset.GetComponent<CorePartData>();
 
                 _archetype.SeedDefaults(prefabCore, _bucket);
+                ApplyCoreAeroDefaults(prefabCore);
                 ApplyValueOverrides(prefabCore);
                 EditorUtility.SetDirty(prefabAsset);
                 AssetDatabase.SaveAssets();
@@ -140,6 +141,46 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                     Object.DestroyImmediate(tempRoot);
                 }
             }
+        }
+
+        private void ApplyCoreAeroDefaults(CorePartData core)
+        {
+            StockBucket source = ResolveStockSource();
+            if (source == null || core == null)
+            {
+                return;
+            }
+
+            ApplyStockField(core, source, StockFieldNames.AngularDrag);
+            ApplyStockField(core, source, StockFieldNames.CoMassOffsetX);
+            ApplyStockField(core, source, StockFieldNames.CoMassOffsetY);
+            ApplyStockField(core, source, StockFieldNames.CoMassOffsetZ);
+            ApplyStockField(core, source, StockFieldNames.CoLiftOffsetX);
+            ApplyStockField(core, source, StockFieldNames.CoLiftOffsetY);
+            ApplyStockField(core, source, StockFieldNames.CoLiftOffsetZ);
+            ApplyStockField(core, source, StockFieldNames.CoPressureOffsetX);
+            ApplyStockField(core, source, StockFieldNames.CoPressureOffsetY);
+            ApplyStockField(core, source, StockFieldNames.CoPressureOffsetZ);
+        }
+
+        private StockBucket ResolveStockSource()
+        {
+            return _bucket?.InBucket ??
+                   _bucket?.Interpolated ??
+                   (_bucket?.FamilyFallback != null && _bucket.FamilyFallback.Count > 0
+                       ? _bucket.FamilyFallback[0]
+                       : null);
+        }
+
+        private static void ApplyStockField(CorePartData core, StockBucket source, string fieldName)
+        {
+            StockField field = source.FindField(fieldName);
+            if (field == null || field.Count == 0)
+            {
+                return;
+            }
+            StockFieldEntry entry = StockFieldPaths.Find(fieldName);
+            entry?.Copier?.Invoke(core, field.Median, out _);
         }
 
         private void ApplyValueOverrides(CorePartData core)

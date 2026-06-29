@@ -110,6 +110,15 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 null
             );
 
+        private static readonly MethodInfo GetAnnotationsMethod =
+            AnnotationUtilityType?.GetMethod(
+                "GetAnnotations",
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic,
+                null,
+                Type.EmptyTypes,
+                null
+            );
+
         private static readonly MethodInfo SetGizmoEnabledMethod =
             AnnotationUtilityType?.GetMethod(
                 "SetGizmoEnabled",
@@ -124,6 +133,8 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 "SetGizmosDirty",
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic
             );
+
+        private static bool _annotationCacheInitialized;
 
         public static bool IsAvailable => GetAnnotationMethod != null &&
                                           SetGizmoEnabledMethod != null &&
@@ -230,11 +241,30 @@ namespace Ksp2UnityTools.Editor.CustomEditors
                 return false;
             }
 
+            EnsureAnnotationCacheInitialized();
             annotation = GetAnnotationMethod.Invoke(
                 null,
                 new object[] { colliderAnnotation.ClassId, BUILT_IN_SCRIPT_CLASS }
             );
             return IsValidAnnotation(annotation, colliderAnnotation.ClassId);
+        }
+
+        private static void EnsureAnnotationCacheInitialized()
+        {
+            if (_annotationCacheInitialized)
+            {
+                return;
+            }
+
+            try
+            {
+                GetAnnotationsMethod?.Invoke(null, null);
+            }
+            catch (TargetInvocationException)
+            {
+            }
+
+            _annotationCacheInitialized = true;
         }
 
         private static bool IsValidAnnotation(object annotation, int expectedClassId)

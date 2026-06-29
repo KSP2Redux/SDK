@@ -45,6 +45,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 case StockFieldNames.SkinMaxTemp: value = (float)data.skinMaxTemp; return true;
                 case StockFieldNames.MaxLength: value = data.maxLength; return true;
                 case StockFieldNames.Buoyancy: value = (float)data.buoyancy; return true;
+                case StockFieldNames.AngularDrag: value = (float)data.angularDrag; return true;
+                case StockFieldNames.CoMassOffsetX: value = data.coMassOffset.x; return true;
+                case StockFieldNames.CoMassOffsetY: value = data.coMassOffset.y; return true;
+                case StockFieldNames.CoMassOffsetZ: value = data.coMassOffset.z; return true;
+                case StockFieldNames.CoLiftOffsetX: value = data.coLiftOffset.x; return true;
+                case StockFieldNames.CoLiftOffsetY: value = data.coLiftOffset.y; return true;
+                case StockFieldNames.CoLiftOffsetZ: value = data.coLiftOffset.z; return true;
+                case StockFieldNames.CoPressureOffsetX: value = data.coPressureOffset.x; return true;
+                case StockFieldNames.CoPressureOffsetY: value = data.coPressureOffset.y; return true;
+                case StockFieldNames.CoPressureOffsetZ: value = data.coPressureOffset.z; return true;
                 case StockFieldNames.TankResourcePercent: return false;
                 case StockFieldNames.EngineGimbalRange: return TryReadModuleFloat<Data_Gimbal>(target, g => g.gimbalRange, out value);
                 case StockFieldNames.EngineGimbalResponseSpeed: return TryReadModuleFloat<Data_Gimbal>(target, g => g.gimbalResponseSpeed, out value);

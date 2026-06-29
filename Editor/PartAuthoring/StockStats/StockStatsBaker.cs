@@ -169,7 +169,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             }
             lookup.SourceHash = ComputeSourceHash(sourceDir);
             lookup.BakedAt = DateTime.UtcNow.ToString("o");
-            lookup.SchemaVersion = 2;
+            lookup.SchemaVersion = 3;
             lookup.PartsScanned = result.PartsScanned;
             result.SourceHash = lookup.SourceHash;
 
