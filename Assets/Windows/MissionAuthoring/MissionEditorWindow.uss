@@ -510,6 +510,13 @@
     white-space: normal;
 }
 
+.action-row-text-area-field > .unity-base-field__input,
+.action-row-text-area-field > .unity-text-field__input,
+.action-row-text-area-field .unity-base-text-field__input,
+.action-row-text-area-field .unity-text-field__input {
+    white-space: normal;
+}
+
 .action-row-section-header {
     -unity-font-style: bold;
     color: rgb(190, 200, 220);
