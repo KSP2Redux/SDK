@@ -3,23 +3,7 @@
 /*noinspection CssInvalidPseudoSelector*/
 :root {
     /*noinspection CssUnknownTarget*/
-    --font-regular: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-medium: url('Fonts/JetBrainsMono/JetBrainsMono-Medium SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-bold: url('Fonts/JetBrainsMono/JetBrainsMono-Bold SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-big: url('Fonts/LEDCounter7/led_counter-7 SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-big-italic: url('Fonts/LEDCounter7/led_counter-7_italic SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-small: url('Fonts/SFPixelate/pixelate SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-small-bold: url('Fonts/SFPixelate/pixelate SDF.asset');
-    /*noinspection CssUnknownTarget*/
-    --font-title-small-italic: url('Fonts/SFPixelate/pixelate SDF.asset');
-    /*noinspection CssInvalidFunction,CssUnresolvedCustomProperty,CssUnknownProperty*/
-    -unity-font-definition: var(--font-regular);
+    -unity-font-definition: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
     color: #c0c7d5;
 }
 
@@ -360,7 +344,6 @@
 .unity-base-text-field {
     margin: 0;
     padding: 4px 0;
-    --unity-cursor-color:#ffffff;
 }
 
 .unity-base-text-field > .unity-base-field__input.unity-base-text-field__input {
@@ -700,7 +683,7 @@
     padding: 0;
     margin: 2px;
     color: rgb(214, 224, 255);
-    -unity-font-definition: var(--font-regular);
+    -unity-font-definition: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
 }
 
 .unity-foldout > .unity-foldout__toggle:active Label {
@@ -773,7 +756,7 @@
 }
 
 #title-bar > .unity-label {
-    -unity-font-definition: var(--font-title-big);
+    -unity-font-definition: url('Fonts/LEDCounter7/led_counter-7 SDF.asset');
     -unity-text-align: lower-left;
     -unity-font-style: normal;
     font-size: 28px;
@@ -830,7 +813,7 @@
 .unity-popup-field .unity-text-element,
 .unity-enum-field .unity-text-element {
     -unity-text-align: upper-left;
-    -unity-font-definition: var(--font-regular);
+    -unity-font-definition: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
     -unity-text-generator: advanced;
     -unity-text-auto-size: best-fit 8px 14px;
     color: rgb(192, 199, 213);
@@ -879,7 +862,7 @@
 }
 
 .unity-base-dropdown .unity-base-dropdown__item > .unity-base-dropdown__item-content > .unity-base-dropdown__label {
-    -unity-font-definition: var(--font-regular);
+    -unity-font-definition: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
     -unity-text-generator: advanced;
     -unity-text-auto-size: best-fit 8px 14px;
     color: rgb(156, 162, 173);
@@ -927,7 +910,7 @@
 
 .unity-progress-bar > .unity-progress-bar__container > .unity-progress-bar__background > .unity-progress-bar__title-container > .unity-progress-bar__title {
     color: #c0c7d5;
-    -unity-font-definition: var(--font-regular);
+    -unity-font-definition: url('Fonts/JetBrainsMono/JetBrainsMono-Regular SDF.asset');
     -unity-text-align: middle-center;
     margin: 0;
     padding: 0 6px;
