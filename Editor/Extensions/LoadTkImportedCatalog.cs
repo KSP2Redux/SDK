@@ -20,6 +20,9 @@ namespace Ksp2UnityTools.Editor.Extensions
         // Path must be relative to Assets directory.
         private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
 
+        private const string PlaySessionInitializedKey =
+            "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
+
 #if TK_ADDRESSABLE
         static LoadTkImportedCatalog()
         {
@@ -34,16 +37,47 @@ namespace Ksp2UnityTools.Editor.Extensions
             // the domain-reload behavior. Unsubscribe first so a domain reload can't double-subscribe.
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+        }
+
+        private static void OnBeforeAssemblyReload()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
-            // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
-            // startup flow loads kspFlow.unity (via GameManager's LoadingFlow), so this is in time.
-            if (state == PlayModeStateChange.EnteredPlayMode)
+            switch (state)
             {
-                EnsureImportedCatalogsLoaded();
+                case PlayModeStateChange.ExitingEditMode:
+                    ArmAddressablesReinitialize();
+                    return;
+                case PlayModeStateChange.ExitingPlayMode:
+                    SessionState.SetBool(PlaySessionInitializedKey, false);
+                    return;
+                // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
+                // startup flow loads kspFlow.unity (via GameManager's LoadingFlow), so this is in time.
+                // SessionState protects against stale duplicate callbacks left behind by a script hot
+                // reload. Addressables was armed at ExitingEditMode so Unity's normal Fast Mode setup,
+                // which runs before this callback, owns creation of the fresh implementation.
+                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
+                    return;
+                case PlayModeStateChange.EnteredPlayMode:
+                    SessionState.SetBool(PlaySessionInitializedKey, true);
+                    EnsureImportedCatalogsLoaded();
+                    break;
             }
+        }
+
+        private static void ArmAddressablesReinitialize()
+        {
+            FieldInfo reinitializeField = typeof(Addressables).GetField(
+                "reinitializeAddressables",
+                BindingFlags.Static | BindingFlags.NonPublic
+            );
+            reinitializeField?.SetValue(null, true);
         }
 
         /// <summary>
@@ -84,7 +118,8 @@ namespace Ksp2UnityTools.Editor.Extensions
                 loadKspCatalogTask.WaitForCompletion();
             }
 
-            // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is no locator already registerd
+            // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is
+            // no locator already registerd
             if (Assembly.GetExecutingAssembly().FullName == "ksp2community.ksp2unitytools.editor" && !Addressables
                 .ResourceLocators
                 .Select(rl => rl.LocatorId)
