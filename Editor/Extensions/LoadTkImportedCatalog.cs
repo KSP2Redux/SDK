@@ -30,7 +30,7 @@ namespace Ksp2UnityTools.Editor.Extensions
             // OnPostprocessAllAssets). Entering Play Mode re-runs Addressables'
             // FastModeInitializationOperation, which rebuilds the resource locators from the project's
             // AddressableAssetSettings and drops the imported catalog. With Domain Reload enabled the
-            // play-mode reload re-fires the postprocessor and re-registers it; with Reload Domain
+            // play-mode reload re-fires the postprocessor and re-registers it. With Reload Domain
             // disabled that never happens, so on the second Play Mode enter base-game content registered
             // only in the imported catalog (e.g. the kspFlow.unity scene) becomes unresolvable
             // ("No Location found for Key=kspFlow.unity"). Re-register on entering Play Mode to restore
@@ -57,6 +57,9 @@ namespace Ksp2UnityTools.Editor.Extensions
                 case PlayModeStateChange.ExitingPlayMode:
                     SessionState.SetBool(PlaySessionInitializedKey, false);
                     return;
+                case PlayModeStateChange.EnteredEditMode:
+                    UnloadLeakedAssetBundles();
+                    return;
                 // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
                 // startup flow loads kspFlow.unity (via GameManager's LoadingFlow), so this is in time.
                 // SessionState protects against stale duplicate callbacks left behind by a script hot
@@ -68,6 +71,27 @@ namespace Ksp2UnityTools.Editor.Extensions
                     SessionState.SetBool(PlaySessionInitializedKey, true);
                     EnsureImportedCatalogsLoaded();
                     break;
+            }
+        }
+
+        // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
+        // Mode enter (see ArmAddressablesReinitialize), but native AssetBundles held by the old
+        // implementation are never unloaded. After a dirty play exit (crash or aborted load flow)
+        // their refcounts never hit zero, the bundle files stay resident, and the next session's
+        // fresh implementation fails to load them again with "another AssetBundle with the same
+        // files is already loaded", which cascades into unresolvable base-game content. Sweep them
+        // once the editor is fully back in edit mode, after the game's own teardown has released
+        // whatever it released cleanly. The "ksp2" BundleKit catalog bundle is excluded because the
+        // edit-mode ReduxResourceAdapter keeps using it between play sessions.
+        private static void UnloadLeakedAssetBundles()
+        {
+            foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles().ToArray())
+            {
+                if (bundle == null || bundle.name == "ksp2")
+                {
+                    continue;
+                }
+                bundle.Unload(true);
             }
         }
 

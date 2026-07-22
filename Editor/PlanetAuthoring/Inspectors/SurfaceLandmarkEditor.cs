@@ -169,6 +169,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 field.RegisterValueChangeCallback(_ => SyncTarget());
             }
 
+            // The region id row is a delayed TextField, not a PropertyField, so the loop above
+            // does not cover it. Track the property directly - this fires once per committed
+            // change (blur or enter) and also re-syncs on undo and redo.
+            root.TrackPropertyValue(serializedObject.FindProperty(nameof(SurfaceLandmark.DiscoverableRegionId)), _ => SyncTarget());
+
             return root;
         }
 
@@ -375,7 +380,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             // Per-instance overrides only show when smoothing is OFF. Smoothing-mode landmarks
             // have their height behavior driven entirely by sync-applied overrides, so exposing
             // the override toggles would be misleading. The template asset itself is never
-            // editable inline (its values are shared across every instance referencing it); the
+            // editable inline (its values are shared across every instance referencing it). The
             // artist opens it via the project view if they need to tune template defaults.
             if (landmark.EnableSmoothing) return;
             if (landmark.ManagedDecal != null && _decalOverridesSlot != null)
