@@ -117,7 +117,24 @@ namespace Ksp2UnityTools.Editor.Extensions
             // catalog ID rather than this imported file path. Comparing locator
             // IDs alone would register the same catalog a second time and cause
             // every stock label/key to resolve twice.
-            Addressables.InitializeAsync().WaitForCompletion();
+            if (!Addressables.ResourceLocators.Any())
+            {
+                try
+                {
+                    Addressables.InitializeAsync().WaitForCompletion();
+                }
+                catch (System.ArgumentOutOfRangeException)
+                    when (
+                        !Addressables.ResourceLocators.Any()
+                        && Addressables.ResourceManager.ResourceProviders.Any()
+                    )
+                {
+                    // Addressables 2.9.1 indexes locator zero when an earlier
+                    // initialization completed or failed and left the
+                    // AddressablesImpl with providers but no locators. Catalog
+                    // loading remains valid and repopulates the locator list.
+                }
+            }
             // Initialization can replace InternalIdTransformFunc, especially
             // when Fast Mode is explicitly reinitialized between play
             // sessions. Restore the imported-game routing after it completes,
