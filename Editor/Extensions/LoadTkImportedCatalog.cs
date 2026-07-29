@@ -1,11 +1,14 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using ThunderKit.Core.Data;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.Initialization;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace Ksp2UnityTools.Editor.Extensions
 {
@@ -20,9 +23,12 @@ namespace Ksp2UnityTools.Editor.Extensions
         // Path must be relative to Assets directory.
         private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
 
-        private const string PlaySessionInitializedKey =
-            "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
+        private const string BaseGameCatalogProbeKey = "kspFlow.unity";
 
+        private static System.Func<IResourceLocation, string>
+            previousInternalIdTransform;
+
+        private static string importedAddressablesRoot;
 #if TK_ADDRESSABLE
         static LoadTkImportedCatalog()
         {
@@ -43,6 +49,12 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static void OnBeforeAssemblyReload()
         {
+            if (Addressables.InternalIdTransformFunc == RedirectImportedInternalId)
+            {
+                Addressables.InternalIdTransformFunc =
+                    previousInternalIdTransform;
+            }
+
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
         }
@@ -54,30 +66,16 @@ namespace Ksp2UnityTools.Editor.Extensions
                 case PlayModeStateChange.ExitingEditMode:
                     ArmAddressablesReinitialize();
                     return;
-                case PlayModeStateChange.ExitingPlayMode:
-                    SessionState.SetBool(PlaySessionInitializedKey, false);
-                    return;
                 // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
                 // startup flow loads kspFlow.unity (via GameManager's LoadingFlow), so this is in time.
-                // SessionState protects against stale duplicate callbacks left behind by a script hot
-                // reload. Addressables was armed at ExitingEditMode so Unity's normal Fast Mode setup,
-                // which runs before this callback, owns creation of the fresh implementation.
-                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
-                    return;
+                // EnsureImportedCatalogsLoaded is idempotent, so run it for every Play Mode session.
+                // A SessionState gate can remain stale across Domain-Reload-disabled sessions and skip
+                // the exact re-registration required by the fresh Addressables implementation.
                 case PlayModeStateChange.EnteredPlayMode:
-                    SessionState.SetBool(PlaySessionInitializedKey, true);
+                    StabilizeAddressablesAfterPlayModeInitialization();
                     EnsureImportedCatalogsLoaded();
                     break;
             }
-        }
-
-        private static void ArmAddressablesReinitialize()
-        {
-            FieldInfo reinitializeField = typeof(Addressables).GetField(
-                "reinitializeAddressables",
-                BindingFlags.Static | BindingFlags.NonPublic
-            );
-            reinitializeField?.SetValue(null, true);
         }
 
         /// <summary>
@@ -111,7 +109,26 @@ namespace Ksp2UnityTools.Editor.Extensions
                 return;
             }
 
-            if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Contains(ksp2CatalogFullPath))
+            InstallImportedAddressablesRouting();
+
+            // BundleKit and other editor integrations can initialize Addressables
+            // directly from the installed game's settings before this callback.
+            // In that case the base-game catalog is already registered under its
+            // catalog ID rather than this imported file path. Comparing locator
+            // IDs alone would register the same catalog a second time and cause
+            // every stock label/key to resolve twice.
+            Addressables.InitializeAsync().WaitForCompletion();
+            // Initialization can replace InternalIdTransformFunc, especially
+            // when Fast Mode is explicitly reinitialized between play
+            // sessions. Restore the imported-game routing after it completes,
+            // before the startup flow requests any stock bundles.
+            InstallImportedAddressablesRouting();
+            if (
+                !CatalogKeyIsRegistered(BaseGameCatalogProbeKey)
+                && !Addressables.ResourceLocators
+                    .Select(rl => rl.LocatorId)
+                    .Contains(ksp2CatalogFullPath)
+            )
             {
                 AsyncOperationHandle<IResourceLocator> loadKspCatalogTask =
                     Addressables.LoadContentCatalogAsync(ksp2CatalogFullPath, true);
@@ -131,6 +148,145 @@ namespace Ksp2UnityTools.Editor.Extensions
                     Addressables.LoadContentCatalogAsync(reduxCatalogFullPath, true);
                 loadKspCatalogTask.WaitForCompletion();
             }
+        }
+
+        private static void ArmAddressablesReinitialize()
+        {
+            CancelPendingAddressablesReinitialize();
+            SetAddressablesReinitialize(true);
+        }
+
+        private static void StabilizeAddressablesAfterPlayModeInitialization()
+        {
+            // Addressables schedules its own delayed reinitialize callback when
+            // leaving Play Mode. If the next session starts before that
+            // callback runs, it can reset the freshly initialized
+            // AddressablesImpl after EnteredPlayMode and discard every
+            // imported locator/transform. We synchronously armed the normal
+            // play-mode rebuild at ExitingEditMode, so no delayed flag should
+            // be allowed to survive this boundary.
+            CancelPendingAddressablesReinitialize();
+            SetAddressablesReinitialize(false);
+        }
+
+        private static void CancelPendingAddressablesReinitialize()
+        {
+            MethodInfo enableMethod = typeof(Addressables).GetMethod(
+                "EnableReinitializeAddressablesFlag",
+                BindingFlags.Static | BindingFlags.NonPublic
+            );
+            if (enableMethod == null)
+                return;
+
+            var callback =
+                (EditorApplication.CallbackFunction)
+                    System.Delegate.CreateDelegate(
+                        typeof(EditorApplication.CallbackFunction),
+                        enableMethod
+                    );
+            EditorApplication.delayCall -= callback;
+        }
+
+        private static void SetAddressablesReinitialize(bool value)
+        {
+            FieldInfo reinitializeField = typeof(Addressables).GetField(
+                "reinitializeAddressables",
+                BindingFlags.Static | BindingFlags.NonPublic
+            );
+            reinitializeField?.SetValue(null, value);
+        }
+
+        private static void InstallImportedAddressablesRouting()
+        {
+            importedAddressablesRoot = Path.GetFullPath(
+                ThunderKitSetting
+                    .GetOrCreateSettings<ThunderKitSettings>()
+                    .AddressableAssetsPath
+            );
+            if (
+                Addressables.InternalIdTransformFunc
+                == RedirectImportedInternalId
+            )
+            {
+                return;
+            }
+
+            previousInternalIdTransform =
+                Addressables.InternalIdTransformFunc;
+            Addressables.InternalIdTransformFunc =
+                RedirectImportedInternalId;
+        }
+
+        private static string RedirectImportedInternalId(
+            IResourceLocation location
+        )
+        {
+            string evaluated = AddressablesRuntimeProperties
+                .EvaluateString(location.InternalId)
+                .Replace('\\', '/');
+            string previous = previousInternalIdTransform
+                ?.Invoke(location)
+                ?.Replace('\\', '/');
+
+            if (IsUsableInternalId(previous))
+                return previous;
+            if (IsUsableInternalId(evaluated))
+                return evaluated;
+            if (
+                !string.IsNullOrWhiteSpace(importedAddressablesRoot)
+                && evaluated.EndsWith(
+                    ".bundle",
+                    System.StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                string externalBundle = Path.Combine(
+                        importedAddressablesRoot,
+                        "StandaloneWindows64",
+                        Path.GetFileName(evaluated)
+                    )
+                    .Replace('\\', '/');
+                if (File.Exists(externalBundle))
+                {
+                    return externalBundle;
+                }
+            }
+
+            return previous ?? evaluated;
+        }
+
+        private static bool IsUsableInternalId(string internalId)
+        {
+            if (string.IsNullOrWhiteSpace(internalId))
+                return false;
+            if (
+                internalId.Contains(
+                    "://",
+                    System.StringComparison.Ordinal
+                )
+            )
+            {
+                return true;
+            }
+
+            return Path.IsPathRooted(internalId)
+                && File.Exists(internalId);
+        }
+
+        private static bool CatalogKeyIsRegistered(string key)
+        {
+            return Addressables.ResourceLocators.Any(
+                locator =>
+                    locator != null
+                    && locator.Keys.OfType<string>().Any(
+                        candidate =>
+                            string.Equals(
+                                candidate,
+                                key,
+                                System.StringComparison.Ordinal
+                            )
+                    )
+            );
         }
 #endif
     }
