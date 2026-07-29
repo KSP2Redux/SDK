@@ -3,10 +3,6 @@ using System.Linq;
 using System.Reflection;
 using ThunderKit.Core.Data;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Build;
-using UnityEditor.AddressableAssets.Build.DataBuilders;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.Initialization;
@@ -28,7 +24,6 @@ namespace Ksp2UnityTools.Editor.Extensions
         private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
 
         private const string BaseGameCatalogProbeKey = "kspFlow.unity";
-        private const string FastModeLocatorId = "AddressableAssetSettings";
 
         private static System.Func<IResourceLocation, string>
             previousInternalIdTransform;
@@ -50,7 +45,6 @@ namespace Ksp2UnityTools.Editor.Extensions
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
-            TrySelectFastModeBuilder(false);
         }
 
         private static void OnBeforeAssemblyReload()
@@ -70,12 +64,6 @@ namespace Ksp2UnityTools.Editor.Extensions
             switch (state)
             {
                 case PlayModeStateChange.ExitingEditMode:
-                    if (!PrepareFastModePlayModeData())
-                    {
-                        EditorApplication.isPlaying = false;
-                        return;
-                    }
-
                     ArmAddressablesReinitialize();
                     return;
                 // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
@@ -86,7 +74,6 @@ namespace Ksp2UnityTools.Editor.Extensions
                 case PlayModeStateChange.EnteredPlayMode:
                     StabilizeAddressablesAfterPlayModeInitialization();
                     EnsureImportedCatalogsLoaded();
-                    ValidateFastModeInitialization();
                     break;
             }
         }
@@ -163,118 +150,6 @@ namespace Ksp2UnityTools.Editor.Extensions
             }
         }
 
-        private static bool PrepareFastModePlayModeData()
-        {
-            if (!TrySelectFastModeBuilder(true))
-                return false;
-
-            AddressableAssetSettings settings =
-                AddressableAssetSettingsDefaultObject.Settings;
-            BuildScriptFastMode fastModeBuilder =
-                settings.ActivePlayModeDataBuilder as BuildScriptFastMode;
-            AddressablesPlayModeBuildResult result =
-                fastModeBuilder.BuildData<AddressablesPlayModeBuildResult>(
-                    new AddressablesDataBuilderInput(settings)
-                );
-            if (!string.IsNullOrEmpty(result.Error))
-            {
-                Debug.LogError(
-                    "[KSP2UnityTools] Could not prepare Addressables Fast Mode "
-                        + "for editor Play Mode: "
-                        + result.Error
-                );
-                return false;
-            }
-
-            string runtimeDataPath = PlayerPrefs.GetString(
-                Addressables.kAddressablesRuntimeDataPath,
-                string.Empty
-            );
-            if (
-                !runtimeDataPath.StartsWith(
-                    "GUID:",
-                    System.StringComparison.Ordinal
-                )
-            )
-            {
-                Debug.LogError(
-                    "[KSP2UnityTools] Addressables Fast Mode did not produce a "
-                        + "GUID runtime-data path. Refusing to enter Play Mode "
-                        + "with potentially stale packed content. Path: '"
-                        + runtimeDataPath
-                        + "'."
-                );
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool TrySelectFastModeBuilder(bool logErrors)
-        {
-            AddressableAssetSettings settings =
-                AddressableAssetSettingsDefaultObject.Settings;
-            if (settings == null)
-            {
-                if (logErrors)
-                {
-                    Debug.LogError(
-                        "[KSP2UnityTools] AddressableAssetSettings are missing; "
-                            + "cannot prepare editor Play Mode."
-                    );
-                }
-
-                return false;
-            }
-
-            int fastModeIndex = settings.DataBuilders.FindIndex(
-                builder => builder is BuildScriptFastMode
-            );
-            if (fastModeIndex < 0)
-            {
-                if (logErrors)
-                {
-                    Debug.LogError(
-                        "[KSP2UnityTools] The Addressables 'Use Asset Database "
-                            + "(fastest)' builder is missing; refusing to enter "
-                            + "Play Mode with stale packed content."
-                    );
-                }
-
-                return false;
-            }
-
-            if (settings.ActivePlayModeDataBuilderIndex != fastModeIndex)
-                settings.ActivePlayModeDataBuilderIndex = fastModeIndex;
-            return true;
-        }
-
-        private static void ValidateFastModeInitialization()
-        {
-            if (
-                Addressables.ResourceLocators.Any(
-                    locator =>
-                        locator != null
-                        && string.Equals(
-                            locator.LocatorId,
-                            FastModeLocatorId,
-                            System.StringComparison.Ordinal
-                        )
-                )
-            )
-            {
-                return;
-            }
-
-            Debug.LogError(
-                "[KSP2UnityTools] Addressables entered Play Mode without its "
-                    + "AssetDatabase locator. Current project assets, including "
-                    + "prefab-patch manifests, would be replaced by stale packed "
-                    + "content, so Play Mode has been stopped."
-            );
-            EditorApplication.isPlaying = false;
-        }
-
         private static void ArmAddressablesReinitialize()
         {
             CancelPendingAddressablesReinitialize();
@@ -283,13 +158,6 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static void StabilizeAddressablesAfterPlayModeInitialization()
         {
-            // Access the implementation while the reinitialize flag is still
-            // armed. Addressables replaces its implementation lazily, on the
-            // first main-thread API access. On cold editor launches nothing
-            // else is guaranteed to touch it before this callback; clearing
-            // the flag first would preserve the edit-mode packed locator.
-            _ = Addressables.ResourceManager;
-
             // Addressables schedules its own delayed reinitialize callback when
             // leaving Play Mode. If the next session starts before that
             // callback runs, it can reset the freshly initialized
