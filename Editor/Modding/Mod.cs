@@ -35,6 +35,10 @@ namespace Ksp2UnityTools.Editor.Modding
         )]
         public string id = "sampleMod";
 
+        public string AddressableScriptLabel => $"{id}_patches";
+        public string AddressablePrefabPatchLabel =>
+            $"{id}_prefab_patches";
+
         [Tooltip("The name of the mod that gets shown in the settings menu")]
         public string name = "Sample Mod";
 
@@ -184,6 +188,9 @@ namespace Ksp2UnityTools.Editor.Modding
                 ["source"] = source,
                 ["version"] = version,
                 ["version_check"] = versionCheck,
+                ["addressable_script_label"] = AddressableScriptLabel,
+                ["addressable_prefab_patch_label"] =
+                    AddressablePrefabPatchLabel,
                 ["ksp2_version"] = ksp2Version,
                 ["dependencies"] = deps,
                 ["conflicts"] = conflicts
@@ -464,6 +471,19 @@ namespace %MOD%
 
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
             foreach (string label in _usedLabels)
+            {
+                if (!settings.GetLabels().Contains(label))
+                {
+                    settings.AddLabel(label);
+                }
+            }
+            foreach (
+                string label in new[]
+                {
+                    AddressableScriptLabel,
+                    AddressablePrefabPatchLabel
+                }
+            )
             {
                 if (!settings.GetLabels().Contains(label))
                 {
