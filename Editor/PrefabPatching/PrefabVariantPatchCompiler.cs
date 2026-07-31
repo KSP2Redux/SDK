@@ -1001,6 +1001,7 @@ public static class PrefabVariantPatchCompiler
                 or "m_PrefabInstance"
                 or "m_PrefabAsset"
                 or "m_GameObject"
+                or "m_Name"
                 or "m_EditorHideFlags"
                 or "m_EditorClassIdentifier"
                 or "m_Script";
