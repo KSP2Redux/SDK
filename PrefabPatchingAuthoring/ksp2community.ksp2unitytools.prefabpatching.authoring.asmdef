@@ -1,0 +1,18 @@
+{
+    "name": "ksp2community.ksp2unitytools.prefabpatching.authoring",
+    "rootNamespace": "Ksp2UnityTools.PrefabPatchingAuthoring",
+    "references": [
+        "PatchManager.PrefabPatching"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
