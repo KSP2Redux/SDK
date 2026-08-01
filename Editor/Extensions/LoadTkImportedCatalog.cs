@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -6,6 +7,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 
 namespace Ksp2UnityTools.Editor.Extensions
 {
@@ -52,7 +54,11 @@ namespace Ksp2UnityTools.Editor.Extensions
             switch (state)
             {
                 case PlayModeStateChange.ExitingEditMode:
-                    ArmAddressablesReinitialize();
+                    // Prepare the fresh Addressables implementation before any runtime object can
+                    // load imported KSP2 content. EnteredPlayMode is too late for some startup
+                    // paths when Reload Domain is disabled.
+                    ResetAddressablesForPlayMode();
+                    EnsureImportedCatalogsLoaded();
                     return;
                 case PlayModeStateChange.ExitingPlayMode:
                     SessionState.SetBool(PlaySessionInitializedKey, false);
@@ -60,11 +66,10 @@ namespace Ksp2UnityTools.Editor.Extensions
                 case PlayModeStateChange.EnteredEditMode:
                     UnloadLeakedAssetBundles();
                     return;
-                // EnteredPlayMode fires after Addressables' play-mode (FastMode) init but before the game's
-                // startup flow loads kspFlow.unity (via GameManager's LoadingFlow), so this is in time.
+                // ExitingEditMode prepares Fast Mode and the imported catalogs before runtime startup.
+                // Recheck them here so manual and automated transitions share the same idempotent path.
                 // SessionState protects against stale duplicate callbacks left behind by a script hot
-                // reload. Addressables was armed at ExitingEditMode so Unity's normal Fast Mode setup,
-                // which runs before this callback, owns creation of the fresh implementation.
+                // reload.
                 case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
                     return;
                 case PlayModeStateChange.EnteredPlayMode:
@@ -75,7 +80,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         }
 
         // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
-        // Mode enter (see ArmAddressablesReinitialize), but native AssetBundles held by the old
+        // Mode enter, but native AssetBundles held by the old
         // implementation are never unloaded. After a dirty play exit (crash or aborted load flow)
         // their refcounts never hit zero, the bundle files stay resident, and the next session's
         // fresh implementation fails to load them again with "another AssetBundle with the same
@@ -93,15 +98,6 @@ namespace Ksp2UnityTools.Editor.Extensions
                 }
                 bundle.Unload(true);
             }
-        }
-
-        private static void ArmAddressablesReinitialize()
-        {
-            FieldInfo reinitializeField = typeof(Addressables).GetField(
-                "reinitializeAddressables",
-                BindingFlags.Static | BindingFlags.NonPublic
-            );
-            reinitializeField?.SetValue(null, true);
         }
 
         /// <summary>
@@ -135,6 +131,8 @@ namespace Ksp2UnityTools.Editor.Extensions
                 return;
             }
 
+            EnsureThunderKitInternalIdRedirect();
+
             if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Contains(ksp2CatalogFullPath))
             {
                 AsyncOperationHandle<IResourceLocator> loadKspCatalogTask =
@@ -156,6 +154,54 @@ namespace Ksp2UnityTools.Editor.Extensions
                 loadKspCatalogTask.WaitForCompletion();
             }
         }
+
+        // Addressables stores this transform on its internal implementation. With Reload Domain
+        // disabled, Addressables replaces that implementation after Play Mode exit, so ThunderKit's
+        // redirect (normally installed only on domain load) must be restored before the next session
+        // uses an imported catalog location.
+        private static void EnsureThunderKitInternalIdRedirect()
+        {
+            if (Addressables.InternalIdTransformFunc != null)
+            {
+                return;
+            }
+
+            MethodInfo redirectMethod = typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings)
+                .GetMethod(
+                    "RedirectInternalIdsToGameDirectory",
+                    BindingFlags.Static | BindingFlags.NonPublic
+                );
+            if (redirectMethod == null)
+            {
+                throw new MissingMethodException(
+                    typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings).FullName,
+                    "RedirectInternalIdsToGameDirectory"
+                );
+            }
+
+            Addressables.InternalIdTransformFunc =
+                (Func<IResourceLocation, string>)redirectMethod.CreateDelegate(
+                    typeof(Func<IResourceLocation, string>)
+                );
+        }
+
+        // Addressables normally schedules this reset through EditorApplication.delayCall after
+        // leaving Play Mode. An automated Play Mode restart can begin its next transition before that
+        // callback runs, leaving a stale ResourceManager and its unloaded bundle resources in place.
+        private static void ResetAddressablesForPlayMode()
+        {
+            FieldInfo reinitializeField = typeof(Addressables).GetField(
+                "reinitializeAddressables",
+                BindingFlags.Static | BindingFlags.NonPublic
+            );
+            if (reinitializeField == null)
+            {
+                throw new MissingFieldException(typeof(Addressables).FullName, "reinitializeAddressables");
+            }
+
+            reinitializeField.SetValue(null, true);
+        }
+
 #endif
     }
 }
