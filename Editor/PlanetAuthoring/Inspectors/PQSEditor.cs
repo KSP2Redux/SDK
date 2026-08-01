@@ -1,4 +1,3 @@
-using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
@@ -50,20 +49,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             BodySurfaceBakeSection.Wire(root, () => BodyResolver.FindBodyIncludingAsset(target as PQS));
 
-            // Same chrome as the body inspector. A body is split across a scaled-space object and
-            // this local-space one, and an author works from whichever is selected, so both carry
-            // the validation chip and Quick Tools rather than forcing a reselect to reach a tool.
-            PlanetAuthoringChrome.Wire(root, ResolveBody);
-            root.schedule.Execute(() =>
-            {
-                PlanetAuthoringChrome.RefreshValidationChip(root, ResolveBody());
-                PlanetAuthoringChrome.RefreshScatter(root, ResolveBody());
-            }).Every(500);
-
             root.Bind(serializedObject);
             return root;
         }
-
-        private CoreCelestialBodyData ResolveBody() => BodyResolver.FindBodyIncludingAsset(target as PQS);
     }
 }

@@ -3,11 +3,12 @@
     xmlns:engine="UnityEngine.UIElements"
     xmlns:editor="UnityEditor.UIElements">
 
-    <engine:Template name="PlanetAuthoringChrome" src="Shared/PlanetAuthoringChrome.uxml" />
-
     <engine:VisualElement class="body-inspector-root">
 
-        <engine:Instance template="PlanetAuthoringChrome" />
+        <engine:VisualElement class="validation-chip">
+            <engine:Label name="validation-chip-label" class="validation-chip-label" />
+            <engine:Button name="validation-chip-open" text="Open report" tooltip="Open the Validation Report window for this body." class="validation-chip-open" />
+        </engine:VisualElement>
 
         <engine:Foldout text="Preview" value="true" class="body-inspector-section">
             <engine:VisualElement name="readiness-section" class="body-inspector-readiness">
@@ -15,6 +16,12 @@
                 <engine:VisualElement name="readiness-errors" />
             </engine:VisualElement>
             <engine:Button name="preview-button" class="body-inspector-preview-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Quick Tools" value="true" class="body-inspector-section body-inspector-quick-tools">
+            <engine:Button name="quick-preview-controls" text="Preview Controls" />
+            <engine:Button name="quick-landmark-manager" text="Landmark Manager" />
+            <engine:Button name="quick-export-localizations" text="Export Localizations" tooltip="Export this body's loc keys (incl. sibling science region keys) to a CSV." />
         </engine:Foldout>
 
         <engine:VisualElement class="body-inspector-body-data">

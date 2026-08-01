@@ -140,12 +140,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         public PreviewCameraDriver CameraDriver { get; }
         /// <summary>Gets the per-session preview state readout, or null for non-solid bodies.</summary>
         public PlanetPreviewState PreviewState { get; }
-        /// <summary>Gets the scatter preview driver, or null for non-solid bodies.</summary>
-        /// <remarks>
-        /// Non-null even when the body has no scatter system. The driver reports that case as a
-        /// no-op rather than an error, since most bodies have no scatter.
-        /// </remarks>
-        public ScatterPreviewDriver ScatterDriver { get; }
 
         private double _lastTickTime;
         private bool _hasSnapshot;
@@ -219,7 +213,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             Class = bodyClass;
             CameraDriver = pqs != null ? new PreviewCameraDriver(pqs) : null;
             PreviewState = pqs != null ? new PlanetPreviewState(body, pqs) : null;
-            ScatterDriver = pqs != null ? new ScatterPreviewDriver(pqs) : null;
         }
 
         /// <summary>
@@ -343,12 +336,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 return null;
             }
 
-            // Scatter boots after the PQS, because the spawner samples the terrain bridge which in
-            // turn needs a live PQS and an initialized decal controller. A body with no scatter
-            // system, or one that fails to boot, still gets a working terrain preview - scatter is
-            // additive and must never be able to take the session down with it.
-            session.ScatterDriver?.Attach();
-
             session.Subscribe();
             session.IsAlive = true;
             Active = session;
@@ -454,10 +441,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             Unsubscribe();
             CameraDriver?.Unbind();
-            // Scatter comes down before anything touches the PQS. Its compute buffers are built from
-            // the terrain bridge, whose own resources are derived from a live sphere, so tearing the
-            // sphere down first would dispose what the scatter side is still holding.
-            ScatterDriver?.Detach();
             // Force-complete the in-flight PQS subdivision job before any path that disables the
             // decal controller. PQSDecalController.OnDisable disposes its native arrays, and the
             // subdivision job is still reading them otherwise.
@@ -539,11 +522,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             Pqs.UpdateSphere();
             Pqs.PQSRenderer.LateUpdateForEditor();
             Pqs.PQSRenderer.DrawPlanet();
-            // Scatter is pumped from here rather than from Tick for the same reason the PQS is.
-            // Graphics.DrawMeshInstancedIndirect only takes effect inside the render loop, so a
-            // submission made from an editor tick lands where nothing consumes it. Runs after the
-            // terrain draw, on the same camera, so culling and drawing agree on the view.
-            ScatterDriver?.Pump(cam);
         }
 
         private void Tick()
@@ -577,13 +555,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
                 // PQS pipeline runs from OnCameraPreCull. Tick only handles bind and repaint requests.
                 if (CameraDriver.CameraMoved)
-                {
-                    // Clip planes follow the camera rather than the last framing call. Dynamic
-                    // clipping is off, so without this a descent from orbit to the surface keeps an
-                    // orbital near plane and hides everything the author flew down to look at.
-                    SceneViewFraming.RefreshClipPlanesForCamera(Pqs);
                     sv.Repaint();
-                }
             }
 
             if (PreviewState != null && PreviewState.Update(sv.camera))

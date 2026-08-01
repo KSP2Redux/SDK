@@ -3,11 +3,7 @@
     xmlns:engine="UnityEngine.UIElements"
     xmlns:editor="UnityEditor.UIElements">
 
-    <engine:Template name="PlanetAuthoringChrome" src="Shared/PlanetAuthoringChrome.uxml" />
-
     <engine:VisualElement class="pqs-inspector-root">
-
-        <engine:Instance template="PlanetAuthoringChrome" />
 
         <engine:Foldout text="Authoring" value="true" class="pqs-inspector-section">
             <editor:PropertyField binding-path="data" label="Data" tooltip="The PQSData ScriptableObject. Owns the heightmap stack, biome structure, and references to surface and scaled-space materials." />
