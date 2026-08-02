@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="pqs-inspector-root">
+
+        <engine:Foldout text="Status" value="true" class="pqs-inspector-section">
+            <engine:Label name="scatter-status-line" class="preview-altitude"
+                          tooltip="Whether the scatter system has initialized, and how many cells it has built. Cells are only built while a planet preview is running." />
+            <engine:Label name="scatter-terrain-line" class="preview-body"
+                          tooltip="Registered terrains, assigned packages, and the total item count across those packages. A terrain count of zero is why most bodies spawn nothing." />
+            <engine:Label name="scatter-hint" class="sdk-hint"
+                          tooltip="The scatter field's origin and radius. Both are derived from the registered terrain rather than authored, so a radius of zero means the terrain registration needs fixing." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Packages" value="true" class="pqs-inspector-section">
+            <engine:VisualElement name="scatter-package-list" />
+            <engine:Button name="scatter-create-package" text="Create Package"
+                           tooltip="Create a new VegetationPackagePro asset and assign it to this body." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Biome mask" value="false" class="pqs-inspector-section">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseBiomeTextureMask" label="Use Biome Mask"
+                                  tooltip="When on, packages spawn only in the biome channel they are bound to. With no mask texture assigned, biome rules cannot resolve." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureMask" label="Biome Mask"
+                                  tooltip="RGBA mask selecting which of the four biome channels owns each point on the surface." />
+            <engine:Button name="scatter-sync-biome-mask" text="Use the body's biome map"
+                           tooltip="Assigns the body's own biome mask, the same texture the surface shader blends its strata from. A shortcut for when you want scatter biomes to follow the surface's, not a requirement - scatter can use any mask you like." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureMaskRChannelType" label="R Channel"
+                                  tooltip="Which biome the mask's red channel represents. A package bound to this biome spawns where red wins." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureMaskGChannelType" label="G Channel"
+                                  tooltip="Which biome the mask's green channel represents." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureMaskBChannelType" label="B Channel"
+                                  tooltip="Which biome the mask's blue channel represents." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureMaskAChannelType" label="A Channel"
+                                  tooltip="Which biome the mask's alpha channel represents." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureRotation" label="Mask Rotation"
+                                  tooltip="Rotates the mask before sampling. Use it when a mask was authored against a different orientation than the body's." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureFlip" label="Mask Flip"
+                                  tooltip="Mirrors the mask before sampling, for a mask exported with a flipped axis." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeTextureOffset" label="Mask Offset"
+                                  tooltip="Shifts the mask in UV space. Small values here move biome boundaries a long way on a large body." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Cells and bounds" value="false" class="pqs-inspector-section">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationCellSize" label="Cell Size (m)"
+                                  tooltip="Granularity the whole system works in. Cells are the unit of spawning, culling and streaming, so this trades per-cell cost against how much is loaded and discarded as the camera moves." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardCellSizeMultiplier" label="Billboard Cell Multiplier"
+                                  tooltip="Billboard cells are this many times the size of vegetation cells, since they cover much greater distances." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="HeroCellSizeMultiplier" label="Hero Cell Multiplier"
+                                  tooltip="Hero cells are this many times the size of vegetation cells. Hero items draw to a far greater distance, so they are grouped more coarsely." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="AutomaticBoundsCalculation" label="Automatic Bounds"
+                                  tooltip="Derives the system bounds from the registered terrain. Off means the bounds below are authored and will not follow a change in body radius." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationSystemBounds" label="Bounds"
+                                  tooltip="Volume the cell grid is built across. Only authored when Automatic Bounds is off." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="SeaLevel" label="Sea Level (m)"
+                                  tooltip="Altitude treated as sea level when deciding which cells to exclude. Item height rules are measured against this datum too." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ExcludeSeaLevelCells" label="Exclude Sea Level Cells"
+                                  tooltip="Skips cells entirely below sea level, so an ocean body does not pay to spawn scatter nothing will ever see." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Rendering and quality" value="false" class="pqs-inspector-section">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationSettings" label="Vegetation Settings"
+                                  tooltip="Per-type draw distances, density multipliers, shadow modes and layers. These are the distances the preview readout reports." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationRenderSettings" label="Render Settings"
+                                  tooltip="Cross-fade distance, shadow and instancing behaviour shared by every item." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="EnvironmentSettings" label="Environment Settings"
+                                  tooltip="Ambient and lighting values handed to the scatter shaders." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="SunDirectionalLight" label="Sun Light"
+                                  tooltip="Directional light used for scatter shadow culling. The preview session drives this separately through Preview Controls." />
+        </engine:Foldout>
+
+        <!-- Wind is not exposed. KSPScatterController defaults SampleWind to false and its UpdateWind
+             is empty, and every IWindController in the fork belongs to a third-party integration this
+             project does not use. The four entries VSP writes into WindControllerSettingsList are
+             produced by reflecting over every loaded assembly, not by anyone choosing them. -->
+        <engine:Foldout text="Streaming" value="false" class="pqs-inspector-section">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="LoadPotentialVegetationCells" label="Preload Potential Cells"
+                                  tooltip="Spawns cells that are near the camera but not yet visible, so they are ready before they come into view rather than popping in." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="PredictiveCellLoaderCellsPerFrame" label="Cells Per Frame"
+                                  tooltip="How many predicted cells are spawned per frame. Higher fills in faster and costs more per frame while it does." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Hand placement" value="false" class="pqs-inspector-section">
+            <engine:Label text="Storage for individually placed instances. The scene tool that authors them is not built yet, so this is reference only."
+                          class="sdk-hint" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="PersistentVegetationStorage" label="Persistent Storage"
+                                  tooltip="Component storing individually placed instances. Absent on a body whose scatter is entirely procedural." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Preview" value="false" class="pqs-inspector-section">
+            <engine:Label name="scatter-preview-hint" class="sdk-hint" />
+            <engine:Button name="scatter-refresh-system" text="Refresh System"
+                           tooltip="Rebuilds the item models as well as the cells, so this is the one to use after changing a prefab or anything under Appearance. Those are cached when the item loads and will not change on their own, however long you wait." />
+            <engine:Button name="scatter-clear-cells" text="Clear Cells"
+                           tooltip="Discards every spawned cell so they respawn as the camera moves. Enough for placement changes - grid spacing, height and steepness bands, surface rules - which are applied at spawn. Appearance changes need Refresh System instead." />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

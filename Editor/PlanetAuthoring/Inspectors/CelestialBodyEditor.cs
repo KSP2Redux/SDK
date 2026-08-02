@@ -47,8 +47,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private VisualElement _readinessErrors;
         private Button _previewButton;
         private VisualElement _starSection;
-        private Label _validationChipLabel;
-        private Button _validationChipOpenButton;
+        private VisualElement _root;
 
         private CoreCelestialBodyData TargetData => (CoreCelestialBodyData)target;
         private GameObject TargetObject => TargetData.gameObject;
@@ -74,15 +73,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _previewButton = root.Q<Button>("preview-button");
             _previewButton.clicked += OnPreviewButtonClicked;
             _starSection = root.Q<VisualElement>("star-section");
+            _root = root;
 
-            _validationChipLabel = root.Q<Label>("validation-chip-label");
-            _validationChipOpenButton = root.Q<Button>("validation-chip-open");
-            if (_validationChipOpenButton != null)
-                _validationChipOpenButton.clicked += OpenValidationReport;
-
-            WireQuickToolButton(root, "quick-preview-controls", PreviewControlsWindow.ShowWindow);
-            WireQuickToolButton(root, "quick-landmark-manager", PlanetAuthoringWindows.ShowLandmarkManager);
-            WireQuickToolButton(root, "quick-export-localizations", () => LocExportFlow.RunForAsset(TargetObject));
+            // Validation chip and Quick Tools are shared with the PQS inspector, so an author reaches
+            // the same tools from either half of a body. Element names are unchanged from when this
+            // markup was inline here.
+            PlanetAuthoringChrome.Wire(root, () => TargetData);
 
             BuildSaveSection(root.Q<VisualElement>("save-section-content"));
             BuildMineDustColorField(root.Q<VisualElement>("mine-dust-color-slot"));
@@ -95,13 +91,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             RefreshDynamicState();
             root.schedule.Execute(RefreshDynamicState).Every(500);
             return root;
-        }
-
-        private static void WireQuickToolButton(VisualElement root, string name, System.Action handler)
-        {
-            var button = root.Q<Button>(name);
-            if (button != null)
-                button.clicked += handler;
         }
 
         private void WireBodySurfaceBake(VisualElement root)
@@ -347,55 +336,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             UpdateReadinessSection(report);
             UpdatePreviewButton(report);
             UpdateStarSection();
-            UpdateValidationChip();
+            PlanetAuthoringChrome.RefreshValidationChip(_root, TargetData);
+            PlanetAuthoringChrome.RefreshScatter(_root, TargetData);
         }
 
-        private void UpdateValidationChip()
-        {
-            if (_validationChipLabel == null) return;
-            _validationChipLabel.RemoveFromClassList("validation-chip--clean");
-            _validationChipLabel.RemoveFromClassList("validation-chip--issues");
-
-            if (TargetData == null)
-            {
-                _validationChipLabel.text = string.Empty;
-                _validationChipOpenButton?.SetEnabled(false);
-                return;
-            }
-
-            PlanetValidationReport cheap = PlanetValidationReport.Run(TargetData, ValidatorCost.Cheap);
-            IReadOnlyList<ValidationIssue> expensive = ValidationExpensiveCache.Get(TargetData);
-            int errors = cheap.ErrorCount;
-            int warnings = cheap.WarningCount;
-            int info = cheap.InfoCount;
-            foreach (ValidationIssue issue in expensive)
-            {
-                switch (issue.Severity)
-                {
-                    case ValidationSeverity.Error: errors++; break;
-                    case ValidationSeverity.Warning: warnings++; break;
-                    case ValidationSeverity.Info: info++; break;
-                }
-            }
-
-            int total = errors + warnings + info;
-            if (total == 0)
-            {
-                _validationChipLabel.text = "Validation: clean";
-                _validationChipLabel.AddToClassList("validation-chip--clean");
-            }
-            else
-            {
-                _validationChipLabel.text = $"Validation: {errors} error{(errors == 1 ? string.Empty : "s")}, {warnings} warning{(warnings == 1 ? string.Empty : "s")}, {info} info";
-                _validationChipLabel.AddToClassList("validation-chip--issues");
-            }
-            _validationChipOpenButton?.SetEnabled(true);
-        }
-
-        private void OpenValidationReport()
-        {
-            Windows.ValidationReportWindow.Open(TargetData);
-        }
 
         private void UpdateStarSection()
         {
