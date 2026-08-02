@@ -9,12 +9,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
     /// Warns when a body's scatter system has no usable vegetation package.
     /// </summary>
     /// <remarks>
-    /// A warning rather than an error, because a system standing ready with no content yet is a
-    /// normal intermediate state while authoring. It still needs saying, since it is the most common
-    /// reason a correctly configured body renders nothing.
-    ///
-    /// No automatic fix. Creating a package means creating and naming a saved asset, which is an
-    /// authoring decision rather than something a validator should invent.
+    /// A system standing ready with no content yet is a normal intermediate state while authoring,
+    /// which is why this is a warning. It still needs saying, since an otherwise correctly
+    /// configured body renders nothing without a package.
     /// </remarks>
     public sealed class ScatterPackageMissingValidator : IPlanetValidator
     {
@@ -29,9 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         {
             VegetationSystemPro system = ScatterValidatorHelper.FindSystem(body);
             if (system == null)
-            {
                 yield break;
-            }
 
             if (system.VegetationPackageProList.Count == 0)
             {

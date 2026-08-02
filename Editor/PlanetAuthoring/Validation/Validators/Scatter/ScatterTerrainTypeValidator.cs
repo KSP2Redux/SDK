@@ -13,10 +13,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
     /// Errors when a body's scatter system is left on the default <c>Flat</c> terrain type.
     /// </summary>
     /// <remarks>
-    /// The quietest failure in the whole scatter setup. <c>TerrainType</c> defaults to <c>Flat</c>,
-    /// which is enum value zero, so a freshly added component looks configured. Polar cell
-    /// construction is gated on the type being <c>PolarSphere</c>, so the cell list stays empty,
-    /// nothing spawns anywhere on the body, and nothing is logged.
+    /// <c>TerrainType</c> defaults to <c>Flat</c>, which is enum value zero, so a freshly added
+    /// component looks configured. Polar cell construction is gated on the type being
+    /// <c>PolarSphere</c>, so the cell list stays empty, nothing spawns anywhere on the body, and
+    /// nothing is logged.
     /// </remarks>
     public sealed class ScatterTerrainTypeValidator : IPlanetValidator
     {
@@ -31,9 +31,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         {
             VegetationSystemPro system = ScatterValidatorHelper.FindSystem(body);
             if (system == null || system.TerrainType == TerrainType.PolarSphere)
-            {
                 yield break;
-            }
 
             var fixes = new[]
             {
@@ -50,9 +48,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         private static void SetPolarSphere(VegetationSystemPro system)
         {
             if (system == null)
-            {
                 return;
-            }
 
             Undo.RecordObject(system, "Set Scatter TerrainType");
             system.TerrainType = TerrainType.PolarSphere;

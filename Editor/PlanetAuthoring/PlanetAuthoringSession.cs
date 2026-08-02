@@ -146,6 +146,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// no-op rather than an error, since most bodies have no scatter.
         /// </remarks>
         public ScatterPreviewDriver ScatterDriver { get; }
+        /// <summary>Gets the scatter preview readout, or null for non-solid bodies.</summary>
+        public ScatterPreviewState ScatterState { get; }
 
         private double _lastTickTime;
         private bool _hasSnapshot;
@@ -220,6 +222,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             CameraDriver = pqs != null ? new PreviewCameraDriver(pqs) : null;
             PreviewState = pqs != null ? new PlanetPreviewState(body, pqs) : null;
             ScatterDriver = pqs != null ? new ScatterPreviewDriver(pqs) : null;
+            ScatterState = ScatterDriver != null ? new ScatterPreviewState(ScatterDriver) : null;
         }
 
         /// <summary>
@@ -500,6 +503,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // restore is a single call.
             SunCoupling.ResetToBaseline();
             PreviewState?.Clear();
+            ScatterState?.Clear();
             IsAlive = false;
             if (Active == this)
                 Active = null;
@@ -586,7 +590,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 }
             }
 
-            if (PreviewState != null && PreviewState.Update(sv.camera))
+            bool previewChanged = PreviewState != null && PreviewState.Update(sv.camera);
+            bool scatterChanged = ScatterState != null && ScatterState.Update();
+            if (previewChanged || scatterChanged)
                 PlanetPreviewState.RaiseActiveChanged();
         }
 

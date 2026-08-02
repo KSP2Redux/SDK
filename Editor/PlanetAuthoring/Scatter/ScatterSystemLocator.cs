@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AwesomeTechnologies.VegetationSystem;
 using KSP;
@@ -14,8 +15,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
     /// </summary>
     /// <remarks>
     /// Every configuration item here is silent when wrong. A scatter system can be present, enabled
-    /// and completely correct looking while spawning nothing at all, so this type exists to make the
-    /// setup a single reviewable action rather than a checklist in a document.
+    /// and correct looking while spawning nothing at all, so the setup is gathered into a single
+    /// reviewable action.
     /// </remarks>
     public static class ScatterSystemLocator
     {
@@ -40,42 +41,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         /// </remarks>
         /// <param name="pqs">The body's PQS.</param>
         /// <returns>The scatter system, or null.</returns>
-        public static VegetationSystemPro Find(PQS pqs)
-        {
-            if (pqs == null)
-            {
-                return null;
-            }
-
-            VegetationSystemPro system = pqs.GetComponent<VegetationSystemPro>();
-            if (system == null)
-            {
-                system = pqs.GetComponentInChildren<VegetationSystemPro>(true);
-            }
-
-            return system;
-        }
+        public static VegetationSystemPro Find(PQS pqs) =>
+            pqs == null ? null : pqs.GetComponentInChildren<VegetationSystemPro>(true);
 
         /// <summary>
         /// Returns the terrain bridge the scatter system samples, or null when the body has none.
         /// </summary>
         /// <param name="pqs">The body's PQS.</param>
         /// <returns>The terrain bridge, or null.</returns>
-        public static PqsTerrain FindTerrain(PQS pqs)
-        {
-            if (pqs == null)
-            {
-                return null;
-            }
-
-            PqsTerrain terrain = pqs.GetComponent<PqsTerrain>();
-            if (terrain == null)
-            {
-                terrain = pqs.GetComponentInChildren<PqsTerrain>(true);
-            }
-
-            return terrain;
-        }
+        public static PqsTerrain FindTerrain(PQS pqs) =>
+            pqs == null ? null : pqs.GetComponentInChildren<PqsTerrain>(true);
 
         /// <summary>
         /// Adds a scatter system to <paramref name="pqs" /> if it has none, and configures whatever is
@@ -84,8 +59,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         /// <remarks>
         /// Registers a single undo group, so the whole action reverts as one step.
         ///
-        /// Does not create or assign a vegetation package. That is a separate authoring decision and
-        /// wants a saved asset the author names, rather than something invented here.
+        /// Assigning a vegetation package is a separate authoring step.
         /// </remarks>
         /// <param name="pqs">The body's PQS. The system is added to its GameObject.</param>
         /// <param name="body">The body being configured, used for the undo label only.</param>
@@ -93,9 +67,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         public static VegetationSystemPro Configure(PQS pqs, CoreCelestialBodyData body)
         {
             if (pqs == null)
-            {
                 return null;
-            }
 
             string label = body != null ? $"Add Scatter System to {body.name}" : "Add Scatter System";
             int undoGroup = Undo.GetCurrentGroup();
@@ -104,7 +76,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
             VegetationSystemPro system = Find(pqs);
             if (system == null)
             {
+                // Captured before the component exists, because adding it makes Unity call Reset,
+                // which creates a WindZone in the scene. See DiscardResetWindZone.
+                WindZone[] windZonesBefore = UnityEngine.Object.FindObjectsByType<WindZone>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+
                 system = Undo.AddComponent<VegetationSystemPro>(GetOrCreateScatterChild(pqs, label));
+                DiscardResetWindZone(system, windZonesBefore);
             }
             else
             {
@@ -129,6 +107,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         }
 
         /// <summary>
+        /// Removes the WindZone that adding the scatter system caused Unity to create.
+        /// </summary>
+        /// <remarks>
+        /// <c>VegetationSystemPro.Reset</c> calls <c>FindWindZone</c>, which creates a plain
+        /// <c>WindZone</c> GameObject at the scene root when the scene has none. Unity runs Reset when
+        /// a component is added, so adding a scatter system silently left one behind, saved into the
+        /// authoring scene with default hide flags.
+        ///
+        /// It is not wanted on a Redux body. Wind reaches nothing here: <c>KSPScatterController</c>
+        /// defaults <c>SampleWind</c> to false and its <c>UpdateWind</c> is an empty method, and every
+        /// wind controller in the fork belongs to a third-party integration this project does not use.
+        /// Every one of them also guards on a null zone, so clearing the reference is safe.
+        ///
+        /// Only a zone that did not exist beforehand is removed. A scene that already had one, or a
+        /// body an author wired up deliberately, is left alone.
+        /// </remarks>
+        /// <param name="system">The scatter system that was just added.</param>
+        /// <param name="before">Every WindZone present before the component was added.</param>
+        private static void DiscardResetWindZone(VegetationSystemPro system, WindZone[] before)
+        {
+            WindZone created = system == null ? null : system.SelectedWindZone;
+            if (created == null || Array.IndexOf(before, created) >= 0)
+                return;
+
+            system.SelectedWindZone = null;
+            Undo.DestroyObjectImmediate(created.gameObject);
+        }
+
+        /// <summary>
         /// Returns the child GameObject that should carry the scatter system, creating it if absent.
         /// </summary>
         /// <remarks>
@@ -145,9 +152,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         {
             Transform existing = pqs.transform.Find(ScatterChildName);
             if (existing != null)
-            {
                 return existing.gameObject;
-            }
 
             var child = new GameObject(ScatterChildName);
             Undo.RegisterCreatedObjectUndo(child, undoLabel);

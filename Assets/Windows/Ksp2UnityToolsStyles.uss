@@ -474,3 +474,251 @@
 .body-inspector-error-fix {
     flex-shrink: 0;
 }
+
+/* ----- Widgets ----------------------------------------------------------
+ * Styling for the reusable widgets in Editor/Widgets/. They live here rather
+ * than in a module sheet so a widget works in any tool without its consumer
+ * knowing which stylesheet to apply, matching how autocomplete-field__* above
+ * is already handled. The .data-editor-* aliases keep part authoring's own
+ * direct uses of these names working unchanged.
+ * ---------------------------------------------------------------------- */
+
+.sdk-inline-list,
+.data-editor-inline-list {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.sdk-inline-list__header,
+.data-editor-inline-list__header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.sdk-inline-list__count,
+.data-editor-inline-list__count {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+.sdk-inline-list__add-btn,
+.data-editor-inline-list__add-btn {
+    flex-shrink: 0;
+}
+
+.sdk-inline-list__title {
+    -unity-font-style: bold;
+    color: rgb(195, 205, 220);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.sdk-inline-list__empty {
+    color: rgb(160, 170, 185);
+    -unity-font-style: italic;
+}
+
+/* Card list widgets: CardShell and CardListSection in Editor/Widgets/. Same reasoning as the
+ * inline list above, so a card list works in any tool without its consumer applying a module
+ * stylesheet. The .data-editor-* aliases keep part authoring's markup and its own direct uses
+ * of these names working unchanged. */
+
+.sdk-card,
+.data-editor-card {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgba(0, 0, 0, 0.45);
+    border-right-color: rgba(0, 0, 0, 0.45);
+    border-top-color: rgba(0, 0, 0, 0.45);
+    border-bottom-color: rgba(0, 0, 0, 0.45);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    padding-bottom: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.sdk-card__header,
+.data-editor-card-header {
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(70, 100, 140, 0.25);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    padding-right: 4px;
+    margin-bottom: 4px;
+}
+
+.sdk-card__disclosure,
+.data-editor-card-disclosure {
+    width: 18px;
+    height: 18px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 4px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    color: rgb(220, 230, 245);
+    -unity-text-align: middle-center;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.sdk-card__name-field,
+.data-editor-card-name-field {
+    flex-grow: 1;
+    margin-right: 6px;
+}
+
+.sdk-card__chip-slot,
+.data-editor-card-chip-slot {
+    flex-direction: row;
+    align-items: center;
+}
+
+.sdk-card__chip,
+.data-editor-card-summary-chip {
+    margin-right: 6px;
+    color: rgb(180, 195, 215);
+}
+
+.sdk-card__remove-btn,
+.data-editor-card-remove-btn {
+    width: 22px;
+    height: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    flex-shrink: 0;
+}
+
+.sdk-card__body,
+.data-editor-card-body {
+    padding-top: 4px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.sdk-card-list,
+.data-editor-section {
+    margin-top: 4px;
+}
+
+.sdk-card-list__header,
+.data-editor-section-header-row {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.sdk-card-list__title,
+.data-editor-section-header {
+    -unity-font-style: bold;
+    color: rgb(210, 220, 235);
+    flex-grow: 1;
+}
+
+.sdk-card-list__items,
+.data-editor-section-list {
+    flex-direction: column;
+}
+
+.sdk-card-list__empty,
+.data-editor-section-empty {
+    -unity-font-style: italic;
+    color: rgb(153, 153, 153);
+    font-size: 11px;
+    padding: 2px 4px;
+}
+
+.sdk-card__move-btn {
+    width: 18px;
+    height: 20px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-right: 2px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    -unity-text-align: middle-center;
+    font-size: 9px;
+    flex-shrink: 0;
+}
+
+/* Subsection foldout: a field-cluster header inside a card body. In the common sheet with the
+ * other widget chrome, since any card list body wants the same grouping. */
+
+.sdk-subsection-foldout,
+.data-editor-subsection-foldout {
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.sdk-subsection-foldout > .unity-foldout__toggle,
+.data-editor-subsection-foldout > .unity-foldout__toggle {
+    background-color: rgba(70, 100, 140, 0.18);
+    border-left-width: 2px;
+    border-left-color: rgba(95, 150, 210, 0.55);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 4px;
+    margin-bottom: 0;
+}
+
+.sdk-subsection-foldout > .unity-foldout__toggle Label,
+.data-editor-subsection-foldout > .unity-foldout__toggle Label {
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+}
+
+.sdk-subsection-foldout > .unity-foldout__content,
+.data-editor-subsection-foldout > .unity-foldout__content {
+    padding-top: 2px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    margin-left: 0;
+}
+
+.sdk-subsection-foldout .unity-decorator-drawers-container,
+.data-editor-subsection-foldout .unity-decorator-drawers-container {
+    display: none;
+}
+
+/* Subsections sit inside a card, so they are inset from its edges and separated from each other.
+ * Without this they run edge to edge and read as siblings of the card's own header rather than as
+ * content within it.
+ *
+ * Descendant rather than child selectors on purpose: a card body may hold a binding wrapper and the
+ * cloned UXML's own root before reaching the foldouts, so the nesting depth is not fixed. Scoped to
+ * the sdk- name so part authoring cards keep their existing look. */
+
+.sdk-card__body .sdk-subsection-foldout {
+    margin-left: 6px;
+    margin-right: 6px;
+    margin-top: 6px;
+}

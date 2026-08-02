@@ -27,9 +27,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         {
             VegetationSystemPro system = ScatterValidatorHelper.FindSystem(body);
             if (system == null || !system.UseBiomeTextureMask || system.BiomeTextureMask != null)
-            {
                 yield break;
-            }
 
             var fixes = new[]
             {
@@ -46,9 +44,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         private static void Disable(VegetationSystemPro system)
         {
             if (system == null)
-            {
                 return;
-            }
 
             Undo.RecordObject(system, "Disable Scatter Biome Mask");
             system.UseBiomeTextureMask = false;

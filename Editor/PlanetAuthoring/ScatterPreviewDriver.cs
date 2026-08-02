@@ -1,6 +1,8 @@
 using System;
+using AwesomeTechnologies.VegetationStudio;
 using AwesomeTechnologies.VegetationSystem;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using Uber.Scatter;
 using UnityEngine;
 
@@ -11,11 +13,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// scatter renders in the SceneView through the same spawn path the game uses.
     /// </summary>
     /// <remarks>
-    /// Owned by <see cref="PlanetAuthoringSession" /> and pumped from the session's own render hook.
-    /// It deliberately does not subscribe to <see cref="Camera.onPreCull" /> itself. A driver with its
-    /// own hook outlives the session across a domain reload and then ticks against a torn-down
-    /// PQSDecalController, throwing once per frame and burying the console. Being pumped rather than
-    /// self-driving makes that unrepresentable rather than merely guarded.
+    /// Owned by <see cref="PlanetAuthoringSession" /> and pumped from the session's own render hook,
+    /// so the driver's lifetime is exactly the session's. A driver holding its own
+    /// <see cref="Camera.onPreCull" /> subscription outlives the session across a domain reload and
+    /// then ticks against a torn-down PQSDecalController, throwing once per frame and burying the
+    /// console.
     ///
     /// Nothing here is reachable from the EditMode suite, which runs headless with no scene. Boot
     /// ordering and teardown ordering are verified by running a preview.
@@ -35,6 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         private VegetationSystemPro _system;
         private PqsTerrain _terrain;
+        private QualityManager _ownedQualityManager;
         private int _consecutiveFailures;
 
         /// <summary>
@@ -55,18 +58,72 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// </remarks>
         public bool Enabled { get; set; } = true;
 
-        /// <summary>Gets a value indicating whether the scatter system has been booted by this driver.</summary>
+        /// <summary>
+        /// Gets a value indicating whether the scatter system has been booted by this driver.
+        /// </summary>
         public bool Booted { get; private set; }
 
-        /// <summary>Gets the scatter system being driven, or null when the body has none.</summary>
+        /// <summary>
+        /// Gets the scatter system being driven, or <c>null</c> when the body has none.
+        /// </summary>
         public VegetationSystemPro System => _system;
 
-        /// <summary>Gets the terrain bridge the scatter system samples, or null when the body has none.</summary>
+        /// <summary>
+        /// Gets the terrain bridge the scatter system samples, or <c>null</c> when the body has none.
+        /// </summary>
         public PqsTerrain Terrain => _terrain;
 
         /// <summary>
-        /// Gets a short human-readable account of the driver's state, for the preview controls readout.
+        /// Gets the quality manager the preview is running at, or <c>null</c> when nothing is booted.
         /// </summary>
+        /// <remarks>
+        /// Worth having a preview-side control over, because the density multiplier is type selective
+        /// and scales the sample grid rather than a spawn chance. A quality level of LOW quarters the
+        /// grass, plants and objects while leaving trees and boulders untouched, so an author tuning at
+        /// HIGH has no way to see what most players will get.
+        /// </remarks>
+        public QualityManager QualityManager =>
+            Booted && _system != null ? _system.GetQualityManager() : null;
+
+        /// <summary>
+        /// Applies a density quality preset to the running preview.
+        /// </summary>
+        /// <remarks>
+        /// Disposing the cells is what makes the change visible. Density feeds the sample grid at spawn
+        /// time, so already-spawned cells keep their old spacing until they are rebuilt, and
+        /// <c>SetDensityQualityLevel</c> handles that itself.
+        /// </remarks>
+        /// <param name="index">Index into the manager's density presets.</param>
+        public void SetDensityQualityLevel(int index)
+        {
+            QualityManager manager = QualityManager;
+            if (manager == null || index < 0 || index >= manager.DensityQualityLevelList.Count)
+                return;
+
+            manager.SetDensityQualityLevel(index);
+        }
+
+        /// <summary>
+        /// Applies a draw distance quality preset to the running preview.
+        /// </summary>
+        /// <param name="index">Index into the manager's draw distance presets.</param>
+        public void SetDrawDistanceQualityLevel(int index)
+        {
+            QualityManager manager = QualityManager;
+            if (manager == null || index < 0 || index >= manager.DrawDistanceQualityLevelList.Count)
+                return;
+
+            manager.SetDrawDistanceQualityLevel(index);
+            _system.SetVegetationStudioCamerasDirty();
+        }
+
+        /// <summary>
+        /// Gets a short human-readable account of anything wrong with the driver, or an empty string
+        /// when it is running normally.
+        /// </summary>
+        /// <remarks>
+        /// Only the cases an author can act on produce text.
+        /// </remarks>
         public string Status { get; private set; } = "not attached";
 
         /// <summary>
@@ -81,13 +138,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// tick, so <see cref="PqsTerrain" /> has to own its compute resources before
         /// <see cref="VegetationSystemPro" /> starts.
         /// </remarks>
-        /// <returns>True when the body either booted cleanly or has no scatter system to boot.</returns>
+        /// <returns>
+        /// True if the body booted cleanly or has no scatter system to boot, false otherwise.
+        /// </returns>
         public bool Attach()
         {
             if (Booted)
-            {
                 return true;
-            }
 
             if (!Resolve())
             {
@@ -102,6 +159,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                     _terrain.BootForEditor();
                 }
 
+                ClaimQualityManager();
                 _system.BootForEditor();
             }
             catch (Exception e)
@@ -116,7 +174,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             Booted = true;
             _consecutiveFailures = 0;
-            Status = "running";
+            Status = string.Empty;
             return true;
         }
 
@@ -134,9 +192,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         public void Detach()
         {
             if (!Booted)
-            {
                 return;
-            }
 
             SafeShutdown();
             Booted = false;
@@ -157,14 +213,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         public void Pump(Camera camera)
         {
             if (!Enabled || !Booted || camera == null || _system == null)
-            {
                 return;
-            }
 
             if (!_system.InitDone)
-            {
                 return;
-            }
 
             BindSceneViewCamera(camera);
 
@@ -197,35 +249,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// <summary>
         /// Finds the scatter system and terrain bridge belonging to the previewed body.
         /// </summary>
-        /// <returns>True when a scatter system was found.</returns>
+        /// <returns>True if a scatter system was found, false otherwise.</returns>
         private bool Resolve()
         {
             if (_pqs == null)
-            {
                 return false;
-            }
 
-            // Scoped to the previewed body rather than the whole scene. An authoring scene can hold
-            // more than one body, and grabbing another body's system would spawn its scatter against
-            // this body's terrain.
             // Explicit null checks rather than the null-coalescing operator, which bypasses Unity's
             // overloaded equality and so does not see a destroyed object as null.
             if (_system == null)
             {
-                _system = _pqs.GetComponent<VegetationSystemPro>();
-                if (_system == null)
-                {
-                    _system = _pqs.GetComponentInChildren<VegetationSystemPro>(true);
-                }
+                _system = ScatterSystemLocator.Find(_pqs);
             }
 
             if (_terrain == null)
             {
-                _terrain = _pqs.GetComponent<PqsTerrain>();
-                if (_terrain == null)
-                {
-                    _terrain = _pqs.GetComponentInChildren<PqsTerrain>(true);
-                }
+                _terrain = ScatterSystemLocator.FindTerrain(_pqs);
             }
 
             return _system != null;
@@ -250,6 +289,40 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                     studioCamera.SelectedCamera = camera;
                 }
             }
+        }
+
+        /// <summary>
+        /// Makes sure a <see cref="QualityManager" /> exists before boot, and that it will not be saved.
+        /// </summary>
+        /// <remarks>
+        /// <c>LoadSettingsFromQualityManager</c> adds one during boot if the system has none, with
+        /// default hide flags and no matching removal in <c>ShutdownForEditor</c>, which leaves a real
+        /// component on the scatter system to be written into the scene and gives the quality dropdown
+        /// a stray component to write its selected preset into.
+        ///
+        /// Creating it here means the fork's <c>GetComponent</c> finds one and never adds its own. A
+        /// manager the author placed deliberately is left alone and not destroyed on teardown.
+        /// </remarks>
+        private void ClaimQualityManager()
+        {
+            if (_system == null || _system.GetComponent<QualityManager>() != null)
+                return;
+
+            _ownedQualityManager = _system.gameObject.AddComponent<QualityManager>();
+
+            // Matches SurfacePrefabPreviewSync, the suite's existing idiom for transient editor
+            // objects. Hidden as well as unsaved, because a component that appears mid-session and
+            // vanishes afterwards is more confusing in the inspector than absent.
+            _ownedQualityManager.hideFlags = HideFlags.HideAndDontSave;
+        }
+
+        private void ReleaseQualityManager()
+        {
+            if (_ownedQualityManager == null)
+                return;
+
+            UnityEngine.Object.DestroyImmediate(_ownedQualityManager);
+            _ownedQualityManager = null;
         }
 
         /// <summary>
@@ -280,6 +353,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             {
                 Debug.LogError($"[ScatterPreview] Terrain shutdown threw on '{_pqs.name}': {e}");
             }
+
+            // Last, because the system holds a reference to it through VegetationSettings and reads it
+            // while shutting down.
+            ReleaseQualityManager();
         }
     }
 }

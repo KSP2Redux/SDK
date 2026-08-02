@@ -17,7 +17,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
     /// Registration is the load-bearing step of scatter setup and its absence is doubly silent. The
     /// spawner has no surface to sample, and the polar sphere radius, transform and max height are
     /// all derived from the registered terrain by <c>SetupPolarSphereInfo</c>, so they resolve to
-    /// zero and null rather than to the body.
+    /// zero and <c>null</c> rather than to the body.
     /// </remarks>
     public sealed class ScatterTerrainRegistrationValidator : IPlanetValidator
     {
@@ -32,9 +32,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         {
             VegetationSystemPro system = ScatterValidatorHelper.FindSystem(body);
             if (system == null || system.VegetationStudioTerrainObjectList.Count > 0)
-            {
                 yield break;
-            }
 
             PQS pqs = BodyResolver.FindPqs(body);
             PqsTerrain terrain = ScatterSystemLocator.FindTerrain(pqs);
@@ -55,9 +53,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         private static void Register(VegetationSystemPro system, PqsTerrain terrain)
         {
             if (system == null || terrain == null)
-            {
                 return;
-            }
 
             Undo.RecordObject(system, "Register Scatter Terrain");
             system.AddTerrain(terrain.gameObject);

@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using AwesomeTechnologies.VegetationStudio;
 using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Overlays;
@@ -25,6 +28,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Label _statusLabel;
         private Label _bodyLabel;
         private Label _altitudeLabel;
+        private Label _scatterStatus;
+        private Toggle _scatterEnabled;
+        private Label _scatterCells;
+        private Label _scatterDistances;
+        private Button _scatterReadCounts;
+        private Label _scatterCounts;
+        private DropdownField _scatterDensityQuality;
+        private DropdownField _scatterDrawQuality;
         private Button _previewButton;
         private Button _refreshPreviewButton;
         private FloatField _latField;
@@ -58,6 +69,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private VisualElement _overlayActiveLayerGrid;
         private VisualElement[,] _overlayActiveLayerCells;
         private Toggle _overlayScienceRegionToggle;
+        private Toggle _overlayScatterBiomeToggle;
         private DropdownField _overlayScienceRegionMode;
         private Label _overlayScienceRegionStatus;
         private Slider _overlayStrengthSlider;
@@ -109,6 +121,40 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _statusLabel = root.Q<Label>("status-label");
             _bodyLabel = root.Q<Label>("body-label");
             _altitudeLabel = root.Q<Label>("altitude-label");
+
+            _scatterStatus = root.Q<Label>("scatter-status");
+            _scatterEnabled = root.Q<Toggle>("scatter-enabled");
+            _scatterCells = root.Q<Label>("scatter-cells");
+            _scatterDistances = root.Q<Label>("scatter-distances");
+            _scatterReadCounts = root.Q<Button>("scatter-read-counts");
+            _scatterCounts = root.Q<Label>("scatter-counts");
+            if (_scatterEnabled != null)
+            {
+                _scatterEnabled.RegisterValueChangedCallback(evt =>
+                {
+                    var driver = PlanetAuthoringSession.Active?.ScatterDriver;
+                    if (driver != null)
+                        driver.Enabled = evt.newValue;
+                });
+            }
+            if (_scatterReadCounts != null)
+                _scatterReadCounts.clicked += OnScatterReadCountsClicked;
+
+            _scatterDensityQuality = root.Q<DropdownField>("scatter-density-quality");
+            _scatterDrawQuality = root.Q<DropdownField>("scatter-draw-quality");
+            if (_scatterDensityQuality != null)
+            {
+                _scatterDensityQuality.RegisterValueChangedCallback(_ =>
+                    PlanetAuthoringSession.Active?.ScatterDriver?.SetDensityQualityLevel(
+                        _scatterDensityQuality.index));
+            }
+
+            if (_scatterDrawQuality != null)
+            {
+                _scatterDrawQuality.RegisterValueChangedCallback(_ =>
+                    PlanetAuthoringSession.Active?.ScatterDriver?.SetDrawDistanceQualityLevel(
+                        _scatterDrawQuality.index));
+            }
             _previewButton = root.Q<Button>("preview-button");
             _refreshPreviewButton = root.Q<Button>("refresh-preview-button");
             _latField = root.Q<FloatField>("lat-field");
@@ -170,6 +216,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlayActiveLayerToggle = root.Q<Toggle>("overlay-active-layer-toggle");
             _overlayActiveLayerGrid = root.Q<VisualElement>("overlay-active-layer-grid");
             _overlayScienceRegionToggle = root.Q<Toggle>("overlay-science-region-toggle");
+            _overlayScatterBiomeToggle = root.Q<Toggle>("overlay-scatter-biome-toggle");
             _overlayScienceRegionMode = root.Q<DropdownField>("overlay-science-region-mode");
             _overlayScienceRegionStatus = root.Q<Label>("overlay-science-region-status");
             _overlayStrengthSlider = root.Q<Slider>("overlay-strength-slider");
@@ -181,6 +228,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             BindOverlayToggle(_overlayAltitudeToggle, PreviewOverlayKind.AltitudeBands);
             BindOverlayToggle(_overlayActiveLayerToggle, PreviewOverlayKind.ActiveLayer);
             BindOverlayToggle(_overlayScienceRegionToggle, PreviewOverlayKind.ScienceRegion);
+            BindOverlayToggle(_overlayScatterBiomeToggle, PreviewOverlayKind.ScatterBiome);
             BuildActiveLayerGrid();
             _overlayScienceRegionMode.choices = new System.Collections.Generic.List<string>(ScienceRegionModeChoices);
             _overlayScienceRegionMode.RegisterValueChangedCallback(evt =>
@@ -319,6 +367,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlayAltitudeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.AltitudeBands));
             _overlayActiveLayerToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ActiveLayer));
             _overlayScienceRegionToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ScienceRegion));
+            _overlayScatterBiomeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ScatterBiome));
             _overlayScienceRegionMode.SetValueWithoutNotify(ScienceRegionModeChoices[(int)PreviewOverlayManager.ScienceRegionMode]);
             _overlayStrengthSlider.SetValueWithoutNotify(PreviewOverlayManager.Strength);
             _overlayBandHeightField.SetValueWithoutNotify(PreviewOverlayManager.BandHeightMeters);
@@ -438,6 +487,130 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             SceneView.RepaintAll();
         }
 
+        private void RefreshScatterSection(PlanetAuthoringSession session, bool active)
+        {
+            if (_scatterStatus == null)
+                return;
+
+            ScatterPreviewState state = active ? session.ScatterState : null;
+            ScatterPreviewDriver driver = active ? session.ScatterDriver : null;
+
+            if (state == null || !state.HasSystem)
+            {
+                _scatterStatus.text = active
+                    ? "This body has no scatter system."
+                    : "No active preview.";
+                _scatterStatus.style.display = DisplayStyle.Flex;
+                _scatterCells.text = string.Empty;
+                _scatterDistances.text = string.Empty;
+                _scatterCounts.text = string.Empty;
+                _scatterEnabled.SetEnabled(false);
+                _scatterReadCounts.SetEnabled(false);
+                SetQualityChoices(_scatterDensityQuality, null);
+                SetQualityChoices(_scatterDrawQuality, null);
+                return;
+            }
+
+            _scatterEnabled.SetEnabled(true);
+            _scatterEnabled.SetValueWithoutNotify(driver != null && driver.Enabled);
+            _scatterReadCounts.SetEnabled(state.Booted);
+
+            QualityManager quality = driver != null ? driver.QualityManager : null;
+            SetQualityChoices(
+                _scatterDensityQuality,
+                quality?.DensityQualityLevelList
+                    .Select(setting => $"{setting.Name} ({setting.GlobalDensityMultipler:0.##}x)")
+                    .ToList());
+            SetQualityChoices(
+                _scatterDrawQuality,
+                quality?.DrawDistanceQualityLevelList
+                    .Select(setting => $"{setting.Name} ({setting.GlobalDrawDistanceMultipler:0.##}x)")
+                    .ToList());
+
+            // Only speaks when something is wrong. The driver reports an empty status on the healthy
+            // path so this collapses rather than confirming that a running system is running.
+            string status = driver != null ? driver.Status : string.Empty;
+            _scatterStatus.text = status;
+            _scatterStatus.style.display = string.IsNullOrEmpty(status) ? DisplayStyle.None : DisplayStyle.Flex;
+
+            _scatterCells.text = $"Cells: {state.CellCount}   |   Loaded: {state.LoadedCellCount}";
+
+            // Shown next to the counts on purpose. Nothing spawns or renders past these, so a count
+            // of zero from further out than the vegetation distance describes where the camera is
+            // rather than anything about the body's scatter.
+            _scatterDistances.text =
+                $"Spawn range - vegetation {state.VegetationDistance:0} m, "
+                + $"tree {state.TreeDistance:0} m, hero {state.HeroDistance:0} m";
+        }
+
+        /// <summary>
+        /// Repopulates a quality dropdown, leaving the current selection alone where it still applies.
+        /// </summary>
+        /// <remarks>
+        /// The preset lists are seeded by the quality manager rather than authored, so the choices are
+        /// only knowable once a body is booted. Rebuilt on every refresh, which means the guard against
+        /// clobbering the author's selection matters more than it looks.
+        /// </remarks>
+        /// <param name="field">The dropdown to populate. Ignored when absent from the markup.</param>
+        /// <param name="choices">Preset names in index order, or null to disable the dropdown.</param>
+        private static void SetQualityChoices(DropdownField field, List<string> choices)
+        {
+            if (field == null)
+            {
+                return;
+            }
+
+            if (choices == null || choices.Count == 0)
+            {
+                field.SetEnabled(false);
+                field.choices = new List<string>();
+                field.SetValueWithoutNotify(string.Empty);
+                return;
+            }
+
+            field.SetEnabled(true);
+            if (!field.choices.SequenceEqual(choices))
+            {
+                field.choices = choices;
+            }
+
+            if (field.index < 0 || field.index >= choices.Count)
+            {
+                field.SetValueWithoutNotify(choices[choices.Count - 1]);
+            }
+        }
+
+        private void OnScatterReadCountsClicked()
+        {
+            var state = PlanetAuthoringSession.Active?.ScatterState;
+            var system = PlanetAuthoringSession.Active?.ScatterDriver?.System;
+            if (state == null || system == null || _scatterCounts == null)
+                return;
+
+            int packages = system.VegetationPackageProList.Count;
+            if (packages == 0)
+            {
+                _scatterCounts.text = "No vegetation package assigned.";
+                return;
+            }
+
+            var lines = new System.Text.StringBuilder();
+            for (int p = 0; p < packages; p++)
+            {
+                var package = system.VegetationPackageProList[p];
+                if (package == null)
+                    continue;
+
+                for (int i = 0; i < package.VegetationInfoList.Count; i++)
+                {
+                    int rendered = state.ReadRenderedInstanceCount(p, i, 0);
+                    lines.AppendLine($"{package.VegetationInfoList[i].Name}: {(rendered < 0 ? "unavailable" : rendered.ToString())} rendered");
+                }
+            }
+
+            _scatterCounts.text = lines.Length > 0 ? lines.ToString().TrimEnd() : "No items in the package.";
+        }
+
         private void RefreshUI()
         {
             if (_statusLabel == null) return;
@@ -478,6 +651,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             SortJumpButtonsByAltitude(session?.Pqs);
             EnsureSunLightAssigned();
             RefreshSunFromLight();
+
+            RefreshScatterSection(session, active);
 
             if (!active)
             {

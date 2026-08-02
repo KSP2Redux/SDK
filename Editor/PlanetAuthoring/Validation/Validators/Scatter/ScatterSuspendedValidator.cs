@@ -13,7 +13,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
     /// <c>_suspendVegetationSystem</c> is a serialized public bool, and <c>SetDefaultSettings</c>
     /// cannot correct it without a GameManager. A stale <c>true</c> saved onto the prefab therefore
     /// means a silently dark preview and a silently dark game, with nothing to distinguish it from a
-    /// body that simply has no scatter authored.
+    /// body that has no scatter authored.
     /// </remarks>
     public sealed class ScatterSuspendedValidator : IPlanetValidator
     {
@@ -28,9 +28,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         {
             VegetationSystemPro system = ScatterValidatorHelper.FindSystem(body);
             if (system == null || !system._suspendVegetationSystem)
-            {
                 yield break;
-            }
 
             var fixes = new[]
             {
@@ -47,9 +45,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
         private static void Resume(VegetationSystemPro system)
         {
             if (system == null)
-            {
                 return;
-            }
 
             Undo.RecordObject(system, "Resume Scatter System");
             system._suspendVegetationSystem = false;

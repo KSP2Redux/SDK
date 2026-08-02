@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="unity-base-field__input scatter-stratum-input">
+        <engine:VisualElement name="swatch" class="scatter-stratum-swatch" />
+        <engine:Button name="picker" class="scatter-stratum-picker"
+                       tooltip="Pick the surface stratum this rule applies to. The list is the body's own small-layer tiles, so the names match the PQS inspector." />
+        <engine:IntegerField name="raw-index" class="scatter-stratum-raw"
+                             tooltip="The slice index actually stored on the rule. Editable so hand-written or imported data can be repaired without a matching stratum." />
+        <engine:Label name="detail" class="scatter-stratum-detail" />
+    </engine:VisualElement>
+
+</engine:UXML>
