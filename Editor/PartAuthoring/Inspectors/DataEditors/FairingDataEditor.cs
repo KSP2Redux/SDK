@@ -12,6 +12,7 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Ksp2UnityTools.Editor.Widgets;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
 {
