@@ -52,6 +52,10 @@ namespace Ksp2UnityTools.Editor.Extensions
             switch (state)
             {
                 case PlayModeStateChange.ExitingEditMode:
+                    // SessionState survives domain reloads. Clear it before every new play
+                    // transition so a previous interrupted/hot-reloaded session cannot suppress
+                    // catalog registration for the next benchmark process.
+                    SessionState.SetBool(PlaySessionInitializedKey, false);
                     ArmAddressablesReinitialize();
                     return;
                 case PlayModeStateChange.ExitingPlayMode:
@@ -65,8 +69,10 @@ namespace Ksp2UnityTools.Editor.Extensions
                 case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
                     return;
                 case PlayModeStateChange.EnteredPlayMode:
-                    SessionState.SetBool(PlaySessionInitializedKey, true);
                     EnsureImportedCatalogsLoaded();
+                    // Mark initialized only after registration succeeds. If catalog loading throws,
+                    // a duplicate callback can retry instead of preserving a false-success state.
+                    SessionState.SetBool(PlaySessionInitializedKey, true);
                     break;
             }
         }
