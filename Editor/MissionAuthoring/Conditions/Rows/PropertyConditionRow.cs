@@ -22,6 +22,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
         private readonly DropdownField _operatorField;
         private readonly VisualElement _thresholdSlot;
         private readonly VisualElement _inputSlot;
+        private readonly VisualElement _variableSlot;
         private PropertyWatcherCatalogEntry _entry;
 
         /// <summary>
@@ -102,9 +103,14 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
             _inputSlot.AddToClassList("condition-row-input-slot");
             _body.Add(_inputSlot);
 
+            _variableSlot = new VisualElement();
+            _variableSlot.AddToClassList("condition-row-variable-slot");
+            _body.Add(_variableSlot);
+
             RebuildOperatorOptions();
             RebuildThresholdField();
             RebuildInputField();
+            RebuildVariableFields();
         }
 
         private void OpenWatcherPicker()
@@ -122,6 +128,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
                 RebuildOperatorOptions();
                 RebuildThresholdField();
                 RebuildInputField();
+                RebuildVariableFields();
                 NotifyChanged?.Invoke();
             });
         }
@@ -269,6 +276,137 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions.Rows
                 NotifyChanged?.Invoke();
             });
             _inputSlot.Add(field);
+        }
+
+        private void RebuildVariableFields()
+        {
+            _variableSlot.Clear();
+
+            if (_entry?.OutputType == typeof(string))
+            {
+                var thresholdVariable = new TextField("Threshold Variable")
+                {
+                    value = _condition.TestWatchedStringVariable ?? string.Empty,
+                    isDelayed = true,
+                    tooltip = "Optional mission variable used instead of the literal string threshold. The condition remains false until this variable exists.",
+                };
+                thresholdVariable.AddToClassList("condition-row-field");
+                thresholdVariable.AddToClassList("unity-base-field__aligned");
+                thresholdVariable.RegisterValueChangedCallback(e =>
+                {
+                    Undo.RecordObject(Mission, "Edit condition threshold variable");
+                    _condition.TestWatchedStringVariable = e.newValue ?? string.Empty;
+                    EditorUtility.SetDirty(Mission);
+                    NotifyChanged?.Invoke();
+                });
+                _variableSlot.Add(thresholdVariable);
+            }
+
+            var captureVariable = new TextField("Capture As Variable")
+            {
+                value = _condition.CaptureValueAsVariable ?? string.Empty,
+                isDelayed = true,
+                tooltip = "When the condition matches, stores the capture watcher's string value in this mission-scoped variable. Empty disables capture.",
+            };
+            captureVariable.AddToClassList("condition-row-field");
+            captureVariable.AddToClassList("unity-base-field__aligned");
+            captureVariable.RegisterValueChangedCallback(e =>
+            {
+                Undo.RecordObject(Mission, "Edit condition capture variable");
+                _condition.CaptureValueAsVariable = e.newValue ?? string.Empty;
+                EditorUtility.SetDirty(Mission);
+                NotifyChanged?.Invoke();
+            });
+            _variableSlot.Add(captureVariable);
+
+            var captureEntry = PropertyWatcherCatalog.FindByAqn(_condition.CapturePropertyTypeAQN);
+            var captureRow = new VisualElement();
+            captureRow.AddToClassList("picker-row");
+            captureRow.AddToClassList("unity-base-field");
+            captureRow.AddToClassList("unity-base-field__aligned");
+
+            var captureLabel = new Label("Capture Watcher");
+            captureLabel.AddToClassList("unity-base-field__label");
+            captureLabel.AddToClassList("unity-property-field__label");
+            captureRow.Add(captureLabel);
+
+            var captureButton = new Button(() => OpenCaptureWatcherPicker())
+            {
+                text = captureEntry?.DisplayName ?? "(watched value)",
+                tooltip = captureEntry?.Description ?? "Capture the main property watcher's string value.",
+            };
+            captureButton.AddToClassList("picker-row__button");
+            captureRow.Add(captureButton);
+
+            if (captureEntry != null)
+            {
+                var clearButton = new Button(ClearCaptureWatcher)
+                {
+                    text = "Clear",
+                    tooltip = "Capture the main property watcher's value instead.",
+                };
+                captureRow.Add(clearButton);
+            }
+
+            _variableSlot.Add(captureRow);
+
+            if (captureEntry?.TakesInput == true)
+            {
+                string label = !string.IsNullOrEmpty(captureEntry.InputDescription)
+                    ? char.ToUpperInvariant(captureEntry.InputDescription[0]) + captureEntry.InputDescription.Substring(1)
+                    : "Capture Input";
+                var captureInput = new TextField(label)
+                {
+                    value = _condition.CaptureInputstring ?? string.Empty,
+                    isDelayed = true,
+                };
+                captureInput.AddToClassList("condition-row-field");
+                captureInput.AddToClassList("unity-base-field__aligned");
+                captureInput.RegisterValueChangedCallback(e =>
+                {
+                    Undo.RecordObject(Mission, "Edit condition capture input");
+                    _condition.CaptureInputstring = e.newValue ?? string.Empty;
+                    _condition.CaptureIsInput = !string.IsNullOrEmpty(_condition.CaptureInputstring);
+                    EditorUtility.SetDirty(Mission);
+                    NotifyChanged?.Invoke();
+                });
+                _variableSlot.Add(captureInput);
+            }
+        }
+
+        private void OpenCaptureWatcherPicker()
+        {
+            PropertyWatcherPicker.Open(entry =>
+            {
+                if (entry == null) return;
+                if (entry.OutputType != typeof(string))
+                {
+                    EditorUtility.DisplayDialog(
+                        "String watcher required",
+                        "Mission variables currently store strings, so the capture watcher must return a string.",
+                        "OK");
+                    return;
+                }
+
+                Undo.RecordObject(Mission, "Pick condition capture watcher");
+                _condition.CapturePropertyTypeAQN = entry.AssemblyQualifiedName;
+                _condition.CaptureInputstring = string.Empty;
+                _condition.CaptureIsInput = false;
+                EditorUtility.SetDirty(Mission);
+                RebuildVariableFields();
+                NotifyChanged?.Invoke();
+            });
+        }
+
+        private void ClearCaptureWatcher()
+        {
+            Undo.RecordObject(Mission, "Clear condition capture watcher");
+            _condition.CapturePropertyTypeAQN = string.Empty;
+            _condition.CaptureInputstring = string.Empty;
+            _condition.CaptureIsInput = false;
+            EditorUtility.SetDirty(Mission);
+            RebuildVariableFields();
+            NotifyChanged?.Invoke();
         }
 
         private static List<PropertyOperator> AllowedOperators(Type outputType)
