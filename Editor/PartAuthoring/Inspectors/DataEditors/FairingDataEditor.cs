@@ -185,7 +185,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             if (mode == AuthoringMode.VariableShroud)
             {
                 SetModuleBool("FloatingNodeEnabled", true);
-                SetDataBool("AllowFloatingNodeChange", true);
                 SetDataBool("DefaultFloatingNodeState", true);
             }
             else
@@ -253,9 +252,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
 
             AddModulePropertyRow(section, "FairingEnabled", "Enabled By Default");
             AddDataFieldRow(section, "DefaultFairingEnabledToggle", "Default PAM Toggle");
-            if (mode == AuthoringMode.Fairing)
+            switch (mode)
             {
-                AddDataFieldRow(section, "AllowConstructionTypeChange", "Allow Construction Mode Change");
+                case AuthoringMode.Fairing:
+                    AddDataFieldRow(section, "AllowConstructionTypeChange", "Allow Construction Mode Change");
+                    break;
+                case AuthoringMode.VariableShroud:
+                    AddDataFieldRow(section, "AllowFloatingNodeChange", "Allow Floating Node Toggle");
+                    break;
             }
             return section;
         }
