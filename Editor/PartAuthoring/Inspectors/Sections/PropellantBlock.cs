@@ -5,6 +5,7 @@ using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
+using Ksp2UnityTools.Editor.Widgets;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 {

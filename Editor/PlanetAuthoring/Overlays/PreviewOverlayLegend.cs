@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using AwesomeTechnologies.VegetationSystem;
+using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,12 +13,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
     /// </summary>
     /// <remarks>
     /// Registered with <see cref="SceneView.duringSceneGui" /> by <see cref="PreviewOverlayManager" />.
-    /// Renders nothing when no overlays are enabled. Position is pinned to the top-right corner of
-    /// the SceneView and stacks one section per active overlay.
+    /// The panel is pinned to the bottom-right corner of the SceneView and stacks one section per
+    /// active overlay.
     /// </remarks>
     internal static class PreviewOverlayLegend
     {
-        // Mirror the shader Property defaults so the swatches match what the overlay actually draws.
+        // Mirror the shader property defaults so the swatches match what the overlay actually draws.
         private static readonly Color BiomeR = new(1.00f, 0.30f, 0.30f);
         private static readonly Color BiomeG = new(0.30f, 1.00f, 0.30f);
         private static readonly Color BiomeB = new(0.30f, 0.50f, 1.00f);
@@ -45,7 +48,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static GUIStyle _panelStyle;
 
         /// <summary>
-        /// SceneView GUI callback that draws the legend panel when overlays are active.
+        /// Draws the legend panel while a preview session is live and at least one overlay is enabled.
         /// </summary>
         /// <param name="view">The SceneView currently being rendered.</param>
         public static void OnSceneGUI(SceneView view)
@@ -111,6 +114,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             PreviewOverlayKind.AltitudeBands => RowHeight + RowHeight + RowHeight,          // title + minor + major
             PreviewOverlayKind.ActiveLayer   => RowHeight + RowHeight + 4f * SwatchSize + 4f, // title + biome row + 4x4 grid
             PreviewOverlayKind.ScienceRegion => ScienceRegionLegendHeight(),                // title + mode + optional stale row
+            PreviewOverlayKind.ScatterBiome  => RowHeight * 5f,                             // title + one row per channel
             _ => RowHeight,
         };
 
@@ -141,8 +145,63 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             PreviewOverlayKind.AltitudeBands => DrawContourLegend(r, DrawTitle(r, r.y, "Altitude contours")),
             PreviewOverlayKind.ActiveLayer   => DrawActiveLayerGrid(r, DrawTitle(r, r.y, "Active small-biome layer")),
             PreviewOverlayKind.ScienceRegion => DrawScienceRegionLegend(r, DrawTitle(r, r.y, "Science region")),
+            PreviewOverlayKind.ScatterBiome  => DrawScatterBiomeLegend(r, DrawTitle(r, r.y, "Scatter biomes")),
             _ => r.y,
         };
+
+        /// <summary>
+        /// Draws one row per mask channel, naming the biome it maps to and the package that owns it.
+        /// </summary>
+        /// <remarks>
+        /// VSP's <c>BiomeType</c> is a bare slot identifier with no meaning of its own, so the owning
+        /// package name is what makes a channel readable: without it a channel reads as "Biome3".
+        ///
+        /// A channel that no package targets is named as such. That is legitimate authoring, and it
+        /// means nothing spawns on that ground, which the mask alone cannot show.
+        /// </remarks>
+        /// <param name="r">The section rect.</param>
+        /// <param name="y">Current vertical cursor, below the title.</param>
+        /// <returns>The vertical cursor after the section.</returns>
+        private static float DrawScatterBiomeLegend(Rect r, float y)
+        {
+            PQS pqs = PlanetAuthoringSession.Active?.Pqs;
+            VegetationSystemPro system = pqs == null ? null : ScatterSystemLocator.Find(pqs);
+            if (system == null || !system.UseBiomeTextureMask || system.BiomeTextureMask == null)
+            {
+                GUI.Label(new Rect(r.x, y, r.width, RowHeight), "No scatter mask assigned.", _smallStyle);
+                return y + RowHeight * 4f;
+            }
+
+            Color[] swatches = { BiomeR, BiomeG, BiomeB, BiomeA };
+            for (var channel = 0; channel < 4; channel++)
+            {
+                var swatch = new Rect(r.x, y + 2f, SwatchSize, SwatchSize);
+                EditorGUI.DrawRect(swatch, swatches[channel]);
+
+                BiomeType biome = ScatterBiomeChannels.ChannelBiome(system, channel);
+                string owner = FindPackageName(system, biome) ?? "no package";
+                GUI.Label(
+                    new Rect(r.x + SwatchSize + 4f, y, r.width - SwatchSize - 4f, RowHeight),
+                    $"{PlanetAuthoringNaming.BiomeChannels[channel]}  {biome}  -  {owner}",
+                    _smallStyle);
+                y += RowHeight;
+            }
+
+            return y;
+        }
+
+        private static string FindPackageName(VegetationSystemPro system, BiomeType biome)
+        {
+            foreach (VegetationPackagePro package in system.VegetationPackageProList)
+            {
+                if (package != null && package.BiomeType == biome)
+                {
+                    return string.IsNullOrWhiteSpace(package.PackageName) ? package.name : package.PackageName;
+                }
+            }
+
+            return null;
+        }
 
         private static float DrawScienceRegionLegend(Rect r, float y)
         {
@@ -258,7 +317,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static float DrawContourLegend(Rect r, float y)
         {
             var bandHeight = PreviewOverlayManager.BandHeightMeters;
-            const float majorEvery = 5f; // Mirrors the shader default; expose if it becomes user-tunable.
+            const float majorEvery = 5f; // Mirrors the shader default. Expose if it becomes user-tunable.
 
             // Minor: thin 2px swatch centered vertically in the row.
             var minorSwatch = new Rect(r.x, y + RowHeight * 0.5f - 1f, ContourSwatchWidth, 2f);

@@ -46,18 +46,18 @@ namespace Ksp2UnityTools.Editor.Widgets
         public static VisualElement Build(out Slots slots)
         {
             var card = new VisualElement();
-            card.AddToClassList("data-editor-card");
+            card.AddToClassList("sdk-card");
 
             var header = new VisualElement();
-            header.AddToClassList("data-editor-card-header");
+            header.AddToClassList("sdk-card__header");
             card.Add(header);
 
             var disclosure = new Button { text = "▼" };
-            disclosure.AddToClassList("data-editor-card-disclosure");
+            disclosure.AddToClassList("sdk-card__disclosure");
             header.Add(disclosure);
 
             var body = new VisualElement();
-            body.AddToClassList("data-editor-card-body");
+            body.AddToClassList("sdk-card__body");
             card.Add(body);
 
             var expanded = true;
@@ -103,7 +103,7 @@ namespace Ksp2UnityTools.Editor.Widgets
                 }
                 afterRemove?.Invoke();
             }) { text = "X" };
-            removeBtn.AddToClassList("data-editor-card-remove-btn");
+            removeBtn.AddToClassList("sdk-card__remove-btn");
             return removeBtn;
         }
     }
