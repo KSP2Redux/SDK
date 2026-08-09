@@ -75,6 +75,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
         private Toggle _displayObjectiveToggle;
         private Toggle _revealOnActivateToggle;
         private Toggle _ignoreExceptionsToggle;
+        private EnumField _progressScopeField;
 
         /// <summary>
         /// Creates a new stage card bound to the given stage.
@@ -186,6 +187,14 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
 
             _ignoreExceptionsToggle = MakeToggle("Ignore Exceptions", Stage.IgnoreExceptionBranches, v => Stage.IgnoreExceptionBranches = v, "Toggle IgnoreExceptionBranches");
             _body.Add(_ignoreExceptionsToggle);
+
+            _progressScopeField = MakeEnum("Progress Scope", Stage.ProgressScope, v => Stage.ProgressScope = (MissionProgressScope)v, "Edit progress scope");
+            _progressScopeField.tooltip =
+                "Campaign: any vessel or none can satisfy this stage.\n" +
+                "Vessel: one vessel must carry this stage and the vessel stages next to it from end to end.\n" +
+                "A Campaign stage between two Vessel stages releases the binding, so the stages after it are open " +
+                "to a different vessel.";
+            _body.Add(_progressScopeField);
         }
 
         /// <summary>
@@ -206,6 +215,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
             _displayObjectiveToggle.SetValueWithoutNotify(Stage.DisplayObjective);
             _revealOnActivateToggle.SetValueWithoutNotify(Stage.RevealObjectiveOnActivate);
             _ignoreExceptionsToggle.SetValueWithoutNotify(Stage.IgnoreExceptionBranches);
+            _progressScopeField.SetValueWithoutNotify(Stage.ProgressScope);
 
             BranchSection?.Reconcile();
             ActionSection?.Reconcile();
@@ -235,6 +245,19 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
         private Toggle MakeToggle(string label, bool initial, Action<bool> setter, string undoLabel)
         {
             var field = new Toggle(label) { value = initial };
+            field.AddToClassList("stage-card-field");
+            field.RegisterValueChangedCallback(evt =>
+            {
+                Undo.RecordObject(Mission, undoLabel);
+                setter(evt.newValue);
+                EditorUtility.SetDirty(Mission);
+            });
+            return field;
+        }
+
+        private EnumField MakeEnum(string label, Enum initial, Action<Enum> setter, string undoLabel)
+        {
+            var field = new EnumField(label, initial);
             field.AddToClassList("stage-card-field");
             field.RegisterValueChangedCallback(evt =>
             {
