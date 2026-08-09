@@ -22,23 +22,17 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Validation.Validators
         {
             MissionData data = context?.Data;
             if (data == null)
-            {
                 yield break;
-            }
 
             if (data.type != MissionType.Tutorial && data.type != MissionType.FTUE)
-            {
                 yield break;
-            }
 
             IReadOnlyList<MissionStage> stages = context.Stages;
             for (int i = 0; i < stages.Count; i++)
             {
                 MissionStage stage = stages[i];
                 if (stage == null || stage.ProgressScope != MissionProgressScope.Vessel)
-                {
                     continue;
-                }
 
                 yield return new ValidationIssue(
                     Code,

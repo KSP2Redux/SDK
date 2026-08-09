@@ -28,23 +28,17 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Validation.Validators
         public IEnumerable<ValidationIssue> Validate(MissionValidationContext context)
         {
             if (context?.Data == null)
-            {
                 yield break;
-            }
 
             IReadOnlyList<MissionStage> stages = context.Stages;
             for (int i = 0; i < stages.Count; i++)
             {
                 MissionStage stage = stages[i];
                 if (stage == null || stage.ProgressScope != MissionProgressScope.Vessel || stage.condition == null)
-                {
                     continue;
-                }
 
                 if (ReadsVesselOrCannotTell(stage.condition))
-                {
                     continue;
-                }
 
                 yield return new ValidationIssue(
                     Code,
@@ -64,16 +58,12 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Validation.Validators
                 case ConditionSet conditionSet:
                 {
                     if (conditionSet.Children == null)
-                    {
                         return false;
-                    }
 
                     foreach (Condition child in conditionSet.Children)
                     {
                         if (ReadsVesselOrCannotTell(child))
-                        {
                             return true;
-                        }
                     }
 
                     return false;
