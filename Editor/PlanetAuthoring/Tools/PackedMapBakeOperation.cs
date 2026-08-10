@@ -48,7 +48,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     public static class PackedMapBakeOperation
     {
         private const string COMPUTE_SHADER_PATH =
-            "Assets/Modules/KSP2UnityTools/Assets/Shaders/PlanetAuthoring/PackedMapBake.compute";
+            SDKConfiguration.BasePath + "/Assets/Shaders/PlanetAuthoring/PackedMapBake.compute";
 
         private const string KERNEL_NAME = "CSPack";
 

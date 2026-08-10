@@ -16,6 +16,6 @@ struct QuadMeshData
 // (Shader.PropertyToID), not by register slot.
 // ----------------------------------------------------------------------------
 StructuredBuffer<QuadMeshData> QuadMeshDataBuffer;
-Buffer<uint> VisibleQuadMeshIndices;
+StructuredBuffer<uint> VisibleQuadMeshIndices;
 
 #endif
