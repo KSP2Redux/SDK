@@ -3,7 +3,12 @@
 //
 // Properties and pass structure for the local-space (near-camera) PQS terrain
 // shader.  Each Pass dispatches into one of the per-pass-kind cginc files via
-// a PASS_* define; see CelestialBody_Local.cginc for the include graph.
+// a PASS_* define.  See CelestialBody_Local.cginc for the include graph.
+//
+// The vertex stage reads its geometry from GPU buffers, and every one of those
+// declarations must be StructuredBuffer to match how PQSRenderer allocates
+// them.  A typed Buffer<uint> view over a structured resource is undefined in
+// D3D11 and reads back zero on some drivers, which clips away every triangle.
 // ============================================================================
 Shader "Redux/Environment/CelestialBody_Local"
 {
