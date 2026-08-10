@@ -25,6 +25,11 @@ namespace Ksp2UnityTools.Editor.Extensions
         private const string PlaySessionInitializedKey =
             "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
 
+        private static bool _catalogLoadScheduled;
+        private static bool _catalogLoadInProgress;
+        private static bool _catalogLoadWaitInProgress;
+        private static AsyncOperationHandle<IResourceLocator> _catalogLoadOperation;
+
 #if TK_ADDRESSABLE
         static LoadTkImportedCatalog()
         {
@@ -45,6 +50,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static void OnBeforeAssemblyReload()
         {
+            EditorApplication.delayCall -= BeginImportedCatalogLoad;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
         }
@@ -131,41 +137,160 @@ namespace Ksp2UnityTools.Editor.Extensions
                 return;
             }
 
-            EnsureImportedCatalogsLoaded();
+            ScheduleImportedCatalogLoad();
+        }
+
+        // Catalog loads use Addressables' editor update loop. Waiting for that loop from an asset
+        // import callback can block the main thread indefinitely, so domain reloads start the work
+        // after the asset database has returned control to the editor.
+        private static void ScheduleImportedCatalogLoad()
+        {
+            if (_catalogLoadScheduled || _catalogLoadInProgress)
+            {
+                return;
+            }
+
+            _catalogLoadScheduled = true;
+            EditorApplication.delayCall += BeginImportedCatalogLoad;
+        }
+
+        private static void BeginImportedCatalogLoad()
+        {
+            EditorApplication.delayCall -= BeginImportedCatalogLoad;
+            _catalogLoadScheduled = false;
+
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                ScheduleImportedCatalogLoad();
+                return;
+            }
+
+            string catalogPath = GetNextMissingCatalogPath();
+            if (catalogPath == null)
+            {
+                return;
+            }
+
+            EnsureThunderKitInternalIdRedirect();
+            _catalogLoadInProgress = true;
+            _catalogLoadOperation = Addressables.LoadContentCatalogAsync(catalogPath, false);
+            _catalogLoadOperation.Completed += OnImportedCatalogLoaded;
+        }
+
+        private static void OnImportedCatalogLoaded(AsyncOperationHandle<IResourceLocator> operation)
+        {
+            _catalogLoadInProgress = false;
+            bool succeeded = operation.Status == AsyncOperationStatus.Succeeded;
+            Exception operationException = operation.OperationException;
+            if (!_catalogLoadWaitInProgress)
+            {
+                Addressables.Release(operation);
+            }
+
+            if (!succeeded)
+            {
+                Debug.LogError(
+                    $"Failed to load a ThunderKit imported Addressables catalog: {operationException}"
+                );
+                return;
+            }
+
+            BeginImportedCatalogLoad();
         }
 
         // Registers the ThunderKit-imported content catalog(s) with Addressables if they are not already
         // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
         private static void EnsureImportedCatalogsLoaded()
         {
-            string ksp2CatalogFullPath = Path.Join(Application.dataPath, loadTkImportedCatalogPath);
-            if (!File.Exists(ksp2CatalogFullPath))
+            EditorApplication.delayCall -= BeginImportedCatalogLoad;
+            _catalogLoadScheduled = false;
+
+            while (_catalogLoadInProgress)
+            {
+                AsyncOperationHandle<IResourceLocator> operation = _catalogLoadOperation;
+                if (!operation.IsValid())
+                {
+                    break;
+                }
+
+                IResourceLocator locator;
+                try
+                {
+                    _catalogLoadWaitInProgress = true;
+                    locator = operation.WaitForCompletion();
+                }
+                finally
+                {
+                    _catalogLoadWaitInProgress = false;
+                }
+
+                Exception operationException = operation.OperationException;
+                Addressables.Release(operation);
+                if (locator == null)
+                {
+                    Debug.LogError(
+                        $"Failed while waiting for a ThunderKit imported Addressables catalog: {operationException}"
+                    );
+                    return;
+                }
+            }
+
+            string catalogPath = GetNextMissingCatalogPath();
+            if (catalogPath == null)
             {
                 return;
             }
 
             EnsureThunderKitInternalIdRedirect();
-
-            if (!Addressables.ResourceLocators.Select(rl => rl.LocatorId).Contains(ksp2CatalogFullPath))
+            while (catalogPath != null)
             {
-                AsyncOperationHandle<IResourceLocator> loadKspCatalogTask =
-                    Addressables.LoadContentCatalogAsync(ksp2CatalogFullPath, true);
-                loadKspCatalogTask.WaitForCompletion();
+                AsyncOperationHandle<IResourceLocator> operation =
+                    Addressables.LoadContentCatalogAsync(catalogPath, false);
+                IResourceLocator locator = operation.WaitForCompletion();
+                Exception operationException = operation.OperationException;
+                Addressables.Release(operation);
+                if (locator == null)
+                {
+                    Debug.LogError(
+                        $"Failed to load the ThunderKit imported Addressables catalog at {catalogPath}: {operationException}"
+                    );
+                    return;
+                }
+
+                catalogPath = GetNextMissingCatalogPath();
+            }
+        }
+
+        private static string GetNextMissingCatalogPath()
+        {
+            string ksp2CatalogFullPath = Path.Join(Application.dataPath, loadTkImportedCatalogPath);
+            if (!File.Exists(ksp2CatalogFullPath))
+            {
+                return null;
+            }
+
+            if (!IsCatalogLoaded(ksp2CatalogFullPath))
+            {
+                return ksp2CatalogFullPath;
             }
 
             // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is
             // no locator already registerd
-            if (Assembly.GetExecutingAssembly().FullName == "ksp2community.ksp2unitytools.editor" && !Addressables
-                .ResourceLocators
-                .Select(rl => rl.LocatorId)
-                .Where(id => id.Contains(reduxCatalogPath))
-                .Any())
+            if (Assembly.GetExecutingAssembly().GetName().Name == "ksp2community.ksp2unitytools.editor")
             {
                 string reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
-                AsyncOperationHandle<IResourceLocator> loadKspCatalogTask =
-                    Addressables.LoadContentCatalogAsync(reduxCatalogFullPath, true);
-                loadKspCatalogTask.WaitForCompletion();
+                if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
+                {
+                    return reduxCatalogFullPath;
+                }
             }
+
+            return null;
+        }
+
+        private static bool IsCatalogLoaded(string catalogPath)
+        {
+            return Addressables.ResourceLocators.Any(locator => locator.LocatorId == catalogPath);
         }
 
         // Addressables stores this transform on its internal implementation. With Reload Domain
