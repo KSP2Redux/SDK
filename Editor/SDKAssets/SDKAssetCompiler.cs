@@ -33,17 +33,49 @@ namespace Ksp2UnityTools.Editor.SDKAssets
                 );
 
             SDKScriptIdentityManifest manifest = LoadManifest(projectRoot);
-            Dictionary<string, CompiledScriptIdentity> compiledScripts = ResolveCompiledScripts(manifest);
-            List<SourceAsset> sourceAssets = FindSourceAssets(sourceRoot, compiledScripts.Keys);
-            Dictionary<string, string> generatedAssetGuids = BuildGeneratedAssetGuidMap(sourceAssets);
-            string generatedRoot = ToAbsolutePath(projectRoot, GENERATED_ROOT);
-            ValidateGeneratedRoot(generatedRoot);
+            Dictionary<string, SDKScriptIdentity> scriptIdentities = manifest.ScriptIdentities.ToDictionary(
+                identity => identity.SourceGuid,
+                StringComparer.Ordinal
+            );
+            List<SourceAsset> sourceAssets = FindSourceAssets(sourceRoot, scriptIdentities);
+            var referencedScriptGuids = new HashSet<string>(
+                sourceAssets.SelectMany(sourceAsset => sourceAsset.ReferencedScriptGuids),
+                StringComparer.Ordinal
+            );
+            Dictionary<string, CompiledScriptIdentity> compiledScripts = ResolveCompiledScripts(
+                manifest.ScriptIdentities.Where(identity => referencedScriptGuids.Contains(identity.SourceGuid)),
+                ResolveCompiledScript,
+                out Dictionary<string, string> resolutionErrors
+            );
+            var compilableAssets = new List<SourceAsset>(sourceAssets.Count);
+            foreach (SourceAsset sourceAsset in sourceAssets)
+            {
+                List<string> assetResolutionErrors = sourceAsset.ReferencedScriptGuids
+                    .Where(resolutionErrors.ContainsKey)
+                    .Select(sourceGuid => resolutionErrors[sourceGuid])
+                    .ToList();
+                if (assetResolutionErrors.Count > 0)
+                {
+                    Debug.LogError(
+                        $"Skipped SDK authoring asset '{sourceAsset.RelativePath}' because its compiled script " +
+                        $"references could not be resolved:{Environment.NewLine}" +
+                        string.Join(Environment.NewLine, assetResolutionErrors)
+                    );
+                    continue;
+                }
 
-            var generatedFiles = new List<string>(sourceAssets.Count);
+                compilableAssets.Add(sourceAsset);
+            }
+
+            Dictionary<string, string> generatedAssetGuids = BuildGeneratedAssetGuidMap(compilableAssets);
+            string generatedRoot = ToAbsolutePath(projectRoot, GENERATED_ROOT);
+            PrepareGeneratedRoot(generatedRoot);
+
+            var generatedFiles = new List<string>(compilableAssets.Count);
             AssetDatabase.StartAssetEditing();
             try
             {
-                foreach (SourceAsset sourceAsset in sourceAssets)
+                foreach (SourceAsset sourceAsset in compilableAssets)
                 {
                     string generatedAssetPath = GenerateAsset(
                         projectRoot,
@@ -82,29 +114,41 @@ namespace Ksp2UnityTools.Editor.SDKAssets
             return manifest;
         }
 
-        private static Dictionary<string, CompiledScriptIdentity> ResolveCompiledScripts(
-            SDKScriptIdentityManifest manifest
+        internal static Dictionary<string, CompiledScriptIdentity> ResolveCompiledScripts(
+            IEnumerable<SDKScriptIdentity> identities,
+            Func<SDKScriptIdentity, CompiledScriptIdentity> resolver,
+            out Dictionary<string, string> resolutionErrors
         )
         {
             var result = new Dictionary<string, CompiledScriptIdentity>(StringComparer.Ordinal);
-            foreach (SDKScriptIdentity identity in manifest.ScriptIdentities)
+            resolutionErrors = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (SDKScriptIdentity identity in identities)
             {
-                MonoScript monoScript = FindCompiledMonoScript(identity);
-                if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(monoScript, out string guid, out long fileId))
+                try
                 {
-                    throw new InvalidOperationException(
-                        $"Unity did not provide a serialized identity for '{identity.TypeName}' " +
-                        $"from '{identity.AssemblyName}'."
-                    );
+                    result.Add(identity.SourceGuid, resolver(identity));
                 }
-
-                result.Add(
-                    identity.SourceGuid,
-                    new CompiledScriptIdentity(identity.SourceFileId, guid, fileId)
-                );
+                catch (InvalidOperationException exception)
+                {
+                    resolutionErrors.Add(identity.SourceGuid, exception.Message);
+                }
             }
 
             return result;
+        }
+
+        private static CompiledScriptIdentity ResolveCompiledScript(SDKScriptIdentity identity)
+        {
+            MonoScript monoScript = FindCompiledMonoScript(identity);
+            if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(monoScript, out string guid, out long fileId))
+            {
+                throw new InvalidOperationException(
+                    $"Unity did not provide a serialized identity for '{identity.TypeName}' " +
+                    $"from '{identity.AssemblyName}'."
+                );
+            }
+
+            return new CompiledScriptIdentity(identity.SourceFileId, guid, fileId);
         }
 
         private static MonoScript FindCompiledMonoScript(SDKScriptIdentity identity)
@@ -155,7 +199,10 @@ namespace Ksp2UnityTools.Editor.SDKAssets
             return match;
         }
 
-        private static List<SourceAsset> FindSourceAssets(string sourceRoot, ICollection<string> sourceScriptGuids)
+        private static List<SourceAsset> FindSourceAssets(
+            string sourceRoot,
+            IReadOnlyDictionary<string, SDKScriptIdentity> scriptIdentities
+        )
         {
             var result = new List<SourceAsset>();
             foreach (string sourcePath in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories))
@@ -167,7 +214,11 @@ namespace Ksp2UnityTools.Editor.SDKAssets
                     continue;
 
                 string content = File.ReadAllText(sourcePath);
-                if (!sourceScriptGuids.Any(sourceGuid => content.Contains(sourceGuid, StringComparison.Ordinal)))
+                List<string> referencedScriptGuids = scriptIdentities
+                    .Where(pair => ContainsScriptReference(content, pair.Value))
+                    .Select(pair => pair.Key)
+                    .ToList();
+                if (referencedScriptGuids.Count == 0)
                     continue;
 
                 string metaPath = sourcePath + ".meta";
@@ -179,10 +230,25 @@ namespace Ksp2UnityTools.Editor.SDKAssets
                     throw new InvalidDataException($"The SDK source metadata at '{metaPath}' has no asset GUID.");
 
                 string relativePath = Path.GetRelativePath(sourceRoot, sourcePath).Replace('\\', '/');
-                result.Add(new SourceAsset(sourcePath, metaPath, relativePath, guidMatch.Groups[1].Value));
+                result.Add(
+                    new SourceAsset(
+                        sourcePath,
+                        metaPath,
+                        relativePath,
+                        guidMatch.Groups[1].Value,
+                        referencedScriptGuids
+                    )
+                );
             }
 
             return result;
+        }
+
+        internal static bool ContainsScriptReference(string content, SDKScriptIdentity identity)
+        {
+            string pattern =
+                $@"m_Script:\s*\{{fileID:\s*{identity.SourceFileId},\s*guid:\s*{Regex.Escape(identity.SourceGuid)},\s*type:\s*3\s*\}}";
+            return Regex.IsMatch(content, pattern, RegexOptions.CultureInvariant);
         }
 
         private static Dictionary<string, string> BuildGeneratedAssetGuidMap(IEnumerable<SourceAsset> sourceAssets) =>
@@ -233,7 +299,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
             return generatedAssetPath;
         }
 
-        private static void ValidateGeneratedRoot(string generatedRoot)
+        internal static void PrepareGeneratedRoot(string generatedRoot)
         {
             if (!Directory.Exists(generatedRoot))
             {
@@ -248,6 +314,16 @@ namespace Ksp2UnityTools.Editor.SDKAssets
                     $"The generated SDK asset folder '{GENERATED_ROOT}' contains files that are not owned by the SDK compiler."
                 );
             }
+
+            if (!File.Exists(generationInfoPath))
+                return;
+
+            var previous = JsonUtility.FromJson<SDKAssetGenerationInfo>(File.ReadAllText(generationInfoPath));
+            if (previous is { CompilerVersion: COMPILER_VERSION })
+                return;
+
+            Directory.Delete(generatedRoot, true);
+            Directory.CreateDirectory(generatedRoot);
         }
 
         private static void PruneStaleFiles(string projectRoot, IReadOnlyCollection<string> generatedFiles)
@@ -257,7 +333,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
                 return;
 
             var previous = JsonUtility.FromJson<SDKAssetGenerationInfo>(File.ReadAllText(generationInfoPath));
-            if (previous == null)
+            if (previous is not { CompilerVersion: COMPILER_VERSION })
                 return;
 
             var currentFiles = new HashSet<string>(generatedFiles, StringComparer.Ordinal);
@@ -322,7 +398,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
         private static string ToAbsolutePath(string projectRoot, string assetPath) =>
             Path.GetFullPath(Path.Combine(projectRoot, assetPath.Replace('/', Path.DirectorySeparatorChar)));
 
-        private sealed class CompiledScriptIdentity
+        internal sealed class CompiledScriptIdentity
         {
             internal CompiledScriptIdentity(long sourceFileId, string guid, long fileId)
             {
@@ -344,13 +420,15 @@ namespace Ksp2UnityTools.Editor.SDKAssets
                 string sourcePath,
                 string metaPath,
                 string relativePath,
-                string sourceGuid
+                string sourceGuid,
+                List<string> referencedScriptGuids
             )
             {
                 SourcePath = sourcePath;
                 MetaPath = metaPath;
                 RelativePath = relativePath;
                 SourceGuid = sourceGuid;
+                ReferencedScriptGuids = referencedScriptGuids;
             }
 
             internal string SourcePath { get; }
@@ -360,6 +438,8 @@ namespace Ksp2UnityTools.Editor.SDKAssets
             internal string RelativePath { get; }
 
             internal string SourceGuid { get; }
+
+            internal List<string> ReferencedScriptGuids { get; }
         }
     }
 }
