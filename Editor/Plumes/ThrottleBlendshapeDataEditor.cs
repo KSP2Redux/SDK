@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using KSP.VFX;
+using Ksp2UnityTools.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace KSP.Editor
     {
         private const float UpperAtmoThresholdDefault = 0.0092f;
         private const string PresetAssetPath =
-            "Assets/Modules/KSP2UnityTools/Assets/Editor/ThrottleBlendshapePresetLibrary.asset";
+            SDKConfiguration.AUTHORING_ASSETS_PATH + "/Editor/ThrottleBlendshapePresetLibrary.asset";
         private const string ParamLockPrefix = "ThrottleBlendshapeDataEditor.ParamLock.";
         private static string _clipboardJson;
 
