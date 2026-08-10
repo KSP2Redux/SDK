@@ -14,7 +14,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     /// </remarks>
     public static class AnalyticScaledSpaceSampler
     {
-        private const string ComputeShaderPath = "Assets/Modules/KSP2UnityTools/Assets/Shaders/PlanetAuthoring/AnalyticScaledSpaceBake.compute";
+        private const string ComputeShaderPath =
+            SDKConfiguration.BasePath + "/Assets/Shaders/PlanetAuthoring/AnalyticScaledSpaceBake.compute";
 
         // Must match SUBMEAN_GRID_SIZE in AnalyticScaledSpaceBake.compute. Submeans are now
         // sized to actual sliceCount via StructuredBuffer (no fixed MAX_SLICES cap).

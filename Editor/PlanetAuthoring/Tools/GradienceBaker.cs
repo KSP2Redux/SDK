@@ -20,7 +20,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     /// </remarks>
     public static class GradienceBaker
     {
-        private const string ComputeShaderPath = "Assets/Modules/KSP2UnityTools/Assets/Shaders/PlanetAuthoring/GradienceBake.compute";
+        private const string ComputeShaderPath =
+            SDKConfiguration.BasePath + "/Assets/Shaders/PlanetAuthoring/GradienceBake.compute";
 
         /// <summary>
         /// Per-biome bake outputs.
