@@ -28,24 +28,10 @@
     padding: 0;
 }
 
-.uitk-dialog__button.unity-button.unity-text-element {
+.uitk-dialog__button {
     flex-grow: 1;
-    height: 31px;
     margin-left: 4px;
     margin-right: 4px;
     margin-top: 0;
     margin-bottom: 0;
-    border-radius: 5px;
-    background-color: rgb(20, 25, 31) !important;
-    border-color: rgb(104, 112, 130);
-    color: rgb(231, 234, 242);
-}
-
-.uitk-dialog__button.unity-button.unity-text-element:hover {
-    background-color: rgb(43, 54, 70) !important;
-    border-color: rgb(148, 157, 176);
-}
-
-.uitk-dialog__button.unity-button.unity-text-element:active {
-    background-color: rgb(65, 80, 104) !important;
 }
