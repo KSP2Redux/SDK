@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root">
+
+        <engine:DropdownField name="mode-field" label="Mode"
+                              choices="Single Tile,Batch Folder"
+                              index="0"
+                              tooltip="Single Tile packs the three source textures below. Batch Folder scans a folder, pairs files by name, and packs every tile it finds."
+                              class="sdk-field unity-base-field__aligned" />
+
+        <engine:Foldout text="Sources" value="true" class="sdk-section" name="sources-section">
+            <editor:ObjectField name="normal-field" label="Normal"
+                                type="UnityEngine.Texture2D, UnityEngine"
+                                allow-scene-objects="false"
+                                tooltip="Tangent-space normal map. Goes into the packed map's alpha (x) and green (y) channels. Compressed and non-readable sources are fine - the pack samples them on the GPU."
+                                class="sdk-field unity-base-field__aligned" />
+            <engine:DropdownField name="normal-encoding-field" label="Normal Encoding"
+                                  choices="Auto,RGB (x in red),DXT5nm (x in alpha)"
+                                  index="0"
+                                  tooltip="Where the source keeps the normal's x component. Auto reads the source's importer type and graphics format. Override it if the preview comes out with the lighting running the wrong way."
+                                  class="sdk-field unity-base-field__aligned" />
+            <engine:Toggle name="flip-green-field" label="Flip Green"
+                           tooltip="Invert the normal's green channel. Needed for sources authored in the OpenGL convention when the rest of the tile set is DirectX, or the other way around."
+                           class="sdk-field unity-base-field__aligned" />
+
+            <editor:ObjectField name="smoothness-field" label="Smoothness"
+                                type="UnityEngine.Texture2D, UnityEngine"
+                                allow-scene-objects="false"
+                                tooltip="Smoothness map. Goes into the packed map's red channel. Leave empty to fill the tile with the constant below."
+                                class="sdk-field unity-base-field__aligned" />
+            <engine:DropdownField name="smoothness-channel-field" label="Source Channel"
+                                  choices="R,G,B,A"
+                                  index="0"
+                                  tooltip="Which channel of the smoothness texture carries the value."
+                                  class="sdk-field unity-base-field__aligned" />
+            <engine:Toggle name="smoothness-invert-field" label="Invert (Roughness)"
+                           tooltip="Tick when the source is a roughness map. Smoothness is one minus roughness."
+                           class="sdk-field unity-base-field__aligned" />
+            <editor:FloatField name="smoothness-constant-field" label="Constant"
+                               value="0.5"
+                               tooltip="Smoothness written across the whole tile when no smoothness source is assigned."
+                               class="sdk-field unity-base-field__aligned" />
+
+            <editor:ObjectField name="ao-field" label="Ambient Occlusion"
+                                type="UnityEngine.Texture2D, UnityEngine"
+                                allow-scene-objects="false"
+                                tooltip="Ambient-occlusion map. Goes into the packed map's blue channel. Leave empty to fill the tile with the constant below."
+                                class="sdk-field unity-base-field__aligned" />
+            <engine:DropdownField name="ao-channel-field" label="Source Channel"
+                                  choices="R,G,B,A"
+                                  index="0"
+                                  tooltip="Which channel of the ambient-occlusion texture carries the value."
+                                  class="sdk-field unity-base-field__aligned" />
+            <editor:FloatField name="ao-constant-field" label="Constant"
+                               value="1"
+                               tooltip="Ambient occlusion written across the whole tile when no AO source is assigned. 1 is unoccluded."
+                               class="sdk-field unity-base-field__aligned" />
+
+            <engine:DropdownField name="resolution-field" label="Resolution"
+                                  choices="Match Source,512,1024,2048,4096,8192"
+                                  index="0"
+                                  tooltip="Output side length in pixels. Match Source follows the normal map's width. Tiles packed into the same Texture2DArray must all share one resolution."
+                                  class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Batch" value="false" class="sdk-section" name="batch-section">
+            <engine:TextField name="input-folder-field" label="Input Folder"
+                              readonly="true"
+                              tooltip="Folder scanned for source maps. Must be inside the project."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="input-folder-button" text="Choose Input Folder" class="sdk-action-button" />
+            <engine:TextField name="output-folder-field" label="Output Folder"
+                              readonly="true"
+                              tooltip="Folder the packed tiles are written to. Leave empty to write each tile next to its own normal source, which keeps a nested source tree's layout."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="output-folder-button" text="Choose Output Folder" class="sdk-action-button" />
+
+            <engine:Foldout text="Suffixes" value="false" class="sdk-subsection-foldout">
+                <engine:TextField name="normal-suffixes-field" label="Normal"
+                                  tooltip="Comma-separated file-name suffixes identifying a normal map. Listed earliest wins when one stem has several."
+                                  class="sdk-field unity-base-field__aligned" />
+                <engine:TextField name="smoothness-suffixes-field" label="Smoothness"
+                                  tooltip="Comma-separated file-name suffixes identifying a smoothness or gloss map."
+                                  class="sdk-field unity-base-field__aligned" />
+                <engine:TextField name="roughness-suffixes-field" label="Roughness"
+                                  tooltip="Comma-separated file-name suffixes identifying a roughness map. Roughness is inverted into smoothness on the way in."
+                                  class="sdk-field unity-base-field__aligned" />
+                <engine:TextField name="ao-suffixes-field" label="Ambient Occlusion"
+                                  tooltip="Comma-separated file-name suffixes identifying an ambient-occlusion map."
+                                  class="sdk-field unity-base-field__aligned" />
+            </engine:Foldout>
+
+            <engine:Button name="scan-button" text="Scan"
+                           tooltip="Pair the folder's files by shared name stem and list what a bake would produce, without writing anything."
+                           class="sdk-action-button" />
+            <engine:VisualElement name="scan-slot" />
+        </engine:Foldout>
+
+        <engine:Button name="bake-button" text="Bake" class="sdk-action-button" />
+
+        <engine:Foldout text="Last Bake" value="true" class="sdk-section">
+            <engine:VisualElement name="warning-slot" />
+            <engine:TextField name="path-field" label="Export Path"
+                              readonly="true"
+                              tooltip="Path of the last packed map written from this window."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:Image name="preview-image" style="height: 160px; width: 160px; margin-top: 4px;" />
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

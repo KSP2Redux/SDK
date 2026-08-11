@@ -22,8 +22,8 @@ struct Appdata
 
 int _DebugBiomeMask;
 int _DebugTriplanarBucketing;
-Buffer<uint> BucketedQuadInfoDecalIndices;
-Buffer<uint> VisibleQuadMeshIndicesMask;
+StructuredBuffer<uint> BucketedQuadInfoDecalIndices;
+StructuredBuffer<uint> VisibleQuadMeshIndicesMask;
 
 // ---------------------------------------------------------------------------
 // Debug clip-distance computation

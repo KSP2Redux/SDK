@@ -28,7 +28,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         public Texture2D AlbedoTexture;
 
         /// <summary>
-        /// Normal+packed tile texture. RGBA encodes (metallic-influence, normalY, AO, normalX) DXT5nm-style.
+        /// Normal+packed tile texture. RGBA encodes (smoothness, normalY, AO, normalX) DXT5nm-style.
         /// </summary>
         public Texture2D NormalTexture;
 

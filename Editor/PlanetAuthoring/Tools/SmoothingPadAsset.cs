@@ -16,7 +16,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     internal static class SmoothingPadAsset
     {
         public const string AssetPath =
-            SDKConfiguration.BasePath + "/Assets/DecalMaps/SmoothingPad.asset";
+            SDKConfiguration.AUTHORING_ASSETS_PATH + "/DecalMaps/SmoothingPad.asset";
 
         private static PQSDecal _cached;
 

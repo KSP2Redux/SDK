@@ -61,6 +61,140 @@
     font-size: 11px;
 }
 
+/* ===== ScatterStratumField (stratum picker) ===== */
+
+.scatter-stratum-input {
+    flex-direction: row;
+    align-items: center;
+    height: 18px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.scatter-stratum-swatch {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-right: 4px;
+    background-color: rgba(20, 22, 28, 0.6);
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.scatter-stratum-picker {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin: 0;
+    -unity-text-align: middle-left;
+}
+
+.scatter-stratum-raw {
+    width: 44px;
+    flex-shrink: 0;
+    margin-left: 4px;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.scatter-stratum-raw > .unity-base-field__input {
+    min-width: 0;
+}
+
+.scatter-stratum-detail {
+    flex-shrink: 0;
+    margin-left: 6px;
+    font-size: 10px;
+    color: rgb(150, 155, 160);
+    -unity-text-align: middle-left;
+}
+
+.scatter-stratum-detail--warning {
+    color: rgb(230, 175, 90);
+}
+
+.scatter-stratum-picker--unresolved {
+    -unity-font-style: italic;
+}
+
+/* ===== ScatterTextureRuleRow ===== */
+
+.scatter-rule-row {
+    flex-direction: column;
+    margin-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    background-color: rgba(40, 45, 55, 0.35);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.scatter-rule-row__line {
+    flex-direction: row;
+    align-items: center;
+}
+
+.scatter-rule-row__stratum {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+}
+
+.scatter-rule-row__remove {
+    width: 20px;
+    flex-shrink: 0;
+    margin-left: 4px;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.scatter-rule-row__window-label {
+    width: 48px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: rgb(170, 178, 188);
+    -unity-text-align: middle-left;
+}
+
+.scatter-rule-row__bound {
+    width: 46px;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.scatter-rule-row__bound > .unity-base-field__input {
+    min-width: 0;
+}
+
+.scatter-rule-row__slider {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-left: 6px;
+    margin-right: 6px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.scatter-rule-row__warning {
+    margin-top: 2px;
+    font-size: 10px;
+    color: rgb(230, 175, 90);
+    white-space: normal;
+}
+
 /* ===== FadeCurvePopup ===== */
 
 .fade-curve-popup-root {
