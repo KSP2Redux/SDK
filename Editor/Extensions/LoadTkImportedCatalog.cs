@@ -94,8 +94,25 @@ namespace Ksp2UnityTools.Editor.Extensions
         {
             SessionState.SetBool(PlaySessionInitializedKey, false);
             ResetAddressablesForPlayMode();
+            RemoveReduxCatalogLocator();
             EnsureImportedCatalogsLoaded();
             SessionState.SetBool(PlaySessionInitializedKey, true);
+        }
+
+        // Rebuilding the Addressables implementation for Play Mode normally drops the edit-mode
+        // locators, but the edit-mode Redux catalog registration must be gone before runtime startup
+        // registers the same catalog itself, or its bundles are loaded twice. See
+        // GetNextMissingCatalogPath for why the duplicate is fatal rather than merely wasteful.
+        private static void RemoveReduxCatalogLocator()
+        {
+            string reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
+            foreach (IResourceLocator locator in Addressables.ResourceLocators.ToArray())
+            {
+                if (locator.LocatorId == reduxCatalogFullPath)
+                {
+                    Addressables.RemoveResourceLocator(locator);
+                }
+            }
         }
 
         // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
@@ -275,8 +292,21 @@ namespace Ksp2UnityTools.Editor.Extensions
             }
 
             // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is
-            // no locator already registerd
-            if (Assembly.GetExecutingAssembly().GetName().Name == "ksp2community.ksp2unitytools.editor")
+            // no locator already registerd.
+            //
+            // Never during a play session: the game's own startup registers this same catalog by a
+            // path relative to the working directory, and it installs its own
+            // Addressables.InternalIdTransformFunc, which resolves that spelling to a different
+            // internal id than the absolute path used here. Both locators then describe the same
+            // bundle files under different ids, so every bundle is loaded a second time. Unity
+            // refuses that load ("another AssetBundle with the same files is already loaded"), which
+            // cascades into dependency failures for whole labels (fonts, spacewarp-ui, cb_cards,
+            // redux_patches, ...) and null assets in the callbacks consuming them. Leave the catalog
+            // to the runtime while playing; edit-mode tooling still gets it registered here.
+            if (
+                Assembly.GetExecutingAssembly().GetName().Name == "ksp2community.ksp2unitytools.editor"
+                && !EditorApplication.isPlayingOrWillChangePlaymode
+            )
             {
                 string reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
                 if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
