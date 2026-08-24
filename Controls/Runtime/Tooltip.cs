@@ -194,16 +194,37 @@ namespace UitkForKsp2.Controls
             style.visibility = Visibility.Visible;
             style.opacity = 0f;
 
+            Vector2 previousSize = default;
+            int stableLayoutFrames = 0;
             task = schedule.Execute(() =>
-            {
-                if (version != transitionVersion || !IsAttached(target))
                 {
-                    return;
-                }
+                    if (version != transitionVersion || !IsAttached(target))
+                    {
+                        task?.Pause();
+                        return;
+                    }
 
-                PositionForTarget(target, hint);
-                StartOpacityAnimation(0f, 1f, fadeInDuration, version, hideWhenComplete: false);
-            });
+                    Vector2 currentSize = worldBound.size;
+                    if (currentSize.x <= 0f ||
+                        currentSize.y <= 0f ||
+                        !Mathf.Approximately(currentSize.x, previousSize.x) ||
+                        !Mathf.Approximately(currentSize.y, previousSize.y))
+                    {
+                        previousSize = currentSize;
+                        stableLayoutFrames = 0;
+                        return;
+                    }
+
+                    stableLayoutFrames++;
+                    if (stableLayoutFrames < 2)
+                    {
+                        return;
+                    }
+
+                    PositionForTarget(target, hint);
+                    StartOpacityAnimation(0f, 1f, fadeInDuration, version, hideWhenComplete: false);
+                })
+                .Every(FadeStepMilliseconds);
         }
 
         private void PositionForTarget(VisualElement target, char hint)
@@ -256,7 +277,7 @@ namespace UitkForKsp2.Controls
                 top = parentBounds.yMax - worldBound.height;
             }
 
-            Vector2 localPosition = parent.WorldToLocal(new Vector2(left, top));
+            Vector2 localPosition = parent.contentContainer.WorldToLocal(new Vector2(left, top));
             style.left = localPosition.x;
             style.top = localPosition.y;
         }
