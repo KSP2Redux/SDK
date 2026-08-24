@@ -356,7 +356,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 
             return trimmed switch
             {
-                "XSMINUS" => PartSizeRegistry.TwoXs,
+                "XXS" => PartSizeRegistry.TwoXs,
                 "XSPLUS" => PartSizeRegistry.XsPlus,
                 "S" => PartSizeRegistry.Sm,
                 "SPLUS" => PartSizeRegistry.SmPlus,
