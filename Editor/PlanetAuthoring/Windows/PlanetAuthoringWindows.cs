@@ -38,6 +38,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         public const int PriorityLandmarkManager = 140;
 
         /// <summary>
+        /// Menu priority for the Resource Maps window.
+        /// </summary>
+        public const int PriorityResourceMaps = 150;
+
+        /// <summary>
         /// Menu priority for the Preset Browser window.
         /// </summary>
         public const int PriorityPresetBrowser = 160;
