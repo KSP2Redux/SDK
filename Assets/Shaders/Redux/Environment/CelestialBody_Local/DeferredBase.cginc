@@ -160,6 +160,38 @@ GBufferOutput frag(V2F i)
     float4 albedoSample   = _AlbedoScaledTex.Sample(sampler_LinearRepeat, uv);
     float4 packedSample   = _PackedScaledTex.Sample(sampler_LinearRepeat, uv);
     float4 emissionSample = _EmissionScaledTex.Sample(sampler_LinearRepeat, uv);
+
+    uint packedWidth;
+    uint packedHeight;
+    uint packedMipCount;
+    _PackedScaledTex.GetDimensions(0, packedWidth, packedHeight, packedMipCount);
+
+    float scaledSmoothness = packedSample.w;
+    if (packedMipCount <= 1)
+    {
+        // A few stock scaled packed maps were imported without mipmaps. Average
+        // their smoothness over the screen-space footprint so distant highlights
+        // do not collapse into bright, single-pixel specular aliases.
+        float2 uvDx = ddx(uv);
+        float2 uvDy = ddy(uv);
+        scaledSmoothness = 0.0;
+        [unroll]
+        for (int y = 0; y < 4; ++y)
+        {
+            [unroll]
+            for (int x = 0; x < 4; ++x)
+            {
+                float2 footprintOffset = uvDx * ((x + 0.5) * 0.25 - 0.5)
+                                       + uvDy * ((y + 0.5) * 0.25 - 0.5);
+                scaledSmoothness += _PackedScaledTex.Sample(
+                    sampler_LinearRepeat,
+                    uv + footprintOffset
+                ).w;
+            }
+        }
+
+        scaledSmoothness *= 0.0625;
+    }
     // projRatio source: per-biome coverage from _BiomeMaskTex (R/G/B/A weights).
     // The eventual `R / sum(R,G,B,A)` is "how dominant is biome R at this pixel".
     float4 projSample     = _BiomeMaskTex.Sample(sampler_LinearRepeat, uv);
@@ -195,7 +227,7 @@ GBufferOutput frag(V2F i)
     float  packedResample = normalResample * (1.0 - packedFade);
     float3 packedScaled   = packedFade * (1.0 - packedResample) * packedSample.xwy;
     float  metallic   = packedScaled.x;
-    float  smoothness = packedScaled.y;
+    float  smoothness = packedFade * (1.0 - packedResample) * scaledSmoothness;
     float  occlusion  = packedScaled.z;
 
     // GBuffer split.
