@@ -20,7 +20,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
         );
 
 #if REDUX
-        [MenuItem("Tools/KSP2 Unity Tools/SDK Assets/Update Script Identity Manifest")]
+        [MenuItem("Modding/SDK Maintenance/Update Script Identity Manifest", false, 900)]
         private static void UpdateManifestFromMenu()
         {
             bool wasUpdated = UpdateManifest();

@@ -25,6 +25,8 @@ namespace Ksp2UnityTools.Editor.Extensions
         private const string PlaySessionInitializedKey =
             "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
 
+        private const string BaseGameCatalogProbeKey = "kspFlow.unity";
+
         private static bool _catalogLoadScheduled;
         private static bool _catalogLoadInProgress;
         private static bool _catalogLoadWaitInProgress;
@@ -269,7 +271,14 @@ namespace Ksp2UnityTools.Editor.Extensions
                 return null;
             }
 
-            if (!IsCatalogLoaded(ksp2CatalogFullPath))
+            // BundleKit and other editor integrations can register the stock
+            // catalog under its catalog ID instead of this imported file path.
+            // Loading it again duplicates every stock location and can leave
+            // systems such as cloud rendering with mismatched result lists.
+            if (
+                !CatalogKeyIsRegistered(BaseGameCatalogProbeKey)
+                && !IsCatalogLoaded(ksp2CatalogFullPath)
+            )
             {
                 return ksp2CatalogFullPath;
             }
@@ -291,6 +300,18 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static bool IsCatalogLoaded(string catalogPath)
         {
             return Addressables.ResourceLocators.Any(locator => locator.LocatorId == catalogPath);
+        }
+
+        private static bool CatalogKeyIsRegistered(string key)
+        {
+            return Addressables.ResourceLocators.Any(
+                locator =>
+                    locator != null
+                    && locator.Keys.OfType<string>().Any(
+                        candidate =>
+                            string.Equals(candidate, key, StringComparison.Ordinal)
+                    )
+            );
         }
 
         // Addressables stores this transform on its internal implementation. With Reload Domain

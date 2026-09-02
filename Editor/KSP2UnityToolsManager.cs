@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,19 +18,23 @@ namespace Ksp2UnityTools.Editor
     {
         private const string BootKspSceneFileName = "boot-ksp.unity";
         private const string PreferredBootKspScenePath = "Assets/boot-ksp.unity";
+        private const string SettingsAssetPath = "Assets/ReduxSDKSettings.asset";
+        private const string LegacySettingsAssetPath = "Assets/KSP2UTSettings.asset";
         public static readonly KSP2UnityToolsSettings Settings;
 
         static KSP2UnityToolsManager()
         {
-            if (!File.Exists("Assets/KSP2UTSettings.asset"))
+            MoveLegacyAsset(LegacySettingsAssetPath, SettingsAssetPath);
+
+            if (!File.Exists(SettingsAssetPath))
             {
                 Settings = ScriptableObject.CreateInstance<KSP2UnityToolsSettings>();
-                AssetDatabase.CreateAsset(Settings, "Assets/KSP2UTSettings.asset");
+                AssetDatabase.CreateAsset(Settings, SettingsAssetPath);
                 AssetDatabase.SaveAssets();
             }
             else
             {
-                Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>("Assets/KSP2UTSettings.asset");
+                Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>(SettingsAssetPath);
             }
 
 #if !REDUX
@@ -55,36 +58,20 @@ namespace Ksp2UnityTools.Editor
 #endif
         }
 
-
-        private static Dictionary<string, PersistentDictionary> StoredDictionaries = new();
-
-        public static PersistentDictionary GetDictionary(string dictionaryName)
+        private static void MoveLegacyAsset(string legacyPath, string currentPath)
         {
-            if (StoredDictionaries.TryGetValue(dictionaryName, out PersistentDictionary result))
-            {
-                return result;
-            }
+            if (!File.Exists(legacyPath) && !Directory.Exists(legacyPath))
+                return;
 
-            if (!Directory.Exists("Assets/KSP2UTData"))
-            {
-                Directory.CreateDirectory("Assets/KSP2UTData");
-            }
+            if (File.Exists(currentPath) || Directory.Exists(currentPath))
+                return;
 
-            if (!File.Exists($"Assets/KSP2UTData/{dictionaryName}.asset"))
-            {
-                PersistentDictionary dict = StoredDictionaries[dictionaryName] =
-                    ScriptableObject.CreateInstance<PersistentDictionary>();
-                AssetDatabase.CreateAsset(dict, $"Assets/KSP2UTData/{dictionaryName}.asset");
-                AssetDatabase.SaveAssets();
-                return dict;
-            }
-            else
-            {
-                return StoredDictionaries[dictionaryName] =
-                    AssetDatabase.LoadAssetAtPath<PersistentDictionary>($"Assets/KSP2UTData/{dictionaryName}.asset");
-            }
+            string error = AssetDatabase.MoveAsset(legacyPath, currentPath);
+            if (!string.IsNullOrEmpty(error))
+                UnityEngine.Debug.LogError(
+                    $"Redux SDK could not rename '{legacyPath}' to '{currentPath}': {error}"
+                );
         }
-
 
         public static async Task TestModsInPlayMode(params Mod[] mods)
         {

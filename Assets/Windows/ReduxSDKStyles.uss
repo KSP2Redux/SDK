@@ -1,9 +1,9 @@
 /* ============================================================================
- * Ksp2UnityToolsStyles.uss
+ * ReduxSDKStyles.uss
  *
  * Single source of truth for editor inspector + editor window theming across
- * every tool that ships in the KSP2UnityTools SDK package. Loaded into a root
- * VisualElement via Ksp2UnityToolsStyles.Apply; window-specific overrides
+ * every tool that ships in the Redux SDK package. Loaded into a root
+ * VisualElement via the shared style loader; window-specific overrides
  * layer on top in argument order.
  *
  * Currently used by the Planet Authoring tool family (Preview Controls,

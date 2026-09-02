@@ -13,7 +13,9 @@ namespace Ksp2UnityTools.Editor.SDKAssets
     internal static class SDKAssetCompiler
     {
         private const int COMPILER_VERSION = 1;
-        private const string GENERATED_ROOT = "Assets/KSP2UnityTools/GeneratedSDKAssets";
+        private const string GENERATED_ROOT = "Assets/ReduxSDK/Generated/AuthoringAssets";
+        private const string INTERIM_GENERATED_ROOT = "Assets/ReduxSDK/GeneratedSDKAssets";
+        private const string LEGACY_GENERATED_ROOT = "Assets/KSP2UnityTools/GeneratedSDKAssets";
         private const string GENERATION_INFO_FILE = "GenerationInfo.json";
         private const string GUID_NAMESPACE = "ksp2unitytools-sdk-assets-v1:";
         private static readonly string[] SERIALIZED_ASSET_EXTENSIONS = { ".asset", ".prefab", ".unity" };
@@ -29,7 +31,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
             string sourceRoot = ToAbsolutePath(projectRoot, SDKConfiguration.BasePath + "/Assets");
             if (!Directory.Exists(sourceRoot))
                 throw new DirectoryNotFoundException(
-                    $"KSP2UnityTools SDK asset source was not found at '{sourceRoot}'."
+                    $"Redux SDK asset source was not found at '{sourceRoot}'."
                 );
 
             SDKScriptIdentityManifest manifest = LoadManifest(projectRoot);
@@ -69,6 +71,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
 
             Dictionary<string, string> generatedAssetGuids = BuildGeneratedAssetGuidMap(compilableAssets);
             string generatedRoot = ToAbsolutePath(projectRoot, GENERATED_ROOT);
+            RemoveObsoleteGeneratedRoots(projectRoot);
             PrepareGeneratedRoot(generatedRoot);
 
             var generatedFiles = new List<string>(compilableAssets.Count);
@@ -324,6 +327,27 @@ namespace Ksp2UnityTools.Editor.SDKAssets
 
             Directory.Delete(generatedRoot, true);
             Directory.CreateDirectory(generatedRoot);
+        }
+
+        private static void RemoveObsoleteGeneratedRoots(string projectRoot)
+        {
+            RemoveObsoleteGeneratedRoot(projectRoot, INTERIM_GENERATED_ROOT);
+            RemoveObsoleteGeneratedRoot(projectRoot, LEGACY_GENERATED_ROOT);
+        }
+
+        private static void RemoveObsoleteGeneratedRoot(string projectRoot, string assetPath)
+        {
+            string absolutePath = ToAbsolutePath(projectRoot, assetPath);
+            string generationInfoPath = Path.Combine(absolutePath, GENERATION_INFO_FILE);
+            if (!File.Exists(generationInfoPath))
+                return;
+
+            if (!AssetDatabase.DeleteAsset(assetPath))
+            {
+                throw new IOException(
+                    $"Could not remove the obsolete generated SDK asset folder '{assetPath}'."
+                );
+            }
         }
 
         private static void PruneStaleFiles(string projectRoot, IReadOnlyCollection<string> generatedFiles)
