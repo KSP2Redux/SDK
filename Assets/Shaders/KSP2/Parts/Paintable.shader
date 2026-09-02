@@ -6,7 +6,7 @@ Shader "KSP2/Parts/Paintable"
         _Color ("Albedo Tint", Color) = (1,1,1,1)
         _MainTex ("Albedo", 2D) = "white" {}
         [NoScaleOffset] _MetallicGlossMap ("Metallic / Smoothness", 2D) = "white" {}
-        [Gamma] _Metallic ("Metallic Strength", Range(0, 1)) = 0
+        [Gamma] _Metallic ("Metallic Strength", Range(0, 1)) = 1
         _GlossMapScale ("Smoothness Strength", Range(0, 1)) = 1
         _MipBias ("Texture Mip Bias", Range(0, 1)) = 0.8
 

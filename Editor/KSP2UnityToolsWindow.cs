@@ -8,6 +8,8 @@ namespace Ksp2UnityTools.Editor
 {
     public class KSP2UnityToolsWindow : EditorWindow
     {
+        private const string SelectedModPrefPrefix = "KSP2UnityTools.SelectedMod";
+
         [MenuItem("Modding/Redux SDK")]
         public static void ShowWindow()
         {
@@ -58,13 +60,24 @@ namespace Ksp2UnityTools.Editor
                 string assetPath = AssetDatabase.GUIDToAssetPath(mod);
                 var modObject = AssetDatabase.LoadAssetAtPath<Mod>(assetPath);
                 _allMods.Add(modObject);
+                bool isSelected = EditorPrefs.GetBool(GetSelectedModPrefKey(mod), false);
+                if (isSelected && !_selectedMods.Contains(modObject))
+                {
+                    _selectedMods.Add(modObject);
+                }
+                else if (!isSelected)
+                {
+                    _selectedMods.Remove(modObject);
+                }
+
                 var toggle = new Toggle
                 {
                     label = modObject.name,
-                    value = _selectedMods.Contains(modObject)
+                    value = isSelected
                 };
                 toggle.RegisterValueChangedCallback(evt =>
                     {
+                        EditorPrefs.SetBool(GetSelectedModPrefKey(mod), evt.newValue);
                         if (evt.newValue)
                         {
                             if (!_selectedMods.Contains(modObject))
@@ -85,6 +98,13 @@ namespace Ksp2UnityTools.Editor
             }
 
             _selectedMods.RemoveAll(x => !_allMods.Contains(x));
+        }
+
+        private static string GetSelectedModPrefKey(string modGuid)
+        {
+            string projectPath = Application.dataPath.Replace('\\', '/').TrimEnd('/').ToLowerInvariant();
+            string encodedProjectPath = System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(projectPath));
+            return $"{SelectedModPrefPrefix}.{encodedProjectPath}.{modGuid}";
         }
     }
 }

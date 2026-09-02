@@ -300,6 +300,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             AddDataFieldRow(foldout, "CapRadius", "Cap Radius");
             AddDataFieldRow(foldout, "CloseRadius", "Close Radius");
             AddDataFieldRow(foldout, "MaxRadius", "Max Radius");
+            AddDataFieldRow(foldout, "LocalUpAxis", "Local Axis");
             AddDataFieldRow(foldout, "CrossSectionHeightMin", "Min Section Height");
             AddDataFieldRow(foldout, "CrossSectionHeightMax", "Max Section Height");
             AddDataFieldRow(foldout, "LengthEditMinimum", "Length Min");

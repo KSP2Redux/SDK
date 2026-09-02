@@ -88,7 +88,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         /// a closest-family fallback used when the exact match is missing.
         /// </summary>
         /// <remarks>
-        /// Adjacency walks the natural size order (XS- through 6XL) using <c>_orderedSizeKeys</c>.
+        /// Adjacency walks the natural size order (XXS through 6XL) using <c>_orderedSizeKeys</c>.
         /// </remarks>
         /// <param name="family">Family to look up.</param>
         /// <param name="sizeKey">Size key to look up.</param>
@@ -286,7 +286,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 
         private static readonly string[] _orderedSizeKeys =
         {
-            PartSizeRegistry.XsMinus,
+            PartSizeRegistry.TwoXs,
             PartSizeRegistry.Xs,
             PartSizeRegistry.XsPlus,
             PartSizeRegistry.Sm,
@@ -356,7 +356,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 
             return trimmed switch
             {
-                "XSMINUS" => PartSizeRegistry.XsMinus,
+                "XXS" => PartSizeRegistry.TwoXs,
                 "XSPLUS" => PartSizeRegistry.XsPlus,
                 "S" => PartSizeRegistry.Sm,
                 "SPLUS" => PartSizeRegistry.SmPlus,
