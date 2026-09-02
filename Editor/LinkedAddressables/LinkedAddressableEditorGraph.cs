@@ -2,6 +2,7 @@ using Ksp2UnityTools.LinkedAddressables;
 using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -1287,13 +1288,26 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (
                 faceInfoProperty?.CanWrite != true
                 || unitsPerEmField == null
-                || (int)unitsPerEmField.GetValue(boxedFaceInfo) != 0
             )
             {
                 return;
             }
 
-            unitsPerEmField.SetValue(boxedFaceInfo, 1000);
+            object unitsPerEm = unitsPerEmField.GetValue(boxedFaceInfo);
+            if (
+                unitsPerEm == null
+                || Convert.ToSingle(unitsPerEm, CultureInfo.InvariantCulture) != 0f
+            )
+            {
+                return;
+            }
+
+            object fallbackUnitsPerEm = Convert.ChangeType(
+                1000,
+                unitsPerEmField.FieldType,
+                CultureInfo.InvariantCulture
+            );
+            unitsPerEmField.SetValue(boxedFaceInfo, fallbackUnitsPerEm);
             faceInfoProperty.SetValue(fontAsset, boxedFaceInfo);
         }
 
