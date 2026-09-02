@@ -1,4 +1,4 @@
-using BundleKit.LinkedAddressables.Editor;
+using Ksp2UnityTools.Editor.LinkedAddressables;
 using Ksp2UnityTools.PrefabPatchingAuthoring;
 using PatchManager.PrefabPatching;
 using System;
@@ -13,11 +13,12 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
-namespace Ksp2UnityTools.Editor.PrefabPatching;
+namespace Ksp2UnityTools.Editor.PrefabPatching
+{
 
 /// <summary>
 /// Guided editor workflow for creating, editing, and compiling a visual prefab
-/// patch from a BundleKit linked prefab.
+/// patch from a KSP2UnityTools linked prefab.
 /// </summary>
 public static class PrefabPatchAuthoringWorkflow
 {
@@ -261,7 +262,7 @@ public static class PrefabPatchAuthoringWorkflow
         if (!TryGetLinkedRoot(linkedPrefab, out _))
         {
             diagnostics.Add(
-                "Select the root GameObject of a BundleKit linked prefab."
+                "Select the root GameObject of a KSP2UnityTools linked prefab."
             );
         }
         if (!IsIdentifier(modId))
@@ -834,4 +835,5 @@ internal sealed class PrefabPatchAssetSaveHook
         }
         return paths;
     }
+}
 }

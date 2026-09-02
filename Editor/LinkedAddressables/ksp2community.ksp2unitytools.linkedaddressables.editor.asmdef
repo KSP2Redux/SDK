@@ -1,0 +1,27 @@
+{
+    "name": "ksp2community.ksp2unitytools.linkedaddressables.editor",
+    "rootNamespace": "Ksp2UnityTools.Editor.LinkedAddressables",
+    "references": [
+        "ksp2community.ksp2unitytools.linkedaddressables",
+        "ThunderKit.Common",
+        "ThunderKit.Core",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "Unity.ResourceManager",
+        "Unity.ScriptableBuildPipeline",
+        "Unity.ScriptableBuildPipeline.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Ksp2UnityTools.AssetsTools.NET.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

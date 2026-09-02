@@ -17,6 +17,7 @@
   },
   "hideInEditor": false,
   "dependencies": {
-    "com.unity.addressables": "1.21.18"
+    "com.unity.addressables": "1.21.18",
+    "com.unity.scriptablebuildpipeline": "1.19.3"
   }
 }

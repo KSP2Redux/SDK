@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Ksp2UnityTools.Editor.PrefabPatching;
+namespace Ksp2UnityTools.Editor.PrefabPatching
+{
 
 public sealed class PrefabPatchCompileException : Exception
 {
@@ -27,4 +28,5 @@ public sealed class PrefabPatchCompileResult
     public string OutputPath;
     public string VariantPath;
     public string BaseDescriptorPath;
+}
 }

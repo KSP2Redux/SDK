@@ -1,4 +1,4 @@
-using BundleKit.LinkedAddressables.Editor;
+using Ksp2UnityTools.Editor.LinkedAddressables;
 using Ksp2UnityTools.PrefabPatchingAuthoring;
 using PatchManager.PrefabPatching;
 using System;
@@ -15,7 +15,8 @@ using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Ksp2UnityTools.Editor.PrefabPatching;
+namespace Ksp2UnityTools.Editor.PrefabPatching
+{
 
 /// <summary>
 /// Strict Unity-prefab-variant frontend for the public prefab patch schema.
@@ -152,7 +153,7 @@ public static class PrefabVariantPatchCompiler
                 new[]
                 {
                     $"Variant '{variantPath}' is not based directly on a "
-                        + "BundleKit linked prefab with a public source map."
+                        + "KSP2UnityTools linked prefab with a public source map."
                 }
             );
         }
@@ -1164,7 +1165,7 @@ public static class PrefabVariantPatchCompiler
         )
         {
             error =
-                "does not resolve to a BundleKit CAB/path-ID source identity.";
+                "does not resolve to a KSP2UnityTools CAB/path-ID source identity.";
             return false;
         }
 
@@ -1780,4 +1781,5 @@ public static class PrefabVariantPatchCompiler
             true
         );
     }
+}
 }

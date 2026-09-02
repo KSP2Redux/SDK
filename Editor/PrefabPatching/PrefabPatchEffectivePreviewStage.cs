@@ -11,7 +11,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-namespace Ksp2UnityTools.Editor.PrefabPatching;
+namespace Ksp2UnityTools.Editor.PrefabPatching
+{
 
 /// <summary>
 /// Read-only Unity stage showing the effective result of every compiled patch
@@ -228,4 +229,5 @@ public sealed class PrefabPatchEffectivePreviewStage : PreviewSceneStage
             DestroyImmediate(previewInstance);
         base.OnCloseStage();
     }
+}
 }

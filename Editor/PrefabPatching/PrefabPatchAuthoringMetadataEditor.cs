@@ -1,11 +1,13 @@
 using System.IO;
+using Ksp2UnityTools.Editor.LinkedAddressables;
 using Ksp2UnityTools.PrefabPatchingAuthoring;
 using PatchManager.PrefabPatching;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Ksp2UnityTools.Editor.PrefabPatching;
+namespace Ksp2UnityTools.Editor.PrefabPatching
+{
 
 /// <summary>
 /// Inspector for the authoring metadata embedded directly in a prefab-patch
@@ -179,8 +181,7 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
         if (
             variant == null
             || basePrefab == null
-            || !BundleKit.LinkedAddressables.Editor
-                .LinkedAddressableEditorIdentity.TryGet(
+            || !LinkedAddressableEditorIdentity.TryGet(
                     basePrefab,
                     out var identity
                 )
@@ -188,7 +189,7 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
         {
             EditorGUILayout.HelpBox(
                 "This component must be on the root of a prefab variant based "
-                    + "directly on a BundleKit linked prefab.",
+                    + "directly on a KSP2UnityTools linked prefab.",
                 MessageType.Error
             );
             return;
@@ -332,4 +333,5 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
         statusType = MessageType.Error;
         Debug.LogException(exception);
     }
+}
 }

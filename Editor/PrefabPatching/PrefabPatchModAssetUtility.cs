@@ -10,7 +10,8 @@ using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Ksp2UnityTools.Editor.PrefabPatching;
+namespace Ksp2UnityTools.Editor.PrefabPatching
+{
 
 internal readonly struct PrefabPatchModAssetInfo
 {
@@ -261,4 +262,5 @@ internal static class PrefabPatchModAssetUtility
             BindingFlags.Public | BindingFlags.Instance
         )?.GetValue(instance);
     }
+}
 }
