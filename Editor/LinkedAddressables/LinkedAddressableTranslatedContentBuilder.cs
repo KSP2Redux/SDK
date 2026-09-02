@@ -14,11 +14,11 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
     public static class LinkedAddressableTranslatedContentBuilder
     {
         public const string SceneBundleName =
-            "ksp2ut-linked-player-scenes.bundle";
+            "redux-sdk-linked-player-scenes.bundle";
         public const string AssetBundleName =
-            "ksp2ut-linked-player-assets.bundle";
+            "redux-sdk-linked-player-assets.bundle";
         public const string OutputDirectory =
-            "Library/KSP2UnityTools/LinkedAddressables/TranslatedContent";
+            "Library/ReduxSDK/LinkedAddressables/TranslatedContent";
         public const string StagingDirectory =
             OutputDirectory + "/Staged";
         public const string ReceiptPath =
@@ -197,7 +197,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (logResult)
             {
                 Debug.Log(
-                    $"[KSP2UnityTools.LinkedAddressables.Build] Built "
+                    $"[ReduxSDK.LinkedAddressables.Build] Built "
                         + $"{stagedBundleNames.Count} translated target bundle(s), "
                         + $"and used {identifiers.UsedMappings.Count} of "
                         + $"{translation.Objects.Count} source-object translations. "

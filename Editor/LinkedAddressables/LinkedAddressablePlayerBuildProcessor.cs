@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         : IPreprocessBuildWithReport,
             IPostprocessBuildWithReport
     {
-        private const string LogPrefix = "[KSP2UnityTools.LinkedAddressables.Build]";
+        private const string LogPrefix = "[ReduxSDK.LinkedAddressables.Build]";
         private const string JsonCatalogDefine = "ENABLE_JSON_CATALOG";
 
         public int callbackOrder => -1000;
@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (report.summary.platform != BuildTarget.StandaloneWindows64)
             {
                 throw new BuildFailedException(
-                    "KSP2UnityTools linked Addressables currently support only "
+                    "Redux SDK linked Addressables currently support only "
                         + "StandaloneWindows64 player builds."
                 );
             }
@@ -87,15 +87,15 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             var externalAddressablesDirectory = Path.Combine(
                 streamingAssetsDirectory,
                 manifest?.StagedExternalMetadataRelativePath
-                    ?? "KSP2UnityTools/ExternalAddressables"
+                    ?? "ReduxSDK/ExternalAddressables"
             );
             var translatedDirectory = Path.Combine(
                 streamingAssetsDirectory,
-                manifest?.ContentDirectoryName ?? "KSP2UnityTools/LinkedAddressables"
+                manifest?.ContentDirectoryName ?? "ReduxSDK/LinkedAddressables"
             );
             var receiptDirectory = Path.Combine(
                 streamingAssetsDirectory,
-                "KSP2UnityTools"
+                "ReduxSDK"
             );
             var receiptPath = Path.Combine(
                 receiptDirectory,
@@ -342,7 +342,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (!File.Exists(LinkedAddressableTranslatedContentBuilder.ReceiptPath))
             {
                 throw new BuildFailedException(
-                    "Translated linked content has not been built. Use the KSP2UnityTools "
+                    "Translated linked content has not been built. Use the Redux SDK "
                         + "linked-player build command so content translation runs first."
                 );
             }

@@ -8,7 +8,7 @@ namespace Ksp2UnityTools.Editor
 {
     public class KSP2UnityToolsWindow : EditorWindow
     {
-        private const string SelectedModPrefPrefix = "KSP2UnityTools.SelectedMod";
+        private const string SelectedModPrefPrefix = "ReduxSDK.SelectedMod";
 
         [MenuItem("Modding/Redux SDK")]
         public static void ShowWindow()
@@ -24,10 +24,10 @@ namespace Ksp2UnityTools.Editor
         private void CreateGUI()
         {
             var asset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                SDKConfiguration.BasePath + "/Assets/Windows/KSP2UnityTools.uxml"
+                SDKConfiguration.BasePath + "/Assets/Windows/ReduxSDK.uxml"
             );
             rootVisualElement.Add(asset.Instantiate());
-            Ksp2UnityToolsStyles.Apply(rootVisualElement, "/Assets/Windows/KSP2UnityTools.uss");
+            Ksp2UnityToolsStyles.Apply(rootVisualElement, "/Assets/Windows/ReduxSDK.uss");
 
             var refreshButton = rootVisualElement.Q<Button>("RefreshModsButton");
             refreshButton.clicked += RefreshModList;

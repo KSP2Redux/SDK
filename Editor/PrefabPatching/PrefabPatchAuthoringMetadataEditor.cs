@@ -189,7 +189,7 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
         {
             EditorGUILayout.HelpBox(
                 "This component must be on the root of a prefab variant based "
-                    + "directly on a KSP2UnityTools linked prefab.",
+                    + "directly on a Redux SDK linked prefab.",
                 MessageType.Error
             );
             return;

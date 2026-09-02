@@ -16,9 +16,9 @@ namespace Ksp2UnityTools.LinkedAddressables
 {
     public static class LinkedAddressableRuntime
     {
-        private const string LogPrefix = "[KSP2UnityTools.LinkedAddressables]";
+        private const string LogPrefix = "[ReduxSDK.LinkedAddressables]";
         public const string SourceRootPropertyName =
-            "KSP2UnityTools.LinkedAddressables.SourceRoot";
+            "ReduxSDK.LinkedAddressables.SourceRoot";
 
         private static readonly HashSet<string> LoadedStableIds = new HashSet<string>(
             StringComparer.Ordinal
@@ -204,11 +204,11 @@ namespace Ksp2UnityTools.LinkedAddressables
             if (Application.isEditor)
             {
                 // Keep the project's normal Play Mode initialization in the
-                // editor. Editor integrations such as KSP2UnityTools register
+                // editor. Editor integrations such as the Redux SDK register
                 // the imported game catalog alongside it. Initializing from
                 // the installed game's settings here would register that same
                 // stock catalog a second time under a different locator ID.
-                // The editor catalog waiter below falls back to KSP2UnityTools'
+                // The editor catalog waiter below falls back to the Redux SDK's
                 // staged external catalog when no integration provides one.
                 initializationHandle = Addressables.InitializeAsync(false);
             }
@@ -397,7 +397,7 @@ namespace Ksp2UnityTools.LinkedAddressables
                 var catalogLoad = Addressables.LoadContentCatalogAsync(
                     catalogPath,
                     false,
-                    "KSP2UnityTools.External"
+                    "ReduxSDK.External"
                 );
                 catalogLoad.Completed += OnCatalogLoaded;
                 return;
@@ -531,7 +531,7 @@ namespace Ksp2UnityTools.LinkedAddressables
             var catalogLoad = Addressables.LoadContentCatalogAsync(
                 catalogPath,
                 false,
-                "KSP2UnityTools.External"
+                "ReduxSDK.External"
             );
             catalogLoad.Completed += OnCatalogLoaded;
         }
@@ -877,7 +877,7 @@ namespace Ksp2UnityTools.LinkedAddressables
             return Path.Combine(
                 Application.streamingAssetsPath,
                 runtimeManifest.ContentDirectoryName
-                    ?? "KSP2UnityTools/LinkedAddressables"
+                    ?? "ReduxSDK/LinkedAddressables"
             );
         }
 
@@ -919,7 +919,7 @@ namespace Ksp2UnityTools.LinkedAddressables
                 Path.Combine(
                     Application.streamingAssetsPath,
                     runtimeManifest.StagedExternalMetadataRelativePath
-                        ?? "KSP2UnityTools/ExternalAddressables"
+                        ?? "ReduxSDK/ExternalAddressables"
                 )
             );
         }

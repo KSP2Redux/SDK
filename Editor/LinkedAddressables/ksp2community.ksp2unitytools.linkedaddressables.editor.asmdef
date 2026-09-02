@@ -18,7 +18,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Ksp2UnityTools.AssetsTools.NET.dll"
+        "ReduxSDK.AssetsTools.NET.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

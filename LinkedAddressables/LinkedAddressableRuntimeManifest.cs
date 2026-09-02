@@ -6,7 +6,7 @@ namespace Ksp2UnityTools.LinkedAddressables
     public sealed class LinkedAddressableRuntimeManifest : ScriptableObject
     {
         public const string ResourcePath =
-            "KSP2UnityTools/LinkedAddressableRuntimeManifest";
+            "ReduxSDK/LinkedAddressableRuntimeManifest";
 
         public string SourceId;
         public string SourceRoot;

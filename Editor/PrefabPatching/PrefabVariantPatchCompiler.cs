@@ -153,7 +153,7 @@ public static class PrefabVariantPatchCompiler
                 new[]
                 {
                     $"Variant '{variantPath}' is not based directly on a "
-                        + "KSP2UnityTools linked prefab with a public source map."
+                        + "Redux SDK linked prefab with a public source map."
                 }
             );
         }
@@ -1165,7 +1165,7 @@ public static class PrefabVariantPatchCompiler
         )
         {
             error =
-                "does not resolve to a KSP2UnityTools CAB/path-ID source identity.";
+                "does not resolve to a Redux SDK CAB/path-ID source identity.";
             return false;
         }
 

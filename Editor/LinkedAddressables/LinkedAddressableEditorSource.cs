@@ -45,7 +45,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
 
             AssetBundle.UnloadAllAssetBundles(true);
             Debug.Log(
-                $"[KSP2UnityTools.LinkedAddressables] Unloaded "
+                $"[ReduxSDK.LinkedAddressables] Unloaded "
                     + $"{loadedBundleCount} edit-time AssetBundle(s) before play mode."
             );
         }

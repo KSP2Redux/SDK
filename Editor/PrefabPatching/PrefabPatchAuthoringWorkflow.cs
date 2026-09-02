@@ -18,7 +18,7 @@ namespace Ksp2UnityTools.Editor.PrefabPatching
 
 /// <summary>
 /// Guided editor workflow for creating, editing, and compiling a visual prefab
-/// patch from a KSP2UnityTools linked prefab.
+/// patch from a Redux SDK linked prefab.
 /// </summary>
 public static class PrefabPatchAuthoringWorkflow
 {
@@ -200,7 +200,7 @@ public static class PrefabPatchAuthoringWorkflow
     {
         var result = PrefabVariantPatchCompiler.Compile(metadata);
         Debug.Log(
-            $"[KSP2UnityTools.PrefabPatching] Compiled '{result.Manifest.PatchId}' "
+            $"[ReduxSDK.PrefabPatching] Compiled '{result.Manifest.PatchId}' "
                 + $"with {result.Manifest.Operations.Count} operation(s) to "
                 + $"'{result.OutputPath}'."
         );
@@ -262,7 +262,7 @@ public static class PrefabPatchAuthoringWorkflow
         if (!TryGetLinkedRoot(linkedPrefab, out _))
         {
             diagnostics.Add(
-                "Select the root GameObject of a KSP2UnityTools linked prefab."
+                "Select the root GameObject of a Redux SDK linked prefab."
             );
         }
         if (!IsIdentifier(modId))
@@ -391,9 +391,9 @@ public sealed class PrefabPatchCreationResult
 internal sealed class PrefabPatchCreationWindow : EditorWindow
 {
     private const string OwningModPreference =
-        "KSP2UnityTools.PrefabPatching.LastAuthoringModGuid";
+        "ReduxSDK.PrefabPatching.LastAuthoringModGuid";
     private const string OutputPreference =
-        "KSP2UnityTools.PrefabPatching.LastAuthoringOutput";
+        "ReduxSDK.PrefabPatching.LastAuthoringOutput";
 
     [SerializeField]
     private GameObject linkedPrefab;
@@ -675,7 +675,7 @@ internal sealed class PrefabPatchCreationWindow : EditorWindow
                 owningMod
             );
             Debug.Log(
-                $"[KSP2UnityTools.PrefabPatching] Created prefab patch variant "
+                $"[ReduxSDK.PrefabPatching] Created prefab patch variant "
                     + $"'{result.VariantPath}' from '{linkedPrefab.name}'."
             );
             Close();
@@ -786,7 +786,7 @@ internal static class PrefabPatchAutoCompiler
             catch (Exception exception)
             {
                 Debug.LogError(
-                    $"[KSP2UnityTools.PrefabPatching] Auto-compile failed for "
+                    $"[ReduxSDK.PrefabPatching] Auto-compile failed for "
                         + $"'{AssetDatabase.GetAssetPath(metadata)}': "
                         + exception
                 );

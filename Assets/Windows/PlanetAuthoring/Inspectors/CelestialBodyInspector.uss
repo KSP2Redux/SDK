@@ -24,7 +24,7 @@
 }
 
 /* Validation chip, Quick Tools and the error-label rules moved to the common
- * sheet Ksp2UnityToolsStyles.uss, because that chrome is now shared with the
+ * sheet ReduxSDKStyles.uss, because that chrome is now shared with the
  * PQS inspector and was rendering unstyled there. */
 
 .body-inspector-preview-button {

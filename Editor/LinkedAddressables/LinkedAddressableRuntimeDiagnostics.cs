@@ -17,7 +17,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (manifest == null)
             {
                 Debug.LogError(
-                    "[KSP2UnityTools.LinkedAddressables] The generated runtime manifest is missing."
+                    "[ReduxSDK.LinkedAddressables] The generated runtime manifest is missing."
                 );
                 return;
             }
@@ -34,7 +34,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                     out var runtimeRoot
                 );
                 Debug.Log(
-                    $"[KSP2UnityTools.LinkedAddressables] Runtime state for "
+                    $"[ReduxSDK.LinkedAddressables] Runtime state for "
                         + $"'{descriptor?.Address}': "
                         + $"mode={(EditorApplication.isPlaying ? "play" : "edit")}; "
                         + $"mounted={runtimeRoot != null}; "
@@ -45,7 +45,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             }
 
             Debug.Log(
-                $"[KSP2UnityTools.LinkedAddressables] Runtime ready="
+                $"[ReduxSDK.LinkedAddressables] Runtime ready="
                     + $"{LinkedAddressableRuntime.IsReady}; translatedScene="
                     + $"{LinkedAddressableRuntime.TranslatedSceneLoaded}; failure="
                     + $"{LinkedAddressableRuntime.RuntimeFailure ?? "<none>"}; source="
@@ -58,12 +58,12 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         private static void UnloadAndValidate()
         {
             Debug.Log(
-                "[KSP2UnityTools.LinkedAddressables] Runtime state immediately before forced unload:"
+                "[ReduxSDK.LinkedAddressables] Runtime state immediately before forced unload:"
             );
             Validate();
             AssetBundle.UnloadAllAssetBundles(true);
             Debug.Log(
-                "[KSP2UnityTools.LinkedAddressables] Runtime state immediately after forced unload:"
+                "[ReduxSDK.LinkedAddressables] Runtime state immediately after forced unload:"
             );
             Validate();
         }

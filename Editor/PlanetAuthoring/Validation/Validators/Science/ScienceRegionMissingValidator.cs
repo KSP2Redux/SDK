@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Science
             yield return new ValidationIssue(
                 Code,
                 ValidationSeverity.Warning,
-                $"Body '{bodyName}' has a PQS but no ScienceRegionData. Create one via Assets > KSP2 Unity Tools > Planet Authoring > Science Region Data, " +
+                $"Body '{bodyName}' has a PQS but no ScienceRegionData. Create one via Assets > Redux SDK > Planet Authoring > Science Region Data, " +
                 $"then name it so its BodyName matches '{bodyName}'.");
         }
     }

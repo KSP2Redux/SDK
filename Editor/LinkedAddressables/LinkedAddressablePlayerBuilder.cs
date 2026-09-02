@@ -11,7 +11,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
     public static class LinkedAddressablePlayerBuilder
     {
         public const string BootstrapScenePath =
-            "Assets/KSP2UnityToolsGenerated/LinkedAddressablesBootstrap.unity";
+            "Assets/ReduxSDK/Generated/LinkedAddressables/LinkedAddressablesBootstrap.unity";
 
         public static BuildReport Build(string outputPath)
         {
@@ -60,7 +60,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             }
 
             Debug.Log(
-                $"[KSP2UnityTools.LinkedAddressables.Build] Built linked Addressables player "
+                $"[ReduxSDK.LinkedAddressables.Build] Built linked Addressables player "
                     + $"at '{absoluteOutputPath}' ({report.summary.totalSize} bytes)."
             );
             return report;

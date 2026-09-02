@@ -39,7 +39,7 @@ internal readonly struct PrefabPatchModAssetInfo
 }
 
 /// <summary>
-/// Accesses KSP2UnityTools' Mod authoring asset without taking an assembly
+/// Accesses the Redux SDK Mod authoring asset without taking an assembly
 /// reference on the predefined editor assembly that contains it.
 /// </summary>
 internal static class PrefabPatchModAssetUtility
@@ -93,19 +93,19 @@ internal static class PrefabPatchModAssetUtility
         if (type == null)
         {
             error =
-                "KSP2UnityTools' Mod authoring type is not available in this "
+                "The Redux SDK Mod authoring type is not available in this "
                 + "project.";
             return false;
         }
         if (asset == null)
         {
-            error = "Select the KSP2UnityTools Mod asset that owns this patch.";
+            error = "Select the Redux SDK Mod asset that owns this patch.";
             return false;
         }
         if (!type.IsInstanceOfType(asset))
         {
             error =
-                $"'{asset.name}' is not a KSP2UnityTools Mod authoring asset.";
+                $"'{asset.name}' is not a Redux SDK Mod authoring asset.";
             return false;
         }
 

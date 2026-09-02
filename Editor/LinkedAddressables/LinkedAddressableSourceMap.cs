@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
 {
     internal sealed class LinkedAddressableSourceMap : ScriptableObject
     {
-        public const string SubAssetIdentifier = "__KSP2UnityToolsSourceMap";
+        public const string SubAssetIdentifier = "__ReduxSDKSourceMap";
 
         [SerializeField]
         private LinkedAddressableSourceObject[] objects =
@@ -28,7 +28,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         )
         {
             var sourceMap = CreateInstance<LinkedAddressableSourceMap>();
-            sourceMap.name = "KSP2UnityTools Source Map";
+            sourceMap.name = "Redux SDK Source Map";
             sourceMap.hideFlags = HideFlags.HideInHierarchy | HideFlags.NotEditable;
             sourceMap.objects = LinkedAddressableSourceLocator
                 .Resolve(descriptor, graph.SourceObjects)
@@ -186,7 +186,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (matches.Length == 0)
             {
                 Debug.LogWarning(
-                    $"[KSP2UnityTools.LinkedAddressables] Skipping optional editor-preview "
+                    $"[ReduxSDK.LinkedAddressables] Skipping optional editor-preview "
                         + $"mapping for external object path ID "
                         + $"{sourceObject.SourceLocalId} "
                         + $"('{sourceObject.SourceType}') in any declared bundle for "

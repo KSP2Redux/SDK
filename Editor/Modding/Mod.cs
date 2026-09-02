@@ -433,7 +433,7 @@ namespace %MOD%
             else
             {
                 Debug.LogWarning(
-                    $"KSP2UnityTools: optional reference package '{Ksp2PackageReferenceDirectory}' was not found. " +
+                    $"Redux SDK: optional reference package '{Ksp2PackageReferenceDirectory}' was not found. " +
                     "Mod assembly generation will use only editor-available references."
                 );
             }

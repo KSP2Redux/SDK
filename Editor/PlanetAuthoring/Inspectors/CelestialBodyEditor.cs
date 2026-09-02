@@ -273,7 +273,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             {
                 EditorUtility.DisplayDialog(
                     "Authoring scene missing",
-                    "No authoring scene was found next to this body's prefab. Run 'Assets > KSP2 Unity Tools > Create Authoring Scene For Selected Celestial Body' on the root prefab first.",
+                    "No authoring scene was found next to this body's prefab. Run 'Assets > Redux SDK > Planet Authoring > Create Authoring Scene For Selected Celestial Body' on the root prefab first.",
                     "OK"
                 );
                 return;

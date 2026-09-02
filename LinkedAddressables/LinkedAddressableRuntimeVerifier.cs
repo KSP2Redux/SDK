@@ -53,14 +53,14 @@ namespace Ksp2UnityTools.LinkedAddressables
             if (string.IsNullOrWhiteSpace(outputDirectory))
             {
                 Debug.LogError(
-                    "[KSP2UnityTools.LinkedAddressables.Verifier] The verification output "
+                    "[ReduxSDK.LinkedAddressables.Verifier] The verification output "
                         + "argument did not contain a directory."
                 );
                 Application.Quit(2);
                 return;
             }
 
-            var runner = new GameObject("KSP2UnityTools Linked Addressables Verifier")
+            var runner = new GameObject("Redux SDK Linked Addressables Verifier")
             {
                 hideFlags = HideFlags.HideAndDontSave
             };
@@ -127,7 +127,7 @@ namespace Ksp2UnityTools.LinkedAddressables
             var reportPath = Path.Combine(outputDirectory, "verification.json");
             File.WriteAllText(reportPath, JsonUtility.ToJson(report, true));
             Debug.Log(
-                $"[KSP2UnityTools.LinkedAddressables.Verifier] Verification "
+                $"[ReduxSDK.LinkedAddressables.Verifier] Verification "
                     + $"{(report.Success ? "passed" : "failed")}. Report: '{reportPath}'."
             );
             Application.Quit(report.Success ? 0 : 3);
@@ -457,7 +457,7 @@ namespace Ksp2UnityTools.LinkedAddressables
             LinkedAddressableVerificationReport report
         )
         {
-            var playerObject = new GameObject("KSP2UnityTools Video Verification")
+            var playerObject = new GameObject("Redux SDK Video Verification")
             {
                 hideFlags = HideFlags.HideAndDontSave
             };

@@ -13,7 +13,9 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
     public static class LinkedAddressableRuntimeManifestBuilder
     {
         public const string ManifestAssetPath =
-            "Assets/KSP2UnityToolsGenerated/Resources/KSP2UnityTools/LinkedAddressableRuntimeManifest.asset";
+            "Assets/ReduxSDK/Generated/LinkedAddressables/Resources/ReduxSDK/LinkedAddressableRuntimeManifest.asset";
+        private const string InterimGeneratedRoot = "Assets/ReduxSDKGenerated";
+        private const string LegacyGeneratedRoot = "Assets/KSP2UnityToolsGenerated";
 
         private static bool rebuildScheduled;
 
@@ -60,6 +62,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         )
         {
             rebuildScheduled = false;
+            RemoveObsoleteGeneratedRoots();
 
             var entries = descriptorPaths
                 .OrderBy(path => path, StringComparer.Ordinal)
@@ -106,10 +109,10 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                 manifest.SettingsFileName = "settings.json";
                 manifest.CopySourceToPlayer = false;
                 manifest.CopiedSourceRelativePath =
-                    "KSP2UnityTools/ExternalAddressables";
+                    "ReduxSDK/ExternalAddressables";
                 manifest.StagedExternalMetadataRelativePath =
-                    "KSP2UnityTools/ExternalAddressables";
-                manifest.ContentDirectoryName = "KSP2UnityTools/LinkedAddressables";
+                    "ReduxSDK/ExternalAddressables";
+                manifest.ContentDirectoryName = "ReduxSDK/LinkedAddressables";
                 manifest.SceneBundleFileName = null;
                 manifest.AssetBundleFileName = null;
                 manifest.InitialScenePath = null;
@@ -122,7 +125,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                 if (logResult)
                 {
                     Debug.Log(
-                        "[KSP2UnityTools.LinkedAddressables] Rebuilt an empty runtime manifest.",
+                        "[ReduxSDK.LinkedAddressables] Rebuilt an empty runtime manifest.",
                         manifest
                     );
                 }
@@ -145,10 +148,10 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             manifest.CopySourceToPlayer =
                 LinkedAddressablePlayerBuildOptions.CopySourceToPlayer;
             manifest.CopiedSourceRelativePath =
-                "KSP2UnityTools/ExternalAddressables";
+                "ReduxSDK/ExternalAddressables";
             manifest.StagedExternalMetadataRelativePath =
-                "KSP2UnityTools/ExternalAddressables";
-            manifest.ContentDirectoryName = "KSP2UnityTools/LinkedAddressables";
+                "ReduxSDK/ExternalAddressables";
+            manifest.ContentDirectoryName = "ReduxSDK/LinkedAddressables";
             var translatedContent = ReadTranslatedContentReceipt();
             manifest.SceneBundleFileName = translatedContent?.SceneBundleName;
             manifest.AssetBundleFileName = translatedContent?.AssetBundleName;
@@ -179,13 +182,32 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             if (logResult)
             {
                 Debug.Log(
-                    $"[KSP2UnityTools.LinkedAddressables] Rebuilt runtime manifest with "
+                    $"[ReduxSDK.LinkedAddressables] Rebuilt runtime manifest with "
                         + $"{entries.Length} linked asset(s) from '{manifest.SourceRoot}'.",
                     manifest
                 );
             }
 
             return manifest;
+        }
+
+        private static void RemoveObsoleteGeneratedRoots()
+        {
+            RemoveObsoleteGeneratedRoot(InterimGeneratedRoot);
+            RemoveObsoleteGeneratedRoot(LegacyGeneratedRoot);
+        }
+
+        private static void RemoveObsoleteGeneratedRoot(string assetPath)
+        {
+            if (
+                AssetDatabase.IsValidFolder(assetPath)
+                && !AssetDatabase.DeleteAsset(assetPath)
+            )
+            {
+                throw new IOException(
+                    $"Could not remove the obsolete generated SDK folder '{assetPath}'."
+                );
+            }
         }
 
         private static LinkedAddressableTranslatedContentBuild ReadTranslatedContentReceipt()
@@ -202,7 +224,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             catch (Exception exception)
             {
                 Debug.LogWarning(
-                    "[KSP2UnityTools.LinkedAddressables] Could not read the translated-content "
+                    "[ReduxSDK.LinkedAddressables] Could not read the translated-content "
                         + $"receipt: {exception.Message}"
                 );
                 return null;

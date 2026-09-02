@@ -58,7 +58,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         {
             var properties = BuildProperties(source);
             var previewName =
-                "Hidden/KSP2UnityTools/Linked Preview/"
+                "Hidden/ReduxSDK/Linked Preview/"
                 + GetStableNameHash(source.name)
                 + "/"
                 + EscapeShaderName(source.name);
@@ -99,7 +99,7 @@ Shader ""{previewName}""
 
         Pass
         {{
-            Name ""KSP2UnityToolsLinkedPreview""
+            Name ""ReduxSDKLinkedPreview""
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag

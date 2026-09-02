@@ -15,7 +15,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
     public static class LinkedAddressableAssetUtility
     {
         public const string DefaultOutputDirectory =
-            "Assets/KSP2UnityTools/LinkedAddressables";
+            "Assets/ReduxSDK/LinkedAddressables";
 
         public static string CreateLink(string address)
         {

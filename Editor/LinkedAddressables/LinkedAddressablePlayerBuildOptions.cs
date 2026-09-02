@@ -9,7 +9,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             "Modding/Linked Addressables/Advanced/Include External Addressables in Player Build";
 
         private const string CopySourcePreferenceKey =
-            "KSP2UnityTools.LinkedAddressables.CopyExternalAddressablesToPlayerBuild";
+            "ReduxSDK.LinkedAddressables.CopyExternalAddressablesToPlayerBuild";
 
         public static bool CopySourceToPlayer;
 

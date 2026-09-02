@@ -107,7 +107,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                 catch (Exception exception)
                 {
                     Debug.LogWarning(
-                        $"[KSP2UnityTools.LinkedAddressables] Could not use "
+                        $"[ReduxSDK.LinkedAddressables] Could not use "
                             + $"'{descriptorPath}' while remapping linked references: "
                             + exception.Message
                     );
@@ -594,7 +594,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             catch (UnityException exception)
             {
                 throw new InvalidOperationException(
-                    $"KSP2UnityTools cannot yet create a project-owned editor instance "
+                    $"Redux SDK cannot yet create a project-owned editor instance "
                         + $"for linked object '{source.name}' of native type "
                         + $"'{source.GetType().FullName}'. Returning the transient "
                         + "source-bundle object would create a broken serialized link.",

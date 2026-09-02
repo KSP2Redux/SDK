@@ -208,7 +208,7 @@ public sealed class PrefabPatchEffectivePreviewStage : PreviewSceneStage
         catch (Exception exception)
         {
             Debug.LogWarning(
-                $"[KSP2UnityTools.PrefabPatching] Skipping malformed preview manifest "
+                $"[ReduxSDK.PrefabPatching] Skipping malformed preview manifest "
                     + $"'{path}': {exception.Message}"
             );
             return null;

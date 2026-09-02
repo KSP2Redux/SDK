@@ -25,7 +25,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
             return true;
 #else
             int generatedAssetCount = SDKAssetCompiler.Compile();
-            Debug.Log($"Generated {generatedAssetCount} KSP2UnityTools authoring assets.");
+            Debug.Log($"Generated {generatedAssetCount} Redux SDK authoring assets.");
             return true;
 #endif
         }
@@ -35,7 +35,7 @@ namespace Ksp2UnityTools.Editor.SDKAssets
         private static void RegenerateAuthoringAssets()
         {
             int generatedAssetCount = SDKAssetCompiler.Compile();
-            Debug.Log($"Generated {generatedAssetCount} KSP2UnityTools authoring assets.");
+            Debug.Log($"Generated {generatedAssetCount} Redux SDK authoring assets.");
         }
 #endif
     }
