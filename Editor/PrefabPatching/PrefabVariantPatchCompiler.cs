@@ -263,6 +263,13 @@ public static class PrefabVariantPatchCompiler
         ICollection<string> diagnostics
     )
     {
+        var emittedContainers = new HashSet<string>(StringComparer.Ordinal);
+        var authoredObjects = variant.GetComponentsInChildren<Component>(true)
+            .Where(component => component != null)
+            .Cast<Object>()
+            .Concat(variant.GetComponentsInChildren<Transform>(true)
+                .Select(transform => (Object)transform.gameObject))
+            .ToArray();
         foreach (
             var modification in (
                 PrefabUtility.GetPropertyModifications(variant)
@@ -272,7 +279,11 @@ public static class PrefabVariantPatchCompiler
                 .Where(value => !IsPatchOwnedAddition(value.target))
                 .Where(value => !IsRedundantSourceValue(value))
                 .OrderBy(value => SourceSortKey(value.target), StringComparer.Ordinal)
-                .ThenBy(value => value.propertyPath, StringComparer.Ordinal)
+                // A collection must be resized before applying its new children.
+                .ThenBy(
+                    value => value.propertyPath.Replace(".Array.size", ".Array.!size"),
+                    StringComparer.Ordinal
+                )
         )
         {
             if (
@@ -290,6 +301,17 @@ public static class PrefabVariantPatchCompiler
                 );
                 continue;
             }
+
+            // Unity records curve and gradient overrides as internal serialized
+            // children. Those names are not runtime members: emit the complete
+            // authored value using the existing typed payload instead.
+            var authoredTarget = authoredObjects.FirstOrDefault(candidate =>
+                PrefabUtility.GetCorrespondingObjectFromSource(candidate)
+                    == modification.target);
+            if (authoredTarget != null && TryCompileContainerProperty(
+                authoredTarget, modification.propertyPath, target, patchId,
+                variantPath, manifest, emittedContainers, diagnostics))
+                continue;
 
             var operation = new PrefabPatchOperation
             {
@@ -349,7 +371,7 @@ public static class PrefabVariantPatchCompiler
                 operation.Kind = PrefabPatchOperationKind.SetValue;
                 if (
                     !TryPropertyValue(
-                        modification.target,
+                        authoredTarget ?? modification.target,
                         modification.propertyPath,
                         modification.value,
                         out var value,
@@ -369,6 +391,50 @@ public static class PrefabVariantPatchCompiler
 
             manifest.Operations.Add(operation);
         }
+    }
+
+    private static bool TryCompileContainerProperty(
+        Object authoredTarget,
+        string propertyPath,
+        PrefabPatchObjectTarget target,
+        string patchId,
+        string variantPath,
+        PrefabPatchManifest manifest,
+        HashSet<string> emittedContainers,
+        ICollection<string> diagnostics
+    )
+    {
+        using var authored = new SerializedObject(authoredTarget);
+        while (!string.IsNullOrEmpty(propertyPath))
+        {
+            var property = authored.FindProperty(propertyPath);
+            if (property != null && property.propertyType is
+                SerializedPropertyType.Gradient or SerializedPropertyType.AnimationCurve)
+            {
+                if (!emittedContainers.Add(target.CanonicalKey + ":" + propertyPath))
+                    return true;
+                if (!TrySerializedPropertyValue(property, out var value, out var error))
+                {
+                    diagnostics.Add($"{variantPath}: property '{propertyPath}' {error}");
+                    return true;
+                }
+                manifest.Operations.Add(new PrefabPatchOperation
+                {
+                    OperationId = OperationId(patchId, "property", target.CanonicalKey, propertyPath),
+                    PatchId = patchId,
+                    Target = target,
+                    Kind = PrefabPatchOperationKind.SetValue,
+                    PropertyPath = propertyPath,
+                    Value = value,
+                    AuthoringAssetPath = variantPath,
+                    AuthoringPropertyPath = propertyPath
+                });
+                return true;
+            }
+            var separator = propertyPath.LastIndexOf('.');
+            propertyPath = separator < 0 ? null : propertyPath.Substring(0, separator);
+        }
+        return false;
     }
 
     private static bool IsRedundantSourceValue(
@@ -1103,7 +1169,17 @@ public static class PrefabVariantPatchCompiler
                 value = JsonValue(
                     new
                     {
-                        ColorKeys = gradient.colorKeys,
+                        ColorKeys = gradient.colorKeys.Select(key => new
+                        {
+                            color = new
+                            {
+                                key.color.r,
+                                key.color.g,
+                                key.color.b,
+                                key.color.a
+                            },
+                            key.time
+                        }).ToArray(),
                         AlphaKeys = gradient.alphaKeys,
                         Mode = (int)gradient.mode
                     },

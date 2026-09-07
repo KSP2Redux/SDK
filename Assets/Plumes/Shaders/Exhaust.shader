@@ -51,6 +51,7 @@ Shader "Redux/VFX/Exhaust"
 		[IntRange] _TracesCount ("Traces Count", Range(0, 10)) = 3
 		_TracesThickness ("Traces Thickness", Range(0.1, 4)) = 2
 		_TracesStrength ("Traces Strength", Range(0, 5)) = 1
+		_TracesVariation ("Traces Flow Variation", Range(0, 1)) = 0
 		_TracesTopPosOffset ("Traces Top Pos Offset", Range(0, 1)) = 0.282353
 		_TracesTopFalloffGradient ("Traces Top Falloff Gradient", Range(0, 2)) = 0.25
 		[NoScaleOffset] _TracesTexture ("Traces Texture", 2D) = "white" {}
@@ -152,6 +153,7 @@ Shader "Redux/VFX/Exhaust"
 			float _TracesTopFalloffGradient;
 			float _TracesAmount;
 			float _TracesStrength;
+			float _TracesVariation;
 			float _TopGradientPosOffset;
 			float _TopGradientFalloff;
 			float _ErosionPosOffset;
@@ -680,8 +682,20 @@ Shader "Redux/VFX/Exhaust"
 				// Sinusoidal streak overlay sampled from the $Globals trace texture, then
 				// masked by top gradient, erosion, and noise before compositing.
 				precise float tracesFreq    = _TracesCount * 6.2831855f;   // TracesCount × 2π
-				precise float tracesU       = tracesFreq * texcoord.x;
-				float tracesMask = pow(max(sin(mad(tracesFreq, uFlipped, 1.5707964f)), 0.0001f), _TracesThickness);
+				// Periodic angular fields keep the UV seam continuous while individual rays
+				// wander and change reach. Variation defaults to zero for stock trace behavior.
+				float traceAngle = texcoord.x * 6.2831855f;
+				float traceTime = _Time.y * .8f + _TracesCount;
+				float traceWarp = .055f * sin(traceAngle * 2.0f + traceTime)
+				                + .025f * sin(traceAngle * 5.0f - traceTime * .73f + vFlipped * 3.0f);
+				float traceFlowU = texcoord.x + _TracesVariation * traceWarp;
+				precise float tracesU = tracesFreq * traceFlowU;
+				float tracesMask = pow(max(sin(mad(tracesFreq, 1.0f - traceFlowU, 1.5707964f)), 0.0001f), _TracesThickness);
+				float traceReach = .48f + .13f * sin(traceAngle * 3.0f - traceTime * .61f);
+				float traceEnvelope = 1.0f - smoothstep(traceReach - .20f, traceReach + .20f, vFlipped);
+				float traceBreakup = (.72f + .28f * sin(traceAngle * 4.0f + traceTime * .47f))
+				                   * lerp(.55f, 1.0f, saturate(distortR * distortG));
+				tracesMask *= lerp(1.0f, traceEnvelope * traceBreakup, _TracesVariation);
 				precise float tracesSinInput      = tracesU * 0.5f;
 				precise float tracesLengthV       = vFlipped * _TracesLength;
 				precise float tracesTopPos        = vFlipped - _TracesTopPosOffset;
