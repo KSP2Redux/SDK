@@ -52,6 +52,9 @@ Shader "Redux/VFX/Exhaust"
 		_TracesThickness ("Traces Thickness", Range(0.1, 4)) = 2
 		_TracesStrength ("Traces Strength", Range(0, 5)) = 1
 		_TracesVariation ("Traces Flow Variation", Range(0, 1)) = 0
+		_LinearFlow ("Straight Radial Flow", Range(0, 1)) = 0
+		_CoherentFlow ("Coherent Jet Flow", Range(0, 1)) = 0
+		_TailFade ("Soft Plume Tail", Range(0, 1)) = 0
 		_TracesTopPosOffset ("Traces Top Pos Offset", Range(0, 1)) = 0.282353
 		_TracesTopFalloffGradient ("Traces Top Falloff Gradient", Range(0, 2)) = 0.25
 		[NoScaleOffset] _TracesTexture ("Traces Texture", 2D) = "white" {}
@@ -154,6 +157,9 @@ Shader "Redux/VFX/Exhaust"
 			float _TracesAmount;
 			float _TracesStrength;
 			float _TracesVariation;
+			float _LinearFlow;
+			float _CoherentFlow;
+			float _TailFade;
 			float _TopGradientPosOffset;
 			float _TopGradientFalloff;
 			float _ErosionPosOffset;
@@ -266,6 +272,24 @@ Shader "Redux/VFX/Exhaust"
 				return tSq * mad(t, -2.0f, 3.0f);
 			}
 
+			// Low-frequency value noise for dissipating gas, independent of the
+			// curved filament atlas used by stock exhaust.
+			float plumeHazeNoise(float2 p)
+			{
+				float2 cell = floor(p);
+				float2 f = frac(p);
+				f = f * f * (3.0f - 2.0f * f);
+				// A wrapped angular lattice also supports seam-free outward advection.
+				cell.x -= floor(cell.x / 32.0f) * 32.0f;
+				float nextX = fmod(cell.x + 1.0f, 32.0f);
+				float4 seeds = float4(dot(cell, float2(127.1f, 311.7f)),
+				    dot(float2(nextX, cell.y), float2(127.1f, 311.7f)),
+				    dot(cell + float2(0, 1), float2(127.1f, 311.7f)),
+				    dot(float2(nextX, cell.y + 1.0f), float2(127.1f, 311.7f)));
+				float4 values = frac(sin(seeds) * 43758.5453f);
+				return lerp(lerp(values.x, values.y, f.x), lerp(values.z, values.w, f.x), f.y);
+			}
+
 			// ── Vertex shader ──────────────────────────────────────────────────
 			// Output: displaced world-space vertex position, world normal, UV, and per-vertex
 			// lighting / SH contribution.  Displacement and bend are applied before the
@@ -291,7 +315,7 @@ Shader "Redux/VFX/Exhaust"
 				precise float contrastRange  = negContrastInv + _VertexDispContrast;  // 2·contrast - 1
 				float dispSample = mad(_DistortionTexture.SampleLevel(sampler_DistortionTexture,
 				    float2(mad(_Time.y, _ScrollSpeedX, dispU), mad(_Time.y, _ScrollSpeedY, dispV)),
-				    0.0f).x, contrastRange, contrastInv);
+				    2.0f * _CoherentFlow).x, contrastRange, contrastInv);
 
 				// ── Displacement → local offset ────────────────────────────────
 				// Project the remapped sample along the vertex normal and scale.
@@ -582,6 +606,22 @@ Shader "Redux/VFX/Exhaust"
 				float4 distortSample1 = _DistortionTexture.Sample(sampler_DistortionTexture,
 				    float2(mad(_Time.y, negScrollSpeedX, scaledU), mad(1.3f, scrollTimeY, scaledV)));
 				float distortG = distortSample1.y;
+				if (_CoherentFlow > 0.0f)
+				{
+					// Both channels advect together, avoiding beats between scrolling layers.
+					float2 flowUV = float2(scaledU, scaledV) + _Time.y * float2(_ScrollSpeedX, _ScrollSpeedY);
+					float2 flowNoise = _DistortionTexture.SampleBias(sampler_DistortionTexture, flowUV, 3.5f).rg;
+					distortR = lerp(distortR, (.5f + .22f * (flowNoise.r - .5f)), _CoherentFlow);
+					distortG = lerp(distortG, (.5f + .22f * (flowNoise.g - .5f)), _CoherentFlow);
+				}
+				// Angular intensity is independent of downstream position: texture features
+				// form straight rays instead of bending through the sheet's radial UVs.
+				float2 radialNoise = _DistortionTexture.Sample(sampler_DistortionTexture,
+				    float2(scaledU, _Time.y * .04f)).rg;
+				radialNoise = lerp(float2(.5f, .5f), radialNoise, .4f);
+				float flowPulse = .85f + .15f * sin(vFlipped * 18.0f - _Time.y * 12.0f + radialNoise.r * 6.0f);
+				distortR = lerp(distortR, radialNoise.r * flowPulse, _LinearFlow);
+				distortG = lerp(distortG, radialNoise.g, _LinearFlow);
 
 				// ── Noise value ────────────────────────────────────────────────
 				// noiseMask:  1 - _NoiseAmount·(1 - R·G),  masks the particle shape by noise.
@@ -605,6 +645,7 @@ Shader "Redux/VFX/Exhaust"
 				precise float erosionBlend = negFresnelOuterRaw + clamp(fresnelMinusNoise, 0.0f, 1.0f);
 				float fresnelOuter = mad(mad(cameraFade, negErosionAmount, _FresnelOuterErosionAmount),
 				                         erosionBlend, fresnelOuterRaw);
+				fresnelOuter = lerp(fresnelOuter, sqrt(max(fresnelOuter, 0.0f)), _LinearFlow);
 
 				// ── Top gradient mask ──────────────────────────────────────────
 				// Smoothstep fade that suppresses the top of the particle shape.
@@ -670,6 +711,14 @@ Shader "Redux/VFX/Exhaust"
 				float tintR = mad(isLowerZone, mad(colorStartSmooth, colorStartDeltaR, _ColorTintMiddle.x), upperColorR);
 				float tintG = mad(isLowerZone, mad(colorStartSmooth, colorStartDeltaG, _ColorTintMiddle.y), upperColorG);
 				float tintB = mad(isLowerZone, mad(colorStartSmooth, colorStartDeltaB, _ColorTintMiddle.z), upperColorB);
+				// Keep vacuum color transitions broad and independent of density noise.
+				// Reach the warm tail color before the strand becomes transparent.
+				float3 flowTint = lerp(_ColorTintStart.rgb, _ColorTintMiddle.rgb,
+				    smoothstep(.02f, .40f, vFlipped));
+				flowTint = lerp(flowTint, _ColorTintEnd.rgb, smoothstep(.26f, .60f, vFlipped));
+				tintR = lerp(tintR, flowTint.r, _LinearFlow);
+				tintG = lerp(tintG, flowTint.g, _LinearFlow);
+				tintB = lerp(tintB, flowTint.b, _LinearFlow);
 				// Boost: tint · (1 + _ColorTintBoost), then scale by baseAlpha.
 				float boostedR = mad(tintR, _ColorTintBoost, tintR);
 				float boostedG = mad(tintG, _ColorTintBoost, tintG);
@@ -685,6 +734,11 @@ Shader "Redux/VFX/Exhaust"
 				// Periodic angular fields keep the UV seam continuous while individual rays
 				// wander and change reach. Variation defaults to zero for stock trace behavior.
 				float traceAngle = texcoord.x * 6.2831855f;
+				// In straight flow, unequal broad angular lobes replace the evenly spaced
+				// narrow bands. No downstream coordinate enters their angular position.
+				float broadRays = .5f + .22f * sin(traceAngle * 3.0f + _Time.y * .035f)
+				                      + .16f * sin(traceAngle * 7.0f - 1.8f - _Time.y * .025f)
+				                      + .10f * sin(traceAngle * 11.0f + .8f);
 				float traceTime = _Time.y * .8f + _TracesCount;
 				float traceWarp = .055f * sin(traceAngle * 2.0f + traceTime)
 				                + .025f * sin(traceAngle * 5.0f - traceTime * .73f + vFlipped * 3.0f);
@@ -696,6 +750,7 @@ Shader "Redux/VFX/Exhaust"
 				float traceBreakup = (.72f + .28f * sin(traceAngle * 4.0f + traceTime * .47f))
 				                   * lerp(.55f, 1.0f, saturate(distortR * distortG));
 				tracesMask *= lerp(1.0f, traceEnvelope * traceBreakup, _TracesVariation);
+				tracesMask = lerp(tracesMask, smoothstep(.32f, .82f, broadRays), _LinearFlow);
 				precise float tracesSinInput      = tracesU * 0.5f;
 				precise float tracesLengthV       = vFlipped * _TracesLength;
 				precise float tracesTopPos        = vFlipped - _TracesTopPosOffset;
@@ -707,6 +762,12 @@ Shader "Redux/VFX/Exhaust"
 				precise float tracesTexV = dot(float2(tracesSinCentered, tracesLengthCentered),
 				                               float2(-1.2246468525851678544463796427522e-16f, -1.0f)) + 0.5f;
 				float4 tracesTex = _TracesTexture.Sample(sampler_TracesTexture, float2(tracesTexU, tracesTexV));
+				// The stock trace atlas contains curved filaments. Straight flow uses the
+				// angular mask directly, with an irregular but smoothly fading radial reach.
+				float radialReach = .48f + .22f * radialNoise.r;
+				float radialFade = 1.0f - smoothstep(radialReach - .25f, radialReach, vFlipped);
+				tracesTex = lerp(tracesTex, float4(radialFade, radialFade, radialFade, 1.0f), _LinearFlow);
+				tracesTex.rgb *= 1.0f + _LinearFlow * .6f * (1.0f - smoothstep(.05f, .35f, vFlipped));
 				// Mask by tracesMask, then apply top falloff smoothstep.
 				precise float tracesBlendR = tracesMask * tracesTex.x;
 				precise float tracesBlendG = tracesMask * tracesTex.y;
@@ -761,6 +822,40 @@ Shader "Redux/VFX/Exhaust"
 				outColor.z = finalB;
 				outColor.w = 1.0f;
 			#endif
+				// Fade emission, including traces and fog, before the open mesh boundary.
+				// Noise changes where the fade begins, but its endpoint always stays inside the mesh.
+				float tailStart = .48f + .14f * saturate(distortR * distortG);
+				float tailMask = 1.0f - smoothstep(tailStart, .985f, vFlipped);
+				outColor.xyz *= lerp(1.0f, tailMask, _TailFade);
+				// Each straight strand has one moving endpoint. A monotonic fade
+				// keeps its tip connected to the nozzle instead of forming outer islands.
+				float strandLength = plumeHazeNoise(float2(texcoord.x * 32.0f, _Time.y * 8.0f));
+				float rayEnd = .44f + .14f * saturate(broadRays) + .08f * strandLength;
+				float rayEndFade = 1.0f - smoothstep(rayEnd - .24f, rayEnd + .09f, vFlipped);
+				outColor.xyz *= lerp(1.0f, rayEndFade, _LinearFlow);
+				float rayBrightness = 1.4f * (.65f + .55f * smoothstep(.25f, .75f, broadRays));
+				float centerBrightness = 1.0f + .25f * (1.0f - smoothstep(0.0f, .4f, vFlipped));
+				outColor.xyz *= lerp(1.0f, rayBrightness * centerBrightness, _LinearFlow);
+				if (_LinearFlow > 0.0f)
+				{
+					// Translate density downstream at roughly one plume length per second.
+					// The nonzero floor keeps the flow connected rather than making dashes.
+					float stream = plumeHazeNoise(float2(texcoord.x * 32.0f,
+					    vFlipped * 5.0f - _Time.y * 6.0f));
+					float streamIntensity = .55f + .9f * stream;
+					// Fine density detail follows the same downstream flow without bending strands.
+					float streamDetail = plumeHazeNoise(float2(texcoord.x * 64.0f,
+					    vFlipped * 18.0f - _Time.y * 21.6f));
+					streamIntensity *= .88f + .24f * streamDetail;
+					outColor.xyz *= lerp(1.0f, streamIntensity,
+					    _LinearFlow * smoothstep(.015f, .12f, vFlipped));
+					// Hot gas just outside the exit remains luminous from the side,
+					// where the broad sheet's normal-facing emission is much weaker.
+					float nozzleGlow = 1.0f - smoothstep(0.0f, .035f, vFlipped);
+					nozzleGlow *= nozzleGlow * topGradMask * (0.5f + 0.5f * fresnelOuter);
+					float3 nozzleTint = lerp(_ColorTintStart.rgb, float3(.8f, .85f, 1.0f), .6f);
+					outColor.xyz += nozzleTint * nozzleGlow * _Alpha * _LinearFlow * 2.0f;
+				}
 				Fragment_Stage_Output stage_output;
 				stage_output.outColor = outColor;
 				return stage_output;
