@@ -1349,7 +1349,10 @@ public static class PrefabVariantPatchCompiler
 
         reference = new PrefabPatchObjectReference
         {
-            Address = entry.address,
+            // Imported model meshes need their subasset key, not the model root.
+            Address = AssetDatabase.IsSubAsset(value)
+                ? $"{entry.address}[{value.name}]"
+                : entry.address,
             ExpectedType = value.GetType().AssemblyQualifiedName
         };
         return true;
