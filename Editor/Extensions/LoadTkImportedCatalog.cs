@@ -73,31 +73,25 @@ namespace Ksp2UnityTools.Editor.Extensions
                 case PlayModeStateChange.EnteredEditMode:
                     UnloadLeakedAssetBundles();
                     return;
-                // ExitingEditMode prepares Fast Mode and the imported catalogs before runtime startup.
+                // BeforeSceneLoad prepares the imported catalogs after Addressables resets its context.
                 // Recheck them here so manual and automated transitions share the same idempotent path.
                 // SessionState protects against stale duplicate callbacks left behind by a script hot
                 // reload.
                 case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
                     return;
                 case PlayModeStateChange.EnteredPlayMode:
-                    EnsureImportedCatalogsLoaded();
-                    // Mark initialized only after registration succeeds. If catalog loading throws,
-                    // a duplicate callback can retry instead of preserving a false-success state.
-                    SessionState.SetBool(PlaySessionInitializedKey, true);
+                    SessionState.SetBool(PlaySessionInitializedKey, EnsureImportedCatalogsLoaded());
                     break;
             }
         }
 
-        // This callback runs after the editor has prepared its Play Mode state but before runtime
-        // initialization and scene Start methods. EnteredPlayMode is too late for BootstrapSceneLoader,
-        // while ExitingEditMode can be followed by Addressables' own delayed reinitialization.
-        [InitializeOnEnterPlayMode]
+        // Addressables 4 clears its context during SubsystemRegistration. Register the
+        // imported catalogs afterwards, before scene startup can request base-game content.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void PrepareAddressablesForPlayMode()
         {
             SessionState.SetBool(PlaySessionInitializedKey, false);
-            ResetAddressablesForPlayMode();
-            EnsureImportedCatalogsLoaded();
-            SessionState.SetBool(PlaySessionInitializedKey, true);
+            SessionState.SetBool(PlaySessionInitializedKey, EnsureImportedCatalogsLoaded());
         }
 
         // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
@@ -175,7 +169,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
             EnsureThunderKitInternalIdRedirect();
             _catalogLoadInProgress = true;
-            _catalogLoadOperation = Addressables.LoadContentCatalogAsync(catalogPath, false);
+            _catalogLoadOperation = LoadImportedCatalogAsync(catalogPath);
             _catalogLoadOperation.Completed += OnImportedCatalogLoaded;
         }
 
@@ -202,7 +196,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         // Registers the ThunderKit-imported content catalog(s) with Addressables if they are not already
         // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
-        private static void EnsureImportedCatalogsLoaded()
+        private static bool EnsureImportedCatalogsLoaded()
         {
             EditorApplication.delayCall -= BeginImportedCatalogLoad;
             _catalogLoadScheduled = false;
@@ -233,21 +227,21 @@ namespace Ksp2UnityTools.Editor.Extensions
                     Debug.LogError(
                         $"Failed while waiting for a ThunderKit imported Addressables catalog: {operationException}"
                     );
-                    return;
+                    return false;
                 }
             }
 
             string catalogPath = GetNextMissingCatalogPath();
             if (catalogPath == null)
             {
-                return;
+                return true;
             }
 
             EnsureThunderKitInternalIdRedirect();
             while (catalogPath != null)
             {
                 AsyncOperationHandle<IResourceLocator> operation =
-                    Addressables.LoadContentCatalogAsync(catalogPath, false);
+                    LoadImportedCatalogAsync(catalogPath);
                 IResourceLocator locator = operation.WaitForCompletion();
                 Exception operationException = operation.OperationException;
                 Addressables.Release(operation);
@@ -256,11 +250,12 @@ namespace Ksp2UnityTools.Editor.Extensions
                     Debug.LogError(
                         $"Failed to load the ThunderKit imported Addressables catalog at {catalogPath}: {operationException}"
                     );
-                    return;
+                    return false;
                 }
 
                 catalogPath = GetNextMissingCatalogPath();
             }
+            return true;
         }
 
         private static string GetNextMissingCatalogPath()
@@ -344,36 +339,22 @@ namespace Ksp2UnityTools.Editor.Extensions
                 );
         }
 
-        // Addressables normally schedules this reset through EditorApplication.delayCall after
-        // leaving Play Mode. An automated Play Mode restart can begin its next transition before that
-        // callback runs, leaving a stale ResourceManager and its unloaded bundle resources in place.
-        private static void ResetAddressablesForPlayMode()
+        // Addressables 4 chooses the catalog provider before chaining initialization itself.
+        // Wait for initialization to register providers before requesting either catalog format.
+        private static AsyncOperationHandle<IResourceLocator> LoadImportedCatalogAsync(string catalogPath)
         {
-            // Addressables queues this callback when Play Mode exits. An automated restart can
-            // reach ExitingEditMode before the callback runs; if it runs after the fresh instance
-            // and imported catalogs are prepared below, the first runtime Addressables access
-            // replaces that instance again and loses both the catalog and path redirect.
-            MethodInfo delayedReinitializeMethod = typeof(Addressables).GetMethod(
-                "EnableReinitializeAddressablesFlag",
-                BindingFlags.Static | BindingFlags.NonPublic
+            AsyncOperationHandle<IResourceLocator> initialization = Addressables.InitializeAsync(false);
+            AsyncOperationHandle<IResourceLocator> load = Addressables.ResourceManager.CreateChainOperation(
+                initialization,
+                operation => operation.Status == AsyncOperationStatus.Succeeded
+                    ? Addressables.LoadContentCatalogAsync(catalogPath, false)
+                    : Addressables.ResourceManager.CreateCompletedOperationWithException<IResourceLocator>(
+                        null,
+                        operation.OperationException ?? new InvalidOperationException("Addressables initialization failed.")
+                    )
             );
-            if (delayedReinitializeMethod != null)
-            {
-                var delayedReinitialize = (EditorApplication.CallbackFunction)
-                    delayedReinitializeMethod.CreateDelegate(typeof(EditorApplication.CallbackFunction));
-                EditorApplication.delayCall -= delayedReinitialize;
-            }
-
-            FieldInfo reinitializeField = typeof(Addressables).GetField(
-                "reinitializeAddressables",
-                BindingFlags.Static | BindingFlags.NonPublic
-            );
-            if (reinitializeField == null)
-            {
-                throw new MissingFieldException(typeof(Addressables).FullName, "reinitializeAddressables");
-            }
-
-            reinitializeField.SetValue(null, true);
+            Addressables.Release(initialization);
+            return load;
         }
 
 #endif
