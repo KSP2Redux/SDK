@@ -37,14 +37,36 @@ namespace UitkForKsp2.Controls
         private AsyncOperationHandle<VisualTreeAsset> _uxmlLoadHandle;
         private AsyncOperationHandle<Shader> _sbShaderLoadHandle;
         private AsyncOperationHandle<Shader> _alphaShaderLoadHandle;
+        private int _loadGeneration;
+        private bool _isLoading;
 
         public ColorPicker() : base(null, null)
         {
-            LoadAssetsAsync();
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+            RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
+        }
+
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            if (!_isLoading && _sbRenderTexture == null)
+            {
+                _ = LoadAssetsAsync();
+            }
+        }
+
+        private void OnDetachFromPanel(DetachFromPanelEvent _)
+        {
+            // PanelRenderer releases its visual tree when disabled. Invalidate an in-flight load so it
+            // cannot initialize that released tree, and recreate the resources if this element is attached again.
+            _loadGeneration++;
+            _isLoading = false;
+            Cleanup();
         }
 
         private async Task LoadAssetsAsync()
         {
+            int generation = ++_loadGeneration;
+            _isLoading = true;
             _uxmlLoadHandle = Addressables.LoadAssetAsync<VisualTreeAsset>(ColorPickerUxmlAddress);
             _sbShaderLoadHandle = Addressables.LoadAssetAsync<Shader>(SbSquareShaderAddress);
             _alphaShaderLoadHandle = Addressables.LoadAssetAsync<Shader>(AlphaGradientShaderAddress);
@@ -56,6 +78,11 @@ namespace UitkForKsp2.Controls
                     _sbShaderLoadHandle.Task,
                     _alphaShaderLoadHandle.Task
                 );
+
+                if (generation != _loadGeneration)
+                {
+                    return;
+                }
 
                 if (_uxmlLoadHandle.Status != AsyncOperationStatus.Succeeded)
                 {
@@ -91,37 +118,48 @@ namespace UitkForKsp2.Controls
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"An error occurred during ColorPicker asset loading: {e.Message}");
-                Cleanup();
+                if (generation == _loadGeneration)
+                {
+                    Debug.LogError($"An error occurred during ColorPicker asset loading: {e.Message}");
+                    Cleanup();
+                }
+            }
+            finally
+            {
+                if (generation == _loadGeneration)
+                {
+                    _isLoading = false;
+                }
             }
         }
 
         private void InitializeUI()
         {
-            _uxmlLoadHandle.Result.CloneTree(this);
-            Remove(Children().First());
+            if (_hueSlider == null)
+            {
+                _uxmlLoadHandle.Result.CloneTree(this);
+                Remove(Children().First());
 
-            _hueSlider = this.Q<Slider>("HueSlider");
-            _hueSliderBackground = _hueSlider.hierarchy[0];
-            _sbSquareBackground = this.Q<VisualElement>("SBSquareBackground");
-            _sbSquare = this.Q<VisualElement>("SBSquare");
-            _sbHandle = this.Q<VisualElement>("SBHandle");
-            _alphaSlider = this.Q<Slider>("AlphaSlider");
-            _alphaSliderBackground = _alphaSlider.hierarchy[0];
+                _hueSlider = this.Q<Slider>("HueSlider");
+                _hueSliderBackground = _hueSlider.hierarchy[0];
+                _sbSquareBackground = this.Q<VisualElement>("SBSquareBackground");
+                _sbSquare = this.Q<VisualElement>("SBSquare");
+                _sbHandle = this.Q<VisualElement>("SBHandle");
+                _alphaSlider = this.Q<Slider>("AlphaSlider");
+                _alphaSliderBackground = _alphaSlider.hierarchy[0];
+
+                SetupHueSlider();
+                SetupSbSquare();
+                SetupAlphaSlider();
+                this.RegisterValueChangedCallback(OnValueChanged);
+            }
 
             SetupTextures(_sbShaderLoadHandle.Result, _alphaShaderLoadHandle.Result);
             UpdateSbSquareTexture();
             UpdateAlphaSliderTexture();
 
-            SetupHueSlider();
-            SetupSbSquare();
-            SetupAlphaSlider();
-
             // The value might be changed before the UI is initialized
             UpdateUIFromColor(value);
-
-            this.RegisterValueChangedCallback(OnValueChanged);
-            RegisterCallback<DetachFromPanelEvent>(_ => Cleanup());
         }
 
         private void OnValueChanged(ChangeEvent<Color> evt)

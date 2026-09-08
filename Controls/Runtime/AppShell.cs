@@ -10,7 +10,6 @@ namespace UitkForKsp2.Controls
     public enum AppShellTitleSpacing
     {
         Normal,
-        Wide,
         Compact
     }
 
@@ -19,7 +18,6 @@ namespace UitkForKsp2.Controls
     {
         private const string UppercaseLocalizationClass = "uppercase";
         private const string DefaultDashes = "----------------------------------------------------------------------------------------------------------------------------------------------------------------/";
-        private const string WideTitleClass = "oab-window-header-title--wide";
         private const string CompactTitleClass = "oab-window-header-title--compact";
 
         private readonly VisualElement _header;
@@ -254,7 +252,6 @@ namespace UitkForKsp2.Controls
         private void UpdateTitleClasses()
         {
             _title.EnableInClassList(UppercaseLocalizationClass, _uppercaseTitle);
-            _title.EnableInClassList(WideTitleClass, _titleSpacing == AppShellTitleSpacing.Wide);
             _title.EnableInClassList(CompactTitleClass, _titleSpacing == AppShellTitleSpacing.Compact);
         }
 

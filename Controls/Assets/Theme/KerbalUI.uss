@@ -963,7 +963,7 @@
 }
 
 .oab-window-header-title {
-    letter-spacing: 4px;
+    letter-spacing: 20px;
     -unity-font-style: normal;
     -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
     font-size: 11px;
@@ -973,12 +973,8 @@
     flex-shrink: 0;
 }
 
-.oab-window-header-title--wide {
-    letter-spacing: 20px;
-}
-
 .oab-window-header-title--compact {
-    letter-spacing: 0;
+    letter-spacing: 8;
 }
 
 .oab-window-header-dashes {
