@@ -1,4 +1,4 @@
-/* Mission Editor window - overrides on top of Ksp2UnityToolsStyles.uss.
+/* Mission Editor window - overrides on top of ReduxSDKStyles.uss.
  * Section header, hint, and accent colors come from the shared sheet. This
  * file contributes the strip + stage card layout. */
 
@@ -507,6 +507,13 @@
     -unity-font-style: italic;
     font-size: 10px;
     padding: 2px 4px;
+    white-space: normal;
+}
+
+.action-row-text-area-field > .unity-base-field__input,
+.action-row-text-area-field > .unity-text-field__input,
+.action-row-text-area-field .unity-base-text-field__input,
+.action-row-text-area-field .unity-text-field__input {
     white-space: normal;
 }
 

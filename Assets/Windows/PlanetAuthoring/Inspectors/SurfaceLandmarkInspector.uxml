@@ -78,7 +78,7 @@
             <editor:PropertyField binding-path="DiscoverableRadius" label="Discoverable radius (m)"
                                   tooltip="Discoverable detection radius in meters. A vessel within this radius of the landmark triggers the discoverable's region scalars."
                                   class="decal-inspector-field unity-base-field__aligned" />
-            <editor:PropertyField binding-path="DiscoverableRegionId" label="Region Id"
+            <engine:TextField binding-path="DiscoverableRegionId" label="Region Id" is-delayed="true"
                                   tooltip="Discoverable region Id. Auto-generated as 'NewLandmarkN' on first enable." />
             <editor:FloatField name="atm-field" label="Atm scalar"
                                tooltip="Science scalar applied while a vessel is in atmospheric flight within the discoverable's radius. -1 disables this situation."

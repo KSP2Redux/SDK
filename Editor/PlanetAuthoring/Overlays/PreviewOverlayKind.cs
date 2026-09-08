@@ -34,5 +34,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         /// Science region visualization in either baked-palette or source-texture mode.
         /// </summary>
         ScienceRegion,
+
+        /// <summary>
+        /// The mask the scatter system samples, with each channel's biome and owning package named.
+        /// </summary>
+        /// <remarks>
+        /// Separate from <see cref="BiomeMask" /> because the scatter system holds its own mask
+        /// reference and may be pointed at a different texture from the body's.
+        /// </remarks>
+        ScatterBiome,
     }
 }

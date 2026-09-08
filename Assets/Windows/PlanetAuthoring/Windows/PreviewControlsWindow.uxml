@@ -54,6 +54,21 @@
             <engine:Slider name="tod-speed-slider" label="Speed (°/s)" tooltip="Rotation speed in degrees per second. Higher values cycle day/night faster." low-value="0" high-value="180" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
         </engine:Foldout>
 
+        <engine:Foldout text="Scatter" value="true" class="preview-section">
+            <engine:Toggle name="scatter-enabled" label="Drive scatter" tooltip="Pump the scatter system each frame the SceneView renders. Turning this off leaves the system booted but idle, so turning it back on does not pay another boot." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="scatter-status" class="sdk-hint" />
+            <engine:Label name="scatter-cells" class="preview-altitude" />
+            <engine:Label name="scatter-distances" class="preview-altitude" />
+            <engine:DropdownField name="scatter-density-quality" label="Density quality"
+                                  tooltip="Preview at a player's scatter density setting without changing your own profile. Only grass, plants and objects scale, and the multiplier divides the sample spacing, so the instance count changes with its square: LOW quarters them and leaves trees and boulders untouched."
+                                  class="preview-coord-field unity-base-field__aligned" />
+            <engine:DropdownField name="scatter-draw-quality" label="Draw distance quality"
+                                  tooltip="Preview at a player's scatter draw distance setting. Scales the spawn distances shown above, so it is the quickest way to tell whether something only reads because you are standing close to it."
+                                  class="preview-coord-field unity-base-field__aligned" />
+            <engine:Button name="scatter-read-counts" text="Read instance counts" tooltip="Read back how many instances survived GPU culling for the current view. This blocks until the GPU catches up, so it runs on demand rather than every frame." class="preview-action-button" />
+            <engine:Label name="scatter-counts" class="sdk-hint" />
+        </engine:Foldout>
+
         <engine:Foldout text="Visualization" value="true" class="preview-section">
             <engine:Toggle name="overlay-biome-toggle" label="Biome mask" tooltip="Render the body's biome mask (R/G/B/A channels) as colored bands over the surface. Useful for checking biome coverage and boundaries." class="preview-coord-field unity-base-field__aligned" />
             <engine:Toggle name="overlay-subzone-toggle" label="Subzone mask" tooltip="Render the subzone mask (R/G/B/A channels) over the surface. Visible only when SUB_ZONES_ENABLED is on for the body." class="preview-coord-field unity-base-field__aligned" />
@@ -66,6 +81,7 @@
             <engine:Toggle name="overlay-science-region-toggle" label="Science region" tooltip="Show this body's science region map as a colored overlay. Use the mode dropdown below to compare the post-bake palette against the source texture you're authoring." class="preview-coord-field unity-base-field__aligned" />
             <engine:DropdownField name="overlay-science-region-mode" label="Region source" tooltip="Baked palette: colorize the asset the runtime actually loads (post-bake). Source texture: render the raw scienceRegionMap you're authoring, before bake." class="preview-coord-field unity-base-field__aligned" />
             <engine:Label name="overlay-science-region-status" class="sdk-hint" />
+            <engine:Toggle name="overlay-scatter-biome-toggle" label="Scatter biomes" tooltip="Show the mask the scatter system samples, which is its own reference and need not be the body's. The legend names each channel's biome and the package that spawns there, which the tint alone cannot tell you." class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="overlay-strength-slider" label="Strength" tooltip="Opacity of every enabled overlay against the surface beneath it." low-value="0" high-value="1" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
         </engine:Foldout>
 

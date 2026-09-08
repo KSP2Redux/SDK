@@ -293,7 +293,16 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Actions.Rows
             VisualElement widget;
             if (ft == typeof(string))
             {
-                var f = new TextField(label) { value = (field.GetValue(owner) as string) ?? string.Empty, isDelayed = true };
+                var textArea = field.GetCustomAttribute<TextAreaAttribute>();
+                bool multiline = textArea != null;
+                var f = new TextField(label)
+                {
+                    value = (field.GetValue(owner) as string) ?? string.Empty,
+                    isDelayed = !multiline,
+                    multiline = multiline
+                };
+                if (multiline)
+                    f.AddToClassList("action-row-text-area-field");
                 f.RegisterValueChangedCallback(e => CommitFieldChangeOnOwner(field, owner, e.newValue ?? string.Empty));
                 widget = f;
             }

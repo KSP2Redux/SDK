@@ -68,6 +68,26 @@ namespace Ksp2UnityTools.Editor.Widgets
             /// Gets or sets the optional callback for adding an item to the list
             /// </summary>
             public Func<object> GenerateNew { get; set; }
+
+            /// <summary>
+            /// Gets or sets a value indicating whether each card gets move up and move down buttons.
+            /// </summary>
+            /// <remarks>
+            /// Off by default. Reorder controls imply that order carries meaning, so they belong only
+            /// on lists where it actually does. Turning them on where order is irrelevant invites
+            /// someone to reorder in search of an effect that will not happen.
+            /// </remarks>
+            public bool AllowReorder { get; set; }
+
+            /// <summary>
+            /// Gets or sets an optional duplicate handler. When set, each card gets a duplicate
+            /// button which is passed the card's current index.
+            /// </summary>
+            /// <remarks>
+            /// A handler rather than a generic array copy, because duplicating a record usually has
+            /// to go through the owning type so identity fields are reissued rather than shared.
+            /// </remarks>
+            public Action<int> OnDuplicate { get; set; }
         }
 
         /// <summary>
@@ -79,22 +99,28 @@ namespace Ksp2UnityTools.Editor.Widgets
         public static VisualElement Build(SerializedProperty arrayProp, Config config)
         {
             var outer = new VisualElement();
-            outer.AddToClassList("data-editor-section");
+            outer.AddToClassList("sdk-card-list");
 
             var headerRow = new VisualElement();
-            headerRow.AddToClassList("data-editor-section-header-row");
+            headerRow.AddToClassList("sdk-card-list__header");
 
             var countLabel = new Label();
-            countLabel.AddToClassList("data-editor-section-header");
+            countLabel.AddToClassList("sdk-card-list__title");
             headerRow.Add(countLabel);
 
-            var addBtn = new Button { text = config.AddButtonText };
-            headerRow.Add(addBtn);
+            // An empty AddButtonText means the list has no generic add path, because appending a
+            // blank element would produce an invalid record. Those lists supply their own add UI.
+            Button addBtn = null;
+            if (!string.IsNullOrEmpty(config.AddButtonText))
+            {
+                addBtn = new Button { text = config.AddButtonText };
+                headerRow.Add(addBtn);
+            }
 
             outer.Add(headerRow);
 
             var container = new VisualElement();
-            container.AddToClassList("data-editor-section-list");
+            container.AddToClassList("sdk-card-list__items");
             outer.Add(container);
 
             void UpdateCount()
@@ -108,22 +134,25 @@ namespace Ksp2UnityTools.Editor.Widgets
             }
             UpdateCount();
 
-            addBtn.clicked += () =>
+            if (addBtn != null)
             {
-                arrayProp.serializedObject.Update();
-                var newIndex = arrayProp.arraySize;
-                arrayProp.arraySize++;
-                arrayProp.serializedObject.ApplyModifiedProperties();
-                if (config.ApplyDefaultsToNew != null)
+                addBtn.clicked += () =>
                 {
                     arrayProp.serializedObject.Update();
-                    config.ApplyDefaultsToNew(arrayProp.GetArrayElementAtIndex(newIndex), newIndex);
+                    var newIndex = arrayProp.arraySize;
+                    arrayProp.arraySize++;
                     arrayProp.serializedObject.ApplyModifiedProperties();
-                }
-                arrayProp.serializedObject.Update();
-                container.Add(BuildCard(arrayProp, newIndex, container, config, UpdateCount));
-                UpdateCount();
-            };
+                    if (config.ApplyDefaultsToNew != null)
+                    {
+                        arrayProp.serializedObject.Update();
+                        config.ApplyDefaultsToNew(arrayProp.GetArrayElementAtIndex(newIndex), newIndex);
+                        arrayProp.serializedObject.ApplyModifiedProperties();
+                    }
+                    arrayProp.serializedObject.Update();
+                    container.Add(BuildCard(arrayProp, newIndex, container, config, UpdateCount));
+                    UpdateCount();
+                };
+            }
 
             return outer;
         }
@@ -133,12 +162,32 @@ namespace Ksp2UnityTools.Editor.Widgets
             var card = CardShell.Build(out var slots);
 
             var idSlot = new VisualElement();
-            idSlot.AddToClassList("data-editor-card-name-field");
+            idSlot.AddToClassList("sdk-card__name-field");
             slots.Header.Add(idSlot);
 
             var chipSlot = new VisualElement();
-            chipSlot.AddToClassList("data-editor-card-chip-slot");
+            chipSlot.AddToClassList("sdk-card__chip-slot");
             slots.Header.Add(chipSlot);
+
+            if (config.AllowReorder)
+            {
+                slots.Header.Add(BuildMoveButton(card, container, arrayProp, -1, "▲"));
+                slots.Header.Add(BuildMoveButton(card, container, arrayProp, 1, "▼"));
+            }
+
+            if (config.OnDuplicate != null)
+            {
+                var duplicate = new Button(() =>
+                {
+                    int index = container.IndexOf(card);
+                    if (index >= 0)
+                    {
+                        config.OnDuplicate(index);
+                    }
+                }) { text = "+", tooltip = "Duplicate" };
+                duplicate.AddToClassList("sdk-card__move-btn");
+                slots.Header.Add(duplicate);
+            }
 
             slots.Header.Add(CardShell.BuildRemoveButton(card, container, arrayProp, updateCount));
 
@@ -148,12 +197,12 @@ namespace Ksp2UnityTools.Editor.Widgets
                 var entry = arrayProp.GetArrayElementAtIndex(index);
 
                 idSlot.Clear();
+                VisualElement idField = null;
                 if (!string.IsNullOrEmpty(config.IdentityFieldName))
                 {
                     var idProp = entry.FindPropertyRelative(config.IdentityFieldName);
                     if (idProp != null)
                     {
-                        VisualElement idField;
                         if (config.BuildIdentityField != null)
                         {
                             idField = config.BuildIdentityField(idProp);
@@ -169,19 +218,34 @@ namespace Ksp2UnityTools.Editor.Widgets
                             });
                             idField = textField;
                         }
-                        idField.style.flexGrow = 1f;
-                        idSlot.Add(idField);
                     }
+                }
+                else if (config.BuildIdentityField != null)
+                {
+                    // Arrays whose elements ARE the value, such as object references, have no named
+                    // identity property to point at. Hand the element itself to the builder so those
+                    // lists can put the reference field in the card header.
+                    idField = config.BuildIdentityField(entry);
+                }
+
+                if (idField != null)
+                {
+                    idField.style.flexGrow = 1f;
+                    idSlot.Add(idField);
                 }
 
                 chipSlot.Clear();
-                if (!string.IsNullOrEmpty(config.ChipFieldName) && config.ChipFormatter != null)
+                if (config.ChipFormatter != null)
                 {
-                    var chipProp = entry.FindPropertyRelative(config.ChipFieldName);
+                    // As with the identity field, an empty ChipFieldName means the element itself is
+                    // the value to summarise rather than a named child of it.
+                    var chipProp = string.IsNullOrEmpty(config.ChipFieldName)
+                        ? entry
+                        : entry.FindPropertyRelative(config.ChipFieldName);
                     if (chipProp != null)
                     {
                         var chip = new Label();
-                        chip.AddToClassList("data-editor-card-summary-chip");
+                        chip.AddToClassList("sdk-card__chip");
                         UpdateChip(chip, chipProp, config.ChipFormatter);
                         chip.TrackPropertyValue(chipProp, p => UpdateChip(chip, p, config.ChipFormatter));
                         chipSlot.Add(chip);
@@ -199,6 +263,59 @@ namespace Ksp2UnityTools.Editor.Widgets
             return card;
         }
 
+        /// <summary>
+        /// Builds a move button that shifts a card, and its array element, by one position.
+        /// </summary>
+        /// <remarks>
+        /// Resolves the card's position at click time rather than capturing an index, for the same
+        /// reason <see cref="CardShell.BuildRemoveButton" /> does: external mutations would otherwise
+        /// leave a stale index behind. Every sibling is re-bound afterwards so each card's fields
+        /// point at the data now sitting at its position.
+        /// </remarks>
+        /// <param name="card">The card to move.</param>
+        /// <param name="container">The container holding the cards.</param>
+        /// <param name="arrayProp">The backing array.</param>
+        /// <param name="delta">-1 to move up, 1 to move down.</param>
+        /// <param name="text">Button glyph.</param>
+        /// <returns>The move button.</returns>
+        private static Button BuildMoveButton(
+            VisualElement card,
+            VisualElement container,
+            SerializedProperty arrayProp,
+            int delta,
+            string text)
+        {
+            var button = new Button(() =>
+            {
+                int from = container.IndexOf(card);
+                int to = from + delta;
+                if (from < 0 || to < 0 || to >= arrayProp.arraySize)
+                {
+                    return;
+                }
+
+                SerializedObject so = arrayProp.serializedObject;
+                so.Update();
+                arrayProp.MoveArrayElement(from, to);
+                so.ApplyModifiedProperties();
+                so.Update();
+
+                container.Remove(card);
+                container.Insert(to, card);
+
+                for (var i = 0; i < container.childCount; i++)
+                {
+                    if (container.ElementAt(i).userData is Action<int> rebind)
+                    {
+                        rebind(i);
+                    }
+                }
+            }) { text = text };
+
+            button.AddToClassList("sdk-card__move-btn");
+            return button;
+        }
+
         private static void UpdateChip(Label chip, SerializedProperty prop, Func<SerializedProperty, string> formatter)
         {
             var text = formatter(prop);
@@ -214,7 +331,7 @@ namespace Ksp2UnityTools.Editor.Widgets
             }
         }
 
-        // ---------- Callback-based variant for IList<T> sources ----------
+        // Callback-based variant for IList<T> sources.
 
         /// <summary>
         /// Configuration for <see cref="BuildFromList{T}"/>. Caller supplies the per-entry
@@ -286,13 +403,13 @@ namespace Ksp2UnityTools.Editor.Widgets
         {
             var handle = new ListHandle();
             var outer = new VisualElement();
-            outer.AddToClassList("data-editor-section");
+            outer.AddToClassList("sdk-card-list");
 
             var headerRow = new VisualElement();
-            headerRow.AddToClassList("data-editor-section-header-row");
+            headerRow.AddToClassList("sdk-card-list__header");
 
             var countLabel = new Label();
-            countLabel.AddToClassList("data-editor-section-header");
+            countLabel.AddToClassList("sdk-card-list__title");
             headerRow.Add(countLabel);
 
             var addBtn = new Button(() => config.OnAddClicked?.Invoke()) { text = config.AddButtonText };
@@ -302,11 +419,11 @@ namespace Ksp2UnityTools.Editor.Widgets
             outer.Add(headerRow);
 
             var container = new VisualElement();
-            container.AddToClassList("data-editor-section-list");
+            container.AddToClassList("sdk-card-list__items");
             outer.Add(container);
 
             var emptyHint = new Label(config.EmptyHintText ?? "(none)");
-            emptyHint.AddToClassList("data-editor-section-empty");
+            emptyHint.AddToClassList("sdk-card-list__empty");
 
             void Rebuild()
             {

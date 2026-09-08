@@ -253,6 +253,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
                     case HeightDerivedPreviewOverlay h:    h.Strength = _strength; break;
                     case ActiveLayerPreviewOverlay a:      a.Strength = _strength; break;
                     case ScienceRegionPreviewOverlay s:    s.Strength = _strength; break;
+                    case ScatterBiomePreviewOverlay sb:    sb.Strength = _strength; break;
                 }
             }
         }
@@ -414,6 +415,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
                 case HeightDerivedPreviewOverlay h:    h.Strength = _strength; h.BandHeightMeters = _bandHeight; h.SlopeStepDegrees = _slopeStepDeg; break;
                 case ActiveLayerPreviewOverlay a:      a.Strength = _strength; a.LayerEnableMask = _activeLayerMask; break;
                 case ScienceRegionPreviewOverlay s:    s.Strength = _strength; s.CurrentMode = _scienceRegionMode; break;
+                case ScatterBiomePreviewOverlay sb:    sb.Strength = _strength; break;
             }
             return created;
         }
@@ -426,6 +428,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             PreviewOverlayKind.AltitudeBands => new HeightDerivedPreviewOverlay(HeightDerivedPreviewOverlay.Source.AltitudeBands),
             PreviewOverlayKind.ActiveLayer   => new ActiveLayerPreviewOverlay(),
             PreviewOverlayKind.ScienceRegion => new ScienceRegionPreviewOverlay { CurrentMode = _scienceRegionMode },
+            PreviewOverlayKind.ScatterBiome  => new ScatterBiomePreviewOverlay(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
 

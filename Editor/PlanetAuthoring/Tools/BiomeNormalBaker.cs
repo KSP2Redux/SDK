@@ -16,7 +16,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     /// </remarks>
     public static class BiomeNormalBaker
     {
-        private const string ComputeShaderPath = "Assets/Modules/KSP2UnityTools/Assets/Shaders/PlanetAuthoring/AnalyticScaledSpaceBake.compute";
+        private const string ComputeShaderPath =
+            SDKConfiguration.BasePath + "/Assets/Shaders/PlanetAuthoring/AnalyticScaledSpaceBake.compute";
         private const int FallbackResolution = 1024;
         // Anchor-mask total-weight epsilon below which a biome is treated as empty.
         private const float BiomeEmptyEpsilon = 1e-3f;

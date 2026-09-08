@@ -715,7 +715,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 for (int x = 0; x <= lonDivisions; x++)
                 {
                     var u = x / (float)lonDivisions;
-                    var phi = u * Mathf.PI * 2f;
+                    var phi = (u - 0.5f) * Mathf.PI * 2f;
                     var sinPhi = Mathf.Sin(phi);
                     var cosPhi = Mathf.Cos(phi);
                     var dir = new Vector3(sinTheta * cosPhi, cosTheta, sinTheta * sinPhi);

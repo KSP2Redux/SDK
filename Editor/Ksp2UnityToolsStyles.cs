@@ -5,18 +5,18 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor
 {
     /// <summary>
-    /// Loads the shared KSP2UnityTools editor stylesheet (and any per-window overlays) onto a root
+    /// Loads the shared Redux SDK editor stylesheet (and any per-window overlays) onto a root
     /// <see cref="VisualElement" /> in one call.
     /// </summary>
     /// <remarks>
-    /// Every inspector and editor window that ships with the KSP2UnityTools SDK calls
+    /// Every inspector and editor window that ships with the Redux SDK calls
     /// <see cref="Apply" /> from its <c>CreateGUI</c> / <c>CreateInspectorGUI</c> to pick up unified
-    /// theming. The shared sheet at <c>/Assets/Windows/Ksp2UnityToolsStyles.uss</c> is loaded first;
+    /// theming. The shared sheet at <c>/Assets/Windows/ReduxSDKStyles.uss</c> is loaded first;
     /// window-specific overrides are layered on top in argument order.
     /// </remarks>
     public static class Ksp2UnityToolsStyles
     {
-        private const string CommonStyleSheetPath = "/Assets/Windows/Ksp2UnityToolsStyles.uss";
+        private const string CommonStyleSheetPath = "/Assets/Windows/ReduxSDKStyles.uss";
 
         /// <summary>
         /// Loads the shared stylesheet onto <paramref name="root" />, then layers any per-window

@@ -1,4 +1,4 @@
-/* Science Region inspector v2: overrides on top of Ksp2UnityToolsStyles.uss.
+/* Science Region inspector v2: overrides on top of ReduxSDKStyles.uss.
  * Only rules unique to this inspector live here. */
 
 .science-region-region-row {

@@ -71,7 +71,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private void OnExpensiveCacheChanged(CorePartData part)
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if (IsPlayModeTransitioning()) return;
             if (_root == null) return;
             if (part != null && part != target) return;
             UpdateValidationChip();
@@ -155,10 +155,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         {
             if (!CanMutateInspectorState())
             {
-                if (!EditorApplication.isPlayingOrWillChangePlaymode)
-                {
-                    EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
-                }
+                EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
                 return;
             }
 
@@ -173,22 +170,25 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private static bool CanMutateInspectorState()
         {
-            return !EditorApplication.isPlayingOrWillChangePlaymode &&
+            return !IsPlayModeTransitioning() &&
                    !EditorApplication.isCompiling &&
                    !EditorApplication.isUpdating;
+        }
+
+        // True only while Unity is entering or leaving Play Mode, which is the window where mutating
+        // hideFlags races scene serialization. isPlayingOrWillChangePlaymode leads isPlaying on the way
+        // in and lags it on the way out, so the two disagree exactly during a transition. Steady-state
+        // Play Mode is not a transition and does not gate anything here, since the authoring inspector
+        // is just as useful on a live part as on one sitting in Edit Mode.
+        private static bool IsPlayModeTransitioning()
+        {
+            return EditorApplication.isPlayingOrWillChangePlaymode != EditorApplication.isPlaying;
         }
 
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
         {
             _root = new VisualElement();
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                _root.Add(new HelpBox(
-                    "Part authoring controls are disabled while Unity is entering or leaving Play Mode.",
-                    HelpBoxMessageType.Info));
-                return _root;
-            }
 
             var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UXML_PATH);
             if (tree == null)
@@ -332,7 +332,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private void UpdateValidationChip()
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if (IsPlayModeTransitioning()) return;
             if (_root == null) return;
             var validChip = _root.Q<Button>("readiness-chip-valid");
             if (validChip == null) return;

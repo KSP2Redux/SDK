@@ -1,5 +1,5 @@
 /* Part Validation Report window - mirrors PlanetAuthoring/Windows/ValidationReportWindow.uss
- * minus the VRAM panel. Issue-row visuals come from the shared Ksp2UnityToolsStyles.uss sheet
+ * minus the VRAM panel. Issue-row visuals come from the shared ReduxSDKStyles.uss sheet
  * via the .validation-issue-* selectors. */
 
 .validation-report-root {

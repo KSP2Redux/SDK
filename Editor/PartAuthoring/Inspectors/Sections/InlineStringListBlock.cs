@@ -2,6 +2,7 @@ using System;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors;
 using UnityEditor;
 using UnityEngine.UIElements;
+using Ksp2UnityTools.Editor.Widgets;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 {

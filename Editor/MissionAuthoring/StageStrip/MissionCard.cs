@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using KSP.Game.Missions;
 using KSP.Game.Missions.Definitions;
 using KSP.Game.Missions.State;
@@ -50,6 +50,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
         private Toggle _hiddenToggle;
         private TriumphLoopVideoKeyField _triumphLoopVideoKeyField;
         private Toggle _visibleRewardsToggle;
+        private Toggle _requiresNewVesselToggle;
         private EnumField _uiDisplayTypeField;
         private TextField _missionSaveAssetKeyField;
 
@@ -138,6 +139,12 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
             _triumphLoopVideoKeyField.AddToClassList("mission-card-field");
             display.Add(_triumphLoopVideoKeyField);
             _visibleRewardsToggle = MakeToggle(display, "Visible Rewards", MissionData.VisibleRewards, v => MissionData.VisibleRewards = v, "Edit visible rewards");
+            _requiresNewVesselToggle = MakeToggle(display, "Requires New Vessel", MissionData.RequiresNewVessel, v => MissionData.RequiresNewVessel = v, "Edit requires new vessel");
+            _requiresNewVesselToggle.tooltip =
+                "Off: any craft can work on this mission, including ones that were already flying when it was "
+                + "picked up.\n"
+                + "On: only craft built after the mission was picked up. Applies to every Vessel scoped run in "
+                + "the mission, each measured against when the mission was picked up rather than when that run began.";
             _uiDisplayTypeField = MakeEnum(display, "Display Type", MissionData.uiDisplayType, v => MissionData.uiDisplayType = (UIDisplayType)v, "Edit UI display type");
 
             var assets = BuildSection("Assets");
@@ -220,6 +227,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
             _hiddenToggle?.SetValueWithoutNotify(MissionData.Hidden);
             _triumphLoopVideoKeyField?.SetValueWithoutNotify(MissionData.TriumphLoopVideoKey ?? string.Empty);
             _visibleRewardsToggle?.SetValueWithoutNotify(MissionData.VisibleRewards);
+            _requiresNewVesselToggle?.SetValueWithoutNotify(MissionData.RequiresNewVessel);
             _uiDisplayTypeField?.SetValueWithoutNotify(MissionData.uiDisplayType);
             _missionSaveAssetKeyField?.SetValueWithoutNotify(MissionData.MissionSaveAssetKey ?? string.Empty);
 

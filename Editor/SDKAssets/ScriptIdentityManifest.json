@@ -1,0 +1,65 @@
+{
+    "Version": 1,
+    "ScriptIdentities": [
+        {
+            "SourceGuid": "0881af29113af1444b7868495b9034e0",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.VFX.ThrottleParticleSystemData"
+        },
+        {
+            "SourceGuid": "2f0b0c553be8edd4682e9180fdd13e37",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "I2.Loc.LanguageSourceAsset"
+        },
+        {
+            "SourceGuid": "40db45e9a7cf50a4089f9941ff82ee9a",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.Rendering.FXBase"
+        },
+        {
+            "SourceGuid": "53c24a9582403274280deffd7cf49dc5",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.Game.ClimbPreset"
+        },
+        {
+            "SourceGuid": "54bcd12d9d43ee24983c40ef45e225d7",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.Logging.LogFilterSettings"
+        },
+        {
+            "SourceGuid": "9119affeda5e4b340acb77079128eff7",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.VFX.ThrottleVFXManager"
+        },
+        {
+            "SourceGuid": "9a8759aaa9217354c9014fb6085feac1",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.VFX.ThrottleBlendshapeData"
+        },
+        {
+            "SourceGuid": "bd810a5af7ad39746905abc8424a1b54",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.Game.InteractPreset"
+        },
+        {
+            "SourceGuid": "c0cf9d3eba35cb24da3ef2b861152487",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "KSP.VFX.ThrottleLightData"
+        },
+        {
+            "SourceGuid": "dcf5744f43aeaac46a432d1a0848766a",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Assembly-CSharp",
+            "TypeName": "PQSDecal"
+        }
+    ]
+}

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEngine;
@@ -210,24 +211,40 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var metalResult = PackIntoArray(pqsData, SmallMetalArrayName, metalSources, out _);
             if (!metalResult.Success) return metalResult;
 
+            // Captured before the vectors are overwritten. Scatter rules store slice indices, and a
+            // repack renumbers them, so without the old map every rule on this body silently starts
+            // naming a different stratum. Null on a first pack, where there is nothing to remap.
+            ScatterStratumLookup.TryReadChannelSliceIndices(surfaceMaterial, out Vector4[] previousSliceIndices);
+
+            // One undo group across the material write and the rule remap below. Left as two, undoing
+            // a repack takes several presses and the state in between pairs the new slice numbering
+            // with the old rules, which is the mismatch the remap exists to prevent.
+            int undoGroup = Undo.GetCurrentGroup();
             Undo.RecordObject(surfaceMaterial, "Repack small tiles");
             surfaceMaterial.SetTexture(SmallAlbedoArrayName, FindArraySubasset(pqsData, SmallAlbedoArrayName));
             surfaceMaterial.SetTexture(SmallNormalArrayName, FindArraySubasset(pqsData, SmallNormalArrayName));
             surfaceMaterial.SetTexture(SmallMetalArrayName, FindArraySubasset(pqsData, SmallMetalArrayName));
 
+            var updatedSliceIndices = new Vector4[4];
             for (var b = 0; b < 4; b++)
             {
+                updatedSliceIndices[b] = new Vector4(
+                    albedoIndices[b * 4], albedoIndices[b * 4 + 1], albedoIndices[b * 4 + 2], albedoIndices[b * 4 + 3]);
                 surfaceMaterial.SetVector(
                     "_SmallBiome" + PlanetAuthoringNaming.BiomeChannels[b],
-                    new Vector4(albedoIndices[b * 4], albedoIndices[b * 4 + 1], albedoIndices[b * 4 + 2], albedoIndices[b * 4 + 3])
+                    updatedSliceIndices[b]
                 );
             }
 
             EditorUtility.SetDirty(surfaceMaterial);
 
+            ScatterRuleRemap.Apply(pqsData, previousSliceIndices, updatedSliceIndices);
+            ScatterStratumLookup.NotifyStrataChanged();
+
             authoring.LastSmallTilesPackFingerprint = ComputeSmallTilesFingerprint(authoring);
             EditorUtility.SetDirty(authoring);
 
+            Undo.CollapseUndoOperations(undoGroup);
             return PackResult.Ok();
         }
 

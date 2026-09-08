@@ -1,5 +1,6 @@
 using System.Reflection;
 using KSP.Sim.Definitions;
+using Ksp2UnityTools.Editor.PartAuthoring.Audio;
 using Ksp2UnityTools.Editor.Widgets;
 using Redux.Audio;
 using Redux.Modules;
@@ -12,7 +13,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
     /// <summary>
     /// Custom editor for <see cref="Data_PartAudioPreset" />. Renders the <c>Presets</c> list as
     /// collapsible cards via <see cref="CardListSection" /> with an autocomplete on each
-    /// binding's preset ID, sourced from <see cref="PartAudioPresetRegistry.GetAuthoringPresetIds" />.
+    /// binding's preset ID, sourced from <see cref="PartAudioPresetIds.GetAuthoringPresetIds" />.
     /// </summary>
     [DataEditor(typeof(Data_PartAudioPreset))]
     public sealed class PartAudioPresetDataEditor : IDataEditor
@@ -44,7 +45,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
                 Title = "Audio Presets",
                 AddButtonText = "+ Add Preset",
                 IdentityFieldName = nameof(AudioPresetBinding.PresetId),
-                BuildIdentityField = idProp => new AutocompleteField(idProp, string.Empty, PartAudioPresetRegistry.GetAuthoringPresetIds),
+                BuildIdentityField = idProp => new AutocompleteField(idProp, string.Empty, PartAudioPresetIds.GetAuthoringPresetIds),
                 BuildBody = BuildBindingBody,
             }));
 

@@ -1,5 +1,5 @@
 /* Mission Validation Report window - direct mirror of PartValidationReportWindow.uss.
- * Issue-row visuals come from the shared Ksp2UnityToolsStyles.uss sheet via the
+ * Issue-row visuals come from the shared ReduxSDKStyles.uss sheet via the
  * .validation-issue-* selectors. */
 
 .validation-report-root {

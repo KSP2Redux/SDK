@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root">
+
+        <engine:Foldout text="Celestial Body" value="true" class="sdk-section" name="body-section">
+            <engine:VisualElement name="authoring-slot" />
+            <engine:Button name="new-button" text="Create New Resource Map Authoring"
+                           tooltip="Create a new authoring asset for a celestial body."
+                           class="sdk-action-button" />
+
+            <engine:TextField name="mask-field" label="Biome Mask"
+                              readonly="true"
+                              tooltip="File name of this body's biome mask within the mask folder set under Settings."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="mask-button" text="Import Biome Mask..."
+                           tooltip="Choose a biome mask PNG. It is copied into the mask folder, which stays out of version control."
+                           class="sdk-action-button" />
+            <engine:Label name="mask-help"
+                          text="Expected: a 4096 x 4096 PNG biome map of the celestial body, with one biome per channel in red, green, blue and alpha. The file will be copied into the reference folder."
+                          class="sdk-hint" />
+            <engine:VisualElement name="mask-warning-slot" />
+
+            <engine:DropdownField name="body-field" label="Celestial Body"
+                                  tooltip="Body these maps belong to. Auto-selected from the mask file name. Must match the runtime body name, since it is written into every generated definition."
+                                  class="sdk-field unity-base-field__aligned" />
+            <engine:TextField name="body-custom-field" label="Celestial Body Name"
+                              tooltip="Name of a body the project does not declare yet. It still has to match the runtime body name exactly."
+                              class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:VisualElement name="resources-slot" />
+
+        <engine:Foldout text="Settings" value="false" class="sdk-section" name="settings-section">
+            <engine:TextField name="map-folder-field" label="Density Map Output"
+                              tooltip="Project folder the generated density map PNGs are written to."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:TextField name="definition-folder-field" label="Definition Output"
+                              tooltip="Project folder the generated definition JSONs are written to."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:TextField name="authoring-folder-field" label="Authoring Assets"
+                              tooltip="Project folder new authoring assets are created in."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:TextField name="mask-folder-field" label="Biome Mask Folder"
+                              tooltip="Folder imported biome masks are copied into, relative to the repository root. Kept outside Assets so Unity never imports these large textures, and outside version control because they are ripped stock art."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:TextField name="group-field" label="Addressables Group"
+                              tooltip="Group both generated files are registered into. The definition also gets the cb_resources label, which is how the runtime finds it."
+                              class="sdk-field unity-base-field__aligned" />
+            <engine:DropdownField name="output-size-field" label="Output Resolution"
+                                  choices="512,1024,2048,4096"
+                                  index="2"
+                                  tooltip="Side length of a generated map in pixels. The shipped maps are 2048."
+                                  class="sdk-field unity-base-field__aligned" />
+            <engine:DropdownField name="preview-size-field" label="Preview Resolution"
+                                  choices="128,256,512,1024"
+                                  index="2"
+                                  tooltip="Side length of the interactive previews. Lower is faster to refresh but aliases high frequency noise, which can misrepresent the settings being tuned."
+                                  class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="reset-settings-button" text="Reset to Defaults" class="sdk-action-button" />
+        </engine:Foldout>
+
+        <engine:VisualElement name="window-warning-slot" />
+
+    </engine:ScrollView>
+
+</engine:UXML>

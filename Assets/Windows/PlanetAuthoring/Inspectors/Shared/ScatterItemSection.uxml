@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!--
+        One scatter item. Binding paths are relative to the list element, which the host arranges by
+        binding this subtree to the element's SerializedProperty rather than to the package.
+
+        Section order is the design. VegetationItemInfoPro has roughly 150 fields and the grouping is
+        what makes it usable, so it follows 03-data-model.md rather than the declaration order.
+    -->
+
+    <engine:VisualElement name="scatter-item-root">
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Source" value="true">
+            <engine:VisualElement enabled="false">
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationItemID" label="Item ID"
+                                      tooltip="Stable GUID for this item. Hand placed instances and dependency rules refer to it, so it is never edited by hand." />
+            </engine:VisualElement>
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="Name" label="Name"
+                                  tooltip="Display name, shown on this card's header and in validation messages." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationType" label="Type"
+                                  tooltip="Not cosmetic. Seeds Sample Distance when the item is added, and at runtime selects the global density multiplier, the render layer, and which distance band the item uses. Objects, Grass and Plant share the vegetation distance, Tree uses the tree distance, Hero the much longer hero distance." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="PrefabType" label="Prefab Type"
+                                  tooltip="Mesh uses the prefab below. Texture uses the built-in grass patch mesh with the texture instead, which is how stock grass items work, and leaves the prefab legitimately empty." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationPrefab" label="Prefab"
+                                  tooltip="Redux-authored prefab spawned for this item. Base game prefabs live in the asset bundle and carry no project GUID, so they cannot be referenced here." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationTexture" label="Texture"
+                                  tooltip="Used instead of a prefab when Prefab Type is Texture." />
+            <engine:VisualElement enabled="false">
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="VegetationRenderMode" label="Render Mode"
+                                      tooltip="Forced to Instanced Indirect on Windows, so this is shown for reference rather than as a choice." />
+            </engine:VisualElement>
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="RenderItem" label="Render"
+                                  tooltip="Whether the item is drawn. Instances still spawn with it off, which is useful for an item that exists only as a dependency source for another." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="EnableRuntimeSpawn" label="Spawn at Runtime"
+                                  tooltip="Turns the item off entirely without deleting it. Hand placed instances are looked up inside the same spawn pass, so they do not appear either." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="DisableShadows" label="Disable Shadows"
+                                  tooltip="Stops this item casting shadows. Worth setting on dense small items, where shadow cost outweighs what the shadows add." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Coverage" value="true">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="SampleDistance" label="Grid Spacing (m)"
+                                  tooltip="Spacing of the candidate grid this item spawns on. The main cost knob, and quadratic: halving it puts roughly four times as many candidates on the same ground." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="Density" label="Density"
+                                  tooltip="Chance each grid candidate becomes an instance, so instances per unit area scale linearly with it. Prefer this over Grid Spacing for thinning an item out, since it changes coverage without multiplying the sampling cost." />
+            <engine:Label name="scatter-item-spacing-hint" class="sdk-hint" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="RandomizePosition" label="Randomize Position"
+                                  tooltip="Jitters each instance within its grid cell. Off leaves a visibly regular lattice." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseSamplePointOffset" label="Use Sample Point Offset"
+                                  tooltip="Pushes each candidate away from its grid point before the rules run, breaking up alignment more strongly than Randomize Position." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="SamplePointMinOffset" label="Min Offset"
+                                  tooltip="Smallest distance a candidate is pushed from its grid point." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="SamplePointMaxOffset" label="Max Offset"
+                                  tooltip="Largest distance a candidate is pushed from its grid point." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="Seed" label="Seed"
+                                  tooltip="Changes the random pattern without changing the amount. Use it when the layout looks wrong rather than sparse." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Placement rules" value="false">
+            <engine:Label text="Noise cutoff and noise density both default to on, so an item has noise applied even if this section is never opened."
+                          class="sdk-hint" />
+
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseHeightRule" label="Use Height Rule"
+                                  tooltip="Restricts the item to an altitude band." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MinHeight" label="Min Height (m)"
+                                  tooltip="Altitude relative to sea level, not to the body's mean radius." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MaxHeight" label="Max Height (m)"
+                                  tooltip="Altitude relative to sea level, not to the body's mean radius." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseAdvancedHeightRule" label="Use Height Curve"
+                                  tooltip="Replaces the flat min and max band with a curve, so density can taper toward the edges of the band instead of stopping abruptly." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MaxCurveHeight" label="Curve Max Height (m)"
+                                  tooltip="Altitude the height curve's right-hand edge corresponds to." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="HeightRuleCurve" label="Height Curve"
+                                  tooltip="Spawn chance against altitude. Zero regions reject outright." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="HeightSampleMode" label="Height Sampled From"
+                                  tooltip="Only meaningful on a body with an ocean. Chooses whether height is measured against terrain, ocean, or whichever is higher." />
+
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseSteepnessRule" label="Use Steepness Rule"
+                                  tooltip="Restricts the item to a slope band." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MinSteepness" label="Min Steepness (deg)"
+                                  tooltip="Shallowest slope, in degrees, the item accepts. Above zero keeps an item off flat ground." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MaxSteepness" label="Max Steepness (deg)"
+                                  tooltip="Steepest slope the item accepts. Low values keep items off cliffs they would appear to float on." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseAdvancedSteepnessRule" label="Use Steepness Curve"
+                                  tooltip="Replaces the flat slope band with a curve." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="SteepnessRuleCurve" label="Steepness Curve"
+                                  tooltip="Spawn chance against slope." />
+
+            <engine:Foldout class="sdk-subsection-foldout" text="Noise" value="false">
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UseNoiseCutoff" label="Use Noise Cutoff"
+                                      tooltip="Carves the field into patches by rejecting candidates where the noise falls below the cutoff. On by default." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseCutoffValue" label="Cutoff Value"
+                                  tooltip="Noise level a point must exceed to spawn. Higher shrinks the patches." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseCutoffScale" label="Cutoff Scale"
+                                  tooltip="Size of the noise pattern. Larger values make bigger, smoother patches." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseCutoffInverse" label="Invert Cutoff"
+                                  tooltip="Spawns in the gaps instead of the patches." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseCutoffOffset" label="Cutoff Offset"
+                                  tooltip="Shifts the noise pattern, so two items using the same scale do not share their patches." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UseNoiseDensity" label="Use Noise Density"
+                                      tooltip="Varies density across the surface rather than rejecting outright. On by default." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseDensityScale" label="Density Scale"
+                                  tooltip="Size of the pattern that varies density. Larger gives broader thick and thin regions." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseDensityInverse" label="Invert Density"
+                                  tooltip="Swaps the thick and thin regions." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseDensityOffset" label="Density Offset"
+                                  tooltip="Shifts the density pattern independently of the cutoff pattern." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UseNoiseScaleRule" label="Use Noise Scale"
+                                  tooltip="Varies instance size by noise, so a field reads as clustered growth rather than uniform sizes." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseScaleMinScale" label="Scale Min"
+                                  tooltip="Size at the low end of the scale noise." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseScaleMaxScale" label="Scale Max"
+                                  tooltip="Size at the high end of the scale noise." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseScaleScale" label="Scale Noise Scale"
+                                  tooltip="Size of the pattern driving scale variation." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseScaleInverse" label="Invert Scale"
+                                  tooltip="Swaps which noise regions get the large instances." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="NoiseScaleOffset" label="Scale Offset"
+                                  tooltip="Shifts the scale pattern independently of the others." />
+            </engine:Foldout>
+
+            <engine:Foldout class="sdk-subsection-foldout" text="Terrain shape" value="false">
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UseConcaveLocationRule" label="Use Concave Rule"
+                                      tooltip="Restricts to hollows and gullies. Sampling for this is not implemented on PQS, so it has no effect here." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="ConcaveLocationInverse" label="Invert Concave"
+                                  tooltip="Targets ridges instead of hollows." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="ConcaveLocationValue" label="Concave Value"
+                                  tooltip="How concave a point must be to qualify." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UsePeakRule" label="Use Peak Rule"
+                                  tooltip="Restricts the item to convex ground such as ridges and high points." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="PeakMinValue" label="Peak Min"
+                                  tooltip="Least peaked the ground may be." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="PeakMaxValue" label="Peak Max"
+                                  tooltip="Most peaked the ground may be." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UseCavityRule" label="Use Cavity Rule"
+                                  tooltip="Restricts the item to concave ground such as hollows and gully floors." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="CavityMinValue" label="Cavity Min"
+                                  tooltip="Least cavernous the ground may be." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="CavityMaxValue" label="Cavity Max"
+                                  tooltip="Most cavernous the ground may be." />
+            </engine:Foldout>
+
+            <engine:Foldout class="sdk-subsection-foldout" text="Dependency" value="false">
+                <engine:Label text="An item can only depend on one spawned earlier in this package's list. Ordering is why the item list has reorder arrows."
+                              class="sdk-hint" />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="UseDependencyRules" label="Use Dependency Rules"
+                                  tooltip="Places this item relative to another item's instances rather than on its own grid." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyVegetationID" label="Depends On (Item ID)"
+                                  tooltip="Item ID this one clusters around. It must appear earlier in the package's list, or its instances do not exist yet when this item spawns." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyMode" label="Mode"
+                                  tooltip="Whether instances are placed around the dependency or injected into it." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyMinDistance" label="Min Distance (m)"
+                                  tooltip="Closest an instance may sit to its dependency." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyMaxDistance" label="Max Distance (m)"
+                                  tooltip="Furthest an instance may sit from its dependency." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyDistanceMinScale" label="Distance Min Scale"
+                                  tooltip="Size applied at the minimum distance, for shrinking outliers." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyDistanceMaxScale" label="Distance Max Scale"
+                                  tooltip="Size applied at the maximum distance." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyDistanceScaleInverse" label="Invert Distance Scale"
+                                  tooltip="Swaps which end of the distance range gets the larger instances." />
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyMaxInstanceCount" label="Max Instances"
+                                  tooltip="Cap on instances generated per dependency instance." />
+            </engine:Foldout>
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Surface restriction" value="false">
+            <engine:Label text="Restricts the item to named surface strata. The index stored is the packed slice index, not the 0-15 cell index."
+                          class="sdk-hint" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseProceduralTextureIncludeRules" label="Use Include Rules"
+                                  tooltip="Restricts the item to the listed surface strata." />
+            <engine:VisualElement name="scatter-include-rules" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseProceduralTextureExcludeRules" label="Use Exclude Rules"
+                                  tooltip="Keeps the item off the listed surface strata." />
+            <engine:VisualElement name="scatter-exclude-rules" />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Transform" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="Rotation" label="Rotation"
+                                  tooltip="How each instance is oriented. Rotate Y spins around the up axis only, for anything that should stand upright. Rotate XYZ tumbles freely, for rocks and debris. Follow Terrain aligns to the surface normal so instances lie against slopes, and Follow Terrain Scale additionally varies scale with the terrain. No Rotation leaves the prefab's own orientation untouched." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="RotationOffset" label="Rotation Offset (deg)"
+                                  tooltip="Constant rotation applied on top of the rotation mode. Use it when a prefab was authored facing the wrong way rather than re-exporting the mesh." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MinScale" label="Min Scale"
+                                  tooltip="Lower bound of the uniform random scale applied per instance." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MaxScale" label="Max Scale"
+                                  tooltip="Equal to Min Scale gives every instance the same size." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ScaleMultiplier" label="Scale Multiplier"
+                                  tooltip="Per-axis multiplier on the whole item. Use it to correct a prefab authored at the wrong scale, and leave the random range for variation." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MinYOffset" label="Min Sink (m)"
+                                  tooltip="Random vertical offset applied per instance. Negative values sink the instance into the surface, which hides a flat base." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="MaxYOffset" label="Max Sink (m)"
+                                  tooltip="Upper bound of the vertical offset. Keep both bounds negative to guarantee every instance is embedded." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Appearance" value="false">
+            <engine:VisualElement enabled="false">
+                <editor:PropertyField class="unity-base-field__aligned" binding-path="ShaderName" label="Shader"
+                                      tooltip="Resolved from the prefab's material when the item is added, and used to pick the shader controller below." />
+            </engine:VisualElement>
+            <!-- Built in code from the shader controller's own property descriptors. -->
+            <engine:VisualElement name="scatter-shader-properties" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ControllerMaterialIndex" label="Material Index"
+                                  tooltip="Which material on the prefab the shader settings drive, for a mesh with more than one." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Colliders" value="false">
+            <engine:Label text="Colliders are created at runtime only. They never appear in the editor preview, so this section cannot be judged from the SceneView."
+                          class="sdk-hint" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderType" label="Collider Type"
+                                  tooltip="Shape generated for collision. None leaves the item non-solid, which is right for grass and debris." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderRadius" label="Radius"
+                                  tooltip="Radius for sphere and capsule colliders." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderHeight" label="Height"
+                                  tooltip="Height for capsule colliders." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderSize" label="Size"
+                                  tooltip="Extents for box colliders." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderOffset" label="Offset"
+                                  tooltip="Shifts the collider relative to the instance, for a mesh whose visual centre is not its base." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderMesh" label="Mesh"
+                                  tooltip="Mesh used for mesh colliders. A simplified shape rather than the render mesh." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderConvex" label="Convex"
+                                  tooltip="Required for a mesh collider to take part in dynamic collision." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderTrigger" label="Trigger"
+                                  tooltip="Makes the collider a trigger, so it reports overlaps without blocking movement." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderTag" label="Tag"
+                                  tooltip="Tag applied to generated colliders, for gameplay code that filters on it." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderDistanceFactor" label="Distance Factor"
+                                  tooltip="Fraction of the item's draw distance within which colliders are generated. Colliders are far more expensive than draws, so this is usually well below one." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Level of detail" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="DisableLOD" label="Disable LOD"
+                                  tooltip="Always renders LOD 0. Only sensible for items with a single LOD anyway." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="LODFactor" label="LOD Factor"
+                                  tooltip="Scales the distances at which this item changes LOD." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="RenderDistanceFactor" label="Render Distance Factor"
+                                  tooltip="Multiplies this item's cull distance against the band its Type selects. Below 1 makes the item fade out sooner than its neighbours." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseDistanceFalloff" label="Use Distance Falloff"
+                                  tooltip="Fades the item out with distance instead of cutting it at the cull distance." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="DistanceFalloffStartDistance" label="Falloff Start"
+                                  tooltip="Fraction of the cull distance at which fading begins." />
+        </engine:Foldout>
+
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Billboards" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="UseBillboards" label="Use Billboards"
+                                  tooltip="Substitutes a flat billboard beyond the mesh draw distance, so an item can read at range for far less cost." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardQuality" label="Quality"
+                                  tooltip="Resolution of the generated billboard atlas." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardFadeDistance" label="Fade Distance"
+                                  tooltip="Distance over which the mesh crosses over to the billboard." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardRenderMode" label="Render Mode"
+                                  tooltip="Lighting model the billboard uses. Match it to the item's own shader." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardCustomPrefab" label="Custom Prefab"
+                                  tooltip="Overrides the generated billboard with an authored one." />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

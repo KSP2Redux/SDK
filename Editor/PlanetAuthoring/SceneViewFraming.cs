@@ -155,7 +155,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             PositionCameraAtDistance(ctx, mode, distanceFromCenter);
         }
 
-        // ----- internals ----------------------------------------------------
+        // Internals
 
         private struct FramingContext
         {
@@ -270,7 +270,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             var camUpWorld = Vector3.up; // +Y
             var cameraOffsetDir = CameraOffsetDirectionFor(mode);
             var cameraPos = ctx.Pqs.transform.position + cameraOffsetDir * (float)distanceFromCenter;
-            // SceneView orbits around its pivot; placing the pivot at the mean-radius sphere surface
+            // SceneView orbits around its pivot. Placing the pivot at the mean-radius sphere surface
             // means orbit gestures spin you around the planet rather than around a point in mid-air.
             var pivotAhead = (float)System.Math.Max(distanceFromCenter - ctx.Radius, 1.0);
             var pivot = cameraPos + camFwdWorld * pivotAhead;
@@ -282,11 +282,65 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             ApplyClipPlanes(ctx.Sv, ctx.Radius, pivotAhead);
         }
 
-        private static void ApplyClipPlanes(SceneView sv, double radius, double pivotAhead)
+        // Depth precision is governed by the far/near ratio rather than by near on its own, so near
+        // is derived from far. A reversed-Z float depth buffer copes with ratios far larger than
+        // this, but staying near half a million keeps a margin for the ocean and decal passes.
+        private const float MaxDepthRatio = 500000f;
+        private const float MinNearClip = 0.05f;
+        private const float MinFarClip = 1000f;
+
+        /// <summary>
+        /// Sets the SceneView clip planes for viewing a body of <paramref name="radius" /> from
+        /// <paramref name="altitude" /> above its surface.
+        /// </summary>
+        /// <remarks>
+        /// Far reaches the horizon at the current altitude rather than across the whole body, which
+        /// is what keeps near small. The horizon distance for altitude h above a sphere of radius r
+        /// is sqrt(h * (2r + h)), doubled here so terrain stays visible well past it.
+        ///
+        /// The previous rule set near to a tenth of the distance from the camera to its pivot, which
+        /// meant a camera framed 900 m from its pivot could see nothing within 90 m of itself. That
+        /// made surface authoring unusable at any sensible framing, and it is why scatter appeared to
+        /// render nothing when it was in fact drawing inside the near plane.
+        /// </remarks>
+        /// <param name="sv">The SceneView to configure.</param>
+        /// <param name="radius">The body radius in metres.</param>
+        /// <param name="altitude">Camera altitude above the surface in metres.</param>
+        public static void ApplyClipPlanes(SceneView sv, double radius, double altitude)
         {
+            if (sv == null)
+            {
+                return;
+            }
+
+            double clampedAltitude = System.Math.Max(altitude, 1.0);
+            double horizon = System.Math.Sqrt(clampedAltitude * (2.0 * radius + clampedAltitude));
+
+            float far = Mathf.Max(MinFarClip, (float)(horizon * 2.0));
             sv.cameraSettings.dynamicClip = false;
-            sv.cameraSettings.nearClip = Mathf.Max(0.05f, (float)(pivotAhead * 0.1));
-            sv.cameraSettings.farClip = (float)((radius + pivotAhead) * 4.0);
+            sv.cameraSettings.farClip = far;
+            sv.cameraSettings.nearClip = Mathf.Max(MinNearClip, far / MaxDepthRatio);
+        }
+
+        /// <summary>
+        /// Recomputes the clip planes from where the SceneView camera actually is.
+        /// </summary>
+        /// <remarks>
+        /// The framing helpers only set the planes at the moment they frame. Because dynamic clipping
+        /// is off, navigating by hand afterwards leaves them at whatever the last framing chose, so a
+        /// descent from orbit to the surface keeps an orbital near plane and hides everything nearby.
+        /// The preview session calls this each tick to track the camera.
+        /// </remarks>
+        /// <param name="planet">The body being previewed.</param>
+        public static void RefreshClipPlanesForCamera(PQS planet)
+        {
+            if (!Resolve(planet, out FramingContext ctx) || ctx.Sv == null || ctx.Sv.camera == null)
+            {
+                return;
+            }
+
+            double distanceFromCentre = Vector3.Distance(ctx.Sv.camera.transform.position, ctx.Pqs.transform.position);
+            ApplyClipPlanes(ctx.Sv, ctx.Radius, distanceFromCentre - ctx.Radius);
         }
     }
 }

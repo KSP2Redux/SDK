@@ -2,12 +2,12 @@ using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
+namespace Ksp2UnityTools.Editor.Widgets
 {
     /// <summary>
     /// Reusable scaffold for the "header row + add button + rows container + empty hint" pattern
-    /// that custom <see cref="IDataEditor" /> implementations use to render array-typed fields
-    /// as inline card-style lists, replacing Unity's default ReorderableList chrome.
+    /// used to render array-typed fields as inline card-style lists, replacing Unity's default
+    /// ReorderableList chrome.
     /// </summary>
     /// <remarks>
     /// Mutations are surgical and state-preserving:
@@ -38,18 +38,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             Action<SerializedProperty> onAdd = null)
         {
             var outer = new VisualElement();
-            outer.AddToClassList("data-editor-inline-list");
+            outer.AddToClassList("sdk-inline-list");
 
             var headerRow = new VisualElement();
-            headerRow.AddToClassList("data-editor-inline-list__header");
+            headerRow.AddToClassList("sdk-inline-list__header");
 
             var countLabel = new Label();
-            countLabel.AddToClassList("data-editor-subsection-header");
-            countLabel.AddToClassList("data-editor-inline-list__count");
+            countLabel.AddToClassList("sdk-inline-list__title");
+            countLabel.AddToClassList("sdk-inline-list__count");
             headerRow.Add(countLabel);
 
             var addBtn = new Button { text = addButtonText };
-            addBtn.AddToClassList("data-editor-inline-list__add-btn");
+            addBtn.AddToClassList("sdk-inline-list__add-btn");
             headerRow.Add(addBtn);
             outer.Add(headerRow);
 
@@ -57,7 +57,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             outer.Add(rows);
 
             var emptyLabel = new Label(emptyHint);
-            emptyLabel.AddToClassList("data-editor-empty-hint");
+            emptyLabel.AddToClassList("sdk-inline-list__empty");
 
             void UpdateCount()
             {

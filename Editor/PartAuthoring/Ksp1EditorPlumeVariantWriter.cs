@@ -14,7 +14,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
 {
     internal static class Ksp1EditorPlumeVariantWriter
     {
-        private const string PlumePrefabRoot = "Assets/Modules/KSP2UnityTools/Assets/Plumes/Prefabs";
+        private const string PlumePrefabRoot = SDKConfiguration.AUTHORING_ASSETS_PATH + "/Plumes/Prefabs";
 
         public static void Apply(
             Ksp1ConfigNode partNode,

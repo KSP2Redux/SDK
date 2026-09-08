@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Ksp2UnityTools.Editor.PartAuthoring.Audio;
 using Ksp2UnityTools.Editor.Validation;
 using Redux.Audio;
 using Redux.Modules;
@@ -36,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Audio
                 {
                     continue;
                 }
-                known ??= new HashSet<string>(PartAudioPresetRegistry.GetAuthoringPresetIds(), StringComparer.Ordinal);
+                known ??= new HashSet<string>(PartAudioPresetIds.GetAuthoringPresetIds(), StringComparer.Ordinal);
                 for (int i = 0; i < audio.Presets.Count; i++)
                 {
                     var binding = audio.Presets[i];

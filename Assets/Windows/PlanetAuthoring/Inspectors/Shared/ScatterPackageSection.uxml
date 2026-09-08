@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!--
+        The authorable surface of one VegetationPackagePro. Instanced twice: by the package asset's
+        own inspector, and inline inside the VegetationSystemPro inspector once per assigned package.
+        Both hosts bind this subtree to a SerializedObject for the package itself, which is why no
+        element here assumes it is the inspector's target.
+    -->
+
+    <engine:VisualElement name="scatter-package-root">
+
+        <editor:PropertyField class="unity-base-field__aligned" binding-path="PackageName" label="Package Name"
+                              tooltip="Display name for this package. Independent of the asset filename." />
+        <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeType" label="Biome"
+                              tooltip="Which biome channel this package spawns in. Default spawns everywhere the item rules allow, ignoring the biome mask." />
+        <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeSortOrder" label="Biome Sort Order"
+                              tooltip="Orders overlapping biome mask polygons, not the whole-planet mask channels. Redux bodies use no polygons yet, so this currently has no effect." />
+        <editor:PropertyField class="unity-base-field__aligned" binding-path="BiomeCutoffWeight" label="Biome Cutoff Weight"
+                              tooltip="Minimum mask weight for this package's biome to claim a point. 0 lets any non-zero weight through." />
+
+        <engine:Label name="scatter-package-biome-hint" class="sdk-hint" />
+
+        <engine:VisualElement name="scatter-package-items" />
+
+        <engine:Button name="scatter-package-add-button" text="Add Item"
+                       tooltip="Pick a Redux-authored prefab to add as a new scatter item. Base game prefabs live in the asset bundle and cannot be referenced here." />
+
+        <engine:Label name="scatter-package-status" class="sdk-hint" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

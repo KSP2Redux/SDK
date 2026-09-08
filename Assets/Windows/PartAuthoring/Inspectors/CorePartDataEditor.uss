@@ -2,7 +2,7 @@
  *
  * Header: identity row, Quick Tools chip row, Gizmo Settings foldout. Tab
  * strip below. Chip pill shape and the foldout-section blue come from the
- * shared Ksp2UnityToolsStyles.uss so this surface matches the SDK chrome
+ * shared ReduxSDKStyles.uss so this surface matches the SDK chrome
  * the planet inspectors use.
  */
 

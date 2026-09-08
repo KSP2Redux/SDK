@@ -1,4 +1,4 @@
-/* Validation Report window - overrides on top of Ksp2UnityToolsStyles.uss.
+/* Validation Report window - overrides on top of ReduxSDKStyles.uss.
  * Section chrome, button rows, action buttons, and field margins come from
  * the shared sheet via the .sdk-* aliases. */
 

@@ -6,6 +6,7 @@ using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors;
 using UnityEditor;
 using UnityEngine.UIElements;
 using VSwift.Modules.Transformers;
+using Ksp2UnityTools.Editor.Widgets;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
 {

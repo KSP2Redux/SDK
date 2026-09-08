@@ -33,6 +33,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 if (_cachedSettings != null)
                     return _cachedSettings;
 
+                if (!IsCatalogRegistered())
+                {
+                    WarnMissingCatalogOnce();
+                    return null;
+                }
+
                 var handle = Addressables.LoadAssetAsync<GameObject>(GraphicsManagerAddressableKey);
                 handle.WaitForCompletion();
 
@@ -43,17 +49,61 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 var graphicsManager = prefab == null ? null : prefab.GetComponent<GraphicsManager>();
                 _cachedSettings = graphicsManager == null ? null : graphicsManager.PQSGlobalSettings;
 
-                if (_cachedSettings == null && !_warnedMissingCatalog)
+                if (_cachedSettings == null)
                 {
-                    _warnedMissingCatalog = true;
-                    Debug.LogError(
-                        $"[EditorPqsBootstrap] '{GraphicsManagerAddressableKey}' not found. " +
-                        "Run ThunderKit > Pipelines > Import Ksp2 To Editor and reopen the authoring scene."
-                    );
+                    WarnMissingCatalogOnce();
                 }
 
                 return _cachedSettings;
             }
+        }
+
+        /// <summary>
+        /// Message logged once per domain when the base-game catalog is unavailable.
+        /// </summary>
+        /// <remarks>
+        /// Exposed so tests running without the ThunderKit import can expect this exact error rather
+        /// than suppressing log failures wholesale.
+        /// </remarks>
+        public static string MissingCatalogMessage =>
+            $"[EditorPqsBootstrap] '{GraphicsManagerAddressableKey}' not found. " +
+            "Run ThunderKit > Pipelines > Import Ksp2 To Editor and reopen the authoring scene.";
+
+        /// <summary>
+        /// Gets a value indicating whether the missing-catalog error has already been logged this domain.
+        /// </summary>
+        /// <remarks>
+        /// The error fires once per domain. A test that expects it has to know whether it is still
+        /// pending, because expecting a message that already fired fails just as hard as an
+        /// unexpected one.
+        /// </remarks>
+        public static bool HasWarnedMissingCatalog => _warnedMissingCatalog;
+
+        /// <summary>
+        /// Reports whether the base-game addressable catalog carries the Graphics Manager prefab.
+        /// </summary>
+        /// <returns>True if the key resolves to at least one location, false otherwise.</returns>
+        /// <remarks>
+        /// Asking for locations is the only way to test a key without Addressables logging an
+        /// InvalidKeyException for the miss. That log is not ours to format or suppress, and an
+        /// unexpected error entry fails any EditMode test that happens to touch this path.
+        /// </remarks>
+        public static bool IsCatalogRegistered()
+        {
+            var locations = Addressables.LoadResourceLocationsAsync(GraphicsManagerAddressableKey);
+            locations.WaitForCompletion();
+            bool found = locations.Result is { Count: > 0 };
+            Addressables.Release(locations);
+            return found;
+        }
+
+        private static void WarnMissingCatalogOnce()
+        {
+            if (_warnedMissingCatalog)
+                return;
+
+            _warnedMissingCatalog = true;
+            Debug.LogError(MissingCatalogMessage);
         }
     }
 }

@@ -1,12 +1,12 @@
 ﻿{
   "name": "ksp2community.ksp2unitytools",
   "version": "0.9.0",
-  "displayName": "KSP 2 Unity Tools",
+  "displayName": "Redux SDK",
   "description": "A collection of Unity editor scripts and utilities to make developing Kerbal Space Program 2 mods easier.",
   "unity": "2022.3",
   "unityRelease": "5f1",
-  "documentationUrl": "https://github.com/KSP2Community/KSP2UnityTools",
-  "licensesUrl": "https://raw.githubusercontent.com/KSP2Community/KSP2UnityTools/main/LICENSE.md",
+  "documentationUrl": "https://modding.ksp2redux.org",
+  "licensesUrl": "https://raw.githubusercontent.com/KSP2Redux/SDK/main/LICENSE.md",
   "keywords": [
     "parts",
     "ksp2",
@@ -17,6 +17,7 @@
   },
   "hideInEditor": false,
   "dependencies": {
-    "com.unity.addressables": "1.21.18"
+    "com.unity.addressables": "1.21.18",
+    "com.unity.scriptablebuildpipeline": "1.19.3"
   }
 }

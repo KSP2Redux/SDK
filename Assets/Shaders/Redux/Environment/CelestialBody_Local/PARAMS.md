@@ -286,7 +286,7 @@ identical parameter shapes.
 | Parameter | Type | What it does |
 |---|---|---|
 | `_SmallAlbedoArray` | 2D Array | The pool of albedo tiles. One slice per material (e.g. one for grass, one for sand, one for granite). |
-| `_SmallNormalArray` | 2D Array | The pool of normal+packed tiles. Each slice's `RGBA` is `(metallic-influence, normalY, AO, normalX)` packed (DXT5nm-style). |
+| `_SmallNormalArray` | 2D Array | The pool of normal+packed tiles. Each slice's `RGBA` is `(smoothness, normalY, AO, normalX)` packed (DXT5nm-style). Metallic is not in here, it comes from `_SmallMetalArray`. |
 | `_SmallMetalArray` | 2D Array | The pool of metallic-mask tiles. Sampled `R` channel is the per-tile metallic value. |
 | `_SmallBiome<C>` | Vector(4) | `(layer1, layer2, layer3, layer4)` slice indices for this biome. `-1` disables that layer slot. |
 | `_SmallEnable<C>` | Vector(4) | Per-layer "active" toggle, 0 or 1 per layer. Use to mute a layer without resetting its slice index. |

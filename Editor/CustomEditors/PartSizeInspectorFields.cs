@@ -331,7 +331,7 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         {
             return key switch
             {
-                PartSizeRegistry.XsMinus => nameof(MetaAssemblySizeFilterType.XSMINUS),
+                PartSizeRegistry.TwoXs => nameof(MetaAssemblySizeFilterType.XXS),
                 PartSizeRegistry.Xs => nameof(MetaAssemblySizeFilterType.XS),
                 PartSizeRegistry.XsPlus => nameof(MetaAssemblySizeFilterType.XSPLUS),
                 PartSizeRegistry.Sm => nameof(MetaAssemblySizeFilterType.S),
