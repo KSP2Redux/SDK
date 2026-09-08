@@ -41,6 +41,9 @@ Shader "Redux/VFX/Exhaust"
 		_ErosionAmount ("Erosion Amount", Range(0, 1)) = 1
 		_ErosionPosOffset ("Erosion Pos Offset", Range(-1, 1)) = 0.2945153
 		_ErosionFalloffGradient ("Erosion Falloff Gradient", Range(0, 5)) = 0.2384171
+		_ShockCellStrength ("Shock Cell Contraction", Range(0, .4)) = 0
+		_ShockCellSpacing ("Shock Cell Spacing", Float) = .75
+		_ShockCellOffset ("First Shock Cell Center", Float) = .492
 		[Header(Vertex Displacement)] _VertexDispScale ("Vertex Disp Scale", Range(0, 10)) = 0
 		_VertexDispContrast ("Vertex Disp Contrast", Range(0.5, 5)) = 0.5
 		_VertexDispPosOffset ("Vertex Disp Pos Offset", Range(0, 1)) = 0
@@ -55,6 +58,8 @@ Shader "Redux/VFX/Exhaust"
 		_LinearFlow ("Straight Radial Flow", Range(0, 1)) = 0
 		_CoherentFlow ("Coherent Jet Flow", Range(0, 1)) = 0
 		_TailFade ("Soft Plume Tail", Range(0, 1)) = 0
+		_FlameTail ("Turbulent Flame Tail", Range(0, 1)) = 0
+		_LayerEdgeSoftness ("Soft Layer Boundaries", Range(0, 1)) = 0
 		_TracesTopPosOffset ("Traces Top Pos Offset", Range(0, 1)) = 0.282353
 		_TracesTopFalloffGradient ("Traces Top Falloff Gradient", Range(0, 2)) = 0.25
 		[NoScaleOffset] _TracesTexture ("Traces Texture", 2D) = "white" {}
@@ -109,6 +114,11 @@ Shader "Redux/VFX/Exhaust"
 			// ── Uniforms: vertex stage ─────────────────────────────────────────
 			float _VertexDispContrast;
 			float _VertexDispScale;
+			float _ShockCellStrength;
+			float _ShockCellSpacing;
+			float _ShockCellOffset;
+			float _FlameTail;
+			float _LayerEdgeSoftness;
 			float _VertexDispPosOffset;
 			float _VertexDispFalloffGradient;
 			float _BendCenterOffset;
@@ -274,6 +284,26 @@ Shader "Redux/VFX/Exhaust"
 
 			// Low-frequency value noise for dissipating gas, independent of the
 			// curved filament atlas used by stock exhaust.
+
+            float flameHash(float3 p)
+            {
+                p = frac(p * .1031f);
+                p += dot(p, p.yzx + 33.33f);
+                return frac((p.x + p.y) * p.z);
+            }
+
+            float flameSpatialNoise(float3 p)
+            {
+                float3 cell = floor(p);
+                float3 f = frac(p);
+                f = f * f * f * (f * (f * 6.0f - 15.0f) + 10.0f);
+                float a = lerp(flameHash(cell), flameHash(cell + float3(1,0,0)), f.x);
+                float b = lerp(flameHash(cell + float3(0,1,0)), flameHash(cell + float3(1,1,0)), f.x);
+                float c = lerp(flameHash(cell + float3(0,0,1)), flameHash(cell + float3(1,0,1)), f.x);
+                float d = lerp(flameHash(cell + float3(0,1,1)), flameHash(cell + float3(1,1,1)), f.x);
+                return lerp(lerp(a,b,f.y), lerp(c,d,f.y), f.z);
+            }
+
 			float plumeHazeNoise(float2 p)
 			{
 				float2 cell = floor(p);
@@ -294,6 +324,16 @@ Shader "Redux/VFX/Exhaust"
 			// Output: displaced world-space vertex position, world normal, UV, and per-vertex
 			// lighting / SH contribution.  Displacement and bend are applied before the
 			// ObjectToWorld transform so they operate in local particle space.
+
+			float shockCellRadius(float z)
+			{
+				float spacing = max(_ShockCellSpacing, .001f);
+				float envelope = smoothstep(0.0f, spacing * .25f, z)
+				               * (1.0f - smoothstep(_ShockCellOffset + spacing * 2.5f, _ShockCellOffset + spacing * 4.0f, z));
+				float wave = .5f + .5f * cos(6.2831853f * (z - _ShockCellOffset) / spacing);
+				return 1.0f - _ShockCellStrength * envelope * wave;
+			}
+
 			Vertex_Stage_Output vert(Vertex_Stage_Input stage_input)
 			{
 				in_pos = stage_input.in_pos;
@@ -304,6 +344,29 @@ Shader "Redux/VFX/Exhaust"
 				in_texcoord2 = stage_input.in_texcoord2;
 				in_texcoord3 = stage_input.in_texcoord3;
 				in_color = stage_input.in_color;
+                float3 plumeView = normalize(_WorldSpaceCameraPos - unity_ObjectToWorld._m03_m13_m23);
+                float3 plumeAxis = normalize(unity_ObjectToWorld._m02_m12_m22);
+                float axialSoftening = _LayerEdgeSoftness * smoothstep(.45f, .94f, abs(dot(plumeView, plumeAxis)));
+                // Atmospheric mixing widens the tail into moving flame tongues.
+                float flameV = saturate(1.0f - in_texcoord.y);
+                float flameSpread = _FlameTail * smoothstep(.48f, .98f, flameV);
+                float flameAngle = atan2(in_pos.y, in_pos.x);
+                float flameWave = sin(flameV * 23.0f - _Time.y * 24.0f + flameAngle * 3.0f);
+                float flameRadius = 1.0f + flameSpread * (.28f + .06f * flameWave * (1.0f - axialSoftening));
+                in_pos.xy *= flameRadius;
+                in_normal = normalize(float3(in_normal.xy / flameRadius, in_normal.z));
+
+				// Keep compression centers fixed on the shock cells while gas flows through.
+				if (_ShockCellStrength > 0.0f)
+				{
+					float z = -in_pos.z;
+					float radiusScale = lerp(shockCellRadius(z), 1.0f, axialSoftening * .95f);
+					float slope = (shockCellRadius(z + .001f) - shockCellRadius(z - .001f)) / .002f * (1.0f - axialSoftening * .95f);
+					in_normal = normalize(float3(in_normal.xy / radiusScale,
+					    in_normal.z + dot(in_normal.xy, in_pos.xy) * slope / radiusScale));
+					in_pos.xy *= radiusScale;
+				}
+
 				// ── Displacement sample ────────────────────────────────────────
 				// Sample _DistortionTexture scrolling in UV at _ScrollSpeedX/Y and apply a
 				// contrast remap to get a displacement magnitude in [0,1].
@@ -825,7 +888,37 @@ Shader "Redux/VFX/Exhaust"
 				// Fade emission, including traces and fog, before the open mesh boundary.
 				// Noise changes where the fade begins, but its endpoint always stays inside the mesh.
 				float tailStart = .48f + .14f * saturate(distortR * distortG);
-				float tailMask = 1.0f - smoothstep(tailStart, .985f, vFlipped);
+				float flameBlend = _FlameTail * smoothstep(.43f, .72f, vFlipped);
+                if (flameBlend > 0.0f)
+                {
+                    float3 flameUV = mul(unity_WorldToObject, float4(worldPos, 1.0f)).xyz;
+                    flameUV = float3(flameUV.xy * 18.0f, vFlipped * 19.0f - _Time.y * 26.8f);
+                    float3 warpUV = flameUV * .43f;
+                    float3 flameWarp = float3(flameSpatialNoise(warpUV),
+                        flameSpatialNoise(warpUV + 9.7f), flameSpatialNoise(warpUV + 23.1f));
+                    flameUV += (flameWarp - .5f) * 2.2f;
+                    float flameNoise = 0.0f;
+                    float flameWeight = 0.0f;
+                    float octaveWeight = .56f;
+                    for (int octave = 0; octave < 3; octave++)
+                    {
+                        float footprint = max(length(ddx(flameUV)), length(ddy(flameUV)));
+                        float weight = octaveWeight * (1.0f - smoothstep(.35f, 1.0f, footprint));
+                        flameNoise += flameSpatialNoise(flameUV) * weight;
+                        flameWeight += weight;
+                        flameUV = flameUV.yzx * 2.03f + float3(3.7f, 11.9f, 7.1f);
+                        octaveWeight *= .48f;
+                    }
+                    flameNoise = flameWeight > .001f ? flameNoise / flameWeight : .5f;
+                    float flameDensity = smoothstep(.12f, .85f, flameNoise);
+                    tailStart = lerp(tailStart, .47f + .26f * flameNoise, flameBlend);
+                    float3 flameTint = lerp(_ColorTintMiddle.rgb, _ColorTintEnd.rgb,
+                        smoothstep(.30f, .75f, vFlipped));
+                    float3 flameEmission = flameTint * _Alpha * fresnelOuter * topGradMask
+                        * (.08f + 1.45f * flameDensity);
+                    outColor.xyz = lerp(outColor.xyz, flameEmission, flameBlend);
+                }
+                float tailMask = 1.0f - smoothstep(tailStart, .985f, vFlipped);
 				outColor.xyz *= lerp(1.0f, tailMask, _TailFade);
 				// Each straight strand has one moving endpoint. A monotonic fade
 				// keeps its tip connected to the nozzle instead of forming outer islands.
@@ -856,6 +949,18 @@ Shader "Redux/VFX/Exhaust"
 					float3 nozzleTint = lerp(_ColorTintStart.rgb, float3(.8f, .85f, 1.0f), .6f);
 					outColor.xyz += nozzleTint * nozzleGlow * _Alpha * _LinearFlow * 2.0f;
 				}
+                // Feather the projected shell silhouette without hiding axial views.
+                float3 shellAxis = normalize(objectNormDir);
+                float3 radialView = viewDirNorm - shellAxis * dot(viewDirNorm, shellAxis);
+                float3 radialNormal = worldNormal - shellAxis * dot(worldNormal, shellAxis);
+                float radialViewLength = length(radialView);
+                float edgeFacing = abs(dot(radialView, radialNormal))
+                    / max(radialViewLength * length(radialNormal), .0001f);
+                float edgeMask = smoothstep(0.0f, .85f, edgeFacing);
+                float axialMask = 1.15f;
+                edgeMask = lerp(axialMask, edgeMask, smoothstep(.12f, .55f, radialViewLength));
+                outColor.xyz *= lerp(1.0f, edgeMask, _LayerEdgeSoftness);
+
 				Fragment_Stage_Output stage_output;
 				stage_output.outColor = outColor;
 				return stage_output;
@@ -897,6 +1002,12 @@ Shader "Redux/VFX/Exhaust"
 			float _TextureScaleY;
 			float _VertexDispContrast;
 			float _VertexDispScale;
+			float _ShockCellStrength;
+			float _ShockCellSpacing;
+			float _ShockCellOffset;
+			float _FlameTail;
+			float3 _WorldSpaceCameraPos;
+			float _LayerEdgeSoftness;
 			float _VertexDispPosOffset;
 			float _VertexDispFalloffGradient;
 			float _BendCenterOffset;
@@ -1006,6 +1117,16 @@ Shader "Redux/VFX/Exhaust"
 			// ── Vertex shader ──────────────────────────────────────────────────
 			// Output: displaced world-space vertex, world normal, and light-space position
 			// for additive per-pixel lighting.  No UV or per-vertex lighting accumulation.
+
+			float shockCellRadius(float z)
+			{
+				float spacing = max(_ShockCellSpacing, .001f);
+				float envelope = smoothstep(0.0f, spacing * .25f, z)
+				               * (1.0f - smoothstep(_ShockCellOffset + spacing * 2.5f, _ShockCellOffset + spacing * 4.0f, z));
+				float wave = .5f + .5f * cos(6.2831853f * (z - _ShockCellOffset) / spacing);
+				return 1.0f - _ShockCellStrength * envelope * wave;
+			}
+
 			Vertex_Stage_Output vert(Vertex_Stage_Input stage_input)
 			{
 				in_pos = stage_input.in_pos;
@@ -1016,6 +1137,29 @@ Shader "Redux/VFX/Exhaust"
 				in_texcoord2 = stage_input.in_texcoord2;
 				in_texcoord3 = stage_input.in_texcoord3;
 				in_color = stage_input.in_color;
+                float3 plumeView = normalize(_WorldSpaceCameraPos - unity_ObjectToWorld._m03_m13_m23);
+                float3 plumeAxis = normalize(unity_ObjectToWorld._m02_m12_m22);
+                float axialSoftening = _LayerEdgeSoftness * smoothstep(.45f, .94f, abs(dot(plumeView, plumeAxis)));
+                // Atmospheric mixing widens the tail into moving flame tongues.
+                float flameV = saturate(1.0f - in_texcoord.y);
+                float flameSpread = _FlameTail * smoothstep(.48f, .98f, flameV);
+                float flameAngle = atan2(in_pos.y, in_pos.x);
+                float flameWave = sin(flameV * 23.0f - _Time.y * 24.0f + flameAngle * 3.0f);
+                float flameRadius = 1.0f + flameSpread * (.28f + .06f * flameWave * (1.0f - axialSoftening));
+                in_pos.xy *= flameRadius;
+                in_normal = normalize(float3(in_normal.xy / flameRadius, in_normal.z));
+
+				// Keep compression centers fixed on the shock cells while gas flows through.
+				if (_ShockCellStrength > 0.0f)
+				{
+					float z = -in_pos.z;
+					float radiusScale = lerp(shockCellRadius(z), 1.0f, axialSoftening * .95f);
+					float slope = (shockCellRadius(z + .001f) - shockCellRadius(z - .001f)) / .002f * (1.0f - axialSoftening * .95f);
+					in_normal = normalize(float3(in_normal.xy / radiusScale,
+					    in_normal.z + dot(in_normal.xy, in_pos.xy) * slope / radiusScale));
+					in_pos.xy *= radiusScale;
+				}
+
 				// Pack loose shader properties into vectors matching the original uniform layout.
 				float4 scroll = float4(_ScrollSpeedX, _ScrollSpeedY, _TextureScaleX, _TextureScaleY);
 				float4 dispc  = float4(_VertexDispContrast, _VertexDispScale, _VertexDispPosOffset, _VertexDispFalloffGradient);
