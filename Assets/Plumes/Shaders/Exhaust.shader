@@ -58,6 +58,7 @@ Shader "Redux/VFX/Exhaust"
 		_LinearFlow ("Straight Radial Flow", Range(0, 1)) = 0
 		_CoherentFlow ("Coherent Jet Flow", Range(0, 1)) = 0
 		_TailFade ("Soft Plume Tail", Range(0, 1)) = 0
+		_VacuumDetailBlend ("Vacuum Methalox Detail", Range(0, 1)) = 0
 		_FlameTail ("Turbulent Flame Tail", Range(0, 1)) = 0
 		_LayerEdgeSoftness ("Soft Layer Boundaries", Range(0, 1)) = 0
 		_TracesTopPosOffset ("Traces Top Pos Offset", Range(0, 1)) = 0.282353
@@ -118,6 +119,7 @@ Shader "Redux/VFX/Exhaust"
 			float _ShockCellSpacing;
 			float _ShockCellOffset;
 			float _FlameTail;
+			float _VacuumDetailBlend;
 			float _LayerEdgeSoftness;
 			float _VertexDispPosOffset;
 			float _VertexDispFalloffGradient;
@@ -353,6 +355,10 @@ Shader "Redux/VFX/Exhaust"
                 float flameAngle = atan2(in_pos.y, in_pos.x);
                 float flameWave = sin(flameV * 23.0f - _Time.y * 24.0f + flameAngle * 3.0f);
                 float flameRadius = 1.0f + flameSpread * (.28f + .06f * flameWave * (1.0f - axialSoftening));
+                // Pressure-driven, opt-in extension keeps the nozzle anchored at z = 0.
+                float vacuumLength = 1.0f + .12f * _VacuumDetailBlend;
+                in_pos.z *= vacuumLength;
+                in_normal.z /= vacuumLength;
                 in_pos.xy *= flameRadius;
                 in_normal = normalize(float3(in_normal.xy / flameRadius, in_normal.z));
 
@@ -782,6 +788,23 @@ Shader "Redux/VFX/Exhaust"
 				tintR = lerp(tintR, flowTint.r, _LinearFlow);
 				tintG = lerp(tintG, flowTint.g, _LinearFlow);
 				tintB = lerp(tintB, flowTint.b, _LinearFlow);
+                // Warm only the fading ends of existing flame filaments. Reuse the exact
+                // scrolling distortion that shapes their emission: an independent color-noise
+                // field slides over the flame like blotches instead of belonging to the gas.
+                // Denser filaments carry their purple core farther downstream before warming.
+                float filamentDensity = saturate(noiseProduct);
+                float coolingStart = .46f + .18f * filamentDensity;
+                float coolingTail = smoothstep(coolingStart, coolingStart + .20f, vFlipped);
+                float warmFilament = smoothstep(.18f, .42f, filamentDensity) * coolingTail;
+                float3 vacuumTint = lerp(float3(tintR, tintG, tintB),
+                    float3(.65f, .20f, .035f), warmFilament * _VacuumDetailBlend * .85f);
+
+                // Let the broad outer envelope survive, but dim it progressively downstream.
+                vacuumTint *= 1.0f - .28f * _VacuumDetailBlend * smoothstep(.15f, .90f, vFlipped);
+                tintR = vacuumTint.r;
+                tintG = vacuumTint.g;
+                tintB = vacuumTint.b;
+
 				// Boost: tint · (1 + _ColorTintBoost), then scale by baseAlpha.
 				float boostedR = mad(tintR, _ColorTintBoost, tintR);
 				float boostedG = mad(tintG, _ColorTintBoost, tintG);
@@ -802,13 +825,15 @@ Shader "Redux/VFX/Exhaust"
 				float broadRays = .5f + .22f * sin(traceAngle * 3.0f + _Time.y * .035f)
 				                      + .16f * sin(traceAngle * 7.0f - 1.8f - _Time.y * .025f)
 				                      + .10f * sin(traceAngle * 11.0f + .8f);
-				float traceTime = _Time.y * .8f + _TracesCount;
+				float traceTime = _Time.y * lerp(.8f, 1.3f, _VacuumDetailBlend) + _TracesCount;
 				float traceWarp = .055f * sin(traceAngle * 2.0f + traceTime)
 				                + .025f * sin(traceAngle * 5.0f - traceTime * .73f + vFlipped * 3.0f);
 				float traceFlowU = texcoord.x + _TracesVariation * traceWarp;
 				precise float tracesU = tracesFreq * traceFlowU;
-				float tracesMask = pow(max(sin(mad(tracesFreq, 1.0f - traceFlowU, 1.5707964f)), 0.0001f), _TracesThickness);
-				float traceReach = .48f + .13f * sin(traceAngle * 3.0f - traceTime * .61f);
+                // A lower band exponent widens vacuum streaks without extending their reach.
+                float traceExponent = _TracesThickness * lerp(1.0f, .75f, _VacuumDetailBlend);
+				float tracesMask = pow(max(sin(mad(tracesFreq, 1.0f - traceFlowU, 1.5707964f)), 0.0001f), traceExponent);
+				float traceReach = lerp(.48f, .31f, _VacuumDetailBlend) + .13f * sin(traceAngle * 3.0f - traceTime * .61f);
 				float traceEnvelope = 1.0f - smoothstep(traceReach - .20f, traceReach + .20f, vFlipped);
 				float traceBreakup = (.72f + .28f * sin(traceAngle * 4.0f + traceTime * .47f))
 				                   * lerp(.55f, 1.0f, saturate(distortR * distortG));
@@ -847,9 +872,11 @@ Shader "Redux/VFX/Exhaust"
 				precise float tracesAmountR = tracesTintR * _TracesAmount;
 				precise float tracesAmountG = tracesTintG * _TracesAmount;
 				precise float tracesAmountB = tracesTintB * _TracesAmount;
-				precise float tracesStrR = tracesAmountR * _TracesStrength;
-				precise float tracesStrG = tracesAmountG * _TracesStrength;
-				precise float tracesStrB = tracesAmountB * _TracesStrength;
+                // Lift only the streak overlay; preserve the dim, diffuse purple envelope.
+                float traceStrength = _TracesStrength * (1.0f + .08f * _VacuumDetailBlend);
+				precise float tracesStrR = tracesAmountR * traceStrength;
+				precise float tracesStrG = tracesAmountG * traceStrength;
+				precise float tracesStrB = tracesAmountB * traceStrength;
 				precise float tracesMaskedR = topGradMask * tracesStrR;
 				precise float tracesMaskedG = topGradMask * tracesStrG;
 				precise float tracesMaskedB = topGradMask * tracesStrB;
@@ -1006,6 +1033,7 @@ Shader "Redux/VFX/Exhaust"
 			float _ShockCellSpacing;
 			float _ShockCellOffset;
 			float _FlameTail;
+			float _VacuumDetailBlend;
 			float3 _WorldSpaceCameraPos;
 			float _LayerEdgeSoftness;
 			float _VertexDispPosOffset;
@@ -1146,6 +1174,10 @@ Shader "Redux/VFX/Exhaust"
                 float flameAngle = atan2(in_pos.y, in_pos.x);
                 float flameWave = sin(flameV * 23.0f - _Time.y * 24.0f + flameAngle * 3.0f);
                 float flameRadius = 1.0f + flameSpread * (.28f + .06f * flameWave * (1.0f - axialSoftening));
+                // Pressure-driven, opt-in extension keeps the nozzle anchored at z = 0.
+                float vacuumLength = 1.0f + .12f * _VacuumDetailBlend;
+                in_pos.z *= vacuumLength;
+                in_normal.z /= vacuumLength;
                 in_pos.xy *= flameRadius;
                 in_normal = normalize(float3(in_normal.xy / flameRadius, in_normal.z));
 
