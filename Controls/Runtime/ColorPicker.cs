@@ -242,13 +242,10 @@ namespace UitkForKsp2.Controls
                 }
             );
 
-            _hueSlider.RegisterValueChangedCallback(evt =>
+            _hueSlider.RegisterValueChangedCallback(_ =>
                 {
-                    if (Mathf.Abs(evt.newValue - GetHue(value) * 255f) <= 0.01f)
-                    {
-                        return;
-                    }
-
+                    // Black and grayscale colors have no RGB hue. Their gradient must still follow
+                    // the slider, including its red endpoint (Redux issue #1488).
                     UpdateColorFromUI();
                     UpdateSbSquareTexture();
                     UpdateAlphaSliderTexture();
@@ -496,10 +493,5 @@ namespace UitkForKsp2.Controls
             }
         }
 
-        private static float GetHue(Color color)
-        {
-            Color.RGBToHSV(color, out float h, out _, out _);
-            return h;
-        }
     }
 }
