@@ -57,6 +57,7 @@ Shader "Redux/VFX/Exhaust"
 		_TracesVariation ("Traces Flow Variation", Range(0, 1)) = 0
 		_LinearFlow ("Straight Radial Flow", Range(0, 1)) = 0
 		_CoherentFlow ("Coherent Jet Flow", Range(0, 1)) = 0
+		_JetShockEmission ("Integrated Jet Shock Emission", Range(0, 1)) = 0
 		_TailFade ("Soft Plume Tail", Range(0, 1)) = 0
 		_OuterLayerHighlights ("Outer Layer Warm Streaks", Range(0, 1)) = 0
 		_PlumeAxialScale ("Plume Axial Scale", Float) = 1
@@ -80,6 +81,28 @@ Shader "Redux/VFX/Exhaust"
 	SubShader
 	{
 		Tags { "IsEmissive" = "true" "QUEUE" = "Transparent+0" "RenderType" = "Transparent" }
+
+        HLSLINCLUDE
+            float flameHash(float3 p)
+            {
+                p = frac(p * .1031f);
+                p += dot(p, p.yzx + 33.33f);
+                return frac((p.x + p.y) * p.z);
+            }
+
+            float flameSpatialNoise(float3 p)
+            {
+                float3 cell = floor(p);
+                float3 f = frac(p);
+                f = f * f * f * (f * (f * 6.0f - 15.0f) + 10.0f);
+                float a = lerp(flameHash(cell), flameHash(cell + float3(1,0,0)), f.x);
+                float b = lerp(flameHash(cell + float3(0,1,0)), flameHash(cell + float3(1,1,0)), f.x);
+                float c = lerp(flameHash(cell + float3(0,0,1)), flameHash(cell + float3(1,0,1)), f.x);
+                float d = lerp(flameHash(cell + float3(0,1,1)), flameHash(cell + float3(1,1,1)), f.x);
+                return lerp(lerp(a,b,f.y), lerp(c,d,f.y), f.z);
+            }
+        ENDHLSL
+
 
 		// ── Pass 1: FORWARDBASE ────────────────────────────────────────────────
 		// Full forward-lit pass: displacement + bend vertex animation, Fresnel,
@@ -175,6 +198,7 @@ Shader "Redux/VFX/Exhaust"
 			float _TracesVariation;
 			float _LinearFlow;
 			float _CoherentFlow;
+			float _JetShockEmission;
 			float _TailFade;
 			float _TopGradientPosOffset;
 			float _TopGradientFalloff;
@@ -291,24 +315,6 @@ Shader "Redux/VFX/Exhaust"
 			// Low-frequency value noise for dissipating gas, independent of the
 			// curved filament atlas used by stock exhaust.
 
-            float flameHash(float3 p)
-            {
-                p = frac(p * .1031f);
-                p += dot(p, p.yzx + 33.33f);
-                return frac((p.x + p.y) * p.z);
-            }
-
-            float flameSpatialNoise(float3 p)
-            {
-                float3 cell = floor(p);
-                float3 f = frac(p);
-                f = f * f * f * (f * (f * 6.0f - 15.0f) + 10.0f);
-                float a = lerp(flameHash(cell), flameHash(cell + float3(1,0,0)), f.x);
-                float b = lerp(flameHash(cell + float3(0,1,0)), flameHash(cell + float3(1,1,0)), f.x);
-                float c = lerp(flameHash(cell + float3(0,0,1)), flameHash(cell + float3(1,0,1)), f.x);
-                float d = lerp(flameHash(cell + float3(0,1,1)), flameHash(cell + float3(1,1,1)), f.x);
-                return lerp(lerp(a,b,f.y), lerp(c,d,f.y), f.z);
-            }
 
 			float plumeHazeNoise(float2 p)
 			{
@@ -355,10 +361,15 @@ Shader "Redux/VFX/Exhaust"
                 float axialSoftening = _LayerEdgeSoftness * smoothstep(.45f, .94f, abs(dot(plumeView, plumeAxis)));
                 // Atmospheric mixing widens the tail into moving flame tongues.
                 float flameV = saturate(1.0f - in_texcoord.y);
-                float flameSpread = _FlameTail * smoothstep(.48f, .98f, flameV);
-                float flameAngle = atan2(in_pos.y, in_pos.x);
-                float flameWave = sin(flameV * 23.0f - _Time.y * 24.0f + flameAngle * 3.0f);
-                float flameRadius = 1.0f + flameSpread * (.28f + .06f * flameWave * (1.0f - axialSoftening));
+                float flameSpread = _FlameTail * smoothstep(.35f, .90f, flameV);
+                float flameFlow = -in_pos.z * 4.0f - _Time.y * 32.0f;
+                float flameWave = 2.0f * flameSpatialNoise(float3(in_pos.xy * 4.0f, flameFlow)) - 1.0f;
+                float flameMotion = flameSpread * (1.0f - axialSoftening);
+                // Keep the mixing layer wider than the core even between flame crests.
+                float flameRadius = 1.0f + flameSpread * 1.15f + .35f * flameMotion * flameWave;
+                float2 flameFold = float2(flameSpatialNoise(float3(7.1f, 3.7f, flameFlow)),
+                    flameSpatialNoise(float3(19.3f, 11.9f, flameFlow))) - .5f;
+                in_pos.xy += flameFold * length(in_pos.xy) * .65f * flameMotion;
                 // Pressure-driven, opt-in extension keeps the nozzle anchored at z = 0.
                 // Outer shells use a pressure curve to remain longer than the core.
                 float vacuumLength = (1.0f + .12f * _VacuumDetailBlend) * max(_PlumeAxialScale, .001f);
@@ -751,7 +762,10 @@ Shader "Redux/VFX/Exhaust"
 				//
 				// Upper zone (vFlipped >= _ColorTintMiddlePos): lerp Middle → End.
 				precise float noisedEndGradient = noiseMask * _ColorTintEndGradient;
-				precise float negMiddlePos   = -_ColorTintMiddlePos;
+				// Keep methalox color mixing broad, independent of density noise.
+                float colorMixing = saturate(max(_FlameTail, _VacuumDetailBlend));
+                float colorMiddlePos = lerp(_ColorTintMiddlePos, max(_ColorTintMiddlePos, .42f), colorMixing);
+                precise float negMiddlePos   = -colorMiddlePos;
 				precise float upperZoneRange = negMiddlePos + 1.0f;          // 1 - middlePos
 				precise float vFromMiddle    = vFlipped + negMiddlePos;      // vFlipped - middlePos
 				precise float upperZoneT     = vFromMiddle / upperZoneRange; // normalised upper-zone pos
@@ -765,13 +779,13 @@ Shader "Redux/VFX/Exhaust"
 				precise float colorEndDeltaR = negMiddleR + _ColorTintEnd.x;
 				precise float colorEndDeltaG = negMiddleG + _ColorTintEnd.y;
 				precise float colorEndDeltaB = negMiddleB + _ColorTintEnd.z;
-				float isUpperZone = (vFlipped >= _ColorTintMiddlePos) ? 1.0f : 0.0f;
+				float isUpperZone = (vFlipped >= colorMiddlePos) ? 1.0f : 0.0f;
 				precise float upperColorR = isUpperZone * mad(colorEndSmooth, colorEndDeltaR, _ColorTintMiddle.x);
 				precise float upperColorG = isUpperZone * mad(colorEndSmooth, colorEndDeltaG, _ColorTintMiddle.y);
 				precise float upperColorB = isUpperZone * mad(colorEndSmooth, colorEndDeltaB, _ColorTintMiddle.z);
 				// Lower zone (vFlipped < _ColorTintMiddlePos): lerp Middle → Start.
-				precise float noisedFalloff  = noiseMask * _ColorTintFalloff;
-				precise float lowerZoneT     = vFlipped / _ColorTintMiddlePos;  // normalised lower-zone pos
+				precise float noisedFalloff  = lerp(noiseMask * _ColorTintFalloff, 1.0f, colorMixing);
+				precise float lowerZoneT     = vFlipped / colorMiddlePos;  // normalised lower-zone pos
 				precise float negLowerZoneT  = -lowerZoneT;
 				precise float invLowerZoneT  = negLowerZoneT + 1.0f;            // 1 - lowerZoneT
 				precise float negColorOffset = -_ColorTintOffset;
@@ -781,7 +795,7 @@ Shader "Redux/VFX/Exhaust"
 				precise float colorStartDeltaR = negMiddleR + _ColorTintStart.x;
 				precise float colorStartDeltaG = negMiddleG + _ColorTintStart.y;
 				precise float colorStartDeltaB = negMiddleB + _ColorTintStart.z;
-				float isLowerZone = (_ColorTintMiddlePos >= vFlipped) ? 1.0f : 0.0f;
+				float isLowerZone = (colorMiddlePos >= vFlipped) ? 1.0f : 0.0f;
 				float tintR = mad(isLowerZone, mad(colorStartSmooth, colorStartDeltaR, _ColorTintMiddle.x), upperColorR);
 				float tintG = mad(isLowerZone, mad(colorStartSmooth, colorStartDeltaG, _ColorTintMiddle.y), upperColorG);
 				float tintB = mad(isLowerZone, mad(colorStartSmooth, colorStartDeltaB, _ColorTintMiddle.z), upperColorB);
@@ -927,30 +941,33 @@ Shader "Redux/VFX/Exhaust"
                 if (flameBlend > 0.0f)
                 {
                     float3 flameUV = mul(unity_WorldToObject, float4(worldPos, 1.0f)).xyz;
-                    flameUV = float3(flameUV.xy * 18.0f, vFlipped * 19.0f - _Time.y * 26.8f);
+                    // Separate tongues across the widened shell, elongated along the flow.
+                    // Independent transverse variation prevents whole cross-sections going dark.
+                    flameUV = float3(flameUV.xy * 9.0f, -flameUV.z * 2.0f);
+                    flameUV.z -= _Time.y * 16.0f;
                     float3 warpUV = flameUV * .43f;
                     float3 flameWarp = float3(flameSpatialNoise(warpUV),
                         flameSpatialNoise(warpUV + 9.7f), flameSpatialNoise(warpUV + 23.1f));
-                    flameUV += (flameWarp - .5f) * 2.2f;
+                    flameUV += (flameWarp - .5f) * 1.2f;
                     float flameNoise = 0.0f;
                     float flameWeight = 0.0f;
                     float octaveWeight = .56f;
-                    for (int octave = 0; octave < 3; octave++)
+                    for (int octave = 0; octave < 2; octave++)
                     {
                         float footprint = max(length(ddx(flameUV)), length(ddy(flameUV)));
                         float weight = octaveWeight * (1.0f - smoothstep(.35f, 1.0f, footprint));
                         flameNoise += flameSpatialNoise(flameUV) * weight;
                         flameWeight += weight;
                         flameUV = flameUV.yzx * 2.03f + float3(3.7f, 11.9f, 7.1f);
-                        octaveWeight *= .48f;
+                        octaveWeight *= .18f;
                     }
                     flameNoise = flameWeight > .001f ? flameNoise / flameWeight : .5f;
-                    float flameDensity = smoothstep(.12f, .85f, flameNoise);
-                    tailStart = lerp(tailStart, .47f + .26f * flameNoise, flameBlend);
+                    float flameDensity = smoothstep(.22f, .70f, flameNoise);
+                    tailStart = lerp(tailStart, .66f + .16f * flameNoise, flameBlend);
                     float3 flameTint = lerp(_ColorTintMiddle.rgb, _ColorTintEnd.rgb,
                         smoothstep(.30f, .75f, vFlipped));
                     float3 flameEmission = flameTint * _Alpha * fresnelOuter * topGradMask
-                        * (.08f + 1.45f * flameDensity);
+                        * (.45f + 1.9f * flameDensity);
                     outColor.xyz = lerp(outColor.xyz, flameEmission, flameBlend);
                 }
                 float tailMask = 1.0f - smoothstep(tailStart, .985f, vFlipped);
@@ -984,6 +1001,21 @@ Shader "Redux/VFX/Exhaust"
 					float3 nozzleTint = lerp(_ColorTintStart.rgb, float3(.8f, .85f, 1.0f), .6f);
 					outColor.xyz += nozzleTint * nozzleGlow * _Alpha * _LinearFlow * 2.0f;
 				}
+                // Compression cells brighten the continuous jet instead of separate opaque diamonds.
+                // Their spacing matches the radial constrictions and their contrast fades downstream.
+                if (_JetShockEmission > 0.0f)
+                {
+                    float jetZ = -mul(unity_WorldToObject, float4(worldPos, 1.0f)).z;
+                    float spacing = max(_ShockCellSpacing, .001f);
+                    float phase = (jetZ - _ShockCellOffset) / spacing;
+                    float wave = .5f + .5f * cos(6.2831853f * phase);
+                    float envelope = smoothstep(0.0f, spacing * .25f, jetZ)
+                        * (1.0f - smoothstep(2.5f, 4.0f, phase));
+                    float cell = smoothstep(.35f, .95f, wave) * envelope;
+                    float downstreamFade = exp2(-.3f * max(phase, 0.0f));
+                    float glow = .65f + 2.4f * cell * downstreamFade;
+                    outColor.xyz *= lerp(1.0f, glow, _JetShockEmission);
+                }
                 // Feather the projected shell silhouette without hiding axial views.
                 float3 shellAxis = normalize(objectNormDir);
                 float3 radialView = viewDirNorm - shellAxis * dot(viewDirNorm, shellAxis);
@@ -1180,10 +1212,15 @@ Shader "Redux/VFX/Exhaust"
                 float axialSoftening = _LayerEdgeSoftness * smoothstep(.45f, .94f, abs(dot(plumeView, plumeAxis)));
                 // Atmospheric mixing widens the tail into moving flame tongues.
                 float flameV = saturate(1.0f - in_texcoord.y);
-                float flameSpread = _FlameTail * smoothstep(.48f, .98f, flameV);
-                float flameAngle = atan2(in_pos.y, in_pos.x);
-                float flameWave = sin(flameV * 23.0f - _Time.y * 24.0f + flameAngle * 3.0f);
-                float flameRadius = 1.0f + flameSpread * (.28f + .06f * flameWave * (1.0f - axialSoftening));
+                float flameSpread = _FlameTail * smoothstep(.35f, .90f, flameV);
+                float flameFlow = -in_pos.z * 4.0f - _Time.y * 32.0f;
+                float flameWave = 2.0f * flameSpatialNoise(float3(in_pos.xy * 4.0f, flameFlow)) - 1.0f;
+                float flameMotion = flameSpread * (1.0f - axialSoftening);
+                // Keep the mixing layer wider than the core even between flame crests.
+                float flameRadius = 1.0f + flameSpread * 1.15f + .35f * flameMotion * flameWave;
+                float2 flameFold = float2(flameSpatialNoise(float3(7.1f, 3.7f, flameFlow)),
+                    flameSpatialNoise(float3(19.3f, 11.9f, flameFlow))) - .5f;
+                in_pos.xy += flameFold * length(in_pos.xy) * .65f * flameMotion;
                 // Pressure-driven, opt-in extension keeps the nozzle anchored at z = 0.
                 // Outer shells use a pressure curve to remain longer than the core.
                 float vacuumLength = (1.0f + .12f * _VacuumDetailBlend) * max(_PlumeAxialScale, .001f);
