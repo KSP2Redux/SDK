@@ -921,15 +921,15 @@ GBufferOutput frag(V2F i)
                                   mad(prepassNormal, quatDiag, quatNdotP * (quatCross + quatCross))),
                               normalFade);
 
-    float finalGlossOcc   = (projRatio * lerp(agg.blendedFarGloss, agg.blendedNearGloss, uvResampleOp)) * packedFade;
-    float finalSmoothness = (projRatio * lerp(agg.blendedFarAO,    agg.blendedNearAO,    uvResampleOp)) * packedFade;
+    float finalSmoothness = (projRatio * lerp(agg.blendedFarGloss, agg.blendedNearGloss, uvResampleOp)) * packedFade;
+    float finalOcclusion  = (projRatio * lerp(agg.blendedFarAO,    agg.blendedNearAO,    uvResampleOp)) * packedFade;
     float finalMetallic   = (projRatio * lerp(agg.blendedFarMet,   agg.blendedNearMet,   uvResampleOp)) * packedFade;
 
     // GBuffer split (additive).
     float3 albedoOut    = finalColor * albedoFade;
     float3 specOut      = mad(finalMetallic, mad(albedoFade, finalColor, -0.04), 0.04);
     float3 diffuseOut   = mad(-finalMetallic, 0.96, 0.96) * albedoOut;
-    float  smoothOcc    = mad(1.0 - projRatio, finalSmoothness, finalSmoothness);
+    float  occlusionTerm = mad(1.0 - projRatio, finalOcclusion, finalOcclusion);
 
     // Emission accumulation: SH (LPPV/L0+L1) + per-vertex L2 + atmospheric specular.
     float3 sh         = EvaluateSH(finalNormal, worldPos, i.worldNormalPosX.w, i.bitangentPosY.w, i.worldTangentPosZ.w);
@@ -940,12 +940,12 @@ GBufferOutput frag(V2F i)
                       + atmosSpec1 * _SGAmplitudeAndSharpness[1].xyz
                       + atmosSpec2 * _SGAmplitudeAndSharpness[2].xyz;
     float3 shLight    = max(sh + i.lighting, 0.0);
-    float3 litColor   = (shLight * smoothOcc + atmosSpec) * albedoOut;
+    float3 litColor   = (shLight * occlusionTerm + atmosSpec) * albedoOut;
 
     GBufferOutput o;
-    o.albedoSmoothness  = float4(diffuseOut, finalSmoothness);
-    o.specularOcclusion = float4(specOut,   finalGlossOcc);
-    o.normalProjRatio   = float4(finalNormal * 0.5 + 0.5, projRatio);
+    o.albedoOcclusion    = float4(diffuseOut, finalOcclusion);
+    o.specularSmoothness = float4(specOut,    finalSmoothness);
+    o.normalProjRatio    = float4(finalNormal * 0.5 + 0.5, projRatio);
 #ifdef UNITY_HDR_ON
     o.emission = float4(litColor, 1.0);
 #else
@@ -959,10 +959,10 @@ GBufferOutput frag(V2F i)
     // BIOME_FRAG_R/G/B/A.  Emits no contribution so the additive blend
     // leaves the GBuffer unchanged.
     GBufferOutput o;
-    o.albedoSmoothness  = float4(0, 0, 0, 0);
-    o.specularOcclusion = float4(0, 0, 0, 0);
-    o.normalProjRatio   = float4(0.5, 0.5, 0.5, 0);
-    o.emission          = float4(0, 0, 0, 0);
+    o.albedoOcclusion    = float4(0, 0, 0, 0);
+    o.specularSmoothness = float4(0, 0, 0, 0);
+    o.normalProjRatio    = float4(0.5, 0.5, 0.5, 0);
+    o.emission           = float4(0, 0, 0, 0);
     return o;
 #endif
 }

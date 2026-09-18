@@ -248,12 +248,11 @@ GBufferOutput frag(V2F i)
         packedFade * packedSample.z,
         mad(shLight, mad(1.0 - projRatio, occlusion, occlusion), atmosSpec) * fadedAlbedo);
 
-    // Unity deferred layout: Target0.a is occlusion, Target1.a is smoothness.
     GBufferOutput o;
-    o.albedoSmoothness  = float4(diffuse,    occlusion);
-    o.specularOcclusion = float4(specularF0, smoothness);
-    o.normalProjRatio   = float4(worldNormal * 0.5 + 0.5, projRatio);
-    o.emission          = EncodeEmission(lighting);
+    o.albedoOcclusion    = float4(diffuse,    occlusion);
+    o.specularSmoothness = float4(specularF0, smoothness);
+    o.normalProjRatio    = float4(worldNormal * 0.5 + 0.5, projRatio);
+    o.emission           = EncodeEmission(lighting);
     return o;
 }
 
