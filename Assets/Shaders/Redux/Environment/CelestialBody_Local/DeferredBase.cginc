@@ -246,13 +246,13 @@ GBufferOutput frag(V2F i)
     float3 lighting  = mad(
         emContrib,
         packedFade * packedSample.z,
-        mad(shLight, mad(1.0 - projRatio, smoothness, smoothness), atmosSpec) * fadedAlbedo);
+        mad(shLight, mad(1.0 - projRatio, occlusion, occlusion), atmosSpec) * fadedAlbedo);
 
     GBufferOutput o;
-    o.albedoSmoothness  = float4(diffuse,    smoothness);
-    o.specularOcclusion = float4(specularF0, occlusion);
-    o.normalProjRatio   = float4(worldNormal * 0.5 + 0.5, projRatio);
-    o.emission          = EncodeEmission(lighting);
+    o.albedoOcclusion    = float4(diffuse,    occlusion);
+    o.specularSmoothness = float4(specularF0, smoothness);
+    o.normalProjRatio    = float4(worldNormal * 0.5 + 0.5, projRatio);
+    o.emission           = EncodeEmission(lighting);
     return o;
 }
 
