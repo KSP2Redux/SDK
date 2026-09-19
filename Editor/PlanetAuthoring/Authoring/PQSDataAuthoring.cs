@@ -62,13 +62,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         public string LastSmallTilesPackFingerprint = string.Empty;
 
         /// <summary>
+        /// Surface distance in meters that one scaled-space bake pixel is treated as spanning, on both axes.
+        /// </summary>
+        /// <remarks>
+        /// Zero selects <see cref="Tools.AnalyticScaledSpaceSampler.DefaultArcPerPixelMeters" />. A gradient
+        /// gain rather than a measured arc length, per body because the useful value varies hugely with radius.
+        /// Lower reads as steeper terrain.
+        /// </remarks>
+        public float ScaledBakeArcPerPixelMeters;
+
+        /// <summary>
         /// Stamped by <see cref="Tools.BodySurfaceBakerOperation" /> after a successful bake, read by the surface-bake-drift validator.
         /// </summary>
         /// <remarks>
-        /// Covers the inputs that feed the gradience bake and per-biome normal bake (per-biome raw
-        /// heightmaps + their height scales + body radius). A mismatch means the artist edited an
-        /// input since the last bake, so the gradience/normal outputs sampled by the surface
-        /// shader are stale.
+        /// Covers the inputs that feed the gradience bake and the scaled-space bake (per-biome raw
+        /// heightmaps + their height scales + body radius + <see cref="ScaledBakeArcPerPixelMeters" />).
+        /// A mismatch means the artist edited an input since the last bake, so the gradience and
+        /// scaled-space outputs sampled by the surface shader are stale.
         /// </remarks>
         public string LastSurfaceBakeFingerprint = string.Empty;
     }
