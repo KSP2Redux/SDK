@@ -147,12 +147,8 @@ uint  _OutHeight;
 uint  _SubsampleN;       // N x N supersamples per output pixel (default 4)
 uint  _AORingCount;      // rays per AO horizon march (default 8)
 float _HeightScale;
-// Surface distance in meters that one output pixel spans, on BOTH axes. Latitude plays no
-// part: the equirect map is treated as a flat plane with square, latitude-independent pixel
-// spacing, which is what stock does. Measuring stock's own baked maps shows their gradient
-// gain is flat across latitude and equal on U and V, and that it does not track
-// heightMapScale / radius at all, so the value is an authored gain rather than a derived
-// arc length. The C# driver computes it and defaults it to 2 * pi * R / _OutWidth.
+// Distance one output pixel spans, same on both axes and with no latitude term, so the
+// equirect map is treated as a flat plane. Set by the C# driver.
 float _ArcPerPixelMeters;
 
 // 0.21763764 is the gamma-corrected mid-gray used by the local shader's color grade
@@ -321,10 +317,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float2 pixelCenterUv = (float2(pixel) + 0.5) * pixelStep;
 
     // Per-pixel distance per cardinal step at the output pixel scale - used by the macro AO.
-    // Both axes take the same value and no latitude term is applied, so the map is treated as
-    // a flat plane. A cos(lat) term would divide the U gradient by an arc collapsing to zero at
-    // the poles, which blows the polar rows out into a band of near-horizontal normals that
-    // stock does not have.
+    // A cos(lat) term here would collapse the U arc to zero at the poles and blow those rows out.
     float arcUMacro = _ArcPerPixelMeters;
     float arcVMacro = _ArcPerPixelMeters;
 

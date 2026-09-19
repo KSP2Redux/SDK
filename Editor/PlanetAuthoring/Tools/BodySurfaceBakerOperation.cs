@@ -15,9 +15,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     /// Produces the per-biome gradience textures, an analytic equirect albedo / normal / packed / emission
     /// set, and a low-poly displaced sphere mesh, then points <c>Celestial.&lt;Body&gt;.Scaled.prefab</c> at
     /// the resulting mesh and material. Operates purely against asset references on the body and its PQS,
-    /// so no live authoring session or open scene is required.
-    /// The <c>_MidNormal*</c> and <c>_LargeNormal*</c> slots are authored rather than baked and are never
-    /// written here.
+    /// so no live authoring session or open scene is required. The <c>_MidNormal*</c> and
+    /// <c>_LargeNormal*</c> slots are authored and never written here.
     /// </remarks>
     public static class BodySurfaceBakerOperation
     {
@@ -90,10 +89,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             try
             {
-                // Per-biome gradience bake. Produces the signed-split slope textures the runtime
-                // samples for slope-window gating and macro-normal evaluation. It is an independent
-                // leaf: it reads the raw per-biome heightmaps straight off PQSData, and nothing
-                // downstream consumes what it writes.
+                // Produces the signed-split slope textures the runtime samples for slope-window
+                // gating. An independent leaf: nothing downstream reads what it writes.
                 ProgressBar("Baking per-biome gradience...", 0.02f);
                 var gradienceBake = GradienceBaker.Bake(ctx.PqsData, ctx.Radius);
                 if (!gradienceBake.Skipped)
@@ -106,10 +103,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     Debug.Log($"[BodySurfaceBaker] Gradience bake skipped: {gradienceBake.SkipReason}");
                 }
 
-                // The _MidNormal*/_LargeNormal* slots are deliberately untouched. Those maps are
-                // authored: artists export them next to the region heightmaps they belong to and
-                // assign them through the surface inspector, so the bake must leave the bindings
-                // alone rather than overwrite them with generated art.
+                // The _MidNormal*/_LargeNormal* slots are authored. Leave them alone.
                 ProgressBar("Baking textures (analytic)...", 0.15f);
                 var textures = AnalyticScaledSpaceSampler.Sample(ctx.PqsData, ctx.Radius, ResolveSamplerSettings(ctx));
                 try
@@ -500,17 +494,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 AppendRegion(ref hash, hmi.mediumA);
             }
 
-            // The scaled bake's gradient gain lives on the authoring sidecar rather than in the
-            // bake settings, so a gain edit has to reach the fingerprint from here or the drift
-            // validator would call a body current while its scaled maps were baked at the old gain.
+            // The gain lives on the sidecar, so it has to reach the hash from here or a gain edit
+            // leaves the body reading as current.
             var authoring = AuthoringSidecars.Find(pqsData);
             hash.Append(authoring != null ? authoring.ScaledBakeArcPerPixelMeters : 0f);
 
             return hash.ToString();
         }
 
-        // Builds the analytic sampler's settings for this body, overriding the derived gradient gain
-        // with the body's own when the artist has set one.
+        // Sampler settings for this body, taking the body's own gain over the derived default.
         private static AnalyticScaledSpaceSampler.Settings ResolveSamplerSettings(BakeContext ctx)
         {
             var settings = AnalyticScaledSpaceSampler.DefaultSettings();

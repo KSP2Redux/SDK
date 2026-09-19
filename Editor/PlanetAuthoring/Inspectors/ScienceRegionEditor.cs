@@ -881,9 +881,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             return -1;
         }
 
-        // Delegates to ComputeLatLon rather than repeating the inverse. The two had drifted apart:
-        // this one passed the atan2 arguments in the other order, so the row label showed
-        // 90 deg minus the longitude that the editable fields, both Frame buttons and Copy used.
+        // Delegates rather than repeating the inverse, which is how the two drifted apart before.
         private static string FormatLatLon(CelestialBodyDiscoverablePosition pos)
         {
             Vector3d p = pos.Position;
@@ -1109,13 +1107,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 var pos = Target.discoverables[i];
                 if (pos == null)
                     continue;
-                // Anchor on the PQS transform, the same one PlaceDiscoverableTool inverts against
-                // when it records the position. SceneViewFraming rotates the PQS on every camera
-                // jump, so reading back through any other transform draws the orb in an unrotated
-                // frame while the terrain sits in the rotated one. The body transform is worse
-                // still: PQS lives on the Local prefab and CoreCelestialBodyData on the Scaled
-                // one, so BodyResolver.FindBody falls through to a scene scan and returns an
-                // object with no positional relationship to the terrain at all.
+                // Must be the PQS transform, the one PlaceDiscoverableTool inverts against.
+                // SceneViewFraming rotates it on every camera jump.
                 var worldPos = planet.transform.TransformPoint((Vector3)pos.Position);
 
                 if (showOrbs && pos.Radius > 0)

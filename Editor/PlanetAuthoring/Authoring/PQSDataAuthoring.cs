@@ -65,13 +65,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         /// Surface distance in meters that one scaled-space bake pixel is treated as spanning, on both axes.
         /// </summary>
         /// <remarks>
-        /// Zero selects <see cref="Tools.AnalyticScaledSpaceSampler.DefaultArcPerPixelMeters" />, which is
-        /// <c>2 * pi * radius / resolution</c>. This is a gradient gain rather than a measured arc length.
-        /// The bake treats the equirectangular map as a flat plane, matching stock, whose own baked maps
-        /// show a gain that is flat across latitude, equal on U and V, and unrelated to
-        /// <c>heightMapScale / radius</c>. Lower values read as steeper terrain. It belongs on the body
-        /// because the derived default spans three orders of magnitude across a system, so no single
-        /// global value serves two bodies.
+        /// Zero selects <see cref="Tools.AnalyticScaledSpaceSampler.DefaultArcPerPixelMeters" />. A gradient
+        /// gain rather than a measured arc length, per body because the useful value varies hugely with radius.
+        /// Lower reads as steeper terrain.
         /// </remarks>
         public float ScaledBakeArcPerPixelMeters;
 

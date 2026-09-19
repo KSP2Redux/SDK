@@ -66,11 +66,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             /// Surface distance in meters that one output pixel is treated as spanning, on both axes.
             /// </summary>
             /// <remarks>
-            /// Zero or negative selects the default from <see cref="DefaultArcPerPixelMeters" />. This is
-            /// the gradient gain, not a measured arc length: the bake treats the equirectangular map as a
-            /// flat plane, so the value is latitude-independent and identical on U and V. Smaller values
-            /// read as steeper terrain. Plumbed from the body's own
-            /// <c>PQSDataAuthoring.ScaledBakeArcPerPixelMeters</c> so each body carries its own gain.
+            /// Zero or negative selects <see cref="DefaultArcPerPixelMeters" />. Smaller values read as
+            /// steeper terrain.
             /// </remarks>
             public float ArcPerPixelMeters;
         }
@@ -82,10 +79,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="resolution">Output side length in pixels.</param>
         /// <returns>The equatorial circumference divided by the output width, or 1 when either input is non-positive.</returns>
         /// <remarks>
-        /// Matches the convention <c>GradienceBake.compute</c> already uses, so the scaled bake and the
-        /// gradience bake agree on what one pixel spans. It is also the value the previous cos(lat) form
-        /// produced on the U axis at the equator, so a re-bake changes the poles and the U to V balance
-        /// without moving overall strength much.
+        /// Same convention <c>GradienceBake.compute</c> uses, so the two bakes agree on what one pixel spans.
         /// </remarks>
         public static float DefaultArcPerPixelMeters(float radius, int resolution)
         {
