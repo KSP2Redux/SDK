@@ -14,13 +14,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     /// </remarks>
     public static class AnalyticScaledSpaceSampler
     {
-        private const string ComputeShaderPath =
+        private const string COMPUTE_SHADER_PATH =
             SDKConfiguration.BasePath + "/Assets/Shaders/PlanetAuthoring/AnalyticScaledSpaceBake.compute";
 
         // Must match SUBMEAN_GRID_SIZE in AnalyticScaledSpaceBake.compute. Submeans are now
         // sized to actual sliceCount via StructuredBuffer (no fixed MAX_SLICES cap).
-        private const int SubmeanGridSize = 4;
-        private const int SubmeansPerSlice = SubmeanGridSize * SubmeanGridSize;
+        private const int SUBMEAN_GRID_SIZE = 4;
+        private const int SUBMEANS_PER_SLICE = SUBMEAN_GRID_SIZE * SUBMEAN_GRID_SIZE;
 
         /// <summary>
         /// Per-bake settings for the analytic scaled-space sampler.
@@ -62,6 +62,49 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             /// Lower values give larger continuous color patches.
             /// </remarks>
             public float VariationFrequency;
+            /// <summary>
+            /// Surface distance in meters that one output pixel is treated as spanning, on both axes.
+            /// </summary>
+            /// <remarks>
+            /// Zero or negative selects the default from <see cref="DefaultArcPerPixelMeters" />. This is
+            /// the gradient gain, not a measured arc length: the bake treats the equirectangular map as a
+            /// flat plane, so the value is latitude-independent and identical on U and V. Smaller values
+            /// read as steeper terrain. Plumbed from the body's own
+            /// <c>PQSDataAuthoring.ScaledBakeArcPerPixelMeters</c> so each body carries its own gain.
+            /// </remarks>
+            public float ArcPerPixelMeters;
+        }
+
+        /// <summary>
+        /// Returns the default per-pixel surface distance for a body of the given radius at the given output resolution.
+        /// </summary>
+        /// <param name="radius">Body radius in meters.</param>
+        /// <param name="resolution">Output side length in pixels.</param>
+        /// <returns>The equatorial circumference divided by the output width, or 1 when either input is non-positive.</returns>
+        /// <remarks>
+        /// Matches the convention <c>GradienceBake.compute</c> already uses, so the scaled bake and the
+        /// gradience bake agree on what one pixel spans. It is also the value the previous cos(lat) form
+        /// produced on the U axis at the equator, so a re-bake changes the poles and the U to V balance
+        /// without moving overall strength much.
+        /// </remarks>
+        public static float DefaultArcPerPixelMeters(float radius, int resolution)
+        {
+            if (radius <= 0f || resolution <= 0)
+                return 1f;
+            return 2f * Mathf.PI * radius / resolution;
+        }
+
+        /// <summary>
+        /// Resolves the per-pixel surface distance a bake should use, falling back to the default when unset.
+        /// </summary>
+        /// <param name="settings">The per-bake settings whose <see cref="Settings.ArcPerPixelMeters" /> acts as the override.</param>
+        /// <param name="radius">Body radius in meters.</param>
+        /// <returns>The override when positive, otherwise <see cref="DefaultArcPerPixelMeters" />.</returns>
+        public static float ResolveArcPerPixelMeters(Settings settings, float radius)
+        {
+            return settings.ArcPerPixelMeters > 0f
+                ? settings.ArcPerPixelMeters
+                : DefaultArcPerPixelMeters(radius, settings.Resolution);
         }
 
         /// <summary>
@@ -119,11 +162,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <exception cref="System.IO.FileNotFoundException">Thrown when the analytic-bake compute shader asset cannot be loaded.</exception>
         public static Result Sample(PQSData pqsData, float radius, Settings settings)
         {
-            if (pqsData == null) throw new ArgumentNullException(nameof(pqsData));
-            if (radius <= 0f) throw new ArgumentException("Radius must be positive.", nameof(radius));
-            if (settings.Resolution <= 0) throw new ArgumentException("Resolution must be positive.", nameof(settings));
-            if (settings.SubsampleN <= 0) throw new ArgumentException("SubsampleN must be positive.", nameof(settings));
-            if (settings.AORingCount <= 0) throw new ArgumentException("AORingCount must be positive.", nameof(settings));
+            if (pqsData == null)
+                throw new ArgumentNullException(nameof(pqsData));
+            if (radius <= 0f)
+                throw new ArgumentException("Radius must be positive.", nameof(radius));
+            if (settings.Resolution <= 0)
+                throw new ArgumentException("Resolution must be positive.", nameof(settings));
+            if (settings.SubsampleN <= 0)
+                throw new ArgumentException("SubsampleN must be positive.", nameof(settings));
+            if (settings.AORingCount <= 0)
+                throw new ArgumentException("AORingCount must be positive.", nameof(settings));
 
             var heightMapInfo = pqsData.heightMapInfo
                 ?? throw new InvalidOperationException("PQSData has no heightMapInfo.");
@@ -157,8 +205,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var midB   = ResolveHeightmapOrFlat(heightMapInfo.mediumB?.heightMap);
             var midA   = ResolveHeightmapOrFlat(heightMapInfo.mediumA?.heightMap);
 
-            var compute = AssetDatabase.LoadAssetAtPath<ComputeShader>(ComputeShaderPath)
-                ?? throw new FileNotFoundException($"Could not load compute shader at '{ComputeShaderPath}'.");
+            var compute = AssetDatabase.LoadAssetAtPath<ComputeShader>(COMPUTE_SHADER_PATH)
+                ?? throw new FileNotFoundException($"Could not load compute shader at '{COMPUTE_SHADER_PATH}'.");
 
             // Outputs are square so they can also be assigned back onto the PQS surface material's
             // _AlbedoScaledTex / _NormalScaledTex / etc slots, which the local-view distance
@@ -166,10 +214,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             int side = settings.Resolution;
 
             // Precompute per-slice 4x4 submean grids via Graphics.Blit reduction. Each slice gets
-            // chain-blitted down to a 4x4 RT; we read those 16 colors back as the submean grid.
+            // chain-blitted down to a 4x4 RT. We read those 16 colors back as the submean grid.
             // Bound to the compute shader as a StructuredBuffer (no fixed slice cap).
             int sliceCount = albedoArray.depth;
-            int submeanEntryCount = sliceCount * SubmeansPerSlice;
+            int submeanEntryCount = sliceCount * SUBMEANS_PER_SLICE;
             var albedoSubmeans = new Vector4[submeanEntryCount];
             var normalSubmeans = new Vector4[submeanEntryCount];
             var metalSubmeans  = new Vector4[submeanEntryCount];
@@ -227,7 +275,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 compute.SetInt("_OutHeight", side);
                 compute.SetInt("_SubsampleN", settings.SubsampleN);
                 compute.SetInt("_AORingCount", settings.AORingCount);
-                compute.SetFloat("_Radius", radius);
+                compute.SetFloat("_ArcPerPixelMeters", ResolveArcPerPixelMeters(settings, radius));
                 compute.SetFloat("_HeightScale", heightMapInfo.heightMapScale);
                 compute.SetFloat("_VariationStrength", settings.VariationStrength);
                 compute.SetFloat("_VariationFrequency", settings.VariationFrequency);
@@ -265,14 +313,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         // Reduces each slice of a Texture2DArray to a 4x4 grid of submeans. For each slice:
         // (1) extract the slice into a 2D RT via Graphics.Blit's array-slice overload;
         // (2) chain bilinear half-resolution blits down to 4x4;
-        // (3) read back 16 colors into dst at offset (slice * SubmeansPerSlice).
+        // (3) read back 16 colors into dst at offset (slice * SUBMEANS_PER_SLICE).
         // Independent of source mip state - works on any Texture2DArray.
         private static void ComputeSliceSubmeans(Texture2DArray array, int sliceCount, Vector4[] dst)
         {
             int srcW = array.width;
             int srcH = array.height;
-            int targetW = Mathf.Max(SubmeanGridSize, 1);
-            int targetH = Mathf.Max(SubmeanGridSize, 1);
+            int targetW = Mathf.Max(SUBMEAN_GRID_SIZE, 1);
+            int targetH = Mathf.Max(SUBMEAN_GRID_SIZE, 1);
 
             for (int s = 0; s < sliceCount; s++)
             {
@@ -296,7 +344,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     curH = nextH;
                 }
 
-                ReadSubmeanGrid(current, dst, s * SubmeansPerSlice);
+                ReadSubmeanGrid(current, dst, s * SUBMEANS_PER_SLICE);
 
                 if (current != slice) RenderTexture.ReleaseTemporary(current);
                 RenderTexture.ReleaseTemporary(slice);
@@ -315,16 +363,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             {
                 tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
                 tex.Apply();
-                int w = Mathf.Min(rt.width, SubmeanGridSize);
-                int h = Mathf.Min(rt.height, SubmeanGridSize);
-                for (int row = 0; row < SubmeanGridSize; row++)
+                int w = Mathf.Min(rt.width, SUBMEAN_GRID_SIZE);
+                int h = Mathf.Min(rt.height, SUBMEAN_GRID_SIZE);
+                for (int row = 0; row < SUBMEAN_GRID_SIZE; row++)
                 {
                     int sampleY = Mathf.Min(row, h - 1);
-                    for (int col = 0; col < SubmeanGridSize; col++)
+                    for (int col = 0; col < SUBMEAN_GRID_SIZE; col++)
                     {
                         int sampleX = Mathf.Min(col, w - 1);
                         var c = tex.GetPixel(sampleX, sampleY);
-                        dst[baseIndex + row * SubmeanGridSize + col] = new Vector4(c.r, c.g, c.b, c.a);
+                        dst[baseIndex + row * SUBMEAN_GRID_SIZE + col] = new Vector4(c.r, c.g, c.b, c.a);
                     }
                 }
             }
@@ -349,7 +397,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="blendLines">Of the <paramref name="totalLines" /> rows, how many to soft-blend toward the captured row pixels. The remainder are hard-set to the pole color.</param>
         public static void BlendPolarNormals(Texture2D normal, int totalLines, int blendLines)
         {
-            if (normal == null) return;
+            if (normal == null)
+                return;
             int w = normal.width;
             int h = normal.height;
 
@@ -390,7 +439,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="blendLines">Of the <paramref name="totalLines" /> rows, how many to soft-blend toward the per-row pixels. The remainder are hard-set to the row's mean color.</param>
         public static void BlendPolarRowsTowardRowMean(Texture2D texture, int totalLines, int blendLines)
         {
-            if (texture == null) return;
+            if (texture == null)
+                return;
             int w = texture.width;
             int h = texture.height;
 
@@ -435,7 +485,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="texture">The texture to make wrap-tileable in place. Null is a no-op.</param>
         public static void EnforceSeamTileability(Texture2D texture)
         {
-            if (texture == null) return;
+            if (texture == null)
+                return;
             int w = texture.width;
             int h = texture.height;
             int xR = w - 1;
@@ -462,7 +513,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
         private static Texture2D GetFlatBlackFallback()
         {
-            if (_flatBlackFallback != null) return _flatBlackFallback;
+            if (_flatBlackFallback != null)
+                return _flatBlackFallback;
             _flatBlackFallback = new Texture2D(1, 1, TextureFormat.RGBA32, mipChain: false, linear: true)
             {
                 hideFlags = HideFlags.HideAndDontSave,
@@ -503,7 +555,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="rt">The render texture to release. Null is a no-op.</param>
         internal static void ReleaseRT(RenderTexture rt)
         {
-            if (rt == null) return;
+            if (rt == null)
+                return;
             rt.Release();
             UnityEngine.Object.DestroyImmediate(rt);
         }

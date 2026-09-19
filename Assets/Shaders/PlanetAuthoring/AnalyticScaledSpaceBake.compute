@@ -1,6 +1,4 @@
 #pragma kernel CSMain
-#pragma kernel CSBakeMid
-#pragma kernel CSBakeLarge
 
 // ============================================================================
 // AnalyticScaledSpaceBake
@@ -44,10 +42,6 @@ RWTexture2D<float4> _OutNormal;
 RWTexture2D<float4> _OutPacked;
 RWTexture2D<float4> _OutEmission;
 
-// Per-biome Mid and Large normal outputs. One biome per dispatch.
-RWTexture2D<float4> _OutMidNormal;
-RWTexture2D<float4> _OutLargeNormal;
-
 // === Inputs =============================================================================
 Texture2D<float4> _BiomeMaskTex;
 Texture2D<float4> _GlobalHeightMap;
@@ -78,24 +72,6 @@ float _VariationStrength;
 float _VariationFrequency;
 
 SamplerState sampler_LinearRepeat;
-
-// === Bindings for CSBakeMid / CSBakeLarge ================================================
-// Per-slice tileable detail normals. CSBakeMid samples a slice at the output tile UV.
-Texture2DArray<float4> _SmallNormalArray;
-
-// Per-dispatch uniforms. One dispatch per biome.
-uint   _MidBakeBiomeIndex;     // 0..3 = R/G/B/A
-int2   _MidBakeAnchorPixel;    // anchor pixel in _BiomeMaskTex
-uint   _MidOutWidth;
-uint   _MidOutHeight;
-
-uint   _LargeBakeBiomeIndex;   // 0..3 = R/G/B/A
-float2 _LargeBakeAnchorUV;     // equirect-UV center for this biome's Large tile
-float2 _LargeBakeTileSpanUV;   // equirect-UV span one Large tile covers
-uint   _LargeOutWidth;
-uint   _LargeOutHeight;
-float  _LargeHeightWeight;
-float  _MidHeightWeight;
 
 // Per-slice 4x4 SUBMEAN grids precomputed in C# via Graphics.Blit reduction. Instead of
 // one mean per slice (which makes every patch of a single material look identical at
@@ -170,8 +146,14 @@ uint  _OutWidth;
 uint  _OutHeight;
 uint  _SubsampleN;       // N x N supersamples per output pixel (default 4)
 uint  _AORingCount;      // rays per AO horizon march (default 8)
-float _Radius;
 float _HeightScale;
+// Surface distance in meters that one output pixel spans, on BOTH axes. Latitude plays no
+// part: the equirect map is treated as a flat plane with square, latitude-independent pixel
+// spacing, which is what stock does. Measuring stock's own baked maps shows their gradient
+// gain is flat across latitude and equal on U and V, and that it does not track
+// heightMapScale / radius at all, so the value is an authored gain rather than a derived
+// arc length. The C# driver computes it and defaults it to 2 * pi * R / _OutWidth.
+float _ArcPerPixelMeters;
 
 // 0.21763764 is the gamma-corrected mid-gray used by the local shader's color grade
 // (matches DeferredBiome.cginc gradedNear formula).
@@ -257,50 +239,6 @@ float RuntimeSlopeDegFromNormalZ(float nz)
     return min(s / max(c, 1e-5), 1.0) * 90.0;
 }
 
-// Per-layer weight (excluding biome-channel) for biome b / layer l at the given height
-// (meters) and slope (degrees). Mirrors CSMain's inline gating. Multiply by biomeChan
-// for the final blend weight.
-float ComputeLayerWeight(int b, int l, float trapezoidHeight, float slopeDeg)
-{
-    float sliceIdx = SMALL_SCALAR(_SmallBiomeIdxPack, b, l);
-    if (sliceIdx < 0.0) return 0.0;
-
-    float enable     = SMALL_SCALAR(_SmallEnablePack, b, l);
-    float baseWeight = SMALL_SCALAR(_SmallHeightWeightPack, b, l);
-    float gate       = enable * baseWeight;
-    if (gate <= 0.0) return 0.0;
-
-    int idx = b * 4 + l;
-    float heightFalloff = lerp(1.0 - SMALL_SCALAR(_SmallHeightEnablePack, b, l), 1.0,
-                               ComputeFadeTri(trapezoidHeight, _SmallHeightParams[idx]));
-    float4 sParams = _SmallSlopeParams[idx];
-    float  sEnable = SMALL_SCALAR(_SmallSlopeEnablePack, b, l);
-    bool   slopeDegenerate = sParams.x == 0.0 && sParams.y == 0.0 && sEnable != 0.0;
-    float  slopeFalloff = slopeDegenerate
-        ? 0.0
-        : lerp(1.0 - sEnable, 1.0, ComputeFadeTri(slopeDeg, sParams));
-    return gate * heightFalloff * slopeFalloff;
-}
-
-// Samples _SmallNormalArray at the tile-space UV and slice. Standard Unity DXT5nm unpack
-// (x in .a, y in .g, z reconstructed from xy).
-float3 SampleSmallNormalAt(int sliceIdx, float2 tileUV)
-{
-    float4 c = _SmallNormalArray.SampleLevel(sampler_LinearRepeat, float3(tileUV, (float)sliceIdx), 0);
-    float nx = c.a * 2.0 - 1.0;
-    float ny = c.g * 2.0 - 1.0;
-    float nz = sqrt(saturate(1.0 - nx * nx - ny * ny));
-    return float3(nx, ny, nz);
-}
-
-// 2D height gradient -> tangent-space normal. Same formula as CSMain's macro normal.
-float3 MakeMacroNormalFromGradient(float dhdu, float dhdv, float arcUStep, float arcVStep)
-{
-    return normalize(float3(-dhdu / max(arcUStep, 0.001),
-                            -dhdv / max(arcVStep, 0.001),
-                            1.0));
-}
-
 // 3D value-noise hash (Inigo Quilez style). Sampling at the sphere position rather than
 // at the equirect UV makes the noise field continuous across the U=0/U=1 wrap (no
 // vertical seam) AND well-defined at the poles (no radial pinch where every U value at
@@ -379,21 +317,16 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     float2 pixelStep    = float2(1.0 / _OutWidth, 1.0 / _OutHeight);
     float2 subPixelStep = pixelStep / N;
 
-    // Output pixel center (latitude is constant across subsamples since they're within the pixel).
+    // Output pixel center.
     float2 pixelCenterUv = (float2(pixel) + 0.5) * pixelStep;
-    float  lat           = (pixelCenterUv.y - 0.5) * UNITY_PI;          // radians, +pi/2 = north pole
-    // Clamp cos(lat) to avoid arc-length collapsing to 0 right at the poles, which would
-    // otherwise blow up the macro-normal gradient division. ~0.5 deg from the pole is about
-    // the smallest cosLat we let through; closer than that and the equirect U-direction is
-    // basically a single point anyway, so any normal we compute there is meaningless and the
-    // polar blend pass below covers it.
-    float  cosLat        = max(cos(lat), 0.01);
 
-    // Per-pixel arc-length per cardinal step at the output pixel scale - used by the macro AO.
-    // U and V differ when the output is square (equirect 2:1 squeezed): each U pixel covers more
-    // arc than each V pixel at the equator. Diagonal AO rays use both.
-    float arcUMacro = (2.0 * UNITY_PI * _Radius * cosLat) / _OutWidth;
-    float arcVMacro = (UNITY_PI * _Radius)                / _OutHeight;
+    // Per-pixel distance per cardinal step at the output pixel scale - used by the macro AO.
+    // Both axes take the same value and no latitude term is applied, so the map is treated as
+    // a flat plane. A cos(lat) term would divide the U gradient by an arc collapsing to zero at
+    // the poles, which blows the polar rows out into a band of near-horizontal normals that
+    // stock does not have.
+    float arcUMacro = _ArcPerPixelMeters;
+    float arcVMacro = _ArcPerPixelMeters;
 
     // Per-subsample arc-length per cardinal step at the subsample scale - used by the macro normal.
     float arcUSub = arcUMacro / N;
@@ -621,138 +554,4 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     _OutNormal[pixel]   = float4(nXY.x, nXY.y, 0.0, 1.0);
     _OutPacked[pixel]   = float4(saturate(accumMetallic), saturate(accumAO), 0.0, saturate(accumSmoothness));
     _OutEmission[pixel] = float4(emissionSrgb, 1.0);
-}
-
-// === CSBakeMid kernel ===================================================================
-// Bakes one biome's Mid normal tile. Mid is triplanar in world-space meters at runtime so
-// the output content is adirectional. One dispatch per biome.
-[numthreads(8, 8, 1)]
-void CSBakeMid(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= _MidOutWidth || id.y >= _MidOutHeight) return;
-    uint2 pixel = id.xy;
-    float2 tileUV = (float2(pixel) + 0.5) * float2(1.0 / _MidOutWidth, 1.0 / _MidOutHeight);
-
-    // Anchor sample: one representative point per biome drives the layer-window evaluation.
-    uint2 maskDims;
-    _BiomeMaskTex.GetDimensions(maskDims.x, maskDims.y);
-    float2 anchorUV = (float2(_MidBakeAnchorPixel) + 0.5) / float2(maskDims);
-    float4 biomeNorm = SampleBiomeNorm(anchorUV);
-    HeightSample hC  = ComposedHeightAt(anchorUV, biomeNorm);
-
-    // Slope at anchor via local height gradient. Arc lengths are latitude-corrected at the
-    // mask's pixel pitch so the slope angle matches the runtime view.
-    float lat       = (anchorUV.y - 0.5) * UNITY_PI;
-    float cosLat    = max(cos(lat), 0.01);
-    float arcU      = (2.0 * UNITY_PI * _Radius * cosLat) / (float)maskDims.x;
-    float arcV      = (UNITY_PI * _Radius)                / (float)maskDims.y;
-    float2 pixelStep = float2(1.0 / maskDims.x, 1.0 / maskDims.y);
-    HeightSample hUp = ComposedHeightAt(anchorUV + float2(pixelStep.x, 0), biomeNorm);
-    HeightSample hUm = ComposedHeightAt(anchorUV - float2(pixelStep.x, 0), biomeNorm);
-    HeightSample hVp = ComposedHeightAt(anchorUV + float2(0, pixelStep.y), biomeNorm);
-    HeightSample hVm = ComposedHeightAt(anchorUV - float2(0, pixelStep.y), biomeNorm);
-    float dhdu = (hUp.composed - hUm.composed) * 0.5;
-    float dhdv = (hVp.composed - hVm.composed) * 0.5;
-    float3 anchorNormal   = MakeMacroNormalFromGradient(dhdu, dhdv, arcU, arcV);
-    float  anchorSlopeDeg = RuntimeSlopeDegFromNormalZ(anchorNormal.z);
-    // Trapezoid height axis uses the composed altitude to match the runtime: quad-mesh
-    // construction (PQSQuadConstructorShader) feeds vertex altitude from globalHeightMap +
-    // per-biome heightmaps weighted by the biome mask, so the runtime trapezoid window
-    // evaluates against that composed value.
-    float  anchorTrapH    = hC.composed;
-
-    int   b         = (int)_MidBakeBiomeIndex;
-    float biomeChan = ScalarFromPack(biomeNorm, b);
-
-    float3 accumN = float3(0, 0, 0);
-    float  accumW = 0.0;
-
-    [loop] for (int l = 0; l < 4; l++)
-    {
-        float sliceIdx = SMALL_SCALAR(_SmallBiomeIdxPack, b, l);
-        if (sliceIdx < 0.0) continue;
-        float perLayerW = ComputeLayerWeight(b, l, anchorTrapH, anchorSlopeDeg);
-        if (perLayerW <= 0.0) continue;
-        float layerWeight = biomeChan * perLayerW;
-        if (layerWeight <= 0.0) continue;
-        float3 n = SampleSmallNormalAt((int)sliceIdx, tileUV);
-        accumN += layerWeight * n;
-        accumW += layerWeight;
-    }
-
-    // Flat fallback when no layer wins at the anchor.
-    float3 outN = (accumW > 0.0) ? normalize(accumN) : float3(0, 0, 1);
-    float2 nXY  = saturate(outN.xy * 0.5 + 0.5);
-    _OutMidNormal[pixel] = float4(nXY.x, nXY.y, 0.0, 1.0);
-}
-
-// Samples a per-biome raw heightmap at the given equirect UV with the given UV scale.
-// b selects which channel's heightmap to read. If/else chain (not early returns) so the
-// HLSL compiler can statically prove the result is always assigned.
-float SampleLargeHeight(int b, float2 uv, float uvScale)
-{
-    float h;
-    if (b == 0)      h = _LargeHeightR.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 1) h = _LargeHeightG.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 2) h = _LargeHeightB.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else             h = _LargeHeightA.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    return h;
-}
-
-float SampleMidHeight(int b, float2 uv, float uvScale)
-{
-    float h;
-    if (b == 0)      h = _MidHeightR.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 1) h = _MidHeightG.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else if (b == 2) h = _MidHeightB.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    else             h = _MidHeightA.SampleLevel(sampler_LinearRepeat, uv * uvScale, 0).x;
-    return h;
-}
-
-// === CSBakeLarge kernel =================================================================
-// Bakes one biome's Large normal tile as a biplanar equirect-tile directional normal,
-// derived from the Mid + Large gradience heightmap gradients per biome.
-[numthreads(8, 8, 1)]
-void CSBakeLarge(uint3 id : SV_DispatchThreadID)
-{
-    if (id.x >= _LargeOutWidth || id.y >= _LargeOutHeight) return;
-    uint2 pixel = id.xy;
-    int   b     = (int)_LargeBakeBiomeIndex;
-
-    // Tile-space UV -> equirect UV inside the biome's anchor patch.
-    float2 tileUV = (float2(pixel) + 0.5) * float2(1.0 / _LargeOutWidth, 1.0 / _LargeOutHeight);
-    float2 eqUV   = _LargeBakeAnchorUV + (tileUV - 0.5) * _LargeBakeTileSpanUV;
-
-    // Per-pixel equirect step in UV and corresponding world-space arc length.
-    float2 stepUV  = _LargeBakeTileSpanUV / float2(_LargeOutWidth, _LargeOutHeight);
-    float  lat     = (eqUV.y - 0.5) * UNITY_PI;
-    float  cosLat  = max(cos(lat), 0.01);
-    float  arcUStep = (2.0 * UNITY_PI * _Radius * cosLat) * stepUV.x;
-    float  arcVStep = (UNITY_PI * _Radius)               * stepUV.y;
-
-    // Mid heightmap gradient. UV scale and height scale are scalar per biome.
-    float midScale       = ScalarFromPack(_MediumHeightMapUVScales, b);
-    float midHeightScale = ScalarFromPack(_MidHeightScales, b);
-    float mUp = SampleMidHeight(b, eqUV + float2(stepUV.x, 0), midScale) * midHeightScale;
-    float mUm = SampleMidHeight(b, eqUV - float2(stepUV.x, 0), midScale) * midHeightScale;
-    float mVp = SampleMidHeight(b, eqUV + float2(0, stepUV.y), midScale) * midHeightScale;
-    float mVm = SampleMidHeight(b, eqUV - float2(0, stepUV.y), midScale) * midHeightScale;
-    float midDU = (mUp - mUm) * 0.5;
-    float midDV = (mVp - mVm) * 0.5;
-    float3 nMid = MakeMacroNormalFromGradient(midDU, midDV, arcUStep, arcVStep);
-
-    // Large heightmap gradient. UV scale and height scale are scalar per biome.
-    float largeScale       = ScalarFromPack(_LargeHeightMapUVScales, b);
-    float largeHeightScale = ScalarFromPack(_LargeHeightScales, b);
-    float lUp = SampleLargeHeight(b, eqUV + float2(stepUV.x, 0), largeScale) * largeHeightScale;
-    float lUm = SampleLargeHeight(b, eqUV - float2(stepUV.x, 0), largeScale) * largeHeightScale;
-    float lVp = SampleLargeHeight(b, eqUV + float2(0, stepUV.y), largeScale) * largeHeightScale;
-    float lVm = SampleLargeHeight(b, eqUV - float2(0, stepUV.y), largeScale) * largeHeightScale;
-    float largeDU = (lUp - lUm) * 0.5;
-    float largeDV = (lVp - lVm) * 0.5;
-    float3 nLarge = MakeMacroNormalFromGradient(largeDU, largeDV, arcUStep, arcVStep);
-
-    float3 outN = normalize(_MidHeightWeight * nMid + _LargeHeightWeight * nLarge);
-    float2 nXY  = saturate(outN.xy * 0.5 + 0.5);
-    _OutLargeNormal[pixel] = float4(nXY.x, nXY.y, 0.0, 1.0);
 }
