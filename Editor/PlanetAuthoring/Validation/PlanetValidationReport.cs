@@ -11,6 +11,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
     /// </summary>
     /// <remarks>
     /// Built fresh on each refresh by <see cref="Run" />. Validators that throw are logged and skipped so one bad validator cannot blank the section.
+    /// Findings emitted before a validator throws remain in the report.
     /// </remarks>
     public readonly struct PlanetValidationReport
     {
@@ -88,26 +89,25 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
                 IPlanetValidator validator = matched[i];
                 progress?.Invoke((float)i / matched.Count, validator.GetType().Name);
 
-                IEnumerable<ValidationIssue> results;
                 try
                 {
-                    results = validator.Validate(body) ?? Array.Empty<ValidationIssue>();
+                    // Iterator validators execute while enumerating, not when Validate is called.
+                    IEnumerable<ValidationIssue> results = validator.Validate(body) ?? Array.Empty<ValidationIssue>();
+                    foreach (ValidationIssue issue in results)
+                    {
+                        issues.Add(issue);
+                        switch (issue.Severity)
+                        {
+                            case ValidationSeverity.Info: info++; break;
+                            case ValidationSeverity.Warning: warn++; break;
+                            case ValidationSeverity.Error: err++; break;
+                        }
+                    }
                 }
                 catch (Exception e)
                 {
                     Debug.LogError($"[PlanetValidationReport] Validator '{validator.GetType().FullName}' threw: {e}");
                     continue;
-                }
-
-                foreach (ValidationIssue issue in results)
-                {
-                    issues.Add(issue);
-                    switch (issue.Severity)
-                    {
-                        case ValidationSeverity.Info: info++; break;
-                        case ValidationSeverity.Warning: warn++; break;
-                        case ValidationSeverity.Error: err++; break;
-                    }
                 }
             }
             progress?.Invoke(1f, "Done");

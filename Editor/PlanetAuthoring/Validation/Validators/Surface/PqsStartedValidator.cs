@@ -27,8 +27,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
         {
-            if (body?.Core?.data == null) yield break;
+            if (body == null || body.Core?.data == null)
+                yield break;
             var pqs = BodyResolver.FindPqsIncludingAsset(body);
+            if (pqs == null)
+                yield break;
             if (pqs.isStarted)
             {
                 yield return new ValidationIssue(Code, ValidationSeverity.Error,
