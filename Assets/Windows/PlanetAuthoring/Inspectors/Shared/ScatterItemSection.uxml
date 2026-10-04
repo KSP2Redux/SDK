@@ -248,13 +248,16 @@
             <editor:PropertyField class="unity-base-field__aligned" binding-path="UseBillboards" label="Use Billboards"
                                   tooltip="Substitutes a flat billboard beyond the mesh draw distance, so an item can read at range for far less cost." />
             <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardQuality" label="Quality"
-                                  tooltip="Resolution of the generated billboard atlas." />
+                                  tooltip="Resolution of Vegetation Studio's own billboard atlas, which Redux never draws. Has no effect on a baked billboard." />
             <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardFadeDistance" label="Fade Distance"
-                                  tooltip="Distance over which the mesh crosses over to the billboard." />
+                                  tooltip="Distance past the billboard draw range over which billboards fade out. Raising it also extends how far they draw." />
             <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardRenderMode" label="Render Mode"
-                                  tooltip="Lighting model the billboard uses. Match it to the item's own shader." />
-            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardCustomPrefab" label="Custom Prefab"
-                                  tooltip="Overrides the generated billboard with an authored one." />
+                                  tooltip="Lighting model of Vegetation Studio's own billboard atlas, which Redux never draws. Has no effect on a baked billboard." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="BillboardCustomPrefab" label="Billboard"
+                                  tooltip="The baked impostor drawn past the mesh distance. Bake Billboard fills this in. It takes its tint, brightness, contrast, saturation, smoothness and specular from the Appearance section, like the mesh." />
+            <engine:Label name="scatter-item-billboard-hint" class="sdk-hint" />
+            <engine:Button name="scatter-item-bake-billboard" text="Bake Billboard"
+                           tooltip="Renders this item's prefab from every direction into an impostor beside the prefab, in a Billboards folder, and assigns it. Rebaking overwrites the earlier bake in place." />
         </engine:Foldout>
 
     </engine:VisualElement>
