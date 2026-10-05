@@ -28,6 +28,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         private const int WRITE = 1;
         private const int SCATTERING_ORDERS = 4;
 
+        // Stock's tables were all baked at this sun zenith cutoff whatever the model says, while the
+        // shaders read them with the model's own value. Kerbin's 111.4 only reproduces stock's look
+        // against a table baked at 120.
+        private const float STOCK_BAKE_SUN_ZENITH_ANGLE = 120f;
+
         /// <summary>
         /// Bakes the model's lookup tables to texture assets and assigns them to the model.
         /// </summary>
@@ -170,7 +175,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             hash.Add(model.AbsorptionHeightMinMax);
             hash.Add(model.GroundAlbedo);
             hash.Add(model.SunAngleRadius);
-            hash.Add(model.SunZenithAngle);
             hash.Add(model.BottomRadius);
             hash.Add(model.AtmosphereHeight);
             return hash.ToHashCode();
@@ -311,21 +315,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             compute.SetVector("SUN_SPECTRAL_RADIANCE_TO_LUMINANCE", Vector3.one);
             compute.SetFloats("luminanceFromRadiance", IdentityMatrix());
 
-            // The model stores its coefficients in the units the stock assets use, which differ
-            // from the reference implementation's by these fixed factors.
+            // The model stores its coefficients in the units the stock assets use. These fixed
+            // factors convert them to the reference implementation's and reproduce stock's Kerbin tables.
             compute.SetVector("solar_irradiance", model.SolarIrradiance * 2f);
             compute.SetVector("rayleigh_scattering", model.RayleighScattering * model.RayleighScatteringScale * 0.1f);
 
             Vector3 mieScattering = model.MieScattering * model.MieScatteringScale * 0.01f;
             compute.SetVector("mie_scattering", mieScattering);
             compute.SetVector("mie_extinction", mieScattering * AtmosphereConstants.MIE_EXTINCTION_TO_SCATTERING_RATIO);
-            compute.SetVector("absorption_extinction", model.Absorption * model.AbsorptionScale * 0.1f);
+            compute.SetVector("absorption_extinction", model.Absorption * model.AbsorptionScale * 0.01f);
             compute.SetVector("ground_albedo", new Vector3(model.GroundAlbedo.r, model.GroundAlbedo.g, model.GroundAlbedo.b));
             compute.SetFloat("sun_angular_radius", model.SunAngleRadius * 0.1f);
             compute.SetFloat("bottom_radius", model.BottomRadius);
             compute.SetFloat("top_radius", model.BottomRadius + model.AtmosphereHeight);
             compute.SetFloat("mie_phase_function_g", model.MieAnisotropy);
-            compute.SetFloat("mu_s_min", Mathf.Cos(model.SunZenithAngle * Mathf.Deg2Rad));
+            compute.SetFloat("mu_s_min", Mathf.Cos(STOCK_BAKE_SUN_ZENITH_ANGLE * Mathf.Deg2Rad));
 
             BindDensityLayer(compute, "rayleigh", 0f, 1f, -1f / Mathf.Max(0.001f, model.RayleighExponentialDistribution), 0f, 0f);
             BindDensityLayer(compute, "mie", 0f, 1f, -1f / Mathf.Max(0.001f, model.MieExponentialDistribution), 0f, 0f);
