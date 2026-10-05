@@ -39,7 +39,9 @@
             <editor:ObjectField name="sun-light-field" label="Sun Light" tooltip="Directional Light treated as the sun. Auto-resolves to the brightest directional light in the scene if left empty." type="UnityEngine.Light, UnityEngine" allow-scene-objects="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="sun-azimuth-slider" label="Azimuth (°)" tooltip="Compass direction the sunlight comes from. 0 = north, 90 = east, 180 = south, 270 = west." low-value="0" high-value="360" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="sun-elevation-slider" label="Elevation (°)" tooltip="Angle of the sun above the horizon. -90 = directly below, 0 = on the horizon, +90 = directly above." low-value="-90" high-value="90" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
-            <engine:Slider name="sun-intensity-slider" label="Intensity" tooltip="Directional Light intensity multiplier. 1 is the typical mid-day value." low-value="0" high-value="3" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:Slider name="sun-star-brightness-slider" label="Brightness" tooltip="How bright the body's star is, as a multiple of Kerbol. 1 is Kerbol." low-value="0" high-value="3" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:FloatField name="sun-star-distance-field" label="Distance (Gm)" tooltip="How far the body orbits from its star, in gigameters. A moon uses its planet's distance. Moho is 5.3, Kerbin 13.6, Duna 20.7, Jool 68.8. The light falls off along Kerbol's curve, steeply near the star and to nothing at 500 Gm." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="sun-light-readout" class="sdk-hint" />
             <engine:VisualElement class="preview-button-row">
                 <engine:Button name="sun-day-button" text="Day side" tooltip="Jump the SceneView camera to the sun-facing hemisphere of the body, preserving zoom." />
                 <engine:Button name="sun-night-button" text="Night side" tooltip="Jump the SceneView camera to the anti-sun (night) hemisphere of the body, preserving zoom." />
@@ -55,8 +57,12 @@
         </engine:Foldout>
 
         <engine:Foldout text="Environment" value="true" class="preview-section">
+            <engine:Toggle name="game-look-enabled" label="Game exposure" tooltip="Render the SceneView in HDR through the game's flight post-processing (auto exposure, tonemapping, bloom). Without it the SceneView clips everything brighter than white." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="game-look-status" class="sdk-hint" />
             <engine:Toggle name="atmosphere-enabled" label="Draw atmosphere" tooltip="Draw the body's atmosphere through the game's post atmosphere shader. Its lookup tables are recomputed live, about a third of a second after a table setting stops changing." class="preview-coord-field unity-base-field__aligned" />
             <engine:Label name="atmosphere-status" class="sdk-hint" />
+            <engine:Toggle name="clouds-enabled" label="Draw clouds" tooltip="Draw the body's volumetric clouds through the game's cloud renderer, from the High quality configuration on the PQS's cloud helper. Clouds composite inside the atmosphere when it is drawn." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="clouds-status" class="sdk-hint" />
         </engine:Foldout>
 
         <engine:Foldout text="Scatter" value="true" class="preview-section">
