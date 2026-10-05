@@ -54,6 +54,11 @@
             <engine:Slider name="tod-speed-slider" label="Speed (°/s)" tooltip="Rotation speed in degrees per second. Higher values cycle day/night faster." low-value="0" high-value="180" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
         </engine:Foldout>
 
+        <engine:Foldout text="Environment" value="true" class="preview-section">
+            <engine:Toggle name="atmosphere-enabled" label="Draw atmosphere" tooltip="Draw the body's atmosphere through the game's post atmosphere shader. Its lookup tables are recomputed live, about a third of a second after a table setting stops changing." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="atmosphere-status" class="sdk-hint" />
+        </engine:Foldout>
+
         <engine:Foldout text="Scatter" value="true" class="preview-section">
             <engine:Toggle name="scatter-enabled" label="Drive scatter" tooltip="Pump the scatter system each frame the SceneView renders. Turning this off leaves the system booted but idle, so turning it back on does not pay another boot." class="preview-coord-field unity-base-field__aligned" />
             <engine:Label name="scatter-status" class="sdk-hint" />

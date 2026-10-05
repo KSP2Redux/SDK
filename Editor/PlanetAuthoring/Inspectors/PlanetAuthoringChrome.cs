@@ -193,18 +193,82 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             };
         }
 
+        /// <summary>
+        /// Refreshes the Quick Tools atmosphere buttons for the current body.
+        /// </summary>
+        /// <param name="root">The inspector root containing the chrome elements.</param>
+        /// <param name="body">The body to describe, or null.</param>
+        public static void RefreshAtmosphere(VisualElement root, CoreCelestialBodyData body)
+        {
+            bool hasAtmosphere = AtmosphereSetup.HasAtmosphere(body);
+            var add = root.Q<Button>("quick-add-atmosphere");
+            if (add != null)
+            {
+                add.text = hasAtmosphere ? "Refit Atmosphere" : "Add Atmosphere";
+            }
+
+            var remove = root.Q<Button>("quick-remove-atmosphere");
+            if (remove != null)
+            {
+                remove.style.display = hasAtmosphere ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
         private static void WireAtmosphere(VisualElement root, Func<CoreCelestialBodyData> resolveBody)
         {
-            var button = root.Q<Button>("quick-add-atmosphere");
-            if (button == null)
+            var add = root.Q<Button>("quick-add-atmosphere");
+            if (add != null)
+            {
+                add.clicked += () =>
+                {
+                    CoreCelestialBodyData body = resolveBody();
+                    bool added = AtmosphereSetup.TryAddAtmosphere(body, out _, out string message);
+                    SetStatus(root.Q<Label>("quick-tools-status"), message);
+
+                    // A running preview attached its drivers before this body had an atmosphere.
+                    // Attach is a no-op when the driver is already booted.
+                    if (added)
+                    {
+                        PlanetAuthoringSession.Active?.AtmosphereDriver?.Attach();
+                    }
+
+                    RefreshAtmosphere(root, body);
+                };
+            }
+
+            var remove = root.Q<Button>("quick-remove-atmosphere");
+            if (remove == null)
             {
                 return;
             }
 
-            button.clicked += () =>
+            remove.clicked += () =>
             {
-                AtmosphereSetup.TryAddAtmosphere(resolveBody(), out _, out string message);
+                CoreCelestialBodyData body = resolveBody();
+                List<string> removals = AtmosphereSetup.DescribeRemoval(body);
+                if (removals.Count == 0)
+                {
+                    RefreshAtmosphere(root, body);
+                    return;
+                }
+
+                bool confirmed = UnityEditor.EditorUtility.DisplayDialog(
+                    "Remove Atmosphere",
+                    "This removes:\n\n- " + string.Join("\n- ", removals)
+                    + "\n\nAssets go to the trash. Has Atmosphere, Atmosphere Depth and the pressure curves are left as they are.",
+                    "Remove",
+                    "Cancel"
+                );
+                if (!confirmed)
+                {
+                    return;
+                }
+
+                // The preview's driver holds the model and its realtime tables, so it lets go first.
+                PlanetAuthoringSession.Active?.AtmosphereDriver?.Detach();
+                AtmosphereSetup.TryRemoveAtmosphere(body, out string message);
                 SetStatus(root.Q<Label>("quick-tools-status"), message);
+                RefreshAtmosphere(root, body);
             };
         }
 

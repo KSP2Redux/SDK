@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// Nothing here is reachable from the EditMode suite, which runs headless with no scene. Boot
     /// ordering and teardown ordering are verified by running a preview.
     /// </remarks>
-    public sealed class ScatterPreviewDriver
+    public class ScatterPreviewDriver : IPreviewDriver
     {
         /// <summary>
         /// Consecutive pump failures tolerated before the driver switches itself off.

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- Inspector for the Bruneton AtmosphereModel. Used on the model asset itself and inlined under the scaled body's atmosphere component. Driven by AtmosphereModelInspector. Heights and radii are kilometers. -->
+
+    <engine:VisualElement class="body-inspector-root">
+
+        <engine:Foldout text="Start From" value="true" class="body-inspector-section">
+            <engine:DropdownField name="atmosphere-preset" label="Stock Preset" tooltip="A shipped KSP2 atmosphere to copy. Applying it overwrites every field below except Bottom Radius, which belongs to the body. Heights are stock's absolute kilometers, so rescale them for a body much smaller or larger than the preset's." class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="atmosphere-apply-preset" text="Apply Preset" tooltip="Copy the selected stock atmosphere into this model. Undoable." class="sdk-action-button" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Geometry" value="true" class="body-inspector-section">
+            <editor:PropertyField name="atmosphere-bottom-radius" binding-path="BottomRadius" label="Bottom Radius (km)" tooltip="The body radius in kilometers. Set from the body by Add or Refit Atmosphere, so edit the body's radius rather than this." />
+            <editor:PropertyField binding-path="AtmosphereHeight" label="Visual Height (km)" tooltip="Height of the visible atmosphere above the bottom radius. Stock keeps it inside the physics atmosphere: Duna 22 of 50 km, Kerbin 60 of 70 km." />
+            <editor:PropertyField binding-path="IsGasGiant" label="Gas Giant" tooltip="Render with the gas giant variant of the atmosphere shaders, for a body with no solid surface." />
+            <editor:PropertyField binding-path="GroundAlbedo" label="Ground Albedo" tooltip="Reflectance of the ground the atmosphere sits on, used for light bounced back into the air. Stock leaves it black except on Jool." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Rayleigh" value="true" class="body-inspector-section">
+            <editor:ColorField name="atmosphere-rayleigh-color" label="Color" show-alpha="false" tooltip="Relative Rayleigh scattering per channel. The brightest channel is the color the sky scatters most, which is blue on Kerbin and red on Duna. Overall strength comes from Density, so keep the brightest channel near 1." class="unity-base-field__aligned" />
+            <editor:PropertyField binding-path="RayleighScatteringScale" label="Density" tooltip="Multiplier on the Rayleigh color at the bottom of the atmosphere. Stock ranges from 0.37 (Jool) to 2.5 (Duna)." />
+            <editor:PropertyField binding-path="RayleighExponentialDistribution" label="Scale Height (km)" tooltip="Height over which Rayleigh density falls by a factor of e. Stock uses 2 to 7.4 km." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Mie" value="true" class="body-inspector-section">
+            <editor:ColorField name="atmosphere-mie-color" label="Color" show-alpha="false" tooltip="Relative Mie scattering per channel. Mie is haze and dust, so it tints the glow around the sun. Overall strength comes from Density." class="unity-base-field__aligned" />
+            <editor:PropertyField binding-path="MieScatteringScale" label="Density" tooltip="Multiplier on the Mie color at the bottom of the atmosphere." />
+            <editor:PropertyField binding-path="MieAnisotropy" label="Anisotropy" tooltip="How strongly haze scatters forward, from 0 (even in all directions) to 1 (tight halo around the sun)." />
+            <editor:PropertyField binding-path="MieExponentialDistribution" label="Scale Height (km)" tooltip="Height over which haze density falls by a factor of e." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Absorption" value="true" class="body-inspector-section">
+            <editor:ColorField name="atmosphere-absorption-color" label="Color" show-alpha="false" tooltip="Relative absorption per channel in the absorbing band, the role ozone plays on Earth. This is the color taken out of long light paths such as sunsets and the limb, so the air there leans toward its opposite. Overall strength comes from Density." class="unity-base-field__aligned" />
+            <editor:PropertyField binding-path="AbsorptionScale" label="Density" tooltip="Multiplier on the absorption color at the band's peak." />
+            <editor:PropertyField binding-path="AbsorptionMaxDensity" label="Peak Density" tooltip="Density at the middle of the band, which falls off linearly to zero at its edges." />
+            <editor:PropertyField binding-path="AbsorptionHeightMinMax" label="Band (km)" tooltip="Bottom and top of the absorbing band, in kilometers above the bottom radius." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Light and Exposure" value="true" class="body-inspector-section">
+            <editor:PropertyField binding-path="Exposure" label="Exposure" tooltip="X is the exposure at the surface and Y at the top of the atmosphere. The local post effect blends between them by camera altitude, and the scaled shells use Y. Stock rocky bodies use about 40 and 50." />
+            <editor:ColorField name="atmosphere-sunlight-color" label="Sunlight Color" show-alpha="false" hdr="true" tooltip="Color and strength of sunlight entering the atmosphere. Stock stays at or under 1 per channel. HDR so a brighter sun can go past it." class="unity-base-field__aligned" />
+            <editor:PropertyField binding-path="SunAngleRadius" label="Sun Angular Radius" tooltip="Apparent size of the sun disk in the sky." />
+            <editor:PropertyField binding-path="SunZenithAngle" label="Sun Zenith Cutoff (deg)" tooltip="Sun zenith angle past which the tables stop computing light, which ends twilight. Stock uses 111 to 120." />
+            <editor:PropertyField binding-path="SunDirectionExposureModifier" label="Sun Direction Exposure" tooltip="Carried over from stock assets. The stock post and scaled atmosphere shaders do not read it." />
+            <editor:PropertyField binding-path="TransmittanceTint" label="Transmittance Tint" tooltip="How colored the dimming of whatever is seen through the air is. 1 keeps the physical per-channel transmittance, 0 dims all channels equally by its overall strength." />
+            <editor:PropertyField binding-path="SunsetColorStrengh" label="Sunset Tint" tooltip="How strongly sunlight on the surface takes the atmosphere's color with the sun low." />
+            <editor:PropertyField binding-path="NoonColorStrengh" label="Noon Tint" tooltip="How strongly sunlight on the surface takes the atmosphere's color with the sun high." />
+            <editor:PropertyField binding-path="ColorTransitionScale" label="Tint Transition" tooltip="How quickly the surface tint moves from Sunset to Noon as the sun rises." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Lookup Tables" value="true" class="body-inspector-section">
+            <engine:Label name="atmosphere-lut-status" class="sdk-hint" />
+            <editor:PropertyField name="atmosphere-lut-transmittance" binding-path="TransmittanceTexture" label="Transmittance" />
+            <editor:PropertyField name="atmosphere-lut-irradiance" binding-path="IrradianceTexture" label="Irradiance" />
+            <editor:PropertyField name="atmosphere-lut-scattering" binding-path="ScatteringTexture" label="Scattering" />
+            <engine:Button name="atmosphere-bake-luts" text="Bake LUTs" tooltip="Precompute the transmittance, irradiance and scattering tables the game renders from and save them next to this model. The preview recomputes its own copy live, so this is only needed before shipping." class="sdk-action-button" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

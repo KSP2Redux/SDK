@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using KSP.Rendering;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using UnityEditor;
@@ -19,6 +20,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     public static class AuthoringSidecars
     {
         private const string DataFolderName = "Data";
+
+        /// <summary>Returns the atmosphere model sidecar for <paramref name="model" />, creating one if absent.</summary>
+        public static AtmosphereModelAuthoring GetOrCreate(AtmosphereModel model) =>
+            GetOrCreateSidecar<AtmosphereModelAuthoring>(model);
+
+        /// <summary>Looks up the atmosphere model sidecar for <paramref name="model" />, or null when absent.</summary>
+        public static AtmosphereModelAuthoring Find(AtmosphereModel model) =>
+            FindSidecar<AtmosphereModelAuthoring>(model);
 
         /// <summary>Returns the PQSData sidecar for <paramref name="pqsData" />, creating one if absent.</summary>
         public static PQSDataAuthoring GetOrCreate(PQSData pqsData) =>

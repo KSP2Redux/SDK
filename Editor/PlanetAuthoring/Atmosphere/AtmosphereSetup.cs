@@ -1,7 +1,11 @@
+using System.Collections.Generic;
 using KSP;
 using KSP.Rendering;
+using KSP.Sim.Definitions;
 using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -72,8 +76,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
 
             Undo.RecordObject(model, "Fit Atmosphere To Body");
             model.PlanetName = bodyName;
-            model.BottomRadius = (float)(body.Data.radius * 0.001);
-            model.AtmosphereHeight = (float)(body.Data.atmosphereDepth * 0.001);
+            FitModelToBody(model, body.Data, created);
             EditorUtility.SetDirty(model);
 
             if (!BrunetonLutBaker.Bake(model, folder, out string error))
@@ -95,6 +98,123 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the body's scaled prefab carries an atmosphere component.
+        /// </summary>
+        /// <param name="body">The body, either the scaled prefab asset or an instance of it.</param>
+        /// <returns>True if the body has a visual atmosphere wired in, false otherwise.</returns>
+        public static bool HasAtmosphere(CoreCelestialBodyData body) =>
+            body != null && body.TryGetComponent(out AtmosphereDataModelComponent _);
+
+        /// <summary>
+        /// Lists what <see cref="TryRemoveAtmosphere" /> would remove, for a confirmation prompt.
+        /// </summary>
+        /// <param name="body">The body, either the scaled prefab asset or an instance of it.</param>
+        /// <returns>One line per thing removed, or an empty list when there is no atmosphere.</returns>
+        public static List<string> DescribeRemoval(CoreCelestialBodyData body)
+        {
+            var lines = new List<string>();
+            if (!HasAtmosphere(body))
+                return lines;
+
+            lines.Add("the atmosphere component and its two shells on the scaled prefab");
+            body.TryGetComponent(out AtmosphereDataModelComponent component);
+            string modelPath = FindModelPath(component.AtmosphereModelKey);
+            if (string.IsNullOrEmpty(modelPath))
+                return lines;
+
+            lines.Add($"the addressable entry '{component.AtmosphereModelKey}'");
+            lines.Add(modelPath);
+            foreach (string texturePath in BakedTablePaths(AssetDatabase.LoadAssetAtPath<AtmosphereModel>(modelPath)))
+            {
+                lines.Add(texturePath);
+            }
+
+            return lines;
+        }
+
+        /// <summary>
+        /// Takes the visual atmosphere off a body: the scaled prefab's component and shells, the
+        /// model's addressable entry, and the model with its baked tables.
+        /// </summary>
+        /// <remarks>
+        /// Assets go to the OS trash rather than being deleted outright. Has Atmosphere, Atmosphere
+        /// Depth and the pressure curves are physics and stay as they are.
+        /// </remarks>
+        /// <param name="body">The body, either the scaled prefab asset or an instance of it.</param>
+        /// <param name="message">A status line describing the outcome or the reason for failure.</param>
+        /// <returns>True if the atmosphere was removed, false otherwise.</returns>
+        public static bool TryRemoveAtmosphere(CoreCelestialBodyData body, out string message)
+        {
+            if (!HasAtmosphere(body))
+            {
+                message = "This body has no atmosphere to remove.";
+                return false;
+            }
+
+            string prefabPath = ResolvePrefabPath(body);
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                message = "The body is not part of a prefab, so there is nothing to remove the atmosphere from.";
+                return false;
+            }
+
+            body.TryGetComponent(out AtmosphereDataModelComponent component);
+            string key = component.AtmosphereModelKey;
+            string modelPath = FindModelPath(key);
+
+            UnwireScaledPrefab(prefabPath);
+
+            var trashed = new List<string>();
+            if (!string.IsNullOrEmpty(modelPath))
+            {
+                var settings = AddressableAssetSettingsDefaultObject.Settings;
+                if (settings != null)
+                {
+                    settings.RemoveAssetEntry(AssetDatabase.AssetPathToGUID(modelPath));
+                }
+
+                var assetPaths = new List<string>(BakedTablePaths(AssetDatabase.LoadAssetAtPath<AtmosphereModel>(modelPath)))
+                {
+                    modelPath,
+                };
+                foreach (string path in assetPaths)
+                {
+                    if (AssetDatabase.MoveAssetToTrash(path))
+                    {
+                        trashed.Add(System.IO.Path.GetFileName(path));
+                    }
+                }
+            }
+
+            AssetDatabase.SaveAssets();
+            message = trashed.Count > 0
+                ? $"Removed the atmosphere and moved {string.Join(", ", trashed)} to the trash."
+                : "Removed the atmosphere component and shells. No model asset was found for its key.";
+            return true;
+        }
+
+        /// <summary>
+        /// Sizes a model to the body it renders for.
+        /// </summary>
+        /// <remarks>
+        /// The model's bottom radius always follows the body. Its visual height is an art choice
+        /// that stock sets well inside the physics atmosphere, Duna at 22 km of 50 and Kerbin at 60
+        /// of 70, so it is only seeded from Atmosphere Depth when the model is new and a refit leaves
+        /// it alone.
+        /// </remarks>
+        /// <param name="model">The model to fit. Its units are kilometers.</param>
+        /// <param name="data">The body's data. Its units are meters.</param>
+        /// <param name="created">True if the model was just created, false for a refit of an existing one.</param>
+        public static void FitModelToBody(AtmosphereModel model, CelestialBodyData data, bool created)
+        {
+            model.BottomRadius = (float)(data.radius * 0.001);
+            if (created)
+            {
+                model.AtmosphereHeight = (float)(data.atmosphereDepth * 0.001);
+            }
         }
 
         private static string ResolvePrefabPath(CoreCelestialBodyData body)
@@ -168,6 +288,136 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             finally
             {
                 PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        private static void UnwireScaledPrefab(string prefabPath)
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(prefabPath);
+            try
+            {
+                if (root.TryGetComponent(out AtmosphereDataModelComponent component))
+                {
+                    Object.DestroyImmediate(component);
+                }
+
+                foreach (string shellName in new[] { INNER_SHELL_NAME, OUTER_SHELL_NAME })
+                {
+                    Transform shell = root.transform.Find(shellName);
+                    if (shell != null)
+                    {
+                        Object.DestroyImmediate(shell.gameObject);
+                    }
+                }
+
+                PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        /// <summary>
+        /// Resolves an atmosphere component's model key to the Bruneton model it names.
+        /// </summary>
+        /// <remarks>
+        /// The runtime loads the model by addressable key. Redux and SDK bodies are authored in the
+        /// project, so the key resolves through the project's own Addressables entries.
+        /// </remarks>
+        /// <param name="key">The model's addressable key.</param>
+        /// <param name="problem">Why nothing was found, or an empty string on success.</param>
+        /// <returns>The model, or null when the key resolves to nothing or to something else.</returns>
+        public static AtmosphereModel FindModel(string key, out string problem)
+        {
+            problem = string.Empty;
+            if (string.IsNullOrEmpty(key))
+            {
+                problem = "the atmosphere component has no model key";
+                return null;
+            }
+
+            string path = FindModelPath(key);
+            if (string.IsNullOrEmpty(path))
+            {
+                problem = $"no addressable entry for '{key}'";
+                return null;
+            }
+
+            var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+            if (asset is AtmosphereModel model)
+                return model;
+
+            problem = asset is HillaireAtmosphereProfile
+                ? "Hillaire atmospheres have no authoring tools yet"
+                : $"'{key}' is not an AtmosphereModel";
+            return null;
+        }
+
+        /// <summary>
+        /// Reports whether a model's baked lookup tables match its current settings.
+        /// </summary>
+        /// <param name="model">The atmosphere model.</param>
+        /// <returns>The state of the model's baked tables.</returns>
+        public static AtmosphereTableState GetTableState(AtmosphereModel model)
+        {
+            bool hasTables = model.TransmittanceTexture != null
+                && model.IrradianceTexture != null
+                && model.ScatteringTexture != null;
+            AtmosphereModelAuthoring sidecar = AuthoringSidecars.Find(model);
+            return ClassifyTables(hasTables, sidecar != null ? sidecar.BakedLutHash : null, BrunetonLutBaker.ComputeLutInputHash(model));
+        }
+
+        /// <summary>
+        /// Classifies baked tables from what is known about them.
+        /// </summary>
+        /// <remarks>
+        /// Tables with no recorded hash were baked by something that did not record one, such as the
+        /// old wizard, so they count as stale rather than trusted.
+        /// </remarks>
+        /// <param name="hasTables">True if all three tables are assigned, false otherwise.</param>
+        /// <param name="bakedHash">The table-input hash recorded at the last bake, or null when none was recorded.</param>
+        /// <param name="currentHash">The model's current table-input hash.</param>
+        /// <returns>The state of the baked tables.</returns>
+        public static AtmosphereTableState ClassifyTables(bool hasTables, int? bakedHash, int currentHash)
+        {
+            if (!hasTables)
+                return AtmosphereTableState.Missing;
+
+            return bakedHash == currentHash ? AtmosphereTableState.Current : AtmosphereTableState.Stale;
+        }
+
+        private static string FindModelPath(string key)
+        {
+            var settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null || string.IsNullOrEmpty(key))
+                return null;
+
+            foreach (var group in settings.groups)
+            {
+                if (group == null)
+                    continue;
+
+                foreach (var entry in group.entries)
+                {
+                    if (entry.address == key)
+                        return entry.AssetPath;
+                }
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> BakedTablePaths(AtmosphereModel model)
+        {
+            if (model == null)
+                yield break;
+
+            foreach (Texture table in new Texture[] { model.TransmittanceTexture, model.IrradianceTexture, model.ScatteringTexture })
+            {
+                string path = table != null ? AssetDatabase.GetAssetPath(table) : null;
+                if (!string.IsNullOrEmpty(path))
+                    yield return path;
             }
         }
 

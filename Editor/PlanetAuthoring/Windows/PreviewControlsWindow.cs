@@ -30,6 +30,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Label _altitudeLabel;
         private Label _scatterStatus;
         private Toggle _scatterEnabled;
+        private Label _atmosphereStatus;
+        private Toggle _atmosphereEnabled;
         private Label _scatterCells;
         private Label _scatterDistances;
         private Button _scatterReadCounts;
@@ -140,6 +142,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             }
             if (_scatterReadCounts != null)
                 _scatterReadCounts.clicked += OnScatterReadCountsClicked;
+
+            _atmosphereStatus = root.Q<Label>("atmosphere-status");
+            _atmosphereEnabled = root.Q<Toggle>("atmosphere-enabled");
+            _atmosphereEnabled?.RegisterValueChangedCallback(evt =>
+            {
+                var driver = PlanetAuthoringSession.Active?.AtmosphereDriver;
+                if (driver == null)
+                    return;
+
+                driver.Enabled = evt.newValue;
+                SceneView.RepaintAll();
+            });
 
             _scatterDensityQuality = root.Q<DropdownField>("scatter-density-quality");
             _scatterDrawQuality = root.Q<DropdownField>("scatter-draw-quality");
@@ -491,6 +505,28 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             SceneView.RepaintAll();
         }
 
+        private void RefreshAtmosphereSection(PlanetAuthoringSession session, bool active)
+        {
+            if (_atmosphereStatus == null || _atmosphereEnabled == null)
+                return;
+
+            var driver = active ? session.AtmosphereDriver : null;
+            if (driver == null)
+            {
+                _atmosphereEnabled.SetEnabled(false);
+                _atmosphereStatus.text = active ? "No atmosphere preview for this body." : "No active preview.";
+                _atmosphereStatus.style.display = DisplayStyle.Flex;
+                return;
+            }
+
+            _atmosphereEnabled.SetEnabled(driver.Booted);
+            _atmosphereEnabled.SetValueWithoutNotify(driver.Enabled);
+
+            // Only speaks when something is wrong, like the scatter status below.
+            _atmosphereStatus.text = driver.Status;
+            _atmosphereStatus.style.display = string.IsNullOrEmpty(driver.Status) ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
         private void RefreshScatterSection(PlanetAuthoringSession session, bool active)
         {
             if (_scatterStatus == null)
@@ -656,6 +692,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             EnsureSunLightAssigned();
             RefreshSunFromLight();
 
+            RefreshAtmosphereSection(session, active);
             RefreshScatterSection(session, active);
 
             if (!active)

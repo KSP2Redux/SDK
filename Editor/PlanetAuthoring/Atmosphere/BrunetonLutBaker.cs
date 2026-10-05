@@ -1,6 +1,7 @@
 using System;
 using KSP.Rendering;
 using KSP.Rendering.Utility;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
@@ -64,6 +65,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 model.IrradianceTexture = SaveAsset(irradiance, $"{folder}/{assetPrefix}_Irradiance.asset");
                 model.ScatteringTexture = SaveAsset(scattering, $"{folder}/{assetPrefix}_Scattering.asset");
                 EditorUtility.SetDirty(model);
+
+                // Lets the stale-tables check tell these tables from ones baked before an edit.
+                AtmosphereModelAuthoring sidecar = AuthoringSidecars.GetOrCreate(model);
+                if (sidecar != null)
+                {
+                    sidecar.BakedLutHash = ComputeLutInputHash(model);
+                    EditorUtility.SetDirty(sidecar);
+                }
+
                 AssetDatabase.SaveAssets();
                 return true;
             }
@@ -131,6 +141,39 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             {
                 textures.Release();
             }
+        }
+
+        /// <summary>
+        /// Hashes every model field the lookup tables are computed from.
+        /// </summary>
+        /// <remarks>
+        /// Two models with the same hash bake the same tables, so a change that leaves it alone, such
+        /// as exposure or a tint, needs new material values but no rebake. Covers exactly the fields
+        /// the precompute binds.
+        /// </remarks>
+        /// <param name="model">The atmosphere model.</param>
+        /// <returns>The hash of the model's table inputs.</returns>
+        public static int ComputeLutInputHash(AtmosphereModel model)
+        {
+            var hash = new HashCode();
+            hash.Add(model.SolarIrradiance);
+            hash.Add(model.RayleighScattering);
+            hash.Add(model.RayleighScatteringScale);
+            hash.Add(model.RayleighExponentialDistribution);
+            hash.Add(model.MieScattering);
+            hash.Add(model.MieScatteringScale);
+            hash.Add(model.MieExponentialDistribution);
+            hash.Add(model.MieAnisotropy);
+            hash.Add(model.Absorption);
+            hash.Add(model.AbsorptionScale);
+            hash.Add(model.AbsorptionMaxDensity);
+            hash.Add(model.AbsorptionHeightMinMax);
+            hash.Add(model.GroundAlbedo);
+            hash.Add(model.SunAngleRadius);
+            hash.Add(model.SunZenithAngle);
+            hash.Add(model.BottomRadius);
+            hash.Add(model.AtmosphereHeight);
+            return hash.ToHashCode();
         }
 
         private static ComputeShader LoadCompute(AtmosphereModel model, out string error)
