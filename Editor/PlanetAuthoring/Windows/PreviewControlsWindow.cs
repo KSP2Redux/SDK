@@ -65,6 +65,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Toggle _overlaySubzoneToggle;
         private Toggle _overlaySlopeToggle;
         private Toggle _overlayAltitudeToggle;
+        private Toggle _overlaySeaLevelToggle;
         private Toggle _overlayActiveLayerToggle;
         private VisualElement _overlayActiveLayerGrid;
         private VisualElement[,] _overlayActiveLayerCells;
@@ -213,6 +214,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlaySubzoneToggle = root.Q<Toggle>("overlay-subzone-toggle");
             _overlaySlopeToggle = root.Q<Toggle>("overlay-slope-toggle");
             _overlayAltitudeToggle = root.Q<Toggle>("overlay-altitude-toggle");
+            _overlaySeaLevelToggle = root.Q<Toggle>("overlay-sea-level-toggle");
             _overlayActiveLayerToggle = root.Q<Toggle>("overlay-active-layer-toggle");
             _overlayActiveLayerGrid = root.Q<VisualElement>("overlay-active-layer-grid");
             _overlayScienceRegionToggle = root.Q<Toggle>("overlay-science-region-toggle");
@@ -226,6 +228,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             BindOverlayToggle(_overlaySubzoneToggle, PreviewOverlayKind.SubzoneMask);
             BindOverlayToggle(_overlaySlopeToggle, PreviewOverlayKind.Slope);
             BindOverlayToggle(_overlayAltitudeToggle, PreviewOverlayKind.AltitudeBands);
+            BindOverlayToggle(_overlaySeaLevelToggle, PreviewOverlayKind.SeaLevel);
             BindOverlayToggle(_overlayActiveLayerToggle, PreviewOverlayKind.ActiveLayer);
             BindOverlayToggle(_overlayScienceRegionToggle, PreviewOverlayKind.ScienceRegion);
             BindOverlayToggle(_overlayScatterBiomeToggle, PreviewOverlayKind.ScatterBiome);
@@ -365,6 +368,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlaySubzoneToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.SubzoneMask));
             _overlaySlopeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.Slope));
             _overlayAltitudeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.AltitudeBands));
+            _overlaySeaLevelToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.SeaLevel));
             _overlayActiveLayerToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ActiveLayer));
             _overlayScienceRegionToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ScienceRegion));
             _overlayScatterBiomeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ScatterBiome));

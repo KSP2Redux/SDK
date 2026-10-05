@@ -426,6 +426,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             PreviewOverlayKind.SubzoneMask   => new MaskPreviewOverlay(MaskPreviewOverlay.Source.SubzoneMask),
             PreviewOverlayKind.Slope         => new HeightDerivedPreviewOverlay(HeightDerivedPreviewOverlay.Source.Slope),
             PreviewOverlayKind.AltitudeBands => new HeightDerivedPreviewOverlay(HeightDerivedPreviewOverlay.Source.AltitudeBands),
+            PreviewOverlayKind.SeaLevel      => new HeightDerivedPreviewOverlay(HeightDerivedPreviewOverlay.Source.SeaLevel),
             PreviewOverlayKind.ActiveLayer   => new ActiveLayerPreviewOverlay(),
             PreviewOverlayKind.ScienceRegion => new ScienceRegionPreviewOverlay { CurrentMode = _scienceRegionMode },
             PreviewOverlayKind.ScatterBiome  => new ScatterBiomePreviewOverlay(),

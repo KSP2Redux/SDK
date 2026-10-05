@@ -27,9 +27,9 @@
                               readonly="true"
                               tooltip="Path of the last successful bake for the currently selected mesh."
                               class="sdk-field unity-base-field__aligned" />
-            <editor:DoubleField name="midlevel-field" label="Radius (Midlevel)"
+            <editor:DoubleField name="midlevel-field" label="Heightmap Zero (Midlevel)"
                                 readonly="true"
-                                tooltip="Lowest sampled mesh height. Plug this into Blender's Displace modifier Midlevel field to reconstruct the original mesh from the baked heightmap."
+                                tooltip="Lowest sampled mesh height, which is where the heightmap's zero sits. It equals the body radius only when the body has no ocean. Plug it into the Height Calculator's Mid-Level, or Blender's Displace modifier Midlevel field to reconstruct the original mesh."
                                 class="sdk-field unity-base-field__aligned" />
             <editor:DoubleField name="strength-field" label="Strength"
                                 readonly="true"

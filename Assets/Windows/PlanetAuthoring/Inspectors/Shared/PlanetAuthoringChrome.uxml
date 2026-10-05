@@ -24,6 +24,7 @@
         <engine:Button name="quick-export-localizations" text="Export Localizations" tooltip="Export this body's loc keys (incl. sibling science region keys) to a CSV." />
         <engine:Button name="quick-bake-body-surface" text="Bake Body Surface" tooltip="Run the body surface bake using the settings from the Body Surface Baking section. Change the resolution or ocean options there first if you need something other than the last used settings." />
         <engine:Button name="quick-scatter-system" text="Add Scatter System" tooltip="Add and configure the VegetationSystemPro that carries this body's terrain scatter. Relabels to Repair when one already exists." />
+        <engine:Button name="quick-add-atmosphere" text="Add Atmosphere" tooltip="Create this body's Bruneton atmosphere model, bake its lookup tables, register it as addressable and wire the atmosphere component and shells into the scaled prefab. Needs Has Atmosphere on, a positive Atmosphere Depth and a baked scaled mesh. Run again to refit after changing the radius or depth." />
         <engine:Label name="quick-tools-status" class="body-inspector-error-label" />
     </engine:Foldout>
 

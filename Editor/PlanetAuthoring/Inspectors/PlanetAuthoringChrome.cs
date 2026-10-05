@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AwesomeTechnologies.VegetationSystem;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
@@ -47,6 +48,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             WireBake(root, resolveBody);
             WireScatter(root, resolveBody);
+            WireAtmosphere(root, resolveBody);
         }
 
         /// <summary>
@@ -188,6 +190,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
                 ScatterSystemLocator.Configure(pqs, body);
                 RefreshScatter(root, body);
+            };
+        }
+
+        private static void WireAtmosphere(VisualElement root, Func<CoreCelestialBodyData> resolveBody)
+        {
+            var button = root.Q<Button>("quick-add-atmosphere");
+            if (button == null)
+            {
+                return;
+            }
+
+            button.clicked += () =>
+            {
+                AtmosphereSetup.TryAddAtmosphere(resolveBody(), out _, out string message);
+                SetStatus(root.Q<Label>("quick-tools-status"), message);
             };
         }
 

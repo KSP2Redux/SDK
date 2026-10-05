@@ -6,10 +6,10 @@ using UnityEngine;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
 {
     /// <summary>
-    /// Renders slope or altitude-band visualization derived from the per-vertex quad-mesh stream
-    /// using the shared <c>Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay</c> shader.
+    /// Renders slope, altitude-band or sea-level visualization derived from the per-vertex
+    /// quad-mesh stream using the shared <c>Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay</c> shader.
     /// </summary>
-    internal sealed class HeightDerivedPreviewOverlay : PreviewOverlay
+    internal class HeightDerivedPreviewOverlay : PreviewOverlay
     {
         /// <summary>
         /// Selects which height-derived visualization the overlay produces.
@@ -25,6 +25,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             /// Draw altitude contour bands at fixed elevation intervals.
             /// </summary>
             AltitudeBands,
+
+            /// <summary>
+            /// Tint terrain below the ocean surface and draw the shoreline.
+            /// </summary>
+            SeaLevel,
         }
 
         private const string ShaderName = "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay";
@@ -32,6 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static readonly int ModeId = Shader.PropertyToID("_Mode");
         private static readonly int StrengthId = Shader.PropertyToID("_Strength");
         private static readonly int PlanetRadiusId = Shader.PropertyToID("_PlanetRadius");
+        private static readonly int HasOceanId = Shader.PropertyToID("_HasOcean");
         private static readonly int BandHeightId = Shader.PropertyToID("_BandHeight");
         private static readonly int SlopeStepDegId = Shader.PropertyToID("_SlopeStepDeg");
         private static readonly int BiomeMaskTexId = Shader.PropertyToID("_BiomeMaskTex");
@@ -57,7 +63,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         /// <summary>
         /// Initializes a new height-derived overlay in the given mode.
         /// </summary>
-        /// <param name="source">Whether the overlay renders slope shading or altitude contour bands.</param>
+        /// <param name="source">Whether the overlay renders slope shading, altitude contour bands or sea level.</param>
         public HeightDerivedPreviewOverlay(Source source) : base(ShaderName)
         {
             _source = source;
@@ -110,18 +116,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         /// <inheritdoc />
         public override void RefreshBindings(PQS pqs)
         {
-            OverlayMaterial.SetFloat(ModeId, _source == Source.Slope ? 0f : 1f);
+            // Source values are declared in the shader's _Mode order.
+            OverlayMaterial.SetFloat(ModeId, (float)_source);
             OverlayMaterial.SetFloat(StrengthId, _strength);
             OverlayMaterial.SetFloat(BandHeightId, _bandHeight);
             OverlayMaterial.SetFloat(SlopeStepDegId, _slopeStepDeg);
 
             var radius = 0f;
+            var hasOcean = false;
             var body = BodyResolver.FindBody(pqs);
-            if (body?.Data != null)
+            if (body != null && body.Data != null)
             {
                 radius = (float)body.Data.radius;
+                hasOcean = body.Data.hasOcean;
             }
             OverlayMaterial.SetFloat(PlanetRadiusId, radius);
+            OverlayMaterial.SetFloat(HasOceanId, hasOcean ? 1f : 0f);
 
             // Slope mode samples the same gradience heightmaps + biome mask the runtime
             // prepass samples (Prepass.cginc:343-346, AccumHeightBiome). Mirror those handles
@@ -129,7 +139,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             // against, not a downstream blended normal.
             if (_source == Source.Slope)
             {
-                var surface = pqs?.data?.materialSettings?.surfaceMaterial;
+                var surface = pqs != null && pqs.data != null ? pqs.data.materialSettings?.surfaceMaterial : null;
                 // Match the surface's gradience encoding so the overlay reads the textures the
                 // same way the runtime prepass does. Without this the overlay runs the stock
                 // 4-channel branch over Redux 2-channel data and reports 90 degrees everywhere.

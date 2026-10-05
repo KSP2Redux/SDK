@@ -4,10 +4,11 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
     //   _Mode 0  Slope:   green (flat) to red (vertical) ramp.
     //   _Mode 1  Contour: thin topographic contour lines at multiples of _BandHeight,
     //            with every _MajorEvery-th line highlighted as a major contour.
+    //   _Mode 2  Sea level: tints terrain below the ocean surface and draws the shoreline.
     Properties
     {
-        // 0 = Slope, 1 = Altitude contour lines.
-        [IntRange] _Mode ("Mode (0=Slope, 1=Altitude contours)", Range(0, 1)) = 0
+        // 0 = Slope, 1 = Altitude contour lines, 2 = Sea level.
+        [IntRange] _Mode ("Mode (0=Slope, 1=Altitude contours, 2=Sea level)", Range(0, 2)) = 0
         _Strength ("Strength", Range(0, 1)) = 0.7
 
         // Slope-mode params.
@@ -27,6 +28,12 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
         _MajorColor     ("Major contour color",          Color) = (1.0, 0.85, 0.30, 1.0)
         _LineWidth      ("Line width (band-units)",      Range(0.0, 0.5)) = 0.08
         _LineSoftness   ("Line edge softness",           Range(0.0, 2.0)) = 1.0
+
+        // Sea-level-mode params. The ocean surface sits at _PlanetRadius whatever the
+        // body's oceanAltitude, which lowers the terrain base rather than raising the sea.
+        _HasOcean       ("Sea level: body has an ocean", float) = 0
+        _SeaColor       ("Sea level: underwater tint",   Color) = (0.10, 0.35, 0.95, 0.6)
+        _ShoreColor     ("Sea level: shoreline color",   Color) = (0.55, 1.00, 1.00, 1.0)
 
         [Toggle(_USE_PQS_BUFFER)] _NoComputeBuffer ("Use PQS QuadMeshDataBuffer", float) = 1
     }
@@ -62,6 +69,10 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
             float4 _MajorColor;
             float  _LineWidth;
             float  _LineSoftness;
+
+            float  _HasOcean;
+            float4 _SeaColor;
+            float4 _ShoreColor;
 
             // Slope samples the same gradience heightmaps the runtime prepass samples so
             // the overlay shows exactly what the trapezoid window will gate against. The
@@ -184,6 +195,26 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
                 return OverlayCompose(lineColor, _Strength * coverage);
             }
 
+            float4 EvalSeaLevel(slope_v2f i)
+            {
+                if (_HasOcean < 0.5)
+                    return float4(0, 0, 0, 0);
+
+                float altitude = OverlayRadial(i.posH.xyz) - _PlanetRadius;
+
+                float4 result = float4(0, 0, 0, 0);
+                if (altitude < 0.0)
+                    result = OverlayCompose(_SeaColor.rgb, _Strength * _SeaColor.a);
+
+                // Shoreline about two pixels wide at any zoom, from the screen-space altitude rate.
+                float aaf = max(fwidth(altitude), 1e-4);
+                float coverage = 1.0 - smoothstep(aaf, aaf * 2.0, abs(altitude));
+                if (coverage > 0.001)
+                    result = lerp(result, OverlayCompose(_ShoreColor.rgb, _Strength * _ShoreColor.a), coverage);
+
+                return result;
+            }
+
             // Explicit if/else; HLSL ternary evaluates BOTH branches, which would let
             // EvalContour's pixel-killing path leak into slope mode.
             float4 frag(slope_v2f i) : SV_Target
@@ -191,7 +222,9 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
                 int mode = (int)round(_Mode);
                 if (mode == 0)
                     return EvalSlope(i);
-                return EvalContour(i);
+                if (mode == 1)
+                    return EvalContour(i);
+                return EvalSeaLevel(i);
             }
             ENDHLSL
         }
