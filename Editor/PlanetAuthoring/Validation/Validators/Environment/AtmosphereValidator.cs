@@ -11,7 +11,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
 {
     /// <summary>
     /// Checks a body's visual atmosphere: that its model resolves, its shells are wired, it is sized to
-    /// the body, it sits inside the physics atmosphere, and its baked tables are current.
+    /// the body, no visible air is drawn past the physics atmosphere, no terrain rises above its top,
+    /// and its baked tables are current.
     /// </summary>
     /// <remarks>
     /// One validator rather than one per check, so the model is resolved once per refresh. Bodies
@@ -28,8 +29,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
         /// <summary>Code for a model whose bottom radius does not match the body radius.</summary>
         public const string RADIUS_MISMATCH_CODE = "ATMO_RADIUS_MISMATCH";
 
-        /// <summary>Code for a visual atmosphere that extends past the physics atmosphere.</summary>
-        public const string HEIGHT_PAST_DEPTH_CODE = "ATMO_HEIGHT_PAST_DEPTH";
+        /// <summary>Code for visible air drawn past the physics atmosphere.</summary>
+        public const string AIR_PAST_DEPTH_CODE = "ATMO_AIR_PAST_DEPTH";
+
+        /// <summary>Code for terrain that rises above the top of the visual atmosphere.</summary>
+        public const string TERRAIN_ABOVE_TOP_CODE = "ATMO_TERRAIN_ABOVE_TOP";
 
         /// <summary>Code for a model with no baked lookup tables.</summary>
         public const string TABLES_MISSING_CODE = "ATMO_LUTS_MISSING";
@@ -39,6 +43,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
 
         // The model stores radius in kilometers as a float, so a metre of slack absorbs the rounding.
         private const double RADIUS_TOLERANCE_METERS = 1.0;
+
+        // Air under a hundredth of its surface density adds no visible haze, so a visual atmosphere
+        // that reaches past the physics depth is only a problem while the air there is denser.
+        private const double VISIBLE_DENSITY_FRACTION = 0.01;
+
+        // Headroom the raise fix leaves above the highest terrain.
+        private const double TERRAIN_CLEARANCE_FRACTION = 0.05;
 
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
@@ -72,12 +83,26 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
                     new[] { new ValidationFix("Refit to body", () => Refit(model, body)) });
             }
 
-            if (IsPastDepth(model.AtmosphereHeight, body.Data.atmosphereDepth))
+            if (IsAirPastDepth(
+                    model.AtmosphereHeight,
+                    model.RayleighExponentialDistribution,
+                    model.MieExponentialDistribution,
+                    body.Data.atmosphereDepth))
+            {
+                double density = DensityAt(body.Data.atmosphereDepth / 1000.0, model.RayleighExponentialDistribution, model.MieExponentialDistribution);
+                yield return new ValidationIssue(
+                    AIR_PAST_DEPTH_CODE,
+                    ValidationSeverity.Warning,
+                    $"Visible air is still {density:P1} of its surface density at Atmosphere Depth ({body.Data.atmosphereDepth / 1000.0:0.#} km), and the visual atmosphere ({model.AtmosphereHeight:0.#} km) goes past it, so haze is drawn where there is no drag. Shorten the scale heights or raise Atmosphere Depth.");
+            }
+
+            if (IsTerrainAboveTop(model.AtmosphereHeight, body.Data.MinTerrainHeight, body.Data.MaxTerrainHeight))
             {
                 yield return new ValidationIssue(
-                    HEIGHT_PAST_DEPTH_CODE,
+                    TERRAIN_ABOVE_TOP_CODE,
                     ValidationSeverity.Warning,
-                    $"Visual atmosphere height ({model.AtmosphereHeight:0.#} km) extends past Atmosphere Depth ({body.Data.atmosphereDepth / 1000.0:0.#} km), so air is drawn where there is no drag. Stock keeps it inside.");
+                    $"Terrain reaches {body.Data.MaxTerrainHeight / 1000.0:0.##} km, above the visual atmosphere top ({model.AtmosphereHeight:0.#} km). The atmosphere shader skips anything above the top, so a hard seam shows where terrain crosses it, even through the air below. Keep Visual Height above the highest terrain, with short scale heights if the air should stay low.",
+                    new[] { new ValidationFix("Raise above terrain", () => RaiseAboveTerrain(model, body.Data.MaxTerrainHeight)) });
             }
 
             switch (AtmosphereSetup.GetTableState(model))
@@ -109,13 +134,62 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
             Math.Abs(bottomRadiusKilometers * 1000.0 - bodyRadiusMeters) <= RADIUS_TOLERANCE_METERS;
 
         /// <summary>
-        /// Gets a value indicating whether a visual atmosphere reaches past the physics atmosphere.
+        /// Gets the density of the visible air at an altitude, as a fraction of its surface density.
         /// </summary>
+        /// <remarks>
+        /// The larger of the Rayleigh and Mie fractions, since either one alone shows as haze.
+        /// </remarks>
+        /// <param name="altitudeKilometers">The altitude above the atmosphere's bottom radius, in kilometers.</param>
+        /// <param name="rayleighScaleHeightKilometers">The Rayleigh scale height in kilometers.</param>
+        /// <param name="mieScaleHeightKilometers">The Mie scale height in kilometers.</param>
+        /// <returns>The density fraction, from 0 to 1.</returns>
+        public static double DensityAt(double altitudeKilometers, float rayleighScaleHeightKilometers, float mieScaleHeightKilometers) =>
+            Math.Max(
+                Math.Exp(-altitudeKilometers / Math.Max(0.001, rayleighScaleHeightKilometers)),
+                Math.Exp(-altitudeKilometers / Math.Max(0.001, mieScaleHeightKilometers)));
+
+        /// <summary>
+        /// Gets a value indicating whether visible air is drawn past the physics atmosphere.
+        /// </summary>
+        /// <remarks>
+        /// A visual atmosphere taller than the physics one is fine when the air above the physics
+        /// depth is too thin to see, which is how air stays confined to low ground.
+        /// </remarks>
         /// <param name="visualHeightKilometers">The model's visual height in kilometers.</param>
+        /// <param name="rayleighScaleHeightKilometers">The Rayleigh scale height in kilometers.</param>
+        /// <param name="mieScaleHeightKilometers">The Mie scale height in kilometers.</param>
         /// <param name="atmosphereDepthMeters">The body's Atmosphere Depth in meters.</param>
-        /// <returns>True if the visual height is greater than the depth, false otherwise.</returns>
-        public static bool IsPastDepth(float visualHeightKilometers, double atmosphereDepthMeters) =>
-            visualHeightKilometers * 1000.0 > atmosphereDepthMeters + RADIUS_TOLERANCE_METERS;
+        /// <returns>True if the visual atmosphere passes the depth while the air there is still visible, false otherwise.</returns>
+        public static bool IsAirPastDepth(
+            float visualHeightKilometers,
+            float rayleighScaleHeightKilometers,
+            float mieScaleHeightKilometers,
+            double atmosphereDepthMeters) =>
+            visualHeightKilometers * 1000.0 > atmosphereDepthMeters + RADIUS_TOLERANCE_METERS
+            && DensityAt(atmosphereDepthMeters / 1000.0, rayleighScaleHeightKilometers, mieScaleHeightKilometers) > VISIBLE_DENSITY_FRACTION;
+
+        /// <summary>
+        /// Gets a value indicating whether terrain rises above the top of the visual atmosphere.
+        /// </summary>
+        /// <remarks>
+        /// Both heights are measured from sea level, which is also the atmosphere's bottom radius. A
+        /// body whose terrain range was never computed, with both bounds still zero, is not reported.
+        /// </remarks>
+        /// <param name="visualHeightKilometers">The model's visual height in kilometers.</param>
+        /// <param name="minTerrainHeightMeters">The body's Min Terrain Height in meters.</param>
+        /// <param name="maxTerrainHeightMeters">The body's Max Terrain Height in meters.</param>
+        /// <returns>True if the highest terrain is above the visual atmosphere's top, false otherwise.</returns>
+        public static bool IsTerrainAboveTop(float visualHeightKilometers, double minTerrainHeightMeters, double maxTerrainHeightMeters) =>
+            !(minTerrainHeightMeters == 0.0 && maxTerrainHeightMeters == 0.0)
+            && maxTerrainHeightMeters > visualHeightKilometers * 1000.0;
+
+        private static void RaiseAboveTerrain(AtmosphereModel model, double maxTerrainHeightMeters)
+        {
+            Undo.RecordObject(model, "Raise Atmosphere Above Terrain");
+            double clearKilometers = maxTerrainHeightMeters * (1.0 + TERRAIN_CLEARANCE_FRACTION) / 1000.0;
+            model.AtmosphereHeight = (float)(Math.Ceiling(clearKilometers * 10.0) / 10.0);
+            EditorUtility.SetDirty(model);
+        }
 
         private static void Refit(AtmosphereModel model, CoreCelestialBodyData body)
         {
