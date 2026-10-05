@@ -17,15 +17,15 @@ namespace Ksp2UnityTools.Editor.Extensions
     public class LoadTkImportedCatalog : AssetPostprocessor
     {
         // This must be the same as the output of the ImportKsp2ToEditor pipeline.
-        private const string loadTkImportedCatalogPath = "DoNotDistribute/aa/catalog.json";
+        private const string LOAD_TK_IMPORTED_CATALOG_PATH = "DoNotDistribute/aa/catalog.json";
 
         // Path must be relative to Assets directory.
-        private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
+        private const string REDUX_CATALOG_PATH = "../Redux/Addressables/StandaloneWindows64/catalog.json";
 
-        private const string PlaySessionInitializedKey =
+        private const string PLAY_SESSION_INITIALIZED_KEY =
             "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
 
-        private const string BaseGameCatalogProbeKey = "kspFlow.unity";
+        private const string BASE_GAME_CATALOG_PROBE_KEY = "kspFlow.unity";
 
         private static bool _catalogLoadScheduled;
         private static bool _catalogLoadInProgress;
@@ -65,25 +65,29 @@ namespace Ksp2UnityTools.Editor.Extensions
                     // SessionState survives domain reloads. Clear it before every new play
                     // transition so a previous interrupted/hot-reloaded session cannot suppress
                     // catalog registration for the next benchmark process.
-                    SessionState.SetBool(PlaySessionInitializedKey, false);
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
                     return;
                 case PlayModeStateChange.ExitingPlayMode:
-                    SessionState.SetBool(PlaySessionInitializedKey, false);
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
                     return;
                 case PlayModeStateChange.EnteredEditMode:
                     UnloadLeakedAssetBundles();
+                    // Deferred so it runs after Addressables' own EnteredEditMode handler, whose flag
+                    // it clears.
+                    EditorApplication.delayCall -= ResetAddressablesForEditMode;
+                    EditorApplication.delayCall += ResetAddressablesForEditMode;
                     return;
                 // ExitingEditMode prepares Fast Mode and the imported catalogs before runtime startup.
                 // Recheck them here so manual and automated transitions share the same idempotent path.
                 // SessionState protects against stale duplicate callbacks left behind by a script hot
                 // reload.
-                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
+                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PLAY_SESSION_INITIALIZED_KEY, false):
                     return;
                 case PlayModeStateChange.EnteredPlayMode:
                     EnsureImportedCatalogsLoaded();
                     // Mark initialized only after registration succeeds. If catalog loading throws,
                     // a duplicate callback can retry instead of preserving a false-success state.
-                    SessionState.SetBool(PlaySessionInitializedKey, true);
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, true);
                     break;
             }
         }
@@ -94,10 +98,10 @@ namespace Ksp2UnityTools.Editor.Extensions
         [InitializeOnEnterPlayMode]
         private static void PrepareAddressablesForPlayMode()
         {
-            SessionState.SetBool(PlaySessionInitializedKey, false);
+            SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
             ResetAddressablesForPlayMode();
             EnsureImportedCatalogsLoaded();
-            SessionState.SetBool(PlaySessionInitializedKey, true);
+            SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, true);
         }
 
         // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
@@ -114,9 +118,7 @@ namespace Ksp2UnityTools.Editor.Extensions
             foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles().ToArray())
             {
                 if (bundle == null || bundle.name == "ksp2")
-                {
                     continue;
-                }
                 bundle.Unload(true);
             }
         }
@@ -135,9 +137,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         )
         {
             if (!didDomainReload)
-            {
                 return;
-            }
 
             ScheduleImportedCatalogLoad();
         }
@@ -148,9 +148,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static void ScheduleImportedCatalogLoad()
         {
             if (_catalogLoadScheduled || _catalogLoadInProgress)
-            {
                 return;
-            }
 
             _catalogLoadScheduled = true;
             EditorApplication.delayCall += BeginImportedCatalogLoad;
@@ -169,9 +167,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
             string catalogPath = GetNextMissingCatalogPath();
             if (catalogPath == null)
-            {
                 return;
-            }
 
             EnsureThunderKitInternalIdRedirect();
             _catalogLoadInProgress = true;
@@ -200,6 +196,15 @@ namespace Ksp2UnityTools.Editor.Extensions
             BeginImportedCatalogLoad();
         }
 
+        /// <summary>
+        /// Registers the ThunderKit-imported content catalogs with Addressables now, if they are missing.
+        /// </summary>
+        /// <remarks>
+        /// For edit-mode code that needs a base-game key before the deferred post-reload load has
+        /// finished. Blocks until the catalogs are loaded. Idempotent.
+        /// </remarks>
+        public static void EnsureRegistered() => EnsureImportedCatalogsLoaded();
+
         // Registers the ThunderKit-imported content catalog(s) with Addressables if they are not already
         // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
         private static void EnsureImportedCatalogsLoaded()
@@ -211,9 +216,7 @@ namespace Ksp2UnityTools.Editor.Extensions
             {
                 AsyncOperationHandle<IResourceLocator> operation = _catalogLoadOperation;
                 if (!operation.IsValid())
-                {
                     break;
-                }
 
                 IResourceLocator locator;
                 try
@@ -239,9 +242,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
             string catalogPath = GetNextMissingCatalogPath();
             if (catalogPath == null)
-            {
                 return;
-            }
 
             EnsureThunderKitInternalIdRedirect();
             while (catalogPath != null)
@@ -265,18 +266,16 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static string GetNextMissingCatalogPath()
         {
-            string ksp2CatalogFullPath = Path.Join(Application.dataPath, loadTkImportedCatalogPath);
+            string ksp2CatalogFullPath = Path.Join(Application.dataPath, LOAD_TK_IMPORTED_CATALOG_PATH);
             if (!File.Exists(ksp2CatalogFullPath))
-            {
                 return null;
-            }
 
             // BundleKit and other editor integrations can register the stock
             // catalog under its catalog ID instead of this imported file path.
             // Loading it again duplicates every stock location and can leave
             // systems such as cloud rendering with mismatched result lists.
             if (
-                !CatalogKeyIsRegistered(BaseGameCatalogProbeKey)
+                !CatalogKeyIsRegistered(BASE_GAME_CATALOG_PROBE_KEY)
                 && !IsCatalogLoaded(ksp2CatalogFullPath)
             )
             {
@@ -287,11 +286,9 @@ namespace Ksp2UnityTools.Editor.Extensions
             // no locator already registerd
             if (Assembly.GetExecutingAssembly().GetName().Name == "ksp2community.ksp2unitytools.editor")
             {
-                string reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
+                string reduxCatalogFullPath = Path.Join(Application.dataPath, REDUX_CATALOG_PATH);
                 if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
-                {
                     return reduxCatalogFullPath;
-                }
             }
 
             return null;
@@ -321,9 +318,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static void EnsureThunderKitInternalIdRedirect()
         {
             if (Addressables.InternalIdTransformFunc != null)
-            {
                 return;
-            }
 
             MethodInfo redirectMethod = typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings)
                 .GetMethod(
@@ -350,7 +345,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static void ResetAddressablesForPlayMode()
         {
             // Addressables queues this callback when Play Mode exits. An automated restart can
-            // reach ExitingEditMode before the callback runs; if it runs after the fresh instance
+            // reach ExitingEditMode before the callback runs. If it runs after the fresh instance
             // and imported catalogs are prepared below, the first runtime Addressables access
             // replaces that instance again and loses both the catalog and path redirect.
             MethodInfo delayedReinitializeMethod = typeof(Addressables).GetMethod(
@@ -364,16 +359,33 @@ namespace Ksp2UnityTools.Editor.Extensions
                 EditorApplication.delayCall -= delayedReinitialize;
             }
 
-            FieldInfo reinitializeField = typeof(Addressables).GetField(
-                "reinitializeAddressables",
-                BindingFlags.Static | BindingFlags.NonPublic
-            );
-            if (reinitializeField == null)
-            {
-                throw new MissingFieldException(typeof(Addressables).FullName, "reinitializeAddressables");
-            }
+            SetAddressablesFlag("reinitializeAddressables", true);
+        }
 
-            reinitializeField.SetValue(null, true);
+        // UnloadLeakedAssetBundles destroys everything the play session's Addressables instance has
+        // cached, but Addressables keeps using that instance for the whole edit-mode stretch. It sets
+        // isExitingPlaymode on returning to edit mode and clears it only when play starts again, and
+        // the flag blocks the swap to a fresh instance. Loads in between hand back destroyed assets,
+        // which is how the planet preview lost PQSGlobalSettings after a play session. Clearing it
+        // gives edit mode the same fresh instance and imported catalogs a play session starts with.
+        private static void ResetAddressablesForEditMode()
+        {
+            EditorApplication.delayCall -= ResetAddressablesForEditMode;
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
+            SetAddressablesFlag("isExitingPlaymode", false);
+            SetAddressablesFlag("reinitializeAddressables", true);
+            EnsureImportedCatalogsLoaded();
+        }
+
+        private static void SetAddressablesFlag(string fieldName, bool value)
+        {
+            FieldInfo field = typeof(Addressables).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic);
+            if (field == null)
+                throw new MissingFieldException(typeof(Addressables).FullName, fieldName);
+
+            field.SetValue(null, value);
         }
 
 #endif

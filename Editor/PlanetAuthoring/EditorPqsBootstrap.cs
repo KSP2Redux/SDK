@@ -1,7 +1,11 @@
 using KSP.Rendering;
 using KSP.Rendering.Planets;
+#if TK_ADDRESSABLE
+using Ksp2UnityTools.Editor.Extensions;
+#endif
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring
 {
@@ -15,16 +19,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     {
         // Same key the runtime uses (GameManager.CreateGraphicsManager, PqsVisSetup.graphicsManagerPath).
         // Resolves once ThunderKit's "Import Ksp2 To Editor" pipeline registers the catalog.
-        private const string GraphicsManagerAddressableKey = "Graphics Manager.prefab";
+        private const string GRAPHICS_MANAGER_ADDRESSABLE_KEY = "Graphics Manager.prefab";
 
         private static PQSGlobalSettings? _cachedSettings;
+        private static AsyncOperationHandle<GameObject> _graphicsManagerHandle;
         private static bool _warnedMissingCatalog;
 
         /// <summary>
         /// Gets the shipped <see cref="PQSGlobalSettings" />, or <c>null</c> when the base-game catalog is not registered.
         /// </summary>
         /// <remarks>
-        /// Logs an error once per session when the catalog is unavailable. Non-null results are cached for the lifetime of the domain. A null result is not cached, so the next access self-heals once the catalog loads.
+        /// Logs an error once per session when the catalog is unavailable. Non-null results are cached until the asset is unloaded, which a play session's teardown does. A null result is not cached, so the next access self-heals once the catalog loads. When the catalog check fails, the imported catalogs are registered on the spot before giving up, which covers the gap between a domain reload and their deferred load.
         /// </remarks>
         public static PQSGlobalSettings? PQSGlobalSettings
         {
@@ -33,29 +38,51 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 if (_cachedSettings != null)
                     return _cachedSettings;
 
+                // The settings were unloaded with the prefab, so the old handle points at a destroyed
+                // asset. Keeping it would hand the same destroyed result back to the next load.
+                ReleaseGraphicsManager();
+
+#if TK_ADDRESSABLE
+                if (!IsCatalogRegistered())
+                {
+                    LoadTkImportedCatalog.EnsureRegistered();
+                }
+#endif
+
                 if (!IsCatalogRegistered())
                 {
                     WarnMissingCatalogOnce();
                     return null;
                 }
 
-                var handle = Addressables.LoadAssetAsync<GameObject>(GraphicsManagerAddressableKey);
-                handle.WaitForCompletion();
+                _graphicsManagerHandle = Addressables.LoadAssetAsync<GameObject>(GRAPHICS_MANAGER_ADDRESSABLE_KEY);
+                _graphicsManagerHandle.WaitForCompletion();
 
-                // handle.Result == null uses Unity's overloaded operator==, so destroyed
-                // GameObjects (from a prior load whose asset got unloaded) are caught here
-                // instead of falling through C#'s ?. operator and tripping MissingReferenceException.
-                var prefab = handle.Result;
+                // Result == null uses Unity's overloaded operator==, so a destroyed prefab from a
+                // load whose asset got unloaded is caught here instead of falling through C#'s ?.
+                // operator and tripping MissingReferenceException.
+                var prefab = _graphicsManagerHandle.Status == AsyncOperationStatus.Succeeded ? _graphicsManagerHandle.Result : null;
                 var graphicsManager = prefab == null ? null : prefab.GetComponent<GraphicsManager>();
                 _cachedSettings = graphicsManager == null ? null : graphicsManager.PQSGlobalSettings;
 
                 if (_cachedSettings == null)
                 {
+                    ReleaseGraphicsManager();
                     WarnMissingCatalogOnce();
                 }
 
                 return _cachedSettings;
             }
+        }
+
+        private static void ReleaseGraphicsManager()
+        {
+            if (_graphicsManagerHandle.IsValid())
+            {
+                Addressables.Release(_graphicsManagerHandle);
+            }
+
+            _graphicsManagerHandle = default;
         }
 
         /// <summary>
@@ -66,7 +93,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// than suppressing log failures wholesale.
         /// </remarks>
         public static string MissingCatalogMessage =>
-            $"[EditorPqsBootstrap] '{GraphicsManagerAddressableKey}' not found. " +
+            $"[EditorPqsBootstrap] '{GRAPHICS_MANAGER_ADDRESSABLE_KEY}' not found. " +
             "Run ThunderKit > Pipelines > Import Ksp2 To Editor and reopen the authoring scene.";
 
         /// <summary>
@@ -90,7 +117,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// </remarks>
         public static bool IsCatalogRegistered()
         {
-            var locations = Addressables.LoadResourceLocationsAsync(GraphicsManagerAddressableKey);
+            var locations = Addressables.LoadResourceLocationsAsync(GRAPHICS_MANAGER_ADDRESSABLE_KEY);
             locations.WaitForCompletion();
             bool found = locations.Result is { Count: > 0 };
             Addressables.Release(locations);
