@@ -68,6 +68,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var serialized = new SerializedObject(package);
             BuildItemList(container, serialized, owningSystem);
             WireAddItem(container, package, serialized, owningSystem);
+            WireBakeBillboards(container, package, serialized, owningSystem);
             RefreshBiomeHint(container, package, owningSystem);
 
             // Bind to the package rather than to whatever the host inspector targets.
@@ -199,6 +200,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             WireSpacingReadout(bindable, entry, owningSystem);
             WireSurfaceRestriction(bindable, entry, resolveLookup);
+            WireBillboard(bindable, entry, owningSystem);
 
             // The shader controller decides which appearance properties exist by probing the material,
             // so the set cannot be expressed in markup and is built from the descriptors instead.
@@ -292,6 +294,138 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             hint.TrackPropertyValue(spacing, _ => Refresh());
             hint.TrackPropertyValue(type, _ => Refresh());
             Refresh();
+        }
+
+        /// <summary>
+        /// Wires an item's Bake Billboard button and the line under it.
+        /// </summary>
+        /// <remarks>
+        /// Vegetation Studio only draws billboards for mesh items in billboard cells, so for any other
+        /// item the button gives way to a line saying why, rather than baking something that never
+        /// shows. <c>UseBillboards</c> defaults to on, so plenty of items carry it without effect.
+        /// </remarks>
+        /// <param name="root">The built item subtree.</param>
+        /// <param name="entry">The item element.</param>
+        /// <param name="owningSystem">The system the package is assigned to, refreshed after a bake. May be null.</param>
+        private static void WireBillboard(VisualElement root, SerializedProperty entry, VegetationSystemPro owningSystem)
+        {
+            var hint = root.Q<Label>("scatter-item-billboard-hint");
+            var button = root.Q<Button>("scatter-item-bake-billboard");
+            SerializedProperty billboard = entry.FindPropertyRelative("BillboardCustomPrefab");
+            SerializedProperty type = entry.FindPropertyRelative("VegetationType");
+            SerializedProperty prefabType = entry.FindPropertyRelative("PrefabType");
+            SerializedProperty prefab = entry.FindPropertyRelative("VegetationPrefab");
+            if (hint == null || button == null || billboard == null || type == null || prefabType == null || prefab == null)
+                return;
+
+            SerializedObject serialized = entry.serializedObject;
+            string itemPath = entry.propertyPath;
+
+            void Refresh()
+            {
+                bool canBillboard = ScatterImpostorBaker.CanBillboard(
+                    (VegetationType)type.enumValueIndex,
+                    (VegetationPrefabType)prefabType.enumValueIndex);
+                button.style.display = canBillboard ? DisplayStyle.Flex : DisplayStyle.None;
+                button.SetEnabled(prefab.objectReferenceValue != null);
+
+                if (!canBillboard)
+                {
+                    SetStatus(hint, "Billboards only draw for Tree, Large Objects and Medium Objects mesh items, so this item never shows one.");
+                    return;
+                }
+
+                UnityEngine.Object baked = billboard.objectReferenceValue;
+                SetStatus(hint, baked == null ? "Not baked." : $"Baked to {AssetDatabase.GetAssetPath(baked)}.");
+            }
+
+            hint.TrackPropertyValue(billboard, _ => Refresh());
+            hint.TrackPropertyValue(type, _ => Refresh());
+            hint.TrackPropertyValue(prefabType, _ => Refresh());
+            hint.TrackPropertyValue(prefab, _ => Refresh());
+            Refresh();
+
+            button.clicked += () =>
+            {
+                VegetationItemInfoPro item = ResolveItem(serialized, itemPath);
+                if (item == null || serialized.targetObject is not VegetationPackagePro package)
+                    return;
+
+                try
+                {
+                    ScatterImpostorBaker.BakeItem(package, item);
+                }
+                catch (InvalidOperationException exception)
+                {
+                    SetStatus(hint, exception.Message);
+                    return;
+                }
+
+                serialized.Update();
+                if (owningSystem != null)
+                    owningSystem.RefreshVegetationSystem();
+                Refresh();
+            };
+        }
+
+        /// <summary>
+        /// Wires the package's Bake Billboards button.
+        /// </summary>
+        /// <param name="container">The built section.</param>
+        /// <param name="package">The package being baked.</param>
+        /// <param name="serialized">The package's serialized object, refreshed after the bake.</param>
+        /// <param name="owningSystem">The system the package is assigned to, refreshed after the bake. May be null.</param>
+        private static void WireBakeBillboards(VisualElement container, VegetationPackagePro package, SerializedObject serialized, VegetationSystemPro owningSystem)
+        {
+            var button = container.Q<Button>("scatter-package-bake-billboards");
+            var status = container.Q<Label>("scatter-package-status");
+            if (button == null)
+                return;
+
+            button.clicked += () =>
+            {
+                string message;
+                try
+                {
+                    int baked = ScatterImpostorBaker.BakePackage(package);
+                    message = baked == 0
+                        ? "No item in this package uses a billboard."
+                        : $"Baked billboards for {baked} items.";
+                }
+                catch (InvalidOperationException exception)
+                {
+                    message = exception.Message;
+                }
+
+                // A failure part way still leaves the earlier prefabs baked and assigned.
+                serialized.Update();
+                if (owningSystem != null)
+                    owningSystem.RefreshVegetationSystem();
+                SetStatus(status, message);
+            };
+        }
+
+        /// <summary>
+        /// Returns the item a list element's property path points at.
+        /// </summary>
+        /// <remarks>
+        /// The bake works on the item itself rather than on its serialized copy, so the element's
+        /// index is read back out of its path at click time, after any reorder.
+        /// </remarks>
+        /// <param name="serialized">The package's serialized object.</param>
+        /// <param name="itemPath">The element's property path.</param>
+        /// <returns>The item, or null when the path no longer points at one.</returns>
+        private static VegetationItemInfoPro ResolveItem(SerializedObject serialized, string itemPath)
+        {
+            if (serialized.targetObject is not VegetationPackagePro package)
+                return null;
+
+            int open = itemPath.LastIndexOf('[');
+            int close = itemPath.LastIndexOf(']');
+            if (open < 0 || close <= open || !int.TryParse(itemPath.Substring(open + 1, close - open - 1), out int index))
+                return null;
+
+            return index >= 0 && index < package.VegetationInfoList.Count ? package.VegetationInfoList[index] : null;
         }
 
         /// <summary>

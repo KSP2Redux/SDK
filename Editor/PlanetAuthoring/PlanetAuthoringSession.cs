@@ -121,7 +121,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         // Throttle for Tick's bind/sync work only. The render pipeline runs unthrottled from
         // OnCameraPreCull, so this doesn't gate visible drawing.
-        private const double TickIntervalSeconds = 1.0 / 30.0;
+        private const double TICK_INTERVAL_SECONDS = 1.0 / 30.0;
 
         /// <summary>
         /// Gets the currently-active session, or null if no preview is running.
@@ -173,7 +173,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             "Pqs",
             "SourceCamera",
-            "CreateColliders",
         };
 
         private static void RevertBootHarnessOverrides(PQS pqs)
@@ -204,8 +203,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         // forward into TryBootPqs's _initialBodyRotation snapshot.
         private static void RevertBodyRotationOverride(CoreCelestialBodyData body)
         {
-            if (body == null) return;
-            if (!PrefabUtility.IsPartOfPrefabInstance(body.transform)) return;
+            if (body == null)
+                return;
+
+            if (!PrefabUtility.IsPartOfPrefabInstance(body.transform))
+                return;
+
             var so = new SerializedObject(body.transform);
             var prop = so.FindProperty("m_LocalRotation");
             if (prop != null)
@@ -362,8 +365,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         private bool TryBootPqs()
         {
-            // Clear stale overrides from any previous run that crashed before End. A leaked
-            // CreateColliders=false override would skip the collider native containers and NRE.
+            // Clear stale overrides from any previous run that crashed before End.
             RevertBootHarnessOverrides(Pqs);
             _hasSnapshot = true;
             // Revert any leaked body rotation override BEFORE snapshotting so a previous crashed
@@ -401,9 +403,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             if (pqs.PQSRenderer.Pqs == null)
                 pqs.PQSRenderer.Pqs = pqs;
 
-            // CreateUpdateListsJob.ActiveColliderMap is read regardless of this flag, so the
-            // collider native containers must be allocated for the job to schedule.
-            pqs.PQSRenderer.CreateColliders = true;
             pqs.PQSRenderer.BootForEditor();
 
             if (pqs.PQSRenderer.PqsDecalController == null)
@@ -564,7 +563,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             }
 
             double now = EditorApplication.timeSinceStartup;
-            if (now - _lastTickTime < TickIntervalSeconds)
+            if (now - _lastTickTime < TICK_INTERVAL_SECONDS)
                 return;
             _lastTickTime = now;
 

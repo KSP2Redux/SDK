@@ -92,15 +92,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             refresh = () =>
             {
                 slot.Clear();
-                BuildSections(slot, pqs, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
+                BuildSections(slot, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
             };
 
-            BuildSections(slot, pqs, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
+            BuildSections(slot, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
         }
 
         private static void BuildSections(
             VisualElement slot,
-            PQS pqs,
             Material material,
             SerializedObject pqsDataSO,
             SerializedObject pqsDataAuthoringSO,
@@ -109,7 +108,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         )
         {
             slot.Add(BuildQualitySection(material, pqsDataSO, refresh));
-            slot.Add(BuildSubdivisionSection(pqs, pqsDataSO));
             slot.Add(BuildHeightmapStackSection(pqsDataSO, material));
             slot.Add(BuildPoleSettingsSection(pqsDataSO));
             slot.Add(BuildScaledSpaceSection(material));
