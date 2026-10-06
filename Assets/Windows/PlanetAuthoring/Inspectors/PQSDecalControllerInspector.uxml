@@ -14,12 +14,10 @@
         <engine:Foldout text="Shared Textures" value="true" class="decal-controller-section">
             <editor:PropertyField binding-path="SharedHeightmap" label="Heightmap (R16)" tooltip="Per-body R16 heightmap sampled by every decal on this body. Set Texture Type = Single Channel, Channel = Red, Format = R16 in the importer." />
             <editor:PropertyField binding-path="SharedAlphaMap" label="Alpha Map (R16)" tooltip="Per-body R16 alpha map sampled by every decal on this body. Same R16 importer settings as the heightmap." />
-            <engine:Label text="These textures are per-body, not per-decal. The runtime has no per-instance height region in the compute shader, so all decals on this body sample the same heightmap and alpha map." class="decal-controller-hint" />
         </engine:Foldout>
 
         <engine:Foldout text="Bake" value="true" class="decal-controller-section">
-            <engine:Button name="bake-button" text="Bake all decals" tooltip="Rebuild PQSDecalData from the controller's instance list and shared textures. Required after editing shared textures or adding/removing instances outside an active session." />
-            <engine:Label text="Rebuilds PQSDecalData from the controller's instance list and shared textures. Auto-runs on decal asset and instance changes when a planet preview session is active." class="decal-controller-hint" />
+            <engine:Button name="bake-button" text="Bake all decals" tooltip="Rebuild PQSDecalData from the controller's instance list and shared textures. It rebakes by itself on decal edits while the preview runs." />
         </engine:Foldout>
 
     </engine:VisualElement>

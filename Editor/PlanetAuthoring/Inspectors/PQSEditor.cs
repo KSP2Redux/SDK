@@ -1,75 +1,56 @@
-using KSP;
+using System;
 using KSP.Rendering.Planets;
-using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
+using KSP.VolumeCloud;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet;
+using Ksp2UnityTools.Editor.Widgets;
+using Uber.Scatter;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Custom inspector for <see cref="PQS" />.
+    /// Hosts the planet inspector on a body's Local prefab, the GameObject carrying <see cref="PQS" />.
     /// </summary>
     /// <remarks>
-    /// Surfaces the artist-facing authoring fields and the hand-coded surface authoring sections
-    /// rendered against the bound <see cref="PQSData" /> and surface material. Layout lives in
-    /// <c>Assets/Windows/PQSInspector.uxml</c> with styling in <c>PQSInspector.uss</c>. Field
-    /// routing:
-    /// <list type="bullet">
-    ///   <item>Authoring: data, generatePhysics, UseFixedLevel/FixedLevel, maxRaycastDistance.</item>
-    ///   <item>Hidden: settings, PQSRenderer, isAlive, isActive, isStarted,
-    ///         primaryTargetDistance, primaryTargetAltitude, isSubdivisionEnabled, trackStats.
-    ///         These are runtime or auto-managed and belong in the Preview Controls or debug
-    ///         window, not in the authoring inspector.</item>
-    /// </list>
+    /// The components the planet inspector presents are hidden from the Inspector while it shows, as the part
+    /// inspector hides a part's modules.
     /// </remarks>
     [CustomEditor(typeof(PQS))]
     public class PQSEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSInspector.uxml";
-        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/PQSInspector.uss";
+        private static readonly Type[] COVERED_COMPONENTS =
+        {
+            typeof(PQSRenderer),
+            typeof(PqsTerrain),
+            typeof(PQSDecalController),
+            typeof(CloudRenderHelper),
+        };
+
+        private readonly InspectorComponentHider _hider = new();
+
+        private void OnEnable()
+        {
+            if (target is PQS pqs)
+            {
+                _hider.Hide(pqs.gameObject, COVERED_COMPONENTS);
+            }
+        }
+
+        private void OnDisable() => _hider.Restore();
 
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
         {
+            PlanetInspectorContext context = PlanetInspectorContext.FromPqs((PQS)target, serializedObject);
+            if (context != null)
+                return PlanetInspectorView.Build(context);
+
             var root = new VisualElement();
-
-            var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
-            if (tree == null)
-            {
-                root.Add(new Label("Failed to load PQSInspector.uxml"));
-                return root;
-            }
-            tree.CloneTree(root);
-
-            Ksp2UnityToolsStyles.Apply(root, UssPath);
-
-            var surfaceSlot = root.Q<VisualElement>("surface-authoring-slot");
-            if (surfaceSlot != null)
-                SurfaceAuthoringBuilder.Populate(surfaceSlot, target as PQS);
-
-            BodySurfaceBakeSection.Wire(root, () => BodyResolver.FindBodyIncludingAsset(target as PQS));
-
-            // Same chrome as the body inspector. A body is split across a scaled-space object and
-            // this local-space one, and an author works from whichever is selected, so both carry
-            // the validation chip and Quick Tools rather than forcing a reselect to reach a tool.
-            PlanetAuthoringChrome.Wire(root, ResolveBody);
-            root.schedule.Execute(() =>
-            {
-                PlanetAuthoringChrome.RefreshValidationChip(root, ResolveBody());
-                PlanetAuthoringChrome.RefreshScatter(root, ResolveBody());
-                PlanetAuthoringChrome.RefreshAtmosphere(root, ResolveBody());
-                PlanetAuthoringChrome.RefreshClouds(root, ResolveBody());
-                PlanetAuthoringChrome.RefreshOcean(root, ResolveBody());
-            }).Every(500);
-
-            root.Bind(serializedObject);
-
-            // After the PQS bind, which would otherwise rebind the section's renderer fields to the PQS.
-            OceanSection.Wire(root, target as PQS);
+            root.Add(new HelpBox(
+                "No celestial body was found for this PQS. Keep the Local prefab beside its Scaled prefab, or open the authoring scene that holds both.",
+                HelpBoxMessageType.Warning));
             return root;
         }
-
-        private CoreCelestialBodyData ResolveBody() => BodyResolver.FindBodyIncludingAsset(target as PQS);
     }
 }

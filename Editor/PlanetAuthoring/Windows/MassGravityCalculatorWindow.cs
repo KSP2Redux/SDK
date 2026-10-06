@@ -123,6 +123,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 : "Above: - (larger than largest stock body)";
         }
 
+        /// <summary>
+        /// Recommends a surface gravity for a body of the given radius from the stock bodies around it in size.
+        /// </summary>
+        /// <param name="radius">The body radius in meters.</param>
+        /// <returns>The recommended gravityASL in g, or zero for a radius that is not positive.</returns>
+        internal static double RecommendGravityASL(double radius) => RecommendGravityASL(radius, out _, out _);
+
         private static double RecommendGravityASL(double radius, out StockBody? below, out StockBody? above)
         {
             below = null;

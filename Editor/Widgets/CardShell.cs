@@ -42,8 +42,9 @@ namespace Ksp2UnityTools.Editor.Widgets
         /// Builds the card chrome and returns its mountable slots.
         /// </summary>
         /// <param name="slots">Receives the card's header, body, and disclosure references.</param>
+        /// <param name="expanded">True to start with the body shown, false to start folded.</param>
         /// <returns>The outer card element.</returns>
-        public static VisualElement Build(out Slots slots)
+        public static VisualElement Build(out Slots slots, bool expanded = true)
         {
             var card = new VisualElement();
             card.AddToClassList("sdk-card");
@@ -52,7 +53,7 @@ namespace Ksp2UnityTools.Editor.Widgets
             header.AddToClassList("sdk-card__header");
             card.Add(header);
 
-            var disclosure = new Button { text = "▼" };
+            var disclosure = new Button { text = expanded ? "▼" : "▶" };
             disclosure.AddToClassList("sdk-card__disclosure");
             header.Add(disclosure);
 
@@ -60,8 +61,7 @@ namespace Ksp2UnityTools.Editor.Widgets
             body.AddToClassList("sdk-card__body");
             card.Add(body);
 
-            var expanded = true;
-            body.style.display = DisplayStyle.Flex;
+            body.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
             disclosure.clicked += () =>
             {
                 expanded = !expanded;

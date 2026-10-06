@@ -10,7 +10,8 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Wires the PQS inspector's Ocean section: the renderer's ocean assets and the material's generated textures.
+    /// Wires the planet inspector's Ocean section: the renderer's ocean assets and quality, and the material's
+    /// generated textures.
     /// </summary>
     /// <remarks>
     /// The section's fields live on the PQS renderer and the material's sidecar rather than the PQS, so it binds them
@@ -36,6 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             var hint = root.Q<Label>("ocean-hint");
             var assets = root.Q("ocean-assets");
+            var quality = root.Q("ocean-quality");
             var textures = root.Q("ocean-textures");
             PQSRenderer renderer = pqs == null ? null
                 : pqs.PQSRenderer != null ? pqs.PQSRenderer : pqs.GetComponentInChildren<PQSRenderer>(true);
@@ -47,11 +49,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 Show(hint, "This PQS has no renderer.");
                 assets.style.display = DisplayStyle.None;
                 textures.style.display = DisplayStyle.None;
+                if (quality != null)
+                {
+                    quality.style.display = DisplayStyle.None;
+                }
+
                 return;
             }
 
             var serializedRenderer = new SerializedObject(renderer);
             assets.Bind(serializedRenderer);
+            quality?.Bind(serializedRenderer);
             Refresh(root, renderer, pqs);
             RefreshSpectrum(root, renderer);
             // The shoreline goes stale with edits to the terrain or sea level made anywhere, so it is checked on a timer.
@@ -111,7 +119,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             Show(status, string.Empty);
             if (material == null || string.IsNullOrEmpty(AssetDatabase.GetAssetPath(material)))
             {
-                Show(hint, "No ocean on this body. Turn on Has Ocean, then use Add Ocean in Quick Tools.");
+                Show(hint, "Turn on Has Ocean, then Add.");
                 textures.style.display = DisplayStyle.None;
                 if (materialFoldout != null)
                 {

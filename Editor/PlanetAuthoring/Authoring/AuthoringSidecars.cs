@@ -78,6 +78,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         public static PQSDecalTemplateAuthoring Find(PQSDecal decal) =>
             FindSidecar<PQSDecalTemplateAuthoring>(decal);
 
+        /// <summary>Returns the orbit sidecar for the body on <paramref name="scaledPrefab" />, creating one if absent.</summary>
+        public static CelestialBodyOrbitAuthoring GetOrCreateOrbit(GameObject scaledPrefab)
+        {
+            CelestialBodyOrbitAuthoring orbit = GetOrCreateSidecar<CelestialBodyOrbitAuthoring>(scaledPrefab);
+            if (orbit != null && orbit.ScaledPrefab == null)
+            {
+                orbit.ScaledPrefab = scaledPrefab;
+                EditorUtility.SetDirty(orbit);
+            }
+
+            return orbit;
+        }
+
+        /// <summary>Looks up the orbit sidecar for the body on <paramref name="scaledPrefab" />, or null when absent.</summary>
+        public static CelestialBodyOrbitAuthoring FindOrbit(GameObject scaledPrefab) =>
+            FindSidecar<CelestialBodyOrbitAuthoring>(scaledPrefab);
+
         /// <summary>Enumerates every <see cref="PQSDataAuthoring" /> sidecar in the project.</summary>
         public static IEnumerable<PQSDataAuthoring> AllPQSDataAuthorings() => FindAllOfType<PQSDataAuthoring>();
 

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- The General tab: the body as a whole. Every binding-path is on the body's CoreCelestialBodyData. -->
+
+    <engine:VisualElement class="planet-inspector-tab">
+
+        <engine:Foldout name="section-identity" text="Identity" value="true" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.bodyName" label="Internal Name" tooltip="Identifier used in saves, JSON, and code. Must be unique across all bodies in the project. Not shown to players." />
+            <editor:PropertyField binding-path="core.data.bodyDisplayName" label="Display Name Key" tooltip="Localization key for the player-facing name. Resolved via LocalizationManager. Falls back to the Internal Name when the key has no translation." />
+            <editor:PropertyField binding-path="core.data.bodyDescription" label="Description Key" tooltip="Localization key for the player-facing description. Same fallback behavior as Display Name Key." />
+            <editor:PropertyField binding-path="core.data.isHomeWorld" label="Is Home World" tooltip="The player's starting body. Hosts the launchpad and default crew. Should be set on exactly one body per project." />
+            <engine:Foldout text="Prefab keys" value="false" class="sdk-subsection-foldout">
+                <editor:PropertyField binding-path="core.data.assetKeyScaled" label="Scaled Prefab Key" tooltip="Addressable key for the scaled-space prefab (orbital and far-camera view). Convention: Celestial.&lt;BodyName&gt;.Scaled.prefab." />
+                <editor:PropertyField binding-path="core.data.assetKeySimulation" label="Simulation Prefab Key" tooltip="Addressable key for the simulation-time prefab (in-physics GameObject hierarchy). Convention: Celestial.&lt;BodyName&gt;.Local.prefab." />
+            </engine:Foldout>
+        </engine:Foldout>
+
+        <engine:Foldout name="section-body-type" text="Body type" value="true" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.isStar" label="Is Star" tooltip="This body is the system's primary light source. Implies no solid surface, no atmosphere flight, and that the directional sun light points away from this body." />
+            <editor:PropertyField binding-path="core.data.hasSolidSurface" label="Has Solid Surface" tooltip="Body has a PQS-rendered solid terrain. False for stars and gas giants, which use the scaled-space prefab only." />
+            <editor:PropertyField binding-path="core.data.HasLocalSpace" label="Has Local Space" tooltip="Body renders in local (close-up) space, with full PQS detail and physics interaction. Disable for bodies that should only ever appear at scaled-space distance." />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-size" text="Size and gravity" value="true" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.radius" label="Radius (m)" tooltip="Body radius in meters, measured from the center of mass to sea level." />
+            <engine:VisualElement class="planet-inspector-field-row">
+                <editor:PropertyField binding-path="core.data.gravityASL" label="Surface Gravity (g)" class="planet-inspector-field-row__field" tooltip="Acceleration due to gravity at sea level, in g (multiples of Earth's standard gravity, where 1 g = 9.80665 m/s²)." />
+                <engine:Button name="suggest-gravity" text="Suggest" class="planet-inspector-field-row__button" tooltip="Set the surface gravity stock bodies of this radius have, interpolated between the two stock bodies closest in size." />
+            </engine:VisualElement>
+            <engine:VisualElement name="terrain-heights">
+                <editor:PropertyField binding-path="core.data.TerrainHeightScale" label="Terrain Height Scale" tooltip="Multiplier applied to heightmap samples when computing terrain elevation. Increase to make mountains taller without re-baking the heightmap." />
+                <editor:PropertyField binding-path="core.data.MinTerrainHeight" label="Min Terrain Height (m)" tooltip="Lowest elevation reached by the heightmap, in meters relative to sea level. Used for camera and physics range calculations." />
+                <editor:PropertyField binding-path="core.data.MaxTerrainHeight" label="Max Terrain Height (m)" tooltip="Highest elevation reached by the heightmap, in meters relative to sea level. Used for camera and physics range calculations." />
+                <engine:Button name="recalc-terrain-height-button" text="Recalculate min/max from heightmap" class="sdk-action-button"
+                               tooltip="Sweep the body's PQS heightmap on a 1° lat/lon grid and write the lowest and highest sampled elevations into the fields above. Requires an active planet preview." />
+                <engine:Label name="recalc-terrain-height-status" class="sdk-hint" />
+                <engine:Foldout name="blender-heights" text="From Blender heights" value="false" class="sdk-subsection-foldout"
+                                tooltip="Scale a displaced mesh from Blender to this body: its lowest point, height range and sea level, in mesh units.">
+                    <engine:DoubleField name="blender-mid-level" label="Mid-Level" tooltip="The mesh's lowest point, in mesh units." />
+                    <engine:DoubleField name="blender-strength" label="Strength" tooltip="The mesh's highest point minus its lowest, in mesh units." />
+                    <engine:DoubleField name="blender-sea-level" label="Sea Level" tooltip="The sea's height above the lowest point, in mesh units. Zero for a body without a sea." />
+                    <engine:DoubleField name="blender-target" label="Target (m)" tooltip="The sea-level radius, or the highest peak's distance from the center, in meters." />
+                    <engine:DropdownField name="blender-target-kind" label="Target Is" choices="Radius,Max Height" index="0" />
+                    <engine:Label name="blender-result" class="sdk-hint" />
+                    <engine:Button name="blender-apply" text="Apply to Radius, Ocean Altitude and Height Scale" class="sdk-action-button" />
+                </engine:Foldout>
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout name="section-rotation" text="Rotation" value="false" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.isRotating" label="Is Rotating" tooltip="Master toggle for body rotation. When false, the body stays at Initial Rotation indefinitely." />
+            <editor:PropertyField binding-path="core.data.isTidallyLocked" label="Is Tidally Locked" tooltip="When true, Rotation Period is overridden at runtime to match the orbital period. The same face always points at the parent body." />
+            <editor:PropertyField binding-path="core.data.rotationPeriod" label="Rotation Period (s)" tooltip="Length of one full rotation in seconds. Overridden at runtime to match orbital period when Is Tidally Locked is true." />
+            <editor:PropertyField binding-path="core.data.initialRotation" label="Initial Rotation (deg)" tooltip="Rotation angle at universalTime zero, in degrees." />
+            <editor:PropertyField binding-path="core.data.axialTilt" label="Axial Tilt (deg)" tooltip="Body's axial tilt as Euler angles in degrees (X, Y, Z)." />
+            <editor:PropertyField binding-path="core.data.hasInverseRotation" label="Use Inverse Rotation" tooltip="When true, the body renders as stationary while the universe rotates around it. Reduces floating-point error at orbital radii." />
+            <editor:PropertyField binding-path="core.data.hasInverseRotationThresholdClamp" label="Clamp Inverse Rotation Threshold" tooltip="When true, the inverse-rotation threshold is auto-raised at runtime to at least the atmosphere depth. Prevents the threshold from sitting inside atmosphere." />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-orbit" text="Orbit" value="true" class="sdk-section">
+            <engine:VisualElement name="orbit-missing">
+                <engine:Button name="orbit-create" text="Set Up Orbit" class="sdk-action-button" tooltip="Create this body's orbit, kept in an editor-only asset in its Data folder. The game leaves a body without one out of the galaxy." />
+            </engine:VisualElement>
+            <engine:VisualElement name="orbit-fields">
+                <engine:VisualElement name="orbit-parent-slot" />
+                <editor:PropertyField binding-path="SemiMajorAxis" label="Semi-Major Axis (m)" tooltip="Half the orbit's longest diameter, in meters." />
+                <editor:PropertyField binding-path="Eccentricity" label="Eccentricity" tooltip="How stretched the orbit is: zero is a circle, and it stays below one." />
+                <editor:PropertyField binding-path="Inclination" label="Inclination (deg)" tooltip="Tilt of the orbit against the parent's equator, in degrees." />
+                <editor:PropertyField binding-path="LongitudeOfAscendingNode" label="Longitude of Ascending Node (deg)" tooltip="Where the orbit crosses the parent's equator going north, in degrees." />
+                <editor:PropertyField binding-path="ArgumentOfPeriapsis" label="Argument of Periapsis (deg)" tooltip="Angle from the ascending node to the lowest point of the orbit, in degrees." />
+                <editor:PropertyField binding-path="MeanAnomalyAtEpoch" label="Mean Anomaly at Epoch (rad)" tooltip="Where along the orbit the body is at the epoch, in radians." />
+                <editor:PropertyField binding-path="Epoch" label="Epoch (s)" tooltip="The universal time the mean anomaly is given at, in seconds." />
+                <engine:Foldout text="Map view line" value="false" class="sdk-subsection-foldout">
+                    <editor:PropertyField binding-path="OrbitColor" label="Orbit Color" />
+                    <editor:PropertyField binding-path="NodeColor" label="Node Color" />
+                    <editor:PropertyField binding-path="LowerCamVsSmaRatio" label="Lower Cam vs SMA Ratio" tooltip="Camera distance, as a multiple of the semi-major axis, below which the line fades." />
+                    <editor:PropertyField binding-path="UpperCamVsSmaRatio" label="Upper Cam vs SMA Ratio" tooltip="Camera distance, as a multiple of the semi-major axis, above which the line fades." />
+                    <editor:PropertyField binding-path="AutoTextureOffset" label="Auto Texture Offset" />
+                    <editor:PropertyField binding-path="TextureOffset" label="Texture Offset" />
+                </engine:Foldout>
+            </engine:VisualElement>
+            <engine:VisualElement name="soi-calc-slot" />
+            <engine:Label name="galaxy-status" class="sdk-hint" />
+            <engine:Button name="galaxy-write" text="Write Galaxy Patch" class="sdk-action-button" tooltip="Write the Patch Manager patch that adds this body to the default galaxy, beside the body, and register it with the redux_patches label." />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-flight" text="Flight and map" value="false" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.navballSwitchAltitudeHigh" label="Navball Orbit Switch Altitude" tooltip="Altitude above sea level. When the vessel rises above this, the navball switches to Orbit mode." />
+            <editor:PropertyField binding-path="core.data.navballSwitchAltitudeLow" label="Navball Surface Switch Altitude" tooltip="Altitude above sea level. When the vessel falls below this, the navball switches to Surface mode." />
+            <editor:PropertyField binding-path="core.data.TimeWarpAltitudeOffset" label="Time Warp Altitude Offset (m)" tooltip="Altitude above the atmosphere or terrain top at which time warp faster than 4x becomes available, in meters." />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-star" text="Star" value="true" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.StarLuminosity" label="Star Luminosity (W)" tooltip="Total radiant power output of the star, in watts. Solar flux at any point is L / (4π × distance²)." />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-output" text="Saving and registration" value="true" class="sdk-section">
+            <engine:Label name="json-status" class="sdk-hint" />
+            <engine:Button name="save-json" text="Save Body JSON" class="sdk-action-button" tooltip="Write this body's JSON next to the Scaled prefab and register it as addressable with the celestial_bodies label." />
+            <engine:Button name="export-localizations" text="Export Localizations" class="sdk-action-button" tooltip="Export this body's localization keys, science region keys included, to a CSV." />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

@@ -58,9 +58,7 @@
                                   tooltip="Changes the random pattern without changing the amount. Use it when the layout looks wrong rather than sparse." />
         </engine:Foldout>
 
-        <engine:Foldout class="sdk-subsection-foldout" text="Placement rules" value="false">
-            <engine:Label text="Noise cutoff and noise density both default to on, so an item has noise applied even if this section is never opened."
-                          class="sdk-hint" />
+        <engine:Foldout class="sdk-subsection-foldout" text="Placement rules" value="false" tooltip="Noise cutoff and noise density are on by default.">
 
             <editor:PropertyField class="unity-base-field__aligned" binding-path="UseHeightRule" label="Use Height Rule"
                                   tooltip="Restricts the item to an altitude band." />
@@ -142,9 +140,7 @@
                                   tooltip="Most cavernous the ground may be." />
             </engine:Foldout>
 
-            <engine:Foldout class="sdk-subsection-foldout" text="Dependency" value="false">
-                <engine:Label text="An item can only depend on one spawned earlier in this package's list. Ordering is why the item list has reorder arrows."
-                              class="sdk-hint" />
+            <engine:Foldout class="sdk-subsection-foldout" text="Dependency" value="false" tooltip="An item can depend only on one spawned earlier in the package's list.">
                 <editor:PropertyField class="unity-base-field__aligned" binding-path="UseDependencyRules" label="Use Dependency Rules"
                                   tooltip="Places this item relative to another item's instances rather than on its own grid." />
                 <editor:PropertyField class="unity-base-field__aligned" binding-path="DependencyVegetationID" label="Depends On (Item ID)"
@@ -166,9 +162,7 @@
             </engine:Foldout>
         </engine:Foldout>
 
-        <engine:Foldout class="sdk-subsection-foldout" text="Surface restriction" value="false">
-            <engine:Label text="Restricts the item to named surface strata. The index stored is the packed slice index, not the 0-15 cell index."
-                          class="sdk-hint" />
+        <engine:Foldout class="sdk-subsection-foldout" text="Surface restriction" value="false" tooltip="Restricts the item to named surface strata.">
             <editor:PropertyField class="unity-base-field__aligned" binding-path="UseProceduralTextureIncludeRules" label="Use Include Rules"
                                   tooltip="Restricts the item to the listed surface strata." />
             <engine:VisualElement name="scatter-include-rules" />
@@ -205,9 +199,7 @@
                                   tooltip="Which material on the prefab the shader settings drive, for a mesh with more than one." />
         </engine:Foldout>
 
-        <engine:Foldout class="sdk-subsection-foldout" text="Colliders" value="false">
-            <engine:Label text="Colliders are created at runtime only. They never appear in the editor preview, so this section cannot be judged from the SceneView."
-                          class="sdk-hint" />
+        <engine:Foldout class="sdk-subsection-foldout" text="Colliders" value="false" tooltip="Colliders exist at runtime only, so the preview does not show them.">
             <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderType" label="Collider Type"
                                   tooltip="Shape generated for collision. None leaves the item non-solid, which is right for grass and debris." />
             <editor:PropertyField class="unity-base-field__aligned" binding-path="ColliderRadius" label="Radius"

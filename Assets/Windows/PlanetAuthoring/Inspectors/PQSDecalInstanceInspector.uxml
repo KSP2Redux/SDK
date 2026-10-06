@@ -25,8 +25,7 @@
             <engine:VisualElement name="template-slot" class="decal-inspector-template-slot" />
         </engine:Foldout>
 
-        <engine:Foldout text="Overrides" value="false" class="decal-inspector-section">
-            <engine:Label text="Toggle to override the template value just for this instance." class="decal-inspector-hint" />
+        <engine:Foldout text="Overrides" value="false" class="decal-inspector-section" tooltip="Tick a row to override the template's value for this decal only.">
             <engine:VisualElement name="overrides-slot" />
         </engine:Foldout>
 

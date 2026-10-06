@@ -177,7 +177,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
             if (_trackedTemplate == null)
             {
-                _templateSlot.Add(new Label("No template assigned. Drop a PQSDecal asset above to edit its fields here.") { style = { whiteSpace = WhiteSpace.Normal, color = new Color(0.6f, 0.6f, 0.6f, 1f) } });
+                _templateSlot.Add(new Label("No template assigned.") { style = { whiteSpace = WhiteSpace.Normal, color = new Color(0.6f, 0.6f, 0.6f, 1f) } });
                 return;
             }
             _templateEditor = CreateEditor(_trackedTemplate);

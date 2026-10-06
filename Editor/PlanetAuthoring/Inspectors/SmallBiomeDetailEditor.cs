@@ -133,10 +133,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             };
             section.Add(newButton);
 
-            var hint = new Label("Drop a SmallLayerMaterial asset above to share defaults across bodies. Toggle the boxes on each row below to override individual fields for this body.");
-            hint.AddToClassList("pqs-inspector-empty-selection");
-            section.Add(hint);
-
             return section;
         }
 

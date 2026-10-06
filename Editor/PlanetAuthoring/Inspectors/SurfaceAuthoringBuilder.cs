@@ -1,4 +1,3 @@
-using System;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using KSP.Rendering.Planets;
 using UnityEditor;
@@ -9,18 +8,14 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Builds the surface authoring section tree consumed by <see cref="PQSEditor" />.
+    /// Builds the surface authoring sections the planet inspector's Terrain and Surface tabs show.
     /// </summary>
     /// <remarks>
-    /// Resolves the bound <see cref="PQSData" /> and the surface material from
-    /// <c>PQSData.materialSettings.surfaceMaterial</c>, then emits one foldout per logical
-    /// section (mirrors PARAMS.md grouping).
-    /// Section methods take only the data they need (Material, PQSData SerializedObject, or
-    /// both) so a future PQSData direct-edit inspector can call the same builders. Section
-    /// methods are split across SurfaceAuthoringBuilder.X.cs partial files by domain (Quality,
-    /// HeightmapStack, PerBiomeLayers, SmallBiome, MaterialSections).
-    /// Keyword toggles invoke a refresh callback that rebuilds the section tree so gated
-    /// fields (for example the subzone mask under SUB_ZONES_ENABLED) update immediately.
+    /// <see cref="TryResolve" /> finds the bound <see cref="PQSData" /> and its surface material, then each tab calls
+    /// the section builders it needs. Section methods take only the data they need (Material, PQSData
+    /// SerializedObject, or both). They are split across SurfaceAuthoringBuilder.X.cs partial files by domain
+    /// (Quality, HeightmapStack, PerBiomeLayers, SmallBiome, MaterialSections). Keyword toggles invoke a refresh
+    /// callback that rebuilds the tab, so gated fields such as the subzone mask update at once.
     /// </remarks>
     public static partial class SurfaceAuthoringBuilder
     {
@@ -40,100 +35,77 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         }
 
         /// <summary>
-        /// Populates the supplied slot with the full surface authoring section tree for the given PQS.
+        /// The objects the surface authoring sections edit, resolved from a PQS.
         /// </summary>
-        /// <remarks>
-        /// Clears the slot first. Emits a help box and returns early if the PQS is null, has no
-        /// bound <see cref="PQSData" />, or the PQSData has no surface material assigned.
-        /// </remarks>
-        /// <param name="slot">The container element that receives the generated section tree.</param>
-        /// <param name="pqs">The PQS whose data and surface material drive the inspector.</param>
-        public static void Populate(VisualElement slot, PQS pqs)
+        public class Inputs
         {
-            slot.Clear();
-
-            if (pqs == null)
+            /// <summary>
+            /// Initializes the inputs.
+            /// </summary>
+            /// <param name="data">The PQS's data.</param>
+            /// <param name="material">The data's surface material.</param>
+            /// <param name="authoring">The data's authoring sidecar, or null.</param>
+            public Inputs(PQSData data, Material material, PQSDataAuthoring authoring)
             {
-                slot.Add(new HelpBox("PQS reference missing.", HelpBoxMessageType.Warning));
-                return;
+                Data = data;
+                Material = material;
+                DataObject = new SerializedObject(data);
+                AuthoringObject = authoring != null ? new SerializedObject(authoring) : null;
             }
 
-            var data = pqs.data;
-            if (data == null)
-            {
-                slot.Add(new HelpBox(
-                    "Bind a PQSData asset to the Data field above to begin authoring the surface.",
-                    HelpBoxMessageType.Info
-                ));
-                return;
-            }
+            /// <summary>
+            /// Gets the PQS's data.
+            /// </summary>
+            public PQSData Data { get; }
 
-            var material = data.materialSettings?.surfaceMaterial;
-            if (material == null)
-            {
-                slot.Add(new HelpBox(
-                    "PQSData has no surface material assigned. Set " +
-                    "PQSData.materialSettings.surfaceMaterial to the body's local-space material " +
-                    "before authoring shader properties.",
-                    HelpBoxMessageType.Warning
-                ));
-                return;
-            }
+            /// <summary>
+            /// Gets the surface material.
+            /// </summary>
+            public Material Material { get; }
 
-            var pqsDataSO = new SerializedObject(data);
-            // The PQSData's authoring sidecar holds the small-biome and subzone-normal source textures - the runtime PQSData no longer carries them.
-            PQSDataAuthoring authoring = AuthoringSidecars.GetOrCreate(data);
-            var pqsDataAuthoringSO = authoring != null ? new SerializedObject(authoring) : null;
+            /// <summary>
+            /// Gets the serialized object for <see cref="Data" />.
+            /// </summary>
+            public SerializedObject DataObject { get; }
 
-            // Self-referencing closure: refresh recurses through BuildSections, which re-emits
-            // the Quality section with this same refresh hooked to its keyword toggles. The
-            // null-then-assign two-step is needed because a lambda can't see itself otherwise.
-            Action refresh = null;
-            refresh = () =>
-            {
-                slot.Clear();
-                BuildSections(slot, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
-            };
+            /// <summary>
+            /// Gets the serialized object for the data's authoring sidecar, which holds the small-biome and
+            /// subzone-normal source textures, or null when there is none.
+            /// </summary>
+            public SerializedObject AuthoringObject { get; }
 
-            BuildSections(slot, material, pqsDataSO, pqsDataAuthoringSO, data, refresh);
+            /// <summary>
+            /// Gets a value indicating whether the surface material has sub-zones on.
+            /// </summary>
+            public bool SubzonesOn => Material.IsKeywordEnabled("SUB_ZONES_ENABLED");
         }
 
-        private static void BuildSections(
-            VisualElement slot,
-            Material material,
-            SerializedObject pqsDataSO,
-            SerializedObject pqsDataAuthoringSO,
-            PQSData pqsData,
-            Action refresh
-        )
+        /// <summary>
+        /// Resolves the objects the surface sections edit for a PQS.
+        /// </summary>
+        /// <param name="pqs">The PQS.</param>
+        /// <param name="inputs">Receives the inputs, or null when they cannot be resolved.</param>
+        /// <returns>A help box saying what is missing, or null when <paramref name="inputs" /> was resolved.</returns>
+        public static HelpBox TryResolve(PQS pqs, out Inputs inputs)
         {
-            slot.Add(BuildQualitySection(material, pqsDataSO, refresh));
-            slot.Add(BuildHeightmapStackSection(pqsDataSO, material));
-            slot.Add(BuildPoleSettingsSection(pqsDataSO));
-            slot.Add(BuildScaledSpaceSection(material));
-            slot.Add(BuildBiomeControlSection(material, pqsDataSO));
-            slot.Add(BuildBiomeLookupBakeSection(material, pqsDataAuthoringSO, pqsData));
-            slot.Add(BuildTriplanarSection(material));
+            inputs = null;
+            if (pqs == null)
+                return new HelpBox("This body has no PQS.", HelpBoxMessageType.Warning);
 
-            var subzonesOn = material.IsKeywordEnabled("SUB_ZONES_ENABLED");
-            for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
-                slot.Add(BuildLargeBiomeSection(material, pqsDataSO, PlanetAuthoringNaming.BiomeChannels[i], i, subzonesOn));
-            for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
-                slot.Add(BuildMidBiomeSection(material, pqsDataSO, PlanetAuthoringNaming.BiomeChannels[i], i, subzonesOn));
+            PQSData data = pqs.data;
+            if (data == null)
+                return new HelpBox("Bind a PQSData asset to the PQS's Data field to begin authoring the surface.", HelpBoxMessageType.Info);
 
-            if (subzonesOn)
+            Material material = data.materialSettings?.surfaceMaterial;
+            if (material == null)
             {
-                for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
-                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 3, PlanetAuthoringNaming.BiomeChannels[i], i));
-                for (var i = 0; i < PlanetAuthoringNaming.BiomeChannels.Length; i++)
-                    slot.Add(BuildSubzoneTierBiomeSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData, 4, PlanetAuthoringNaming.BiomeChannels[i], i));
+                return new HelpBox(
+                    "PQSData has no surface material assigned. Set PQSData.materialSettings.surfaceMaterial to the body's local-space material before authoring shader properties.",
+                    HelpBoxMessageType.Warning);
             }
 
-            slot.Add(BuildSmallBiomeDetailSection(material, pqsDataSO, pqsDataAuthoringSO, pqsData));
-            slot.Add(BuildDecalsSection(material));
-            slot.Add(BuildDistanceCascadeSection(material));
-            slot.Add(BuildCrossBiomeBlendSection(material));
-            slot.Add(BuildMiscSection(material));
+            inputs = new Inputs(data, material, AuthoringSidecars.GetOrCreate(data));
+            return null;
         }
 
         private static PropertyField BindPropertyField(SerializedObject so, string path, string label, string tooltip)
