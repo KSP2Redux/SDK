@@ -13,18 +13,22 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         private static readonly Dictionary<string, AssetBundle> LoadedBundles =
             new Dictionary<string, AssetBundle>(StringComparer.OrdinalIgnoreCase);
 
+        // The bundles this source opened itself, as opposed to ones it found already open.
+        private static readonly HashSet<AssetBundle> OwnedBundles = new HashSet<AssetBundle>();
+
         public static void BeginMaterialization()
         {
-            AssetBundle.UnloadAllAssetBundles(true);
+            // Bundles someone else already has open, such as Addressables loads made by an editor preview, are
+            // reused rather than unloaded. Unloading them destroyed the assets their owners still held.
             LoadedBundles.Clear();
+            OwnedBundles.Clear();
         }
 
         public static void EndMaterialization()
         {
             foreach (
-                var bundle in LoadedBundles
-                    .Values.Where(bundle => bundle != null)
-                    .Distinct()
+                var bundle in OwnedBundles
+                    .Where(bundle => bundle != null)
                     .ToArray()
             )
             {
@@ -32,6 +36,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             }
 
             LoadedBundles.Clear();
+            OwnedBundles.Clear();
         }
 
         public static void PrepareForPlayMode()
@@ -80,6 +85,13 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                 );
             }
 
+            // A bundle already open elsewhere, such as an Addressables load made by an editor
+            // preview, cannot be opened a second time. Addressables opens a root's dependencies
+            // before the root, so a root found open needs nothing else loaded.
+            var openSource = FindInOpenBundles(descriptor, assetType);
+            if (openSource != null)
+                return openSource;
+
             // Addressables reports the bundle containing the root first, followed by
             // its dependencies. Native bundle loading must do the opposite so scripts
             // and referenced assets are available when Unity deserializes the root.
@@ -102,9 +114,14 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                     continue;
                 }
 
+                // A dependency already open elsewhere fails to open here, which leaves it in
+                // place for the root to use.
                 var bundle = AssetBundle.LoadFromFile(bundlePath);
                 if (bundle != null)
+                {
+                    OwnedBundles.Add(bundle);
                     LoadedBundles[bundlePath] = bundle;
+                }
             }
 
             var rootBundlePath = Path.Combine(bundleDirectory, bundleFileNames[0]);
@@ -127,6 +144,24 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                 $"Could not load '{descriptor.Address}' as '{assetType.FullName}' from "
                     + $"the external Addressables bundles under '{bundleDirectory}'."
             );
+        }
+
+        private static UnityEngine.Object FindInOpenBundles(
+            LinkedAddressableDescriptor descriptor,
+            Type assetType
+        )
+        {
+            foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles())
+            {
+                if (bundle == null || bundle.isStreamedSceneAssetBundle)
+                    continue;
+
+                var asset = LoadAsset(bundle, descriptor, assetType);
+                if (asset != null)
+                    return asset;
+            }
+
+            return null;
         }
 
         private static IEnumerable<string> GetBundleFileNames(
