@@ -6,6 +6,7 @@ using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Clouds;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Lighting;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Ocean;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Redux;
 using UnityEditor;
@@ -161,6 +162,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// Non-null even when the body has no clouds, which it reports through its status.
         /// </remarks>
         public CloudPreviewDriver CloudDriver { get; }
+        /// <summary>Gets the ocean preview driver, or null for non-solid bodies.</summary>
+        /// <remarks>
+        /// Non-null even when the body has no ocean, which it reports through its status.
+        /// </remarks>
+        public OceanPreviewDriver OceanDriver { get; }
         /// <summary>Gets the driver that gives the SceneView the game's exposure and sunlight, or null for non-solid bodies.</summary>
         public GameLookPreviewDriver GameLookDriver { get; }
 
@@ -250,6 +256,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             ScatterState = ScatterDriver != null ? new ScatterPreviewState(ScatterDriver) : null;
             AtmosphereDriver = pqs != null ? new AtmospherePreviewDriver(body, pqs) : null;
             CloudDriver = pqs != null ? new CloudPreviewDriver(pqs, AtmosphereDriver) : null;
+            OceanDriver = pqs != null ? new OceanPreviewDriver(body, pqs) : null;
             GameLookDriver = pqs != null ? new GameLookPreviewDriver() : null;
             // First, so the camera is in HDR and the sun at game brightness before anything draws against them.
             if (GameLookDriver != null)
@@ -260,6 +267,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             if (ScatterDriver != null)
             {
                 _drivers.Add(ScatterDriver);
+            }
+
+            // Before the atmosphere and clouds, which read the water depth it renders.
+            if (OceanDriver != null)
+            {
+                _drivers.Add(OceanDriver);
             }
 
             if (AtmosphereDriver != null)

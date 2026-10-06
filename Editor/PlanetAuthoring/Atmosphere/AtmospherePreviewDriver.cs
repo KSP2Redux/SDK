@@ -141,7 +141,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                     sunDirection,
                     0f,
                     _pqs.data.heightMapInfo.DitheringScale,
-                    null
+                    Ocean.OceanPreviewDriver.ActiveWaterDepth
                 );
                 AtmosphereScatterManager.DrawPostAtmosphere(camera, _material, _quad);
                 _consecutiveFailures = 0;

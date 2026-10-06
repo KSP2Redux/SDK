@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- Inspector for an OceanWaveSpectrum, driven by OceanWaveSpectrumInspector, which builds the octave graph. The ocean sums waves in 14 octaves, each twice the wavelength of the one before, from 6 cm up to about 500 m. -->
+
+    <engine:VisualElement class="body-inspector-root">
+
+        <engine:Foldout text="Start From" value="false" class="sdk-subsection-foldout">
+            <engine:DropdownField name="spectrum-preset" label="Stock Preset" tooltip="A stock body's waves to copy. Applying it overwrites every setting here, octaves included. Undoable." class="unity-base-field__aligned" />
+            <engine:Button name="spectrum-apply-preset" text="Apply Preset" tooltip="Copy the selected stock body's wave spectrum into this one. Undoable." class="sdk-action-button" />
+            <engine:Label name="spectrum-preset-status" class="sdk-hint" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Waves" value="true" class="sdk-subsection-foldout">
+            <engine:Slider name="spectrum-direction-variance" binding-path="_waveDirectionVariance" label="Direction Spread (deg)" low-value="0" high-value="180" show-input-field="true" tooltip="How widely wave directions spread around the main one. 0 sends every wave the same way, 180 sends them every way." class="unity-base-field__aligned" />
+            <engine:Slider name="spectrum-gravity" binding-path="_gravity" label="Gravity (m/s2)" low-value="0" high-value="100" show-input-field="true" tooltip="The gravity waves move under, which sets how fast each wavelength travels." class="unity-base-field__aligned" />
+            <engine:Slider name="spectrum-gravity-scale" binding-path="_gravityScale" label="Wave Speed" low-value="0" high-value="25" show-input-field="true" tooltip="Multiplier on gravity for wave travel. More means faster waves." class="unity-base-field__aligned" />
+            <engine:Slider name="spectrum-multiplier" binding-path="_multiplier" label="Amplitude" low-value="0" high-value="10" show-input-field="true" tooltip="Multiplier on every wave's height." class="unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Octaves" value="true" class="sdk-subsection-foldout" tooltip="Wave power in each octave, on a log scale. Each column is one octave, shortest waves on the left. Tick the box under an octave to silence it.">
+            <engine:VisualElement name="spectrum-octave-graph" />
+            <engine:SliderInt name="spectrum-octave" label="Octave" low-value="0" high-value="13" show-input-field="true" tooltip="The octave whose chop and speed are shown below." class="unity-base-field__aligned" />
+            <engine:Label name="spectrum-octave-wavelength" class="sdk-hint" />
+            <engine:VisualElement name="spectrum-octave-detail" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Generate From a Model" value="false" class="sdk-subsection-foldout" tooltip="Fill every octave's power from a standard ocean spectrum. Chop, speed and silenced octaves are left as they are.">
+            <engine:Slider name="spectrum-wind-speed" binding-path="_windSpeed" label="Wind Speed (m/s)" low-value="0" high-value="40" show-input-field="true" tooltip="The wind the sea is driven by. Stronger wind moves power toward longer waves." class="unity-base-field__aligned" />
+            <engine:FloatField name="spectrum-fetch" binding-path="_fetch" label="Fetch (m)" tooltip="How far the wind has blown over open water. Only JONSWAP uses it. A short fetch makes a younger, choppier sea." class="unity-base-field__aligned" />
+            <engine:Slider name="spectrum-wavelength-multiplier" binding-path="_smallWavelengthMultiplier" label="Wavelength Scale" low-value="0.1" high-value="10" show-input-field="true" tooltip="Scales the wavelength each octave is sampled at." class="unity-base-field__aligned" />
+            <engine:VisualElement class="sdk-button-row" style="flex-direction: row;">
+                <engine:Button name="spectrum-apply-phillips" text="Phillips" tooltip="A wind-driven sea with no peak, power rising steadily toward long waves." class="sdk-action-button" />
+                <engine:Button name="spectrum-apply-pierson-moskowitz" text="Pierson-Moskowitz" tooltip="A fully developed sea, wind blowing long enough over open water that waves stop growing." class="sdk-action-button" />
+                <engine:Button name="spectrum-apply-jonswap" text="JONSWAP" tooltip="A sea still developing over the fetch, with a sharper peak than Pierson-Moskowitz." class="sdk-action-button" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

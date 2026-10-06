@@ -5,6 +5,7 @@ using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Clouds;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Ocean;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
@@ -51,6 +52,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             WireScatter(root, resolveBody);
             WireAtmosphere(root, resolveBody);
             WireClouds(root, resolveBody);
+            WireOcean(root, resolveBody);
         }
 
         /// <summary>
@@ -349,6 +351,84 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 CloudSetup.TryRemoveClouds(body, out string message);
                 SetStatus(root.Q<Label>("quick-tools-status"), message);
                 RefreshClouds(root, body);
+            };
+        }
+
+        /// <summary>
+        /// Refreshes the Quick Tools ocean buttons for the current body.
+        /// </summary>
+        /// <param name="root">The inspector root containing the chrome elements.</param>
+        /// <param name="body">The body to describe, or null.</param>
+        public static void RefreshOcean(VisualElement root, CoreCelestialBodyData body)
+        {
+            bool hasOcean = OceanSetup.HasOcean(body);
+            var add = root.Q<Button>("quick-add-ocean");
+            if (add != null)
+            {
+                add.text = hasOcean ? "Re-wire Ocean" : "Add Ocean";
+            }
+
+            var remove = root.Q<Button>("quick-remove-ocean");
+            if (remove != null)
+            {
+                remove.style.display = hasOcean ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
+        private static void WireOcean(VisualElement root, Func<CoreCelestialBodyData> resolveBody)
+        {
+            var add = root.Q<Button>("quick-add-ocean");
+            if (add != null)
+            {
+                add.clicked += () =>
+                {
+                    CoreCelestialBodyData body = resolveBody();
+                    bool added = OceanSetup.TryAddOcean(body, "Kerbin", out string message);
+                    SetStatus(root.Q<Label>("quick-tools-status"), message);
+
+                    // A running preview attached its drivers before this body had an ocean. Attach is a no-op when the
+                    // driver is already booted.
+                    if (added)
+                    {
+                        PlanetAuthoringSession.Active?.OceanDriver?.Attach();
+                    }
+
+                    RefreshOcean(root, body);
+                };
+            }
+
+            var remove = root.Q<Button>("quick-remove-ocean");
+            if (remove == null)
+            {
+                return;
+            }
+
+            remove.clicked += () =>
+            {
+                CoreCelestialBodyData body = resolveBody();
+                List<string> removals = OceanSetup.DescribeRemoval(body);
+                if (removals.Count == 0)
+                {
+                    RefreshOcean(root, body);
+                    return;
+                }
+
+                bool confirmed = UnityEditor.EditorUtility.DisplayDialog(
+                    "Remove Ocean",
+                    "This removes:\n\n- " + string.Join("\n- ", removals) + "\n\nAssets go to the trash.",
+                    "Remove",
+                    "Cancel"
+                );
+                if (!confirmed)
+                {
+                    return;
+                }
+
+                // The preview's driver holds the renderer's ocean and the water manager, so it lets go first.
+                PlanetAuthoringSession.Active?.OceanDriver?.Detach();
+                OceanSetup.TryRemoveOcean(body, out string message);
+                SetStatus(root.Q<Label>("quick-tools-status"), message);
+                RefreshOcean(root, body);
             };
         }
 

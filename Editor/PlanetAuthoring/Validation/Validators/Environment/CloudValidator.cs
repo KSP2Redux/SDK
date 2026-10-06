@@ -31,6 +31,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
         /// <summary>Code for a cloud helper with a quality tier left empty.</summary>
         public const string TIER_MISSING_CODE = "CLOUD_TIER_MISSING";
 
+        /// <summary>Code for a Low quality tier that draws volumetric clouds.</summary>
+        public const string LOW_VOLUMETRIC_CODE = "CLOUD_LOW_VOLUMETRIC";
+
         /// <summary>Code for a configuration whose planet radius does not match the body.</summary>
         public const string RADIUS_MISMATCH_CODE = "CLOUD_RADIUS_MISMATCH";
 
@@ -60,6 +63,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
 
         /// <inheritdoc />
         public BodyClassFlags AppliesTo => BodyClassFlags.SolidSurface;
+
+        /// <summary>
+        /// Gets a value indicating whether a Low quality tier's configuration draws volumetric clouds.
+        /// </summary>
+        /// <param name="low">The configuration the Low tier loads, or null when it is not a project asset.</param>
+        /// <returns>True if the configuration draws volumetric clouds, false otherwise.</returns>
+        public static bool DrawsVolumetricOnLow(VolumeCloudConfiguration low) => low != null && !low.useScaleCloudsOnly;
+
+        // A stock configuration lives in the game's bundles and resolves to nothing here.
+        private static VolumeCloudConfiguration LoadProjectConfiguration(string guid)
+        {
+            if (string.IsNullOrEmpty(guid))
+                return null;
+
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<VolumeCloudConfiguration>(path);
+        }
 
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
@@ -104,6 +124,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Environmen
                     TIER_MISSING_CODE,
                     ValidationSeverity.Warning,
                     "The cloud helper has an empty quality tier, so players on that cloud quality setting get no clouds.",
+                    new[] { new ValidationFix("Refit clouds", () => Refit(body)) }
+                );
+            }
+
+            VolumeCloudConfiguration low = LoadProjectConfiguration(helper.LowQualityCloudConfiguration?.AssetGUID);
+            if (DrawsVolumetricOnLow(low))
+            {
+                yield return new ValidationIssue(
+                    LOW_VOLUMETRIC_CODE,
+                    ValidationSeverity.Warning,
+                    $"The Low quality tier loads {low.name}, which draws volumetric clouds. Stock's Low tiers draw scaled clouds only, so players on Low cloud quality pay for clouds they turned down.",
                     new[] { new ValidationFix("Refit clouds", () => Refit(body)) }
                 );
             }

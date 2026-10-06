@@ -15,6 +15,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         public ScaledCloudConfiguration ScaledConfiguration;
 
         /// <summary>
+        /// The configuration the Low cloud quality tier loads: a mirror of this one that draws scaled clouds only, as
+        /// stock's Low tiers do.
+        /// </summary>
+        public KSP.VolumeCloud.VolumeCloudConfiguration LowConfiguration;
+
+        /// <summary>
         /// The settings each layer's distribution map was last generated from, matched by layer name.
         /// </summary>
         public List<CloudDistributionSettings> Distributions = new();

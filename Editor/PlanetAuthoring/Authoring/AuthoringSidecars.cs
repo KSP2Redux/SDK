@@ -38,6 +38,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         public static VolumeCloudConfigurationAuthoring Find(VolumeCloudConfiguration configuration) =>
             FindSidecar<VolumeCloudConfigurationAuthoring>(configuration);
 
+        /// <summary>Returns the ocean sidecar for the ocean material <paramref name="material" />, creating one if absent.</summary>
+        public static OceanMaterialAuthoring GetOrCreateOcean(Material material) =>
+            GetOrCreateSidecar<OceanMaterialAuthoring>(material);
+
+        /// <summary>Looks up the ocean sidecar for the ocean material <paramref name="material" />, or null when absent.</summary>
+        public static OceanMaterialAuthoring FindOcean(Material material) =>
+            FindSidecar<OceanMaterialAuthoring>(material);
+
         /// <summary>Returns the PQSData sidecar for <paramref name="pqsData" />, creating one if absent.</summary>
         public static PQSDataAuthoring GetOrCreate(PQSData pqsData) =>
             GetOrCreateSidecar<PQSDataAuthoring>(pqsData);

@@ -12,8 +12,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
     /// The cloud environment of a planet preview: the session's sun, its PQS and the atmosphere the preview draws.
     /// </summary>
     /// <remarks>
-    /// The authoring scene has no ocean, no time warp and no floating origin, and its body has no ambient probe, so
-    /// those read as empty.
+    /// The authoring scene has no time warp and no floating origin, and its body has no ambient probe, so those read as
+    /// empty. The water depth comes from the ocean preview when one is drawing.
     /// </remarks>
     public class CloudPreviewEnvironment : IVolumeCloudEnvironment
     {
@@ -50,7 +50,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         public bool CanCastShadows => true;
 
         /// <inheritdoc />
-        public RenderTexture OceanDepthTexture => null;
+        public RenderTexture OceanDepthTexture => Ocean.OceanPreviewDriver.ActiveWaterDepth;
 
         /// <inheritdoc />
         public Light GetLocalLight() => SunCoupling.CurrentSun;

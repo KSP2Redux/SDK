@@ -68,6 +68,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             CloudSetup.DeriveLayers(configuration);
             serializedConfiguration.Update();
             CloudSetup.SyncScaled(configuration);
+            CloudSetup.SyncLowTier(configuration);
             configuration.OnCloudLayerChanged?.Invoke(configuration);
             configuration.OnConfigChanged?.Invoke(configuration);
             VisualElement cards = layers?.Q(className: "sdk-card-list__items");

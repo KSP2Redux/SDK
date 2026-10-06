@@ -35,6 +35,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Toggle _atmosphereEnabled;
         private Label _cloudsStatus;
         private Toggle _cloudsEnabled;
+        private Label _oceanStatus;
+        private Toggle _oceanEnabled;
         private Label _gameLookStatus;
         private Toggle _gameLookEnabled;
         private Label _scatterCells;
@@ -156,6 +158,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _cloudsStatus = root.Q<Label>("clouds-status");
             _cloudsEnabled = root.Q<Toggle>("clouds-enabled");
             BindDriverToggle(_cloudsEnabled, session => session.CloudDriver);
+            _oceanStatus = root.Q<Label>("ocean-status");
+            _oceanEnabled = root.Q<Toggle>("ocean-enabled");
+            BindDriverToggle(_oceanEnabled, session => session.OceanDriver);
             _gameLookStatus = root.Q<Label>("game-look-status");
             _gameLookEnabled = root.Q<Toggle>("game-look-enabled");
             BindDriverToggle(_gameLookEnabled, session => session.GameLookDriver);
@@ -546,6 +551,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
                 active ? session.CloudDriver : null,
                 active,
                 "No cloud preview for this body."
+            );
+            RefreshDriverRow(
+                _oceanEnabled,
+                _oceanStatus,
+                active ? session.OceanDriver : null,
+                active,
+                "No ocean preview for this body."
             );
         }
 

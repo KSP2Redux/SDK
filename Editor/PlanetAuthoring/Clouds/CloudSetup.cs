@@ -19,8 +19,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
     /// </summary>
     /// <remarks>
     /// Running it again on a body that already has clouds refits the configuration's planet radius to the body,
-    /// re-derives the layers and re-wires both prefabs without touching the layer settings. All three quality tiers
-    /// reference the one configuration.
+    /// re-derives the layers and re-wires both prefabs without touching the layer settings. High and Medium quality load
+    /// the configuration. Low loads a mirror of it that draws scaled clouds only, as stock's Low tiers do, so players on
+    /// Low cloud quality get no volumetric clouds.
     /// </remarks>
     public static class CloudSetup
     {
@@ -92,11 +93,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 
             VolumeCloudConfigurationAuthoring sidecar = AuthoringSidecars.GetOrCreate(configuration);
             sidecar.ScaledConfiguration = scaled;
+            sidecar.LowConfiguration = LoadOrCreate<VolumeCloudConfiguration>(folder, $"{bodyName}_Clouds_Low", out _);
             EditorUtility.SetDirty(sidecar);
             SyncScaled(configuration);
+            SyncLowTier(configuration);
 
-            bool registered = RegisterAddressable(configuration);
-            WireLocalPrefab(localPath, configuration);
+            bool registered = RegisterAddressable(configuration) && RegisterAddressable(sidecar.LowConfiguration);
+            WireLocalPrefab(localPath, configuration, sidecar.LowConfiguration);
             WireScaledPrefab(scaledPath, scaled);
             AssetDatabase.SaveAssets();
 
@@ -203,6 +206,42 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         }
 
         /// <summary>
+        /// Brings a configuration's Low tier mirror in line with it: every setting and layer copied, with scaled clouds only.
+        /// </summary>
+        /// <remarks>
+        /// The scaled clouds sync their layers from whichever tier loaded, so the mirror keeps every layer even though it
+        /// draws none of them volumetrically.
+        /// </remarks>
+        /// <param name="configuration">The configuration High and Medium quality load.</param>
+        /// <returns>True if a Low tier mirror was found and updated, false otherwise.</returns>
+        public static bool SyncLowTier(VolumeCloudConfiguration configuration)
+        {
+            VolumeCloudConfigurationAuthoring sidecar = AuthoringSidecars.Find(configuration);
+            VolumeCloudConfiguration low = sidecar != null ? sidecar.LowConfiguration : null;
+            if (low == null || low == configuration)
+                return false;
+
+            Undo.RecordObject(low, "Sync Low Quality Clouds");
+            MirrorToLowTier(configuration, low);
+            EditorUtility.SetDirty(low);
+            return true;
+        }
+
+        /// <summary>
+        /// Copies every setting and layer of <paramref name="source" /> onto <paramref name="low" />, keeping its name,
+        /// and makes it draw scaled clouds only.
+        /// </summary>
+        /// <param name="source">The configuration High and Medium quality load.</param>
+        /// <param name="low">The Low tier mirror to overwrite.</param>
+        public static void MirrorToLowTier(VolumeCloudConfiguration source, VolumeCloudConfiguration low)
+        {
+            string name = low.name;
+            EditorUtility.CopySerialized(source, low);
+            low.name = name;
+            low.useScaleCloudsOnly = true;
+        }
+
+        /// <summary>
         /// Lists what <see cref="TryRemoveClouds" /> would remove, for a confirmation prompt.
         /// </summary>
         /// <param name="body">The body, either the scaled prefab asset or an instance of it.</param>
@@ -264,6 +303,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 if (settings != null)
                 {
                     settings.RemoveAssetEntry(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(configuration)));
+                    VolumeCloudConfiguration low = AuthoringSidecars.Find(configuration)?.LowConfiguration;
+                    if (low != null)
+                    {
+                        settings.RemoveAssetEntry(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(low)));
+                    }
                 }
             }
 
@@ -295,6 +339,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             if (sidecar != null)
             {
                 AddIfOwned(paths, folder, AssetDatabase.GetAssetPath(sidecar.ScaledConfiguration));
+                AddIfOwned(paths, folder, AssetDatabase.GetAssetPath(sidecar.LowConfiguration));
                 AddIfOwned(paths, folder, AssetDatabase.GetAssetPath(sidecar));
             }
 
@@ -409,9 +454,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             return true;
         }
 
-        private static void WireLocalPrefab(string localPath, VolumeCloudConfiguration configuration)
+        private static void WireLocalPrefab(string localPath, VolumeCloudConfiguration configuration, VolumeCloudConfiguration low)
         {
             string guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(configuration));
+            string lowGuid = low != null ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(low)) : guid;
             GameObject root = PrefabUtility.LoadPrefabContents(localPath);
             try
             {
@@ -425,10 +471,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 }
 
                 var serialized = new SerializedObject(helper);
-                foreach (string tier in new[] { "HighQualityCloudConfiguration", "MediumQualityCloudConfiguration", "LowQualityCloudConfiguration" })
-                {
-                    serialized.FindProperty($"{tier}.m_AssetGUID").stringValue = guid;
-                }
+                serialized.FindProperty("HighQualityCloudConfiguration.m_AssetGUID").stringValue = guid;
+                serialized.FindProperty("MediumQualityCloudConfiguration.m_AssetGUID").stringValue = guid;
+                serialized.FindProperty("LowQualityCloudConfiguration.m_AssetGUID").stringValue = lowGuid;
 
                 // Stock helpers take their lights from the cloud light manager, which the game fills from the star.
                 serialized.FindProperty("AutoGetLight").boolValue = true;

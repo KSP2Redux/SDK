@@ -29,8 +29,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// collider's bounds as <c>baseSizeFactor</c>, so the runtime scales the mesh by
         /// <c>body.radius * 2 / (2 * AuthoredRadius) = body.radius / AuthoredRadius</c>. The mesh
         /// baker writes vertex distances of
-        /// <c>AuthoredRadius + h * heightScale * (AuthoredRadius / body.radius)</c>, so a vertex at
-        /// the body's nominal radius (h = 0) lands at world radius <c>body.radius</c> after scaling.
+        /// <c>AuthoredRadius + (h * heightScale - oceanAltitude) * (AuthoredRadius / body.radius)</c>,
+        /// so a vertex at sea level lands at world radius <c>body.radius</c> after scaling, matching
+        /// PQS, which builds terrain up from <c>radius - oceanAltitude</c>.
         /// </remarks>
         public const float AuthoredRadius = 1000f;
 
@@ -44,13 +45,30 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             /// </summary>
             public int MeshResolutionIndex;
             /// <summary>
-            /// When true, ocean color is composited into the scaled albedo and terrain is clamped to sea level.
+            /// When true, the per-biome gradience textures are baked.
             /// </summary>
-            public bool IncludeOcean;
+            public bool BakeGradience;
             /// <summary>
-            /// Color written over ocean pixels in the scaled albedo when <see cref="IncludeOcean" /> is true.
+            /// When true, the scaled-space albedo, normal, packed and emission maps are baked.
             /// </summary>
-            public Color OceanColor;
+            public bool BakeTextures;
+            /// <summary>
+            /// When true, the scaled-space mesh is baked and wired into the Scaled prefab.
+            /// </summary>
+            public bool BakeMesh;
+
+            /// <summary>
+            /// Gets settings that bake every output.
+            /// </summary>
+            /// <param name="meshResolutionIndex">Mesh resolution index where 0=64x32, 1=128x64, 2=256x128, 3=512x256.</param>
+            /// <returns>The settings.</returns>
+            public static Settings Everything(int meshResolutionIndex) => new()
+            {
+                MeshResolutionIndex = meshResolutionIndex,
+                BakeGradience = true,
+                BakeTextures = true,
+                BakeMesh = true,
+            };
         }
 
         /// <summary>
@@ -84,77 +102,67 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <returns>A <see cref="Result" /> describing success or failure.</returns>
         public static Result Bake(CoreCelestialBodyData body, Settings settings)
         {
+            if (!settings.BakeGradience && !settings.BakeTextures && !settings.BakeMesh)
+                return Fail("Nothing to bake. Tick at least one output.");
+
             if (!TryPrepareContext(body, settings, out var ctx, out var error))
                 return Fail(error);
 
             try
             {
-                // Produces the signed-split slope textures the runtime samples for slope-window
-                // gating. An independent leaf: nothing downstream reads what it writes.
-                ProgressBar("Baking per-biome gradience...", 0.02f);
-                var gradienceBake = GradienceBaker.Bake(ctx.PqsData, ctx.Radius);
-                if (!gradienceBake.Skipped)
+                if (settings.BakeGradience)
                 {
-                    ProgressBar("Writing per-biome gradience...", 0.04f);
-                    WriteAndBindGradiences(ctx, gradienceBake);
+                    // Produces the signed-split slope textures the runtime samples for slope-window
+                    // gating. An independent leaf: nothing downstream reads what it writes.
+                    ProgressBar("Baking per-biome gradience...", 0.02f);
+                    var gradienceBake = GradienceBaker.Bake(ctx.PqsData, ctx.Radius);
+                    if (!gradienceBake.Skipped)
+                    {
+                        ProgressBar("Writing per-biome gradience...", 0.04f);
+                        WriteAndBindGradiences(ctx, gradienceBake);
+                    }
+                    else
+                    {
+                        Debug.Log($"[BodySurfaceBaker] Gradience bake skipped: {gradienceBake.SkipReason}");
+                    }
                 }
-                else
+
+                Material matAsset = null;
+                if (settings.BakeTextures)
                 {
-                    Debug.Log($"[BodySurfaceBaker] Gradience bake skipped: {gradienceBake.SkipReason}");
+                    matAsset = BakeTextures(ctx);
+
+                    // An ocean fades into the body's scaled maps with altitude, as stock's do.
+                    Ocean.OceanSetup.WireScaledMaps(body);
                 }
 
-                // The _MidNormal*/_LargeNormal* slots are authored. Leave them alone.
-                ProgressBar("Baking textures (analytic)...", 0.15f);
-                var textures = AnalyticScaledSpaceSampler.Sample(ctx.PqsData, ctx.Radius, ResolveSamplerSettings(ctx));
-                try
+                string prefabPath = null;
+                if (settings.BakeMesh)
                 {
-                    ProgressBar("Compositing ocean / polar blend...", 0.45f);
-                    ApplyOptionalOceanInPlace(ctx, textures.Albedo);
-                    AnalyticScaledSpaceSampler.BlendPolarNormals(textures.Normal, totalLines: 32, blendLines: 24);
-                    AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Albedo,   totalLines: 32, blendLines: 24);
-                    AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Packed,   totalLines: 32, blendLines: 24);
-                    AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Emission, totalLines: 32, blendLines: 24);
-                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Albedo);
-                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Normal);
-                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Packed);
-                    AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Emission);
-
-                    ProgressBar("Writing scaled-space textures...", 0.6f);
-                    var albedoAsset = WriteAndImportPng(textures.Albedo,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_d.png",  ConfigureSrgbImporter);
-                    var normalAsset = WriteAndImportPng(textures.Normal,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_n.png",  ConfigureNormalImporter);
-                    var packedAsset = WriteAndImportPng(textures.Packed,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_pk.png", ConfigureLinearImporter);
-                    var emissionAsset = WriteAndImportPng(textures.Emission, $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_e.png",  ConfigureSrgbImporter);
-
-                    ProgressBar("Resolving material...", 0.7f);
-                    var matAsset = ResolveOrCreateMaterial(ctx);
-                    BindBakedTexturesToMaterial(matAsset, albedoAsset, normalAsset, packedAsset, emissionAsset);
-
-                    // Same outputs also feed the PQS surface material's scaled-tex slots so the
-                    // local-view distance crossfade samples the baked maps.
-                    BindBakedTexturesToSurfaceMaterial(ctx.PqsData, albedoAsset, normalAsset, packedAsset, emissionAsset);
-
                     ProgressBar("Baking mesh...", 0.8f);
                     var meshAsset = BakeLodMesh(ctx);
+                    matAsset ??= ResolveOrCreateMaterial(ctx);
 
                     FlushBeforePrefabWiring(ref meshAsset, ref matAsset);
 
                     ProgressBar("Wiring prefab...", 0.9f);
-                    var prefabPath = WirePrefab(ctx.BodyFolder, ctx.BodyName, meshAsset, matAsset);
+                    prefabPath = WirePrefab(ctx.BodyFolder, ctx.BodyName, meshAsset, matAsset);
 
                     FinalizeImports(meshAsset, prefabPath);
-
-                    StampBakeFingerprint(ctx.PqsData, ctx.Radius);
-
-                    Debug.Log($"[BodySurfaceBaker] Wrote mesh+material+textures to '{ctx.ScaledFolder}/' and wired prefab '{prefabPath}'.");
-                    return Succeed(prefabPath, ctx.ScaledFolder);
                 }
-                finally
+                else
                 {
-                    if (textures.Albedo != null)   UnityEngine.Object.DestroyImmediate(textures.Albedo);
-                    if (textures.Normal != null)   UnityEngine.Object.DestroyImmediate(textures.Normal);
-                    if (textures.Packed != null)   UnityEngine.Object.DestroyImmediate(textures.Packed);
-                    if (textures.Emission != null) UnityEngine.Object.DestroyImmediate(textures.Emission);
+                    AssetDatabase.SaveAssets();
                 }
+
+                // Only a full bake brings every output in line with the inputs the drift check hashes.
+                if (settings.BakeGradience && settings.BakeTextures && settings.BakeMesh)
+                {
+                    StampBakeFingerprint(ctx.PqsData, ctx.Radius);
+                }
+
+                Debug.Log($"[BodySurfaceBaker] Wrote the selected outputs to '{ctx.ScaledFolder}/'.");
+                return Succeed(prefabPath, ctx.ScaledFolder);
             }
             catch (Exception ex)
             {
@@ -165,6 +173,61 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             {
                 EditorUtility.ClearProgressBar();
             }
+        }
+
+        // Bakes and writes the scaled-space maps, and binds them to the scaled material and the PQS surface material.
+        private static Material BakeTextures(BakeContext ctx)
+        {
+            // The _MidNormal*/_LargeNormal* slots are authored. Leave them alone.
+            ProgressBar("Baking textures (analytic)...", 0.15f);
+            var textures = AnalyticScaledSpaceSampler.Sample(ctx.PqsData, ctx.Radius, ResolveSamplerSettings(ctx));
+            try
+            {
+                ProgressBar("Compositing ocean / polar blend...", 0.45f);
+                ApplyOptionalOceanInPlace(ctx, textures.Albedo);
+                AnalyticScaledSpaceSampler.BlendPolarNormals(textures.Normal, totalLines: 32, blendLines: 24);
+                AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Albedo,   totalLines: 32, blendLines: 24);
+                AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Packed,   totalLines: 32, blendLines: 24);
+                AnalyticScaledSpaceSampler.BlendPolarRowsTowardRowMean(textures.Emission, totalLines: 32, blendLines: 24);
+                AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Albedo);
+                AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Normal);
+                AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Packed);
+                AnalyticScaledSpaceSampler.EnforceSeamTileability(textures.Emission);
+
+                ProgressBar("Writing scaled-space textures...", 0.6f);
+                var albedoAsset = WriteAndImportPng(textures.Albedo,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_d.png",  ConfigureSrgbImporter);
+                var normalAsset = WriteAndImportPng(textures.Normal,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_n.png",  ConfigureNormalImporter);
+                var packedAsset = WriteAndImportPng(textures.Packed,   $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_pk.png", ConfigureLinearImporter);
+                var emissionAsset = WriteAndImportPng(textures.Emission, $"{ctx.ScaledFolder}/{ctx.BodyName}_scaled_e.png",  ConfigureSrgbImporter);
+
+                ProgressBar("Resolving material...", 0.7f);
+                var matAsset = ResolveOrCreateMaterial(ctx);
+                BindBakedTexturesToMaterial(matAsset, albedoAsset, normalAsset, packedAsset, emissionAsset);
+
+                // Same outputs also feed the PQS surface material's scaled-tex slots so the
+                // local-view distance crossfade samples the baked maps.
+                BindBakedTexturesToSurfaceMaterial(ctx.PqsData, albedoAsset, normalAsset, packedAsset, emissionAsset);
+                return matAsset;
+            }
+            finally
+            {
+                if (textures.Albedo != null)   UnityEngine.Object.DestroyImmediate(textures.Albedo);
+                if (textures.Normal != null)   UnityEngine.Object.DestroyImmediate(textures.Normal);
+                if (textures.Packed != null)   UnityEngine.Object.DestroyImmediate(textures.Packed);
+                if (textures.Emission != null) UnityEngine.Object.DestroyImmediate(textures.Emission);
+            }
+        }
+
+        /// <summary>
+        /// Gets the folder a body's scaled-space outputs are written to.
+        /// </summary>
+        /// <param name="body">The body.</param>
+        /// <returns>The folder's project path, or null when the body's folder cannot be resolved.</returns>
+        public static string ResolveScaledFolder(CoreCelestialBodyData body)
+        {
+            PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
+            string bodyFolder = pqs != null && pqs.data != null ? ResolveBodyFolder(body, pqs.data) : null;
+            return bodyFolder != null ? bodyFolder + "/Scaled" : null;
         }
 
         // Carries the resolved inputs the bake steps consume so step signatures stay small.
@@ -178,6 +241,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             public Texture2D GlobalHeightMap;
             public float HeightScale;
             public bool HasOcean;
+            public float OceanAltitude;
             public float OceanNormalized;
             public Color OceanColor;
             public int MeshResolutionIndex;
@@ -201,6 +265,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var bodyFolder = ResolveBodyFolder(body, pqsData);
             if (bodyFolder == null) { error = "Could not determine the body's asset folder. Save the body's prefab and PQSData before baking."; return false; }
 
+            error = CheckPqsDataOwnership(bodyName, bodyFolder, AssetDatabase.GetAssetPath(pqsData));
+            if (error != null)
+                return false;
+
             var scaledFolder = bodyFolder + "/Scaled";
             if (!AssetDatabase.IsValidFolder(scaledFolder))
                 AssetDatabase.CreateFolder(bodyFolder, "Scaled");
@@ -209,11 +277,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             if (hmInfoCheck == null) { error = "PQSData has no heightMapInfo. Open the PQS inspector and assign a global heightmap before baking."; return false; }
 
             var heightScale = hmInfoCheck.heightMapScale;
-            var hasOcean = (body.Data?.hasOcean ?? false) && settings.IncludeOcean;
+            // A body with an ocean always gets its sea in the scaled view: painted into the albedo and
+            // flattening the mesh at sea level.
+            var hasOcean = body.Data?.hasOcean ?? false;
             var oceanAltitude = (float)(body.Data?.oceanAltitude ?? 0);
-            // Heightmap is normalized [0,1] mapped to altitudes [0, heightScale] above the body
-            // radius (h * heightScale - matches PQSJobUtil.HeightSample). Ocean sits at altitude
-            // oceanAltitude, so normalized = oceanAltitude / heightScale.
+            // Heightmap is normalized [0,1] mapped to [0, heightScale] above heightmap zero
+            // (h * heightScale - matches PQSJobUtil.HeightSample), which PQS puts oceanAltitude
+            // below the body radius. Sea level is the radius, so normalized = oceanAltitude / heightScale.
             var oceanNormalized = hasOcean && heightScale > 0 ? oceanAltitude / heightScale : -1f;
 
             var hmInfo = hmInfoCheck;
@@ -227,8 +297,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 GlobalHeightMap = hmInfo?.globalHeightMap,
                 HeightScale = heightScale,
                 HasOcean = hasOcean,
+                OceanAltitude = oceanAltitude,
                 OceanNormalized = oceanNormalized,
-                OceanColor = settings.OceanColor,
+                OceanColor = Ocean.OceanSetup.ResolveScaledOceanColor(body),
                 MeshResolutionIndex = settings.MeshResolutionIndex,
             };
             error = null;
@@ -524,7 +595,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             hash.Append(region.uvScale);
         }
 
-        private static void AppendTextureHash(ref Hash128 hash, Texture2D tex)
+        /// <summary>
+        /// Appends a texture's identity and import timestamp to a hash, so an edit to the texture changes the hash.
+        /// </summary>
+        /// <param name="hash">The hash to append to.</param>
+        /// <param name="tex">The texture, or null.</param>
+        internal static void AppendTextureHash(ref Hash128 hash, Texture2D tex)
         {
             if (tex == null) { hash.Append("none"); return; }
             var path = AssetDatabase.GetAssetPath(tex);
@@ -548,9 +624,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         private static Result Fail(string error) => new() { Success = false, Error = error };
         private static Result Succeed(string prefabPath, string scaledFolder) => new() { Success = true, PrefabPath = prefabPath, ScaledFolder = scaledFolder };
 
+        /// <summary>
+        /// Checks that a body's PQS data lives in the body's own folder.
+        /// </summary>
+        /// <remarks>
+        /// The bake writes into the PQS data's surface and scaled materials. PQS data in another folder usually belongs
+        /// to another body, such as a body copied without copying its PQS data, and baking would overwrite that body's
+        /// materials.
+        /// </remarks>
+        /// <param name="bodyName">The body's name, for the message.</param>
+        /// <param name="bodyFolder">The body's folder.</param>
+        /// <param name="pqsDataPath">The PQS data's asset path.</param>
+        /// <returns>Why the bake cannot run, or null when the PQS data is the body's own.</returns>
+        public static string CheckPqsDataOwnership(string bodyName, string bodyFolder, string pqsDataPath)
+        {
+            string pqsFolder = Path.GetDirectoryName(pqsDataPath ?? string.Empty)?.Replace('\\', '/');
+            if (string.IsNullOrEmpty(pqsFolder) || pqsFolder == bodyFolder || pqsFolder.StartsWith(bodyFolder + "/"))
+                return null;
+
+            return $"{bodyName}'s PQS uses {Path.GetFileName(pqsDataPath)} from {pqsFolder}, outside {bodyName}'s folder. "
+                + $"The bake writes into that PQS data's materials, which would overwrite another body's. Give {bodyName} its own PQS data first.";
+        }
+
+        // The body's own prefab decides its folder, whether the body is the prefab asset or an instance in the open
+        // scene. The PQS data's folder is only a fallback for a body that is neither.
         private static string ResolveBodyFolder(CoreCelestialBodyData body, PQSData pqsData)
         {
-            var bodyAssetPath = AssetDatabase.GetAssetPath(body);
+            var bodyAssetPath = PrefabUtility.IsPartOfPrefabAsset(body)
+                ? AssetDatabase.GetAssetPath(body)
+                : PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(body.gameObject);
             if (!string.IsNullOrEmpty(bodyAssetPath))
             {
                 var folder = Path.GetDirectoryName(bodyAssetPath)?.Replace('\\', '/');
@@ -669,10 +771,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                         var sampleU = u;
                         var sampleV = 1f - v;
                         var globalH = SampleBilinear(globalPixels, hmGW, hmGH, sampleU, sampleV);
-                        if (ctx.OceanNormalized >= 0f && globalH < ctx.OceanNormalized)
-                            globalH = ctx.OceanNormalized;
-
-                        displacement = globalH * ctx.HeightScale * metersToMesh;
+                        displacement = DisplacementMeters(globalH, ctx.HeightScale, ctx.OceanAltitude, ctx.HasOcean) * metersToMesh;
                     }
                     var i = y * (lonDivisions + 1) + x;
                     verts[i] = dir * (AuthoredRadius + displacement);
@@ -741,6 +840,24 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var a = Mathf.Lerp(c00, c10, tx);
             var b = Mathf.Lerp(c01, c11, tx);
             return Mathf.Lerp(a, b, ty);
+        }
+
+        /// <summary>
+        /// Gets how far a scaled-mesh vertex sits above the body radius, which is sea level.
+        /// </summary>
+        /// <remarks>
+        /// PQS builds terrain up from <c>radius - oceanAltitude</c>, so the heightmap's zero sits that far below sea
+        /// level. A body with an ocean has its seabed flattened to the sea's surface, which is what shows from orbit.
+        /// </remarks>
+        /// <param name="normalizedHeight">The global heightmap's value.</param>
+        /// <param name="heightScale">The heightmap's scale, in meters.</param>
+        /// <param name="oceanAltitude">The body's ocean altitude, in meters.</param>
+        /// <param name="hasOcean">Whether the body has an ocean.</param>
+        /// <returns>The height above the body radius, in meters.</returns>
+        public static float DisplacementMeters(float normalizedHeight, float heightScale, float oceanAltitude, bool hasOcean)
+        {
+            float meters = normalizedHeight * heightScale - oceanAltitude;
+            return hasOcean ? Mathf.Max(meters, 0f) : meters;
         }
 
         private static Material ResolveOrCreateMaterial(BakeContext ctx)

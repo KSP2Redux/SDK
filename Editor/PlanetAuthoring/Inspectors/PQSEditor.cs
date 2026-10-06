@@ -60,9 +60,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 PlanetAuthoringChrome.RefreshScatter(root, ResolveBody());
                 PlanetAuthoringChrome.RefreshAtmosphere(root, ResolveBody());
                 PlanetAuthoringChrome.RefreshClouds(root, ResolveBody());
+                PlanetAuthoringChrome.RefreshOcean(root, ResolveBody());
             }).Every(500);
 
             root.Bind(serializedObject);
+
+            // After the PQS bind, which would otherwise rebind the section's renderer fields to the PQS.
+            OceanSection.Wire(root, target as PQS);
             return root;
         }
 

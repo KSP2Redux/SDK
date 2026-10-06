@@ -63,6 +63,8 @@
             <engine:Label name="atmosphere-status" class="sdk-hint" />
             <engine:Toggle name="clouds-enabled" label="Draw clouds" tooltip="Draw the body's volumetric clouds through the game's cloud renderer, from the High quality configuration on the PQS's cloud helper. Clouds composite inside the atmosphere when it is drawn." class="preview-coord-field unity-base-field__aligned" />
             <engine:Label name="clouds-status" class="sdk-hint" />
+            <engine:Toggle name="ocean-enabled" label="Draw ocean" tooltip="Draw the body's ocean through the game's water renderer, from the spectrum and material on the PQS renderer. The underwater effect is not drawn, since only the game camera draws it." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="ocean-status" class="sdk-hint" />
         </engine:Foldout>
 
         <engine:Foldout text="Scatter" value="true" class="preview-section">
