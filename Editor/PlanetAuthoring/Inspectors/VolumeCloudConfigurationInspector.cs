@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using KSP.VolumeCloud;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Clouds;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -13,51 +15,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Builds the authoring UI for a <see cref="VolumeCloudConfiguration" />.
     /// </summary>
     /// <remarks>
-    /// Layout lives in <c>Assets/Windows/PlanetAuthoring/Inspectors/VolumeCloudConfigurationInspector.uxml</c>. Nothing
-    /// the game ships raises the configuration's change events, so every edit raises them here, which is what makes a
-    /// running cloud preview pick up layer changes. Each edit also re-derives the layers and re-syncs the scaled clouds.
+    /// Layout lives in <c>Assets/Windows/PlanetAuthoring/Inspectors/VolumeCloudConfigurationInspector.uxml</c>, and each
+    /// layer card's body in <c>Shared/CloudLayerSection.uxml</c>. Nothing the game ships raises the configuration's change
+    /// events, so every edit raises them here, which is what makes a running cloud preview pick up layer changes. Each
+    /// edit also re-derives the layers and re-syncs the scaled clouds.
     /// </remarks>
     public static class VolumeCloudConfigurationInspector
     {
         private const string UXML_PATH = "/Assets/Windows/PlanetAuthoring/Inspectors/VolumeCloudConfigurationInspector.uxml";
+        private const string LAYER_UXML_PATH = "/Assets/Windows/PlanetAuthoring/Inspectors/Shared/CloudLayerSection.uxml";
 
-        private static readonly (string Path, string Label, string Tooltip)[] LAYER_FIELDS =
-        {
-            ("isEnable", "Enabled", "Draw this layer."),
-            ("layerName", "Name", "The layer's name, which its scaled layer shares."),
-            ("cloudHeightRange", "Height Range (m)", "Bottom and top of the layer, in meters above the planet radius. The scaled layer sits at the bottom."),
-            ("castShadow", "Cast Shadow", "Let this layer cast shadows when the configuration's shadows are on."),
-            ("distributionMap", "Distribution Map", "Cubemap of where clouds form over the body, its coverage mask. Imported, not painted."),
-            ("cloudColorMap", "Color Map", "Optional cubemap tinting the layer, used when Use Color Maps is on."),
-            ("coverageScale", "Coverage", "How much of the distribution map turns into cloud."),
-            ("cloudsDensity", "Density", "How thick the clouds are."),
-            ("cloudsMaskBias", "Mask Bias", "Shifts the distribution map up or down before coverage is applied."),
-            ("evanish", "Vanish", "How strongly clouds thin out at their edges."),
-            ("upperFalloff", "Upper Falloff", "How sharply density falls toward the layer's top."),
-            ("lowerFalloff", "Lower Falloff", "How sharply density falls toward the layer's bottom."),
-            ("topOffset", "Top Offset", "Shears the layer's tops sideways along the wind."),
-            ("baseTexture", "Base Noise", "3D noise that shapes the clouds. Use Stock Noise links stock's."),
-            ("baseTexureTile", "Base Noise Tiling", "How many times the base noise repeats."),
-            ("enableDetailTexture", "Use Detail Noise", "Erode the cloud edges with the detail noise."),
-            ("detailTexture", "Detail Noise", "3D noise that erodes the cloud edges. Use Stock Noise links stock's."),
-            ("detailTextureTile", "Detail Noise Tiling", "How many times the detail noise repeats."),
-            ("detailStrength", "Detail Strength", "How hard the detail noise erodes."),
-            ("detailAmount", "Detail Amount", "How much of each cloud the detail noise reaches."),
-            ("detailAltitudeShift", "Detail Altitude Shift", "Moves the detail noise's effect up or down through the layer."),
-            ("normalScale", "Normal Scale", "Strength of the scaled clouds' normal map."),
-            ("scaleCloudColor", "Scaled Color", "Tint of this layer's scaled clouds."),
-            ("cloudsLayerRotate", "Rotation", "This layer's rotation, in degrees."),
-            ("enableWind", "Wind", "Move and evolve the layer over time."),
-            ("windDirection", "Wind Direction", "The axis the layer drifts around."),
-            ("movementSpeed", "Movement Speed", "How fast the layer drifts."),
-            ("evolveSpeed", "Evolve Speed", "How fast the clouds change shape."),
-            ("bakedScaledTexture", "Baked Scaled Clouds", "The scaled clouds' color cubemap. Written by Bake Scaled Clouds."),
-            ("cloudNormalMap", "Baked Scaled Normals", "The scaled clouds' normal cubemap. Written by Bake Scaled Clouds."),
-            ("bakedBottomScaledTexture", "Baked Scaled Underside", "The scaled clouds' underside cubemap. Written by Bake Scaled Clouds."),
-        };
-
-        // Written by the scaled cloud bake, so not edited by hand.
-        private static readonly HashSet<string> BAKED_FIELDS = new() { "bakedScaledTexture", "cloudNormalMap", "bakedBottomScaledTexture" };
+        // Written by the scaled cloud bake for one layer, so a new or duplicated layer starts without them.
+        private static readonly string[] BAKED_FIELDS = { "bakedScaledTexture", "cloudNormalMap", "bakedBottomScaledTexture" };
 
         /// <summary>
         /// Builds the configuration's authoring UI bound to <paramref name="serializedConfiguration" />.
@@ -81,9 +50,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             var status = root.Q<Label>("clouds-status");
             SetStatus(status, string.Empty);
-            var layers = root.Q<ListView>("clouds-layer-list");
-            var detail = root.Q("clouds-layer-detail");
-            WireLayerList(root, layers, detail, configuration, serializedConfiguration);
+            VisualElement layers = root.Q("clouds-layers-host");
+            RebuildLayers(layers, configuration, serializedConfiguration);
             WirePresets(root, status, layers, configuration, serializedConfiguration);
             WireStockNoise(root, status, configuration, serializedConfiguration);
 
@@ -93,110 +61,160 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         }
 
         // Re-derives the layers, raises the change events a running preview listens to, and keeps the scaled clouds in
-        // step. Undo restores the serialized values, which lands here as well.
-        private static void NotifyChanged(VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration, ListView layers)
+        // step. Undo restores the serialized values, which lands here as well, so a layer count the cards no longer
+        // match means an add or remove was undone and the cards are rebuilt.
+        private static void NotifyChanged(VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration, VisualElement layers)
         {
             CloudSetup.DeriveLayers(configuration);
             serializedConfiguration.Update();
             CloudSetup.SyncScaled(configuration);
             configuration.OnCloudLayerChanged?.Invoke(configuration);
             configuration.OnConfigChanged?.Invoke(configuration);
-            layers?.RefreshItems();
+            VisualElement cards = layers?.Q(className: "sdk-card-list__items");
+            if (cards != null && cards.childCount != (configuration.cumulusList?.Count ?? 0))
+            {
+                RebuildLayers(layers, configuration, serializedConfiguration);
+            }
+
             SceneView.RepaintAll();
         }
 
-        private static void WireLayerList(
-            VisualElement root,
-            ListView layers,
-            VisualElement detail,
+        private static void RebuildLayers(VisualElement host, VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration)
+        {
+            if (host == null)
+                return;
+
+            host.Clear();
+            serializedConfiguration.Update();
+            SerializedProperty layers = serializedConfiguration.FindProperty("cumulusList");
+            if (layers == null)
+                return;
+
+            host.Add(CardListSection.Build(layers, new CardListSection.Config
+            {
+                Title = "Layers",
+                AddButtonText = "+ Add Layer",
+                IdentityFieldName = "layerName",
+                ChipFormatter = FormatChip,
+                BuildBody = (entry, body) => BuildLayerBody(entry, body, configuration, serializedConfiguration),
+                ApplyDefaultsToNew = (entry, index) => ApplyLayerDefaults(entry, index, configuration),
+                OnDuplicate = index => DuplicateLayer(host, configuration, serializedConfiguration, index),
+            }));
+        }
+
+        private static void BuildLayerBody(
+            SerializedProperty entry,
+            VisualElement body,
             VolumeCloudConfiguration configuration,
             SerializedObject serializedConfiguration
         )
         {
-            if (layers == null || detail == null)
-                return;
-
-            configuration.cumulusList ??= new List<VolumeCloudConfiguration.CumulusData>();
-            layers.itemsSource = configuration.cumulusList;
-            layers.makeItem = () => new Label();
-            layers.bindItem = (element, index) => ((Label)element).text = DescribeLayer(configuration.cumulusList[index]);
-            layers.selectionChanged += _ => ShowLayer(detail, configuration, serializedConfiguration, layers.selectedIndex);
-            if (configuration.cumulusList.Count > 0)
+            var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + LAYER_UXML_PATH);
+            if (tree == null)
             {
-                layers.SetSelection(0);
+                body.Add(new Label("Failed to load CloudLayerSection.uxml"));
+                return;
             }
 
-            ShowLayer(detail, configuration, serializedConfiguration, layers.selectedIndex);
+            // A BindableElement wrapper, so the markup's binding paths resolve against the layer without naming its index.
+            var bindable = new BindableElement();
+            tree.CloneTree(bindable);
+            bindable.BindProperty(entry);
+            body.Add(bindable);
 
-            root.Q<Button>("clouds-add-layer")?.RegisterCallback<ClickEvent>(_ =>
-            {
-                Undo.RecordObject(configuration, "Add Cloud Layer");
-                int selected = layers.selectedIndex;
-                VolumeCloudConfiguration.CumulusData layer = selected >= 0 && selected < configuration.cumulusList.Count
-                    ? CopyLayer(configuration.cumulusList[selected])
-                    : CloudSetup.CreateDefaultLayer();
-                layer.layerName = $"{layer.layerName} {configuration.cumulusList.Count + 1}";
-                configuration.cumulusList.Add(layer);
-                ApplyStructuralChange(configuration, serializedConfiguration, layers);
-                layers.SetSelection(configuration.cumulusList.Count - 1);
-            });
+            int index = LayerIndex(entry);
+            bindable.Q("cloud-layer-distribution-generator")?.Add(BuildDistributionGenerator(configuration, serializedConfiguration, index));
 
-            root.Q<Button>("clouds-bake-layer")?.RegisterCallback<ClickEvent>(_ =>
+            var status = bindable.Q<Label>("cloud-layer-status");
+            SetStatus(status, string.Empty);
+            bindable.Q<Button>("cloud-layer-bake-scaled")?.RegisterCallback<ClickEvent>(_ =>
             {
-                ScaledCloudBaker.TryBake(configuration, layers.selectedIndex, out string message);
+                ScaledCloudBaker.TryBake(configuration, LayerIndex(entry), out string message);
                 serializedConfiguration.Update();
-                ShowLayer(detail, configuration, serializedConfiguration, layers.selectedIndex);
-                SetStatus(root.Q<Label>("clouds-status"), message);
-            });
-
-            root.Q<Button>("clouds-remove-layer")?.RegisterCallback<ClickEvent>(_ =>
-            {
-                int selected = layers.selectedIndex;
-                if (selected < 0 || selected >= configuration.cumulusList.Count)
-                    return;
-
-                Undo.RecordObject(configuration, "Remove Cloud Layer");
-                configuration.cumulusList.RemoveAt(selected);
-                ApplyStructuralChange(configuration, serializedConfiguration, layers);
-                layers.SetSelection(Mathf.Min(selected, configuration.cumulusList.Count - 1));
+                SetStatus(status, message);
             });
         }
 
-        private static void ApplyStructuralChange(VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration, ListView layers)
+        // A new element is a copy of the last one, so it keeps that layer's look but needs its own name and loses the
+        // other layer's baked scaled clouds. The first layer starts from the defaults with stock noise.
+        private static void ApplyLayerDefaults(SerializedProperty entry, int index, VolumeCloudConfiguration configuration)
         {
-            EditorUtility.SetDirty(configuration);
-            serializedConfiguration.Update();
-            layers.Rebuild();
-            NotifyChanged(configuration, serializedConfiguration, layers);
-        }
-
-        private static void ShowLayer(VisualElement detail, VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration, int index)
-        {
-            detail.Unbind();
-            detail.Clear();
-            SerializedProperty layers = serializedConfiguration.FindProperty("cumulusList");
-            if (layers == null || index < 0 || index >= layers.arraySize)
+            if (index == 0)
             {
-                detail.Add(new Label("Select a layer to edit it.") { tooltip = string.Empty });
-                return;
-            }
-
-            SerializedProperty layer = layers.GetArrayElementAtIndex(index);
-            foreach ((string path, string label, string tooltip) in LAYER_FIELDS)
-            {
-                SerializedProperty property = layer.FindPropertyRelative(path);
-                if (property == null)
-                    continue;
-
-                var field = new PropertyField(property, label) { tooltip = tooltip };
-                field.BindProperty(property);
-                field.SetEnabled(!BAKED_FIELDS.Contains(path));
-                detail.Add(field);
-                if (path == "distributionMap")
+                entry.boxedValue = CloudSetup.CreateDefaultLayer();
+                if (StockCloudNoise.TryLink(out Texture3D baseNoise, out Texture3D detailNoise, out _))
                 {
-                    detail.Add(BuildDistributionGenerator(configuration, serializedConfiguration, index));
+                    entry.FindPropertyRelative("baseTexture").objectReferenceValue = baseNoise;
+                    entry.FindPropertyRelative("detailTexture").objectReferenceValue = detailNoise;
                 }
             }
+
+            foreach (string field in BAKED_FIELDS)
+            {
+                entry.FindPropertyRelative(field).objectReferenceValue = null;
+            }
+
+            SerializedProperty name = entry.FindPropertyRelative("layerName");
+            name.stringValue = UniqueLayerName(configuration, name.stringValue, index);
+        }
+
+        private static void DuplicateLayer(VisualElement host, VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration, int index)
+        {
+            if (index < 0 || index >= configuration.cumulusList.Count)
+                return;
+
+            Undo.RecordObject(configuration, "Duplicate Cloud Layer");
+            VolumeCloudConfiguration.CumulusData copy = JsonUtility.FromJson<VolumeCloudConfiguration.CumulusData>(
+                JsonUtility.ToJson(configuration.cumulusList[index]));
+            copy.bakedScaledTexture = null;
+            copy.cloudNormalMap = null;
+            copy.bakedBottomScaledTexture = null;
+            configuration.cumulusList.Insert(index + 1, copy);
+            copy.layerName = UniqueLayerName(configuration, copy.layerName, index + 1);
+            ApplyStructuralChange(host, configuration, serializedConfiguration);
+        }
+
+        private static void ApplyStructuralChange(VisualElement host, VolumeCloudConfiguration configuration, SerializedObject serializedConfiguration)
+        {
+            EditorUtility.SetDirty(configuration);
+            RebuildLayers(host, configuration, serializedConfiguration);
+            NotifyChanged(configuration, serializedConfiguration, host);
+        }
+
+        // Scaled layers and distribution settings are matched to a layer by name, so two layers cannot share one.
+        private static string UniqueLayerName(VolumeCloudConfiguration configuration, string name, int index)
+        {
+            string stem = string.IsNullOrEmpty(name) ? "Clouds" : name;
+            HashSet<string> taken = configuration.cumulusList
+                .Where((_, i) => i != index)
+                .Select(layer => layer.layerName)
+                .ToHashSet();
+            if (!taken.Contains(stem))
+                return stem;
+
+            int suffix = 2;
+            while (taken.Contains($"{stem} {suffix}"))
+            {
+                suffix++;
+            }
+
+            return $"{stem} {suffix}";
+        }
+
+        // The card's element path ends in the layer's index, which stays current because removing a card rebinds the
+        // cards after it.
+        private static int LayerIndex(SerializedProperty entry)
+        {
+            string path = entry.propertyPath;
+            int open = path.LastIndexOf('[');
+            return open >= 0 && int.TryParse(path.Substring(open + 1, path.Length - open - 2), out int index) ? index : -1;
+        }
+
+        private static string FormatChip(SerializedProperty entry)
+        {
+            Vector2 range = entry.FindPropertyRelative("cloudHeightRange").vector2Value;
+            string state = entry.FindPropertyRelative("isEnable").boolValue ? string.Empty : "  off";
+            return $"{range.x:#,0}–{range.y:#,0} m{state}";
         }
 
         private static readonly (string Path, string Label)[] DISTRIBUTION_FIELDS =
@@ -223,7 +241,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var foldout = new Foldout { text = "Generate Distribution", value = false };
             foldout.tooltip = "Generate this layer's distribution map from warped noise evaluated on the sphere, so it is seamless across faces and at the poles. Latitude Profile scales coverage from the equator, at 0, to the poles, at 1.";
             VolumeCloudConfigurationAuthoring sidecar = AuthoringSidecars.GetOrCreate(configuration);
-            if (sidecar == null)
+            if (sidecar == null || index < 0 || index >= configuration.cumulusList.Count)
             {
                 foldout.Add(new HelpBox("Save the configuration as an asset first.", HelpBoxMessageType.Info));
                 return foldout;
@@ -271,7 +289,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private static void WirePresets(
             VisualElement root,
             Label status,
-            ListView layers,
+            VisualElement layers,
             VolumeCloudConfiguration configuration,
             SerializedObject serializedConfiguration
         )
@@ -294,7 +312,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 SetStatus(status, message);
                 if (applied)
                 {
-                    ApplyStructuralChange(configuration, serializedConfiguration, layers);
+                    ApplyStructuralChange(layers, configuration, serializedConfiguration);
                 }
             };
         }
@@ -323,16 +341,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 SetStatus(status, message);
             });
         }
-
-        private static string DescribeLayer(VolumeCloudConfiguration.CumulusData layer)
-        {
-            string name = string.IsNullOrEmpty(layer.layerName) ? "Unnamed" : layer.layerName;
-            string state = layer.isEnable ? string.Empty : " (off)";
-            return $"{name}   {layer.cloudHeightRange.x:0} to {layer.cloudHeightRange.y:0} m{state}";
-        }
-
-        private static VolumeCloudConfiguration.CumulusData CopyLayer(VolumeCloudConfiguration.CumulusData source) =>
-            JsonUtility.FromJson<VolumeCloudConfiguration.CumulusData>(JsonUtility.ToJson(source));
 
         private static void SetStatus(Label status, string message)
         {

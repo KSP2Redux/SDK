@@ -21,15 +21,8 @@
             <editor:PropertyField binding-path="cloudCoverageModifier" label="Coverage Modifier" tooltip="Multiplier on every layer's coverage." />
         </engine:Foldout>
 
-        <engine:Foldout text="Layers" value="true" class="body-inspector-section">
-            <engine:ListView name="clouds-layer-list" fixed-item-height="20" selection-type="Single" show-border="true" style="min-height: 80px; max-height: 160px;" />
-            <engine:VisualElement class="preview-button-row" style="flex-direction: row;">
-                <engine:Button name="clouds-add-layer" text="Add Layer" tooltip="Add a layer, copying the selected one when there is one." />
-                <engine:Button name="clouds-remove-layer" text="Remove Layer" tooltip="Remove the selected layer. Undoable." />
-                <engine:Button name="clouds-bake-layer" text="Bake Scaled Clouds" tooltip="Bake the selected layer's scaled clouds, the cubemaps the game draws it from once the body switches to scaled space, with the game's own baker. Saves color, underside and normal cubemaps beside this configuration at stock's resolution and precision, which is about 270 MB each for color and normals. Needs the layer's distribution map and noise." />
-            </engine:VisualElement>
-            <engine:VisualElement name="clouds-layer-detail" />
-        </engine:Foldout>
+        <engine:VisualElement name="clouds-layers-host" />
+
 
         <engine:Foldout text="Lighting" value="false" class="body-inspector-section">
             <editor:PropertyField binding-path="ambientColor" label="Ambient Color" />
