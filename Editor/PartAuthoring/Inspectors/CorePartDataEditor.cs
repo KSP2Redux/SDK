@@ -40,7 +40,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
 
         private const string SESSION_STATE_KEY_ACTIVE_TAB = "PartAuthoring.ActiveTab";
         private const string DEFAULT_TAB = "core";
-        private const string TAB_ACTIVE_CLASS = "part-tab--active";
+        private const string TAB_ACTIVE_CLASS = "sdk-tab--active";
 
         private static readonly string[] TAB_IDS = { "core", "modules", "variants" };
         private static readonly List<Dictionary<PartBehaviourModule, HideFlags>> PendingModuleHideFlagRestores = new();

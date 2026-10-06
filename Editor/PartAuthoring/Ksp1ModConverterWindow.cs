@@ -96,12 +96,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
         private void BuildHeader(VisualElement root)
         {
             VisualElement header = new();
-            header.AddToClassList("part-inspector-header");
+            header.AddToClassList("sdk-inspector-header");
             header.AddToClassList("ksp1-converter-header");
             root.Add(header);
 
             Label title = new("KSP1 Mod Converter");
-            title.AddToClassList("part-inspector-part-name");
+            title.AddToClassList("sdk-inspector-name");
             title.AddToClassList("ksp1-converter-title");
             header.Add(title);
 
@@ -117,7 +117,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             root.Add(panel);
 
             Label sectionTitle = new("Import Source");
-            sectionTitle.AddToClassList("part-inspector-section-label");
+            sectionTitle.AddToClassList("sdk-inspector-label");
             sectionTitle.AddToClassList("ksp1-converter-section-title");
             panel.Add(sectionTitle);
 
@@ -136,7 +136,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             panel.Add(_targetModField);
 
             Label sourceTitle = new("Source Folder");
-            sourceTitle.AddToClassList("part-inspector-section-label");
+            sourceTitle.AddToClassList("sdk-inspector-label");
             sourceTitle.AddToClassList("ksp1-converter-subsection-title");
             panel.Add(sourceTitle);
 
@@ -191,7 +191,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             {
                 text = "Load Part List"
             };
-            _scanButton.AddToClassList("part-inspector-chip");
+            _scanButton.AddToClassList("sdk-tool-chip");
             _scanButton.AddToClassList("ksp1-converter-secondary-button");
             actionRow.Add(_scanButton);
 
@@ -199,7 +199,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             {
                 text = "Convert Selected Parts"
             };
-            _convertButton.AddToClassList("part-inspector-chip");
+            _convertButton.AddToClassList("sdk-tool-chip");
             _convertButton.AddToClassList("ksp1-converter-primary-button");
             actionRow.Add(_convertButton);
         }
@@ -216,7 +216,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             _partSelectionPanel.Add(titleRow);
 
             Label title = new("Parts To Convert");
-            title.AddToClassList("part-inspector-section-label");
+            title.AddToClassList("sdk-inspector-label");
             title.AddToClassList("ksp1-converter-section-title");
             titleRow.Add(title);
 
@@ -290,7 +290,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             panel.Add(titleRow);
 
             Label title = new("Summary");
-            title.AddToClassList("part-inspector-section-label");
+            title.AddToClassList("sdk-inspector-label");
             title.AddToClassList("ksp1-converter-section-title");
             titleRow.Add(title);
 

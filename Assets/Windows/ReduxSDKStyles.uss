@@ -487,6 +487,13 @@
     font-size: 13px;
 }
 
+.sdk-inspector-label {
+    color: rgb(210, 220, 235);
+    font-size: 12px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
 .sdk-inspector-meta-chip {
     margin-right: 12px;
     color: rgb(195, 205, 220);
