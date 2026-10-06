@@ -3,6 +3,7 @@ using KSP.VolumeCloud;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 {
@@ -29,10 +30,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         private const int QUANTILE_COUNT = 1024;
         private const int RANKING_RESOLUTION = 256;
 
+        // Unity started with -nographics, as CI does, runs on the null device. It still reports compute shader support,
+        // but compiles no kernels, so finding one throws.
+        private static bool CanDispatch => SystemInfo.supportsComputeShaders && SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null;
+
         /// <summary>
         /// Gets a value indicating whether this machine can run the bake.
         /// </summary>
-        public static bool IsSupported => SystemInfo.supportsComputeShaders && LoadComputeShader() != null;
+        public static bool IsSupported => CanDispatch && LoadComputeShader() != null;
 
         /// <summary>
         /// Generates every face of a distribution map.
@@ -44,7 +49,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         public static float[] Generate(CloudDistributionSettings settings, double bodyRadiusMeters, int resolution)
         {
             ComputeShader shader = LoadComputeShader();
-            if (shader == null || !SystemInfo.supportsComputeShaders)
+            if (shader == null || !CanDispatch)
                 return null;
 
             int kernel = shader.FindKernel("BakeDistribution");
@@ -63,7 +68,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         public static float[] Evaluate(CloudDistributionSettings settings, double bodyRadiusMeters, Vector3[] directions)
         {
             ComputeShader shader = LoadComputeShader();
-            if (shader == null || !SystemInfo.supportsComputeShaders)
+            if (shader == null || !CanDispatch)
                 return null;
 
             int kernel = shader.FindKernel("EvaluateDistribution");
@@ -81,7 +86,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         public static float[] Probe(Cubemap cubemap, Vector3[] directions)
         {
             ComputeShader shader = LoadComputeShader();
-            if (shader == null || !SystemInfo.supportsComputeShaders)
+            if (shader == null || !CanDispatch)
                 return null;
 
             return RunOverDirections(shader, shader.FindKernel("ProbeCubemap"), directions, cubemap);

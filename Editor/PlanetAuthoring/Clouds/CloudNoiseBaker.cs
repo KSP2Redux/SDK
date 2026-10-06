@@ -2,6 +2,7 @@ using System.IO;
 using KSP.VolumeCloud;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Experimental.Rendering;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
@@ -50,10 +51,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         private const int DETAIL_PERIOD = 16;
         private const int DETAIL_OCTAVES = 3;
 
+        // Unity started with -nographics, as CI does, runs on the null device. It still reports compute shader support,
+        // but compiles no kernels, so finding one throws.
+        private static bool CanDispatch => SystemInfo.supportsComputeShaders && SystemInfo.graphicsDeviceType != GraphicsDeviceType.Null;
+
         /// <summary>
         /// Gets a value indicating whether this machine can run the bake.
         /// </summary>
-        public static bool IsSupported => SystemInfo.supportsComputeShaders && LoadComputeShader() != null;
+        public static bool IsSupported => CanDispatch && LoadComputeShader() != null;
 
         /// <summary>
         /// Generates a tileable noise volume.
@@ -66,7 +71,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         public static float[] Generate(NoiseKind kind, int resolution, int period, int octaves)
         {
             ComputeShader shader = LoadComputeShader();
-            if (shader == null || !SystemInfo.supportsComputeShaders)
+            if (shader == null || !CanDispatch)
                 return null;
 
             int kernel = shader.FindKernel(kind == NoiseKind.Perlin ? "BakePerlin" : "BakeWorley");
