@@ -30,7 +30,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
 
         // Stock's tables were all baked at this sun zenith cutoff whatever the model says, while the
         // shaders read them with the model's own value. Kerbin's 111.4 only reproduces stock's look
-        // against a table baked at 120.
+        // against a table baked at 120, so a cutoff at or under it still bakes at 120.
         private const float STOCK_BAKE_SUN_ZENITH_ANGLE = 120f;
 
         /// <summary>
@@ -177,8 +177,22 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             hash.Add(model.SunAngleRadius);
             hash.Add(model.BottomRadius);
             hash.Add(model.AtmosphereHeight);
+
+            // Every cutoff up to stock's bakes the same tables, so only one past it joins the hash,
+            // which leaves the hash of every table baked at 120 unchanged.
+            float bakeSunZenithAngle = BakeSunZenithAngle(model);
+            if (bakeSunZenithAngle > STOCK_BAKE_SUN_ZENITH_ANGLE)
+            {
+                hash.Add(bakeSunZenithAngle);
+            }
+
             return hash.ToHashCode();
         }
+
+        // The tables cover sun angles down to this cutoff. Past it the shaders clamp to the last row, which
+        // an atmosphere tall for its body reaches when its night side is seen against a lit limb.
+        private static float BakeSunZenithAngle(AtmosphereModel model) =>
+            Mathf.Max(STOCK_BAKE_SUN_ZENITH_ANGLE, model.SunZenithAngle);
 
         private static ComputeShader LoadCompute(AtmosphereModel model, out string error)
         {
@@ -329,7 +343,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             compute.SetFloat("bottom_radius", model.BottomRadius);
             compute.SetFloat("top_radius", model.BottomRadius + model.AtmosphereHeight);
             compute.SetFloat("mie_phase_function_g", model.MieAnisotropy);
-            compute.SetFloat("mu_s_min", Mathf.Cos(STOCK_BAKE_SUN_ZENITH_ANGLE * Mathf.Deg2Rad));
+            compute.SetFloat("mu_s_min", Mathf.Cos(BakeSunZenithAngle(model) * Mathf.Deg2Rad));
 
             BindDensityLayer(compute, "rayleigh", 0f, 1f, -1f / Mathf.Max(0.001f, model.RayleighExponentialDistribution), 0f, 0f);
             BindDensityLayer(compute, "mie", 0f, 1f, -1f / Mathf.Max(0.001f, model.MieExponentialDistribution), 0f, 0f);

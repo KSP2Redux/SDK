@@ -10,7 +10,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
     /// <remarks>
     /// Values are the shipped <c>&lt;body&gt;_atmosphere_model</c> assets read from the game's
     /// <c>celestialbody-shared-&lt;body&gt;</c> bundles. Applying one copies every field except the
-    /// bottom radius, which belongs to the body. Heights are stock's absolute kilometers, so on a body
+    /// bottom radius, which belongs to the body, and the sun zenith cutoff, which takes
+    /// <see cref="AtmosphereSetup.SUN_ZENITH_ANGLE" />. Heights are stock's absolute kilometers, so on a body
     /// much smaller or larger than the preset's the visual height and scale heights want rescaling.
     /// </remarks>
     public class AtmospherePreset
@@ -26,9 +27,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
 
         /// <summary>Gets the sun's angular radius.</summary>
         public float SunAngleRadius { get; set; }
-
-        /// <summary>Gets the sun zenith angle in degrees below which light is cut off.</summary>
-        public float SunZenithAngle { get; set; }
 
         /// <summary>Gets the solar irradiance color.</summary>
         public Vector3 SolarIrradiance { get; set; }
@@ -99,7 +97,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             model.IsGasGiant = IsGasGiant;
             model.Exposure = Exposure;
             model.SunAngleRadius = SunAngleRadius;
-            model.SunZenithAngle = SunZenithAngle;
+            model.SunZenithAngle = AtmosphereSetup.SUN_ZENITH_ANGLE;
             model.SolarIrradiance = SolarIrradiance;
             model.SunDirectionExposureModifier = SunDirectionExposureModifier;
             model.TransmittanceTint = TransmittanceTint;
@@ -131,7 +129,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 Name = "Kerbin",
                 Exposure = new Vector2(41.21339f, 50f),
                 SunAngleRadius = 0.04675f,
-                SunZenithAngle = 111.4f,
                 SolarIrradiance = new Vector3(1f, 1f, 1f),
                 SunDirectionExposureModifier = 0.29f,
                 TransmittanceTint = 1f,
@@ -157,7 +154,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 Name = "Duna",
                 Exposure = new Vector2(40.396f, 50f),
                 SunAngleRadius = 0.203f,
-                SunZenithAngle = 120f,
                 SolarIrradiance = new Vector3(0.90588236f, 0.78402305f, 0.74554116f),
                 TransmittanceTint = 1f,
                 SunsetColorStrength = 1f,
@@ -182,7 +178,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 Name = "Laythe",
                 Exposure = new Vector2(9f, 10f),
                 SunAngleRadius = 0.04675f,
-                SunZenithAngle = 120f,
                 SolarIrradiance = new Vector3(0.75f, 0.75f, 0.75f),
                 SunDirectionExposureModifier = 0.7f,
                 TransmittanceTint = 1f,
@@ -208,7 +203,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 Name = "Eve",
                 Exposure = new Vector2(30f, 30f),
                 SunAngleRadius = 0.148f,
-                SunZenithAngle = 120f,
                 SolarIrradiance = new Vector3(0.6117647f, 0.48235294f, 1f),
                 TransmittanceTint = 0.7f,
                 SunsetColorStrength = 1f,
@@ -234,7 +228,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 IsGasGiant = true,
                 Exposure = new Vector2(50f, 50f),
                 SunAngleRadius = 0f,
-                SunZenithAngle = 115f,
                 SolarIrradiance = new Vector3(0.8852837f, 1f, 0.56078434f),
                 TransmittanceTint = 1f,
                 SunsetColorStrength = 1f,

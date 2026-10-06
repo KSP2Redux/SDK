@@ -26,6 +26,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         /// </summary>
         public const string ATMOSPHERE_FOLDER = "Atmosphere";
 
+        /// <summary>
+        /// The sun zenith cutoff, in degrees, that new models and applied presets take.
+        /// </summary>
+        /// <remarks>
+        /// 180 has the tables cover every sun angle. Anything lower clamps the sun on a night side seen
+        /// against a lit limb, which an atmosphere tall for its body shows as a glow cut off at the
+        /// analytic horizon.
+        /// </remarks>
+        public const float SUN_ZENITH_ANGLE = 180f;
+
         private const string INNER_SHELL_NAME = "AtmosphereInner";
         private const string OUTER_SHELL_NAME = "AtmosphereOuter";
 
@@ -35,7 +45,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         /// <remarks>
         /// The body must already have Has Atmosphere on with a positive Atmosphere Depth, and a
         /// scaled mesh, because the inner shell reuses that mesh. New models start from the
-        /// <see cref="AtmosphereModel" /> defaults for everything but geometry.
+        /// <see cref="AtmosphereModel" /> defaults for everything but geometry and the sun zenith cutoff.
         /// </remarks>
         /// <param name="body">The body, either the scaled prefab asset or an instance of it.</param>
         /// <param name="model">The created or refitted model, or null on failure.</param>
@@ -214,6 +224,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             if (created)
             {
                 model.AtmosphereHeight = (float)(data.atmosphereDepth * 0.001);
+                model.SunZenithAngle = SUN_ZENITH_ANGLE;
             }
         }
 
