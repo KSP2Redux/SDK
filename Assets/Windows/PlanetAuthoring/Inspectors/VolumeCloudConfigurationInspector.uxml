@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- Inspector for a VolumeCloudConfiguration. Driven by VolumeCloudConfigurationInspector, which builds the layer list and the selected layer's detail. Heights are meters above the planet radius, which Add Clouds sets to the body's sea level. -->
+
+    <engine:VisualElement class="body-inspector-root">
+
+        <engine:Foldout text="Start From" value="true" class="body-inspector-section">
+            <engine:DropdownField name="clouds-preset" label="Stock Preset" tooltip="A stock body's clouds to copy. Applying it overwrites every setting and layer except textures, which stay as they are, and the planet radius, which belongs to the body. Stock heights are converted to heights above sea level." class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="clouds-apply-preset" text="Apply Preset" tooltip="Copy the selected stock body's clouds into this configuration. Undoable." class="sdk-action-button" />
+            <engine:Button name="clouds-link-noise" text="Use Stock Noise" tooltip="Give every layer without noise stock's base and detail noise volumes, linked from the game rather than copied." class="sdk-action-button" />
+            <engine:Button name="clouds-generate-noise" text="Generate Noise" tooltip="Bake this body's own base and detail noise beside the configuration and give them to every layer. Built with the game's own noise generators on the GPU. Stock's noise came from a tool that is not shipped, so this approximates it rather than reproducing it." class="sdk-action-button" />
+            <engine:Label name="clouds-status" class="sdk-hint" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Body" value="true" class="body-inspector-section">
+            <editor:PropertyField name="clouds-planet-radius" binding-path="planetRadius" label="Planet Radius (m)" tooltip="The sphere layer heights are measured from. Add or Refit Clouds sets it to the body's sea-level radius, so edit the body rather than this." />
+            <editor:PropertyField binding-path="CloudsRotateAll" label="Rotate All Layers" tooltip="Rotation applied to every layer on top of its own, in degrees." />
+            <editor:PropertyField binding-path="cloudCoverageModifier" label="Coverage Modifier" tooltip="Multiplier on every layer's coverage." />
+        </engine:Foldout>
+
+        <engine:Foldout text="Layers" value="true" class="body-inspector-section">
+            <engine:ListView name="clouds-layer-list" fixed-item-height="20" selection-type="Single" show-border="true" style="min-height: 80px; max-height: 160px;" />
+            <engine:VisualElement class="preview-button-row" style="flex-direction: row;">
+                <engine:Button name="clouds-add-layer" text="Add Layer" tooltip="Add a layer, copying the selected one when there is one." />
+                <engine:Button name="clouds-remove-layer" text="Remove Layer" tooltip="Remove the selected layer. Undoable." />
+                <engine:Button name="clouds-bake-layer" text="Bake Scaled Clouds" tooltip="Bake the selected layer's scaled clouds, the cubemaps the game draws it from once the body switches to scaled space, with the game's own baker. Saves color, underside and normal cubemaps beside this configuration at stock's resolution and precision, which is about 270 MB each for color and normals. Needs the layer's distribution map and noise." />
+            </engine:VisualElement>
+            <engine:VisualElement name="clouds-layer-detail" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Lighting" value="false" class="body-inspector-section">
+            <editor:PropertyField binding-path="ambientColor" label="Ambient Color" />
+            <editor:PropertyField binding-path="ambinetScale" label="Ambient Scale" tooltip="Brightness of the clouds' ambient light. The scaled clouds take it as their brightness." />
+            <editor:PropertyField binding-path="EnableCloudGI" label="Cloud GI" />
+            <editor:PropertyField binding-path="cloudGIIntensity" label="GI Intensity" />
+            <editor:PropertyField binding-path="cloudGITint" label="GI Tint" />
+            <editor:PropertyField binding-path="scatteringCoefficient" label="Scattering Coefficient" />
+            <editor:PropertyField binding-path="scatteringScale" label="Scattering Scale" />
+            <editor:PropertyField binding-path="multiScatteringScattering" label="Multiple Scattering" />
+            <editor:PropertyField binding-path="extinctionByLightPosition" label="Extinction By Light" />
+            <editor:PropertyField binding-path="lightPenetrateDistance" label="Light Penetration" />
+            <editor:PropertyField binding-path="opticsDistanceScale" label="Optical Distance Scale" />
+            <editor:PropertyField binding-path="cloudsDensityScale" label="Density Scale" tooltip="Multiplier on every layer's density." />
+            <editor:PropertyField binding-path="silverSpread" label="Silver Lining Spread" />
+            <editor:PropertyField binding-path="bloomStrength" label="Silver Lining Strength" />
+            <editor:PropertyField binding-path="silverSpreadUnderCloud" label="Spread Under Clouds" />
+            <editor:PropertyField binding-path="bloomStrengthUnderCloud" label="Strength Under Clouds" />
+            <editor:PropertyField binding-path="antiBandingAmplify" label="Anti-Banding" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Color" value="false" class="body-inspector-section">
+            <editor:PropertyField binding-path="enableColorMap" label="Use Color Maps" tooltip="Tint each layer by its color cubemap." />
+            <editor:PropertyField binding-path="colorMapIntensity" label="Color Map Intensity" />
+            <editor:PropertyField binding-path="enableVerticalColor" label="Use Vertical Color" tooltip="Tint the clouds by height through the gradient below." />
+            <editor:PropertyField binding-path="verticalColorIntensity" label="Vertical Color Intensity" />
+            <editor:PropertyField binding-path="ColorVertical" label="Vertical Color" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Shadows" value="false" class="body-inspector-section">
+            <editor:PropertyField binding-path="enableShadows" label="Cast Shadows" tooltip="Cast cloud shadows onto the terrain." />
+            <editor:PropertyField binding-path="enableLayerShadows" label="Layer Shadows" tooltip="Let layers shadow the layers beneath them." />
+            <editor:PropertyField binding-path="volumetricShadowDensity" label="Shadow Density" />
+            <editor:PropertyField binding-path="volumetricShadowLodBias" label="Shadow LOD Bias" />
+            <editor:PropertyField binding-path="volumetricShadowDistance" label="Shadow Distance (m)" />
+            <editor:PropertyField binding-path="shadowOpacity" label="Shadow Opacity" />
+            <editor:PropertyField binding-path="shadowMapStrength" label="Shadow Map Strength" />
+            <editor:PropertyField binding-path="layerShadowDensity" label="Layer Shadow Density" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Godrays" value="false" class="body-inspector-section">
+            <editor:PropertyField binding-path="enableGodray" label="Godrays" />
+            <editor:PropertyField binding-path="godrayIntensity" label="Intensity" />
+            <editor:PropertyField binding-path="godrayVisableDistance" label="Visible Distance (m)" />
+            <editor:PropertyField binding-path="godrayStepSize" label="Step Size" />
+            <editor:PropertyField binding-path="sampleLightStepSize" label="Light Step Size" />
+            <editor:PropertyField binding-path="sampleLightStepCount" label="Light Step Count" />
+            <editor:PropertyField binding-path="cloudDensityRangeEmitGodray" label="Emitting Density Range" />
+            <editor:PropertyField binding-path="godrayAttenuation" label="Attenuation" />
+            <editor:PropertyField binding-path="godrayFadeHeight" label="Fade Height (m)" />
+            <editor:PropertyField binding-path="IsBlurGodray" label="Blur" />
+            <editor:PropertyField binding-path="godrayBlurSize" label="Blur Size" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Quality" value="false" class="body-inspector-section">
+            <editor:PropertyField binding-path="raymarchStepSize" label="Raymarch Steps" />
+            <editor:PropertyField binding-path="increaceRaymarchStepByDistance" label="More Steps With Distance" />
+            <editor:PropertyField binding-path="distanceRatio" label="Distance Ratio" />
+            <editor:PropertyField binding-path="maxRaymarchStepSize" label="Max Raymarch Steps" />
+            <editor:PropertyField binding-path="detailVariationRange" label="Detail Variation Range" />
+            <editor:PropertyField binding-path="cullingEdgeClouds" label="Cull Edge Clouds" />
+            <editor:PropertyField binding-path="cullingStrength" label="Culling Strength" />
+            <editor:PropertyField binding-path="autoMipmap" label="Auto Mipmap" />
+            <editor:PropertyField binding-path="increaseMipmapLevelByHeight" label="Mip Increase Height (m)" />
+            <editor:PropertyField binding-path="mipmapScale" label="Mipmap Scale" />
+            <editor:PropertyField binding-path="cascadedResolutionRange" label="Cascade Range (m)" />
+            <editor:PropertyField binding-path="enableNoiseStep" label="Noise Step" />
+            <editor:PropertyField binding-path="noiseStepMap" label="Noise Step Map" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Fade Out and Scaled Clouds" value="false" class="body-inspector-section">
+            <editor:PropertyField binding-path="enableFadeout" label="Fade Out With Altitude" />
+            <editor:PropertyField binding-path="startFadeoutHeight" label="Fade Start (m)" />
+            <editor:PropertyField binding-path="endFadeoutHeight" label="Fade End (m)" />
+            <editor:PropertyField binding-path="useScaleCloudsOnly" label="Scaled Clouds Only" tooltip="Draw only the scaled clouds, with no volumetric layers, at every altitude." />
+            <editor:PropertyField binding-path="scaleCloudMask" label="Scaled Detail Mask" />
+            <editor:PropertyField binding-path="scaleCloudMaskNormal" label="Scaled Detail Normal" />
+            <editor:PropertyField binding-path="scaleCloudMaskNormalTileRate" label="Scaled Detail Tiling" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

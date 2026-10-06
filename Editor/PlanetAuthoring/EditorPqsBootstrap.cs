@@ -124,6 +124,26 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             return found;
         }
 
+        /// <summary>
+        /// Makes sure the base-game catalog is registered, registering it again if it has dropped out.
+        /// </summary>
+        /// <remarks>
+        /// Call before loading any stock asset by key. Addressables can reinitialise between editor operations and
+        /// come back without the imported catalog, after which stock keys fail with InvalidKeyException.
+        /// </remarks>
+        /// <returns>True if the catalog is registered, false otherwise.</returns>
+        public static bool EnsureStockCatalog()
+        {
+#if TK_ADDRESSABLE
+            if (!IsCatalogRegistered())
+            {
+                LoadTkImportedCatalog.EnsureRegistered();
+            }
+#endif
+
+            return IsCatalogRegistered();
+        }
+
         private static void WarnMissingCatalogOnce()
         {
             if (_warnedMissingCatalog)

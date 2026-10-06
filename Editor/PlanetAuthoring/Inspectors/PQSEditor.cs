@@ -59,6 +59,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 PlanetAuthoringChrome.RefreshValidationChip(root, ResolveBody());
                 PlanetAuthoringChrome.RefreshScatter(root, ResolveBody());
                 PlanetAuthoringChrome.RefreshAtmosphere(root, ResolveBody());
+                PlanetAuthoringChrome.RefreshClouds(root, ResolveBody());
             }).Every(500);
 
             root.Bind(serializedObject);

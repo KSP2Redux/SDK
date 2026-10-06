@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using KSP.Rendering;
 using KSP.Rendering.Planets;
+using KSP.VolumeCloud;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
@@ -28,6 +29,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         /// <summary>Looks up the atmosphere model sidecar for <paramref name="model" />, or null when absent.</summary>
         public static AtmosphereModelAuthoring Find(AtmosphereModel model) =>
             FindSidecar<AtmosphereModelAuthoring>(model);
+
+        /// <summary>Returns the cloud configuration sidecar for <paramref name="configuration" />, creating one if absent.</summary>
+        public static VolumeCloudConfigurationAuthoring GetOrCreate(VolumeCloudConfiguration configuration) =>
+            GetOrCreateSidecar<VolumeCloudConfigurationAuthoring>(configuration);
+
+        /// <summary>Looks up the cloud configuration sidecar for <paramref name="configuration" />, or null when absent.</summary>
+        public static VolumeCloudConfigurationAuthoring Find(VolumeCloudConfiguration configuration) =>
+            FindSidecar<VolumeCloudConfigurationAuthoring>(configuration);
 
         /// <summary>Returns the PQSData sidecar for <paramref name="pqsData" />, creating one if absent.</summary>
         public static PQSDataAuthoring GetOrCreate(PQSData pqsData) =>

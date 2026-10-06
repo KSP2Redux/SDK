@@ -4,6 +4,7 @@ using AwesomeTechnologies.VegetationSystem;
 using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Clouds;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
@@ -49,6 +50,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             WireBake(root, resolveBody);
             WireScatter(root, resolveBody);
             WireAtmosphere(root, resolveBody);
+            WireClouds(root, resolveBody);
         }
 
         /// <summary>
@@ -269,6 +271,84 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 AtmosphereSetup.TryRemoveAtmosphere(body, out string message);
                 SetStatus(root.Q<Label>("quick-tools-status"), message);
                 RefreshAtmosphere(root, body);
+            };
+        }
+
+        /// <summary>
+        /// Refreshes the Quick Tools cloud buttons for the current body.
+        /// </summary>
+        /// <param name="root">The inspector root containing the chrome elements.</param>
+        /// <param name="body">The body to describe, or null.</param>
+        public static void RefreshClouds(VisualElement root, CoreCelestialBodyData body)
+        {
+            bool hasClouds = CloudSetup.HasClouds(body);
+            var add = root.Q<Button>("quick-add-clouds");
+            if (add != null)
+            {
+                add.text = hasClouds ? "Refit Clouds" : "Add Clouds";
+            }
+
+            var remove = root.Q<Button>("quick-remove-clouds");
+            if (remove != null)
+            {
+                remove.style.display = hasClouds ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
+        private static void WireClouds(VisualElement root, Func<CoreCelestialBodyData> resolveBody)
+        {
+            var add = root.Q<Button>("quick-add-clouds");
+            if (add != null)
+            {
+                add.clicked += () =>
+                {
+                    CoreCelestialBodyData body = resolveBody();
+                    bool added = CloudSetup.TryAddClouds(body, out _, out string message);
+                    SetStatus(root.Q<Label>("quick-tools-status"), message);
+
+                    // A running preview attached its drivers before this body had clouds. Attach is a no-op when the
+                    // driver is already booted.
+                    if (added)
+                    {
+                        PlanetAuthoringSession.Active?.CloudDriver?.Attach();
+                    }
+
+                    RefreshClouds(root, body);
+                };
+            }
+
+            var remove = root.Q<Button>("quick-remove-clouds");
+            if (remove == null)
+            {
+                return;
+            }
+
+            remove.clicked += () =>
+            {
+                CoreCelestialBodyData body = resolveBody();
+                List<string> removals = CloudSetup.DescribeRemoval(body);
+                if (removals.Count == 0)
+                {
+                    RefreshClouds(root, body);
+                    return;
+                }
+
+                bool confirmed = UnityEditor.EditorUtility.DisplayDialog(
+                    "Remove Clouds",
+                    "This removes:\n\n- " + string.Join("\n- ", removals) + "\n\nAssets go to the trash.",
+                    "Remove",
+                    "Cancel"
+                );
+                if (!confirmed)
+                {
+                    return;
+                }
+
+                // The preview's driver holds the configuration and the helper's registration, so it lets go first.
+                PlanetAuthoringSession.Active?.CloudDriver?.Detach();
+                CloudSetup.TryRemoveClouds(body, out string message);
+                SetStatus(root.Q<Label>("quick-tools-status"), message);
+                RefreshClouds(root, body);
             };
         }
 

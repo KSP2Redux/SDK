@@ -339,6 +339,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             PlanetAuthoringChrome.RefreshValidationChip(_root, TargetData);
             PlanetAuthoringChrome.RefreshScatter(_root, TargetData);
             PlanetAuthoringChrome.RefreshAtmosphere(_root, TargetData);
+            PlanetAuthoringChrome.RefreshClouds(_root, TargetData);
         }
 
 
