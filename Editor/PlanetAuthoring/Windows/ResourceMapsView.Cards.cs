@@ -11,7 +11,7 @@ using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 {
-    public partial class ResourceMapsWindow
+    public partial class ResourceMapsView
     {
         private const float RESULT_IMAGE_SIZE = 320f;
         private const float CHANNEL_IMAGE_SIZE = 160f;
@@ -303,7 +303,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         /// </remarks>
         private sealed class ResourceCardView : IDisposable
         {
-            private readonly ResourceMapsWindow _window;
+            private readonly ResourceMapsView _window;
             private readonly SerializedProperty _entry;
             private readonly ResourceMapPreview _resultPreview;
             private readonly VisualElement _channelBody;
@@ -314,7 +314,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             private int _activeChannel;
             private bool _customResource;
 
-            public ResourceCardView(ResourceMapsWindow window, SerializedProperty entry, VisualElement body)
+            public ResourceCardView(ResourceMapsView window, SerializedProperty entry, VisualElement body)
             {
                 _window = window;
                 _entry = entry;
@@ -889,7 +889,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             {
                 if (_biomeThumbnail == null)
                     return;
-                DestroyImmediate(_biomeThumbnail);
+                UnityEngine.Object.DestroyImmediate(_biomeThumbnail);
                 _biomeThumbnail = null;
             }
 
