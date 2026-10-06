@@ -5,54 +5,11 @@
 
     <!--
         The Surface tab: how the ground looks. The biome-map and detail sections come from SurfaceAuthoringBuilder.
-        Biome layers picks one of the per-biome layer sections from a channel by tier grid and shows it in
-        layer-detail. Sub 3 and Sub 4 show only with sub-zones on.
     -->
 
     <engine:VisualElement class="planet-inspector-tab">
 
         <engine:VisualElement name="surface-biome-sections" />
-
-        <engine:Foldout name="section-layers" text="Biome layers" value="true" class="sdk-section">
-            <engine:VisualElement class="planet-layer-grid">
-                <engine:VisualElement class="planet-layer-grid__row">
-                    <engine:Label class="planet-layer-grid__channel" />
-                    <engine:Label text="Large" class="planet-layer-grid__head" />
-                    <engine:Label text="Mid" class="planet-layer-grid__head" />
-                    <engine:Label text="Sub 3" class="planet-layer-grid__head planet-layer-grid__subzone" />
-                    <engine:Label text="Sub 4" class="planet-layer-grid__head planet-layer-grid__subzone" />
-                </engine:VisualElement>
-                <engine:VisualElement class="planet-layer-grid__row">
-                    <engine:Label text="R" class="planet-layer-grid__channel" />
-                    <engine:Button name="layer-large-r" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-mid-r" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-sub3-r" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                    <engine:Button name="layer-sub4-r" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                </engine:VisualElement>
-                <engine:VisualElement class="planet-layer-grid__row">
-                    <engine:Label text="G" class="planet-layer-grid__channel" />
-                    <engine:Button name="layer-large-g" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-mid-g" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-sub3-g" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                    <engine:Button name="layer-sub4-g" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                </engine:VisualElement>
-                <engine:VisualElement class="planet-layer-grid__row">
-                    <engine:Label text="B" class="planet-layer-grid__channel" />
-                    <engine:Button name="layer-large-b" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-mid-b" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-sub3-b" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                    <engine:Button name="layer-sub4-b" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                </engine:VisualElement>
-                <engine:VisualElement class="planet-layer-grid__row">
-                    <engine:Label text="A" class="planet-layer-grid__channel" />
-                    <engine:Button name="layer-large-a" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-mid-a" class="planet-layer-grid__cell" />
-                    <engine:Button name="layer-sub3-a" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                    <engine:Button name="layer-sub4-a" class="planet-layer-grid__cell planet-layer-grid__subzone" />
-                </engine:VisualElement>
-            </engine:VisualElement>
-            <engine:VisualElement name="layer-detail" class="planet-layer-detail" />
-        </engine:Foldout>
 
         <engine:VisualElement name="surface-detail-sections" />
 

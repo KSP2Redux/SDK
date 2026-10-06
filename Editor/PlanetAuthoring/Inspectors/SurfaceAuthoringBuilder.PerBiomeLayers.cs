@@ -11,7 +11,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         // ===================== PARAMS 3.4.1: Large layer (per biome, top-level) =====================
 
         /// <summary>
-        /// Builds a Large biome foldout exposing the per-biome large-scale gradience and normal layer.
+        /// Builds a Large biome foldout exposing the per-biome large-scale heightmap, gradience and normal layer.
         /// </summary>
         /// <param name="material">The surface material whose large-layer properties are edited.</param>
         /// <param name="pqsDataSO">SerializedObject wrapping the bound PQSData for mirrored fields.</param>
@@ -30,12 +30,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var foldout = new Foldout { text = $"Large Biome {c}", value = false };
             foldout.AddToClassList("pqs-inspector-section");
 
+            AddRawHeightmapFields(foldout, pqsDataSO, material, "large", "_LargeHeightMapUVScales", c, idx, "large-scale");
+
             foldout.Add(MaterialPropertyFields.MaterialOnlyTexture(
                 material, $"_LargeGradience{c}",
                 "Gradience map",
                 $"Baked gradience texture for biome {c}. Auto-populated by the body " +
-                "surface bake from the raw heightmap in the Heightmap stack section. " +
-                "Re-bake to refresh."
+                "surface bake from the heightmap above. Re-bake to refresh."
             ));
 
             foldout.Add(MaterialPropertyFields.Texture(
@@ -78,7 +79,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         // ===================== PARAMS 3.4.2: Mid layer (per biome, top-level) =====================
 
         /// <summary>
-        /// Builds a Mid biome foldout exposing the per-biome mid-scale gradience and normal layer.
+        /// Builds a Mid biome foldout exposing the per-biome mid-scale heightmap, gradience and normal layer.
         /// </summary>
         /// <param name="material">The surface material whose mid-layer properties are edited.</param>
         /// <param name="pqsDataSO">SerializedObject wrapping the bound PQSData for mirrored fields.</param>
@@ -97,12 +98,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var foldout = new Foldout { text = $"Mid Biome {c}", value = false };
             foldout.AddToClassList("pqs-inspector-section");
 
+            AddRawHeightmapFields(foldout, pqsDataSO, material, "medium", "_MediumHeightMapUVScales", c, idx, "mid-scale");
+
             foldout.Add(MaterialPropertyFields.MaterialOnlyTexture(
                 material, $"_MidGradience{c}",
                 "Gradience map",
                 $"Baked gradience texture for biome {c}. Auto-populated by the body " +
-                "surface bake from the raw heightmap in the Heightmap stack section. " +
-                "Re-bake to refresh."
+                "surface bake from the heightmap above. Re-bake to refresh."
             ));
 
             foldout.Add(MaterialPropertyFields.Texture(
@@ -140,6 +142,36 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             foldout.Add(subzoneFilter);
 
             return foldout;
+        }
+
+        // The raw heightmap behind a large or mid layer, on PQSData's HeightRegion. The UV scale is also mirrored into
+        // the material's packed UV scales so the shader samples the baked gradience at the heightmap's tile rate.
+        private static void AddRawHeightmapFields(
+            VisualElement parent, SerializedObject pqsDataSO, Material material,
+            string regionPrefix, string uvScaleMaterialProp, string c, int idx, string scaleDescription)
+        {
+            string region = $"heightMapInfo.{regionPrefix}{c}";
+
+            parent.Add(MaterialPropertyFields.PqsDataTexture(
+                pqsDataSO, $"{region}.heightMap",
+                "Heightmap",
+                $"Raw heightmap for biome {c}'s {scaleDescription} contribution. " +
+                "Consumed by CPU mesh displacement and as the source for the bake's gradience output."
+            ));
+
+            parent.Add(MaterialPropertyFields.PqsDataFloat(
+                pqsDataSO, $"{region}.heightScale",
+                "Height scale",
+                $"Vertical scale (meters) applied to biome {c}'s {scaleDescription} heightmap."
+            ));
+
+            parent.Add(MaterialPropertyFields.MirroredIntChannel(
+                pqsDataSO, $"{region}.uvScale",
+                material, uvScaleMaterialProp, idx,
+                "UV scale",
+                $"Tile rate for biome {c}'s {scaleDescription} heightmap across the planet. " +
+                $"Higher values tile more frequently. Packed into {uvScaleMaterialProp} channel {idx} for runtime sampling."
+            ));
         }
 
         // ===================== PARAMS 3.5: Subzone tier 3/4 (per biome, top-level, gated) =====================
