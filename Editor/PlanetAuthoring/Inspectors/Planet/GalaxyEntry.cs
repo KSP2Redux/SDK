@@ -7,6 +7,7 @@ using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.ResourceMaps;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
@@ -109,7 +110,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
             File.WriteAllText(path, orbit.Generate());
             AssetDatabase.ImportAsset(path);
 
-            AddressableAssetGroup group = PlanetAuthoringAddressables.ResolveCelestialBodiesGroup(orbit.ScaledPrefab);
+            // A patch already registered stays in its group, such as Redux's own patches in the Redux group.
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            AddressableAssetEntry existing = settings != null ? settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(path)) : null;
+            AddressableAssetGroup group = existing != null
+                ? existing.parentGroup
+                : PlanetAuthoringAddressables.ResolveCelestialBodiesGroup(orbit.ScaledPrefab);
             if (group == null)
                 return $"Wrote {path}. No Celestial Bodies addressables group was found, so give it the {PROJECT_PATCH_LABEL} label by hand.";
 
