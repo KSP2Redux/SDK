@@ -225,7 +225,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             ("Roughness", "Roughness"),
             ("WarpStrength", "Warp"),
             ("Coverage", "Coverage"),
-            ("Softness", "Edge Softness"),
+            ("Density", "Density"),
             ("LatitudeProfile", "Latitude Profile"),
             ("Resolution", "Face Size"),
             ("Compress", "Compress (BC4)"),
@@ -239,7 +239,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         )
         {
             var foldout = new Foldout { text = "Generate Distribution", value = false };
-            foldout.tooltip = "Generate this layer's distribution map from warped noise evaluated on the sphere, so it is seamless across faces and at the poles. Latitude Profile scales coverage from the equator, at 0, to the poles, at 1.";
+            foldout.tooltip = "Generate this layer's distribution map from warped noise evaluated on the sphere, so it is seamless across faces and at the poles. Coverage is the share of the sky with any cloud and Density the map's average value there. Latitude Profile scales the map from the equator, at 0, to the poles, at 1.";
             VolumeCloudConfigurationAuthoring sidecar = AuthoringSidecars.GetOrCreate(configuration);
             if (sidecar == null || index < 0 || index >= configuration.cumulusList.Count)
             {

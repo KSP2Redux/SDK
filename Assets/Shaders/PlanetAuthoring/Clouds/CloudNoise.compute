@@ -7,6 +7,7 @@
 
 #pragma kernel BakePerlin
 #pragma kernel BakeWorley
+#pragma kernel SampleDistribution
 #pragma kernel BakeDistribution
 #pragma kernel EvaluateDistribution
 #pragma kernel ProbeCubemap
@@ -219,7 +220,9 @@ float3 _SeedOffset;
 float _Roughness;
 float _WarpStrength;
 float _Coverage;
-float _Softness;
+float _Density;
+StructuredBuffer<float> _Quantiles;
+uint _QuantileCount;
 StructuredBuffer<float> _LatitudeProfile;
 uint _LatitudeSamples;
 StructuredBuffer<float3> _Directions;
@@ -263,7 +266,8 @@ float LatitudeFactor(float3 direction)
     return lerp(_LatitudeProfile[lower], _LatitudeProfile[upper], position - lower);
 }
 
-float Distribution(float3 direction)
+// The warped noise the map is shaped from, before coverage is applied.
+float RawDistribution(float3 direction)
 {
     float3 p = direction * _Frequency + _SeedOffset;
     // Domain warp bends the noise into streaks and swirls, which is what makes a map read as weather.
@@ -271,10 +275,41 @@ float Distribution(float3 direction)
         SphereOctaves(p + float3(17.3, 0.0, 0.0), 3, 0.5),
         SphereOctaves(p + float3(0.0, 41.7, 0.0), 3, 0.5),
         SphereOctaves(p + float3(0.0, 0.0, 73.1), 3, 0.5)) - 0.5;
-    float n = SphereOctaves(p + warp * _WarpStrength, _Octaves, _Roughness);
-    float threshold = 1.0 - _Coverage;
-    float covered = smoothstep(threshold - _Softness, threshold + _Softness, n);
-    return saturate(covered * LatitudeFactor(direction));
+    return SphereOctaves(p + warp * _WarpStrength, _Octaves, _Roughness);
+}
+
+// The fraction of the sphere whose noise is below n, read from the quantile table the baker built from a raw pass.
+float Rank(float n)
+{
+    uint lower = 0;
+    uint upper = _QuantileCount - 1;
+    while (upper - lower > 1)
+    {
+        uint middle = (lower + upper) / 2;
+        if (_Quantiles[middle] <= n)
+            lower = middle;
+        else
+            upper = middle;
+    }
+
+    float span = max(_Quantiles[upper] - _Quantiles[lower], 1e-9);
+    float within = saturate((n - _Quantiles[lower]) / span);
+    return saturate((lower + within) / (_QuantileCount - 1));
+}
+
+// Stock maps are faint and smooth: a share of the sky has any cloud, and over it the values fall off exponentially
+// from the edges, rarely reaching 0.5. Ranking the noise and mapping the covered ranks through the inverse
+// exponential distribution reproduces that for any coverage and average density, with the densest cloud on the
+// noise's ridges and a value of 0 at every edge.
+float Distribution(float3 direction)
+{
+    float rank = Rank(RawDistribution(direction));
+    float coverage = max(_Coverage, 1e-6);
+    if (rank <= 1.0 - coverage)
+        return 0.0;
+
+    float remaining = max((1.0 - rank) / coverage, 1e-6);
+    return saturate(-_Density * log(remaining) * LatitudeFactor(direction));
 }
 
 // Unity cube faces in order +X, -X, +Y, -Y, +Z, -Z, with texel rows running down each face.
@@ -294,6 +329,15 @@ float3 FaceDirection(uint face, uint2 texel)
     }
 
     return normalize(direction);
+}
+
+[numthreads(8, 8, 1)]
+void SampleDistribution(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Resolution || id.y >= _Resolution || id.z >= 6)
+        return;
+
+    _Result[id.z * _Resolution * _Resolution + id.y * _Resolution + id.x] = RawDistribution(FaceDirection(id.z, id.xy));
 }
 
 [numthreads(8, 8, 1)]

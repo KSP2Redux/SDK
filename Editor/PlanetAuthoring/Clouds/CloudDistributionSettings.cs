@@ -27,7 +27,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         /// <summary>
         /// How many octaves of finer detail are layered on.
         /// </summary>
-        [Range(1, 8)] public int Octaves = 5;
+        /// <remarks>
+        /// The finest octave has to vary coverage within one repeat of the layer's base noise, a few kilometers, or every
+        /// repeat looks the same.
+        /// </remarks>
+        [Range(1, 8)] public int Octaves = 8;
 
         /// <summary>
         /// How strongly each finer octave shows, from smooth to ragged.
@@ -40,14 +44,24 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         [Range(0f, 8f)] public float WarpStrength = 2f;
 
         /// <summary>
-        /// Roughly how much of the sky is covered, from none to all of it.
+        /// The share of the sky with any cloud, from none to all of it.
         /// </summary>
+        /// <remarks>
+        /// Stock Kerbin's map covers about 30 percent.
+        /// </remarks>
+        [Tooltip("The share of the sky with any cloud. Stock Kerbin's map covers about 0.3.")]
         [Range(0f, 1f)] public float Coverage = 0.3f;
 
         /// <summary>
-        /// How soft the edges of covered regions are.
+        /// The map's average value over the covered sky.
         /// </summary>
-        [Range(0.001f, 0.5f)] public float Softness = 0.08f;
+        /// <remarks>
+        /// Values fall off exponentially from the densest cloud, as stock's do, so this also sets how rarely the map
+        /// gets near 1. Stock Kerbin's averages about 0.12, and the stock layer settings presets copy expect a map that
+        /// faint.
+        /// </remarks>
+        [Tooltip("The map's average value where there is cloud. Stock Kerbin's is about 0.12, and stock layer settings expect a map that faint.")]
+        [Range(0.01f, 1f)] public float Density = 0.125f;
 
         /// <summary>
         /// Coverage scale from the equator, at 0, to the poles, at 1.

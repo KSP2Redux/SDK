@@ -13,6 +13,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
     /// Noise is evaluated in 3D at each texel's direction, so the map is seamless across faces and even at the poles.
     /// The cloud shaders only read a distribution map's first channel, so the map is single-channel and can be stored as
     /// BC4.
+    ///
+    /// Stock layer settings expect a faint map, so values follow stock's shape rather than a thresholded mask. A raw pass
+    /// ranks the noise over the whole sphere, and the shaping pass covers the requested share of the sky with values
+    /// averaging the requested density. A mask of solid 1 over wide regions gives every repeat of the base noise the
+    /// same coverage, which shows as a lattice of identical clouds.
     /// </remarks>
     public static class CloudDistributionBaker
     {
@@ -21,6 +26,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         private const int FACE_COUNT = 6;
         private const int FACE_GROUP_SIZE = 8;
         private const int LINEAR_GROUP_SIZE = 64;
+        private const int QUANTILE_COUNT = 1024;
+        private const int RANKING_RESOLUTION = 256;
 
         /// <summary>
         /// Gets a value indicating whether this machine can run the bake.
@@ -41,15 +48,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 return null;
 
             int kernel = shader.FindKernel("BakeDistribution");
-            var values = new float[FACE_COUNT * resolution * resolution];
-            using var result = new ComputeBuffer(values.Length, sizeof(float));
             using ComputeBuffer latitude = BindSettings(shader, kernel, settings, bodyRadiusMeters);
-            shader.SetInt("_Resolution", resolution);
-            shader.SetBuffer(kernel, "_Result", result);
-            int groups = Mathf.CeilToInt(resolution / (float)FACE_GROUP_SIZE);
-            shader.Dispatch(kernel, groups, groups, FACE_COUNT);
-            result.GetData(values);
-            return values;
+            using ComputeBuffer quantiles = BindQuantiles(shader, kernel);
+            return RunOverFaces(shader, kernel, resolution);
         }
 
         /// <summary>
@@ -67,6 +68,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 
             int kernel = shader.FindKernel("EvaluateDistribution");
             using ComputeBuffer latitude = BindSettings(shader, kernel, settings, bodyRadiusMeters);
+            using ComputeBuffer quantiles = BindQuantiles(shader, kernel);
             return RunOverDirections(shader, kernel, directions, null);
         }
 
@@ -190,9 +192,75 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             shader.SetInt("_Octaves", Mathf.Clamp(settings.Octaves, 1, 8));
             shader.SetFloat("_Roughness", settings.Roughness);
             shader.SetFloat("_WarpStrength", settings.WarpStrength);
-            shader.SetFloat("_Coverage", settings.Coverage);
-            shader.SetFloat("_Softness", Mathf.Max(0.001f, settings.Softness));
+            shader.SetFloat("_Coverage", Mathf.Clamp01(settings.Coverage));
+            shader.SetFloat("_Density", Mathf.Max(0f, settings.Density));
             return latitude;
+        }
+
+        // Samples the raw noise over every face and binds its quantiles, so the shaping pass can tell what share of the
+        // sphere lies below any value. Texels are weighted by solid angle, since a cube face's corners cover less of the
+        // sphere than its center. Expects BindSettings to have run.
+        private static ComputeBuffer BindQuantiles(ComputeShader shader, int kernel)
+        {
+            float[] raw = RunOverFaces(shader, shader.FindKernel("SampleDistribution"), RANKING_RESOLUTION);
+            var weights = new float[raw.Length];
+            int faceTexels = RANKING_RESOLUTION * RANKING_RESOLUTION;
+            for (int y = 0; y < RANKING_RESOLUTION; y++)
+            {
+                float v = 2f * (y + 0.5f) / RANKING_RESOLUTION - 1f;
+                for (int x = 0; x < RANKING_RESOLUTION; x++)
+                {
+                    float u = 2f * (x + 0.5f) / RANKING_RESOLUTION - 1f;
+                    float weight = Mathf.Pow(1f + u * u + v * v, -1.5f);
+                    for (int face = 0; face < FACE_COUNT; face++)
+                    {
+                        weights[face * faceTexels + y * RANKING_RESOLUTION + x] = weight;
+                    }
+                }
+            }
+
+            System.Array.Sort(raw, weights);
+            double total = 0.0;
+            foreach (float weight in weights)
+            {
+                total += weight;
+            }
+
+            var table = new float[QUANTILE_COUNT];
+            double cumulative = 0.0;
+            int next = 0;
+            for (int i = 0; i < raw.Length && next < QUANTILE_COUNT; i++)
+            {
+                cumulative += weights[i];
+                while (next < QUANTILE_COUNT && cumulative >= total * next / (QUANTILE_COUNT - 1))
+                {
+                    table[next++] = raw[i];
+                }
+            }
+
+            for (; next < QUANTILE_COUNT; next++)
+            {
+                table[next] = raw[raw.Length - 1];
+            }
+
+            table[0] = raw[0];
+            var quantiles = new ComputeBuffer(QUANTILE_COUNT, sizeof(float));
+            quantiles.SetData(table);
+            shader.SetBuffer(kernel, "_Quantiles", quantiles);
+            shader.SetInt("_QuantileCount", QUANTILE_COUNT);
+            return quantiles;
+        }
+
+        private static float[] RunOverFaces(ComputeShader shader, int kernel, int resolution)
+        {
+            var values = new float[FACE_COUNT * resolution * resolution];
+            using var result = new ComputeBuffer(values.Length, sizeof(float));
+            shader.SetInt("_Resolution", resolution);
+            shader.SetBuffer(kernel, "_Result", result);
+            int groups = Mathf.CeilToInt(resolution / (float)FACE_GROUP_SIZE);
+            shader.Dispatch(kernel, groups, groups, FACE_COUNT);
+            result.GetData(values);
+            return values;
         }
 
         private static float[] RunOverDirections(ComputeShader shader, int kernel, Vector3[] directions, Cubemap probe)
