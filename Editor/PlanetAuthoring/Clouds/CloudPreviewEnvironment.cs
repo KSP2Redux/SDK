@@ -75,7 +75,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             AtmosphereScatterManager.BindLocalAtmosphere(
                 material,
                 model,
-                Camera,
                 _pqs.transform.position * AtmosphereConstants.LENGTH_UNIT_IN_KILOMETERS,
                 sun != null ? -sun.transform.forward : Vector3.up,
                 null
