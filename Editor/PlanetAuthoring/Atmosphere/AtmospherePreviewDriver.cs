@@ -1,23 +1,29 @@
 using System;
+using System.Collections.Generic;
 using KSP;
 using KSP.Rendering;
 using KSP.Rendering.Planets;
 using KSP.Rendering.Utility;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
 {
     /// <summary>
-    /// Draws a body's Bruneton atmosphere in the SceneView during a planet preview, through the same
-    /// post shader and binding the game uses.
+    /// Draws a body's atmosphere in the SceneView during a planet preview, through the same post
+    /// shader and binding the game uses.
     /// </summary>
     /// <remarks>
     /// The model comes from the scaled prefab's <see cref="AtmosphereDataModelComponent" />, resolved
     /// through its addressable key in the project's own Addressables settings. Its lookup tables are
     /// computed on the GPU at attach and again whenever a table input changes, and handed to the
     /// model as realtime textures, so baked tables on disk are neither needed nor touched.
+    ///
+    /// A model rendering with Bruneton is drawn as a mesh, and one rendering with Hillaire is
+    /// composited over each SceneView camera by the game's own command buffer, so switching the
+    /// model's technique switches the preview with it.
     ///
     /// Solid bodies only. The scaled shells sit inside the metre-scale PQS in the authoring scene,
     /// so the post effect is what shows the atmosphere from every altitude.
@@ -34,7 +40,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         private readonly CoreCelestialBodyData _body;
         private readonly PQS _pqs;
 
+        // Each camera the Hillaire composite is attached to, with the HDR setting it was built for.
+        private readonly Dictionary<Camera, (CommandBuffer Buffer, bool Hdr)> _composites = new();
+
         private AtmosphereModel _model;
+        private Shader _stockShader;
         private Material _material;
         private Mesh _quad;
         private int _bakedHash;
@@ -86,14 +96,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 return true;
             }
 
-            Shader shader = Shader.Find(POST_SHADER_NAME);
-            if (shader == null)
+            _stockShader = Shader.Find(POST_SHADER_NAME);
+            if (_stockShader == null)
             {
                 Status = $"{POST_SHADER_NAME} not found. Run 'ThunderKit > Import Ksp2 To Editor'.";
                 return false;
             }
 
-            _material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            _material = new Material(_model.GetPostAtmosphereShader(_stockShader)) { hideFlags = HideFlags.HideAndDontSave };
             _quad = AtmosphereScatterManager.CreateFullscreenQuadMesh();
             _quad.hideFlags = HideFlags.HideAndDontSave;
             if (!Rebake())
@@ -122,7 +132,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         /// <inheritdoc />
         public void Pump(Camera camera)
         {
-            if (!Enabled || !Booted || camera == null || _model == null || _pqs == null)
+            if (!Enabled)
+            {
+                ReleaseComposites();
+                return;
+            }
+
+            if (!Booted || camera == null || _model == null || _pqs == null)
                 return;
 
             try
@@ -130,6 +146,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 RebakeWhenSettled();
                 Light sun = SunCoupling.CurrentSun;
                 Vector3 sunDirection = sun != null ? -sun.transform.forward : Vector3.up;
+                Shader shader = _model.GetPostAtmosphereShader(_stockShader);
+                if (_material.shader != shader)
+                {
+                    _material.shader = shader;
+                }
 
                 // Transition 0 keeps the post effect at full strength. In game it fades out with
                 // distance in favour of the scaled shells, which the authoring scene cannot show.
@@ -143,7 +164,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                     _pqs.data.heightMapInfo.DitheringScale,
                     Ocean.OceanPreviewDriver.ActiveWaterDepth
                 );
-                AtmosphereScatterManager.DrawPostAtmosphere(camera, _material, _quad);
+                if (_model.Technique == AtmosphereRenderTechnique.Hillaire)
+                {
+                    EnsureComposite(camera);
+                }
+                else
+                {
+                    RemoveComposite(camera);
+                    AtmosphereScatterManager.DrawPostAtmosphere(camera, _material, _quad);
+                }
+
                 _consecutiveFailures = 0;
             }
             catch (Exception e)
@@ -208,8 +238,53 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             return true;
         }
 
+        // The composite stays on the camera across frames, as the game's does, and is rebuilt only when
+        // the camera's HDR setting changes the scene copy's format.
+        private void EnsureComposite(Camera camera)
+        {
+            bool hdr = camera.allowHDR;
+            if (_composites.TryGetValue(camera, out (CommandBuffer Buffer, bool Hdr) composite))
+            {
+                if (composite.Hdr == hdr)
+                    return;
+
+                RemoveComposite(camera);
+            }
+
+            CommandBuffer buffer = AtmosphereScatterManager.CreateHillaireComposite(_material, _quad, hdr);
+            camera.AddCommandBuffer(AtmosphereScatterManager.HILLAIRE_COMPOSITE_EVENT, buffer);
+            _composites[camera] = (buffer, hdr);
+        }
+
+        private void RemoveComposite(Camera camera)
+        {
+            if (!_composites.TryGetValue(camera, out (CommandBuffer Buffer, bool Hdr) composite))
+                return;
+
+            camera.RemoveCommandBuffer(AtmosphereScatterManager.HILLAIRE_COMPOSITE_EVENT, composite.Buffer);
+            composite.Buffer.Release();
+            _composites.Remove(camera);
+        }
+
+        private void ReleaseComposites()
+        {
+            foreach (KeyValuePair<Camera, (CommandBuffer Buffer, bool Hdr)> composite in _composites)
+            {
+                if (composite.Key != null)
+                {
+                    composite.Key.RemoveCommandBuffer(AtmosphereScatterManager.HILLAIRE_COMPOSITE_EVENT, composite.Value.Buffer);
+                }
+
+                composite.Value.Buffer.Release();
+            }
+
+            _composites.Clear();
+        }
+
         private void ReleaseResources()
         {
+            ReleaseComposites();
+
             // Hands the model back its baked tables, so nothing realtime is left for the game or a
             // later bake to find.
             if (_model != null)
