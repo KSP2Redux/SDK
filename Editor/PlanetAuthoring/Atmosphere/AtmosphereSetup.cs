@@ -283,9 +283,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 }
 
                 // The runtime sets the inner shell to unit scale, so it must be the body's own mesh.
-                // The outer shell is rescaled to the atmosphere top, so any sphere serves.
+                // The outer shell is rescaled to the atmosphere top by its bounds, so it takes the
+                // shared geosphere stock uses.
                 MeshRenderer inner = EnsureShell(root.transform, INNER_SHELL_NAME, bodyMesh);
-                MeshRenderer outer = EnsureShell(root.transform, OUTER_SHELL_NAME, BuiltinSphereMesh());
+                MeshRenderer outer = EnsureShell(root.transform, OUTER_SHELL_NAME, AtmosphereShellMesh.Get());
 
                 var serialized = new SerializedObject(component);
                 serialized.FindProperty("_atmosphereModelKey").stringValue = model.name;
@@ -460,14 +461,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             renderer.enabled = false;
             shell.gameObject.layer = parent.gameObject.layer;
             return renderer;
-        }
-
-        private static Mesh BuiltinSphereMesh()
-        {
-            GameObject primitive = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Mesh mesh = primitive.GetComponent<MeshFilter>().sharedMesh;
-            Object.DestroyImmediate(primitive);
-            return mesh;
         }
 
         private static void EnsureFolder(string folder)
