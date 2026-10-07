@@ -1,9 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using KSP.VolumeCloud;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 {
@@ -22,6 +25,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             "Assets/Scripts/Simulation Scripts/View/Cameras/prefabs/FlightCameraAssembly_Physics.prefab";
 
         private const int FACE_SIZE = 2048;
+
+        // Every file the bake saves ends in one of these, beside the configuration.
+        private static readonly string[] BAKE_SUFFIXES = { "_ScaledClouds.asset", "_ScaledClouds_Bottom.asset", "_ScaledClouds_Normal.asset" };
 
         // The stock renderer's shader fields and the baker's fields they fill.
         private static readonly (string Renderer, string Baker)[] SHADER_FIELDS =
@@ -54,6 +60,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             if (layer.distributionMap == null || layer.baseTexture == null || layer.detailTexture == null)
             {
                 message = "The layer needs its distribution map and both noise volumes before it can be baked.";
+                return false;
+            }
+
+            if (!ConfirmReplacingCustomTextures(layer, configurationPath))
+            {
+                message = "Bake cancelled.";
                 return false;
             }
 
@@ -114,6 +126,76 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 
                 Addressables.Release(flightCameraHandle);
             }
+        }
+
+        /// <summary>
+        /// Bakes every enabled layer's scaled clouds, stopping at the first layer that fails or is cancelled.
+        /// </summary>
+        /// <param name="configuration">The configuration whose layers to bake.</param>
+        /// <param name="message">A status line describing the outcome or the reason for failure.</param>
+        /// <returns>True if every enabled layer was baked, false otherwise.</returns>
+        public static bool TryBakeAll(VolumeCloudConfiguration configuration, out string message)
+        {
+            int baked = 0;
+            for (int i = 0; i < configuration.cumulusList.Count; i++)
+            {
+                if (!configuration.cumulusList[i].isEnable)
+                    continue;
+
+                if (!TryBake(configuration, i, out message))
+                    return false;
+
+                baked++;
+            }
+
+            message = baked > 0 ? $"Baked {baked} layer(s)." : "No enabled layers to bake.";
+            return true;
+        }
+
+        /// <summary>
+        /// Checks whether a texture is one the bake saved rather than one an author assigned.
+        /// </summary>
+        /// <remarks>
+        /// Matches any layer name, so a layer's earlier bake still counts after the layer is renamed.
+        /// </remarks>
+        /// <param name="texturePath">The texture's asset path.</param>
+        /// <param name="configurationPath">The asset path of the configuration the layer belongs to.</param>
+        /// <returns>True if the texture is a bake output beside the configuration, false otherwise.</returns>
+        public static bool IsBakeOutput(string texturePath, string configurationPath)
+        {
+            string folder = Path.GetDirectoryName(configurationPath)?.Replace('\\', '/');
+            string textureFolder = Path.GetDirectoryName(texturePath)?.Replace('\\', '/');
+            return !string.IsNullOrEmpty(folder)
+                && textureFolder == folder
+                && Array.Exists(BAKE_SUFFIXES, suffix => texturePath.EndsWith(suffix, StringComparison.Ordinal));
+        }
+
+        // The bake saves to its own files, so an assigned texture is never overwritten, but the layer stops pointing at it.
+        private static bool ConfirmReplacingCustomTextures(VolumeCloudConfiguration.CumulusData layer, string configurationPath)
+        {
+            var custom = new List<string>();
+            foreach ((string label, Texture texture) in new (string, Texture)[]
+                     {
+                         ("Baked Clouds", layer.bakedScaledTexture),
+                         ("Baked Normals", layer.cloudNormalMap),
+                         ("Baked Underside", layer.bakedBottomScaledTexture),
+                     })
+            {
+                string path = texture != null ? AssetDatabase.GetAssetPath(texture) : null;
+                if (string.IsNullOrEmpty(path) || IsBakeOutput(path, configurationPath))
+                    continue;
+
+                custom.Add(label);
+            }
+
+            return custom.Count == 0
+                || EditorUtility.DisplayDialog(
+                    "Bake Scaled Clouds",
+                    $"{layer.layerName}'s {string.Join(", ", custom)} did not come from a bake. Baking points the layer at "
+                    + "new baked cubemaps instead. The assigned textures themselves are left alone.",
+                    "Bake",
+                    "Cancel"
+                );
         }
 
         // A 90 degree square camera at the origin, which is where the bake puts the planet's center, drawing nothing

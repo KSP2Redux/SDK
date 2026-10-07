@@ -55,6 +55,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             WirePresets(root, status, layers, configuration, serializedConfiguration);
             WireStockNoise(root, status, configuration, serializedConfiguration);
 
+            var bakeStatus = root.Q<Label>("clouds-bake-status");
+            SetStatus(bakeStatus, string.Empty);
+            root.Q<Button>("clouds-bake-scaled")?.RegisterCallback<ClickEvent>(_ =>
+            {
+                ScaledCloudBaker.TryBakeAll(configuration, out string message);
+                serializedConfiguration.Update();
+                SetStatus(bakeStatus, message);
+            });
+
             root.Bind(serializedConfiguration);
             root.TrackSerializedObjectValue(serializedConfiguration, _ => NotifyChanged(configuration, serializedConfiguration, layers));
             return root;
@@ -125,6 +134,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             int index = LayerIndex(entry);
             bindable.Q("cloud-layer-distribution-generator")?.Add(BuildDistributionGenerator(configuration, serializedConfiguration, index));
+
+            VisualElement notBaked = bindable.Q("cloud-layer-not-baked");
+            if (notBaked != null)
+            {
+                SerializedProperty enabled = entry.FindPropertyRelative("isEnable");
+                SerializedProperty baked = entry.FindPropertyRelative("bakedScaledTexture");
+                void ShowIfNotBaked() => notBaked.style.display = enabled.boolValue && baked.objectReferenceValue == null
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
+
+                ShowIfNotBaked();
+                notBaked.TrackPropertyValue(entry, _ => ShowIfNotBaked());
+            }
 
             var status = bindable.Q<Label>("cloud-layer-status");
             SetStatus(status, string.Empty);

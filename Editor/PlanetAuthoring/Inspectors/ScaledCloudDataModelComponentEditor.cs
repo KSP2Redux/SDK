@@ -7,30 +7,45 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Inspector for <see cref="ScaledCloudDataModelComponent" />: its wiring and scaled layers read-only, with the bake.
+    /// Inspector for <see cref="ScaledCloudDataModelComponent" />: its wiring, and its scaled layers read-only with the
+    /// bake.
     /// </summary>
+    /// <remarks>
+    /// The layer view is rebuilt when the wired scaled configuration changes.
+    /// </remarks>
     [CustomEditor(typeof(ScaledCloudDataModelComponent))]
     public class ScaledCloudDataModelComponentEditor : UnityEditor.Editor
     {
+        private VisualElement _layersSlot;
+
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
         {
-            var component = (ScaledCloudDataModelComponent)target;
             var root = new VisualElement();
             Ksp2UnityToolsStyles.Apply(root);
 
             var wiring = new Foldout { text = "Wiring", value = false };
             wiring.AddToClassList("body-inspector-section");
-            wiring.tooltip = "Written by Add Clouds. The scaled cloud objects themselves are created by the game at load.";
-            var field = new PropertyField(serializedObject.FindProperty("ScaledCloudConfiguration"), "Scaled Configuration");
-            field.SetEnabled(false);
-            wiring.Add(field);
+            wiring.tooltip = "Written by Add Clouds, and Refit writes it again. The scaled cloud objects themselves are created by the game at load.";
+            SerializedProperty scaledProperty = serializedObject.FindProperty("ScaledCloudConfiguration");
+            wiring.Add(new PropertyField(scaledProperty, "Scaled Configuration"));
             root.Add(wiring);
-            root.Bind(serializedObject);
 
-            component.TryGetComponent(out CoreCelestialBodyData body);
-            root.Add(ScaledCloudsInspector.Build(component.ScaledCloudConfiguration, ScaledCloudsInspector.FindConfiguration(body)));
+            _layersSlot = new VisualElement();
+            root.Add(_layersSlot);
+            RebuildLayersSlot();
+            _layersSlot.TrackPropertyValue(scaledProperty, _ => RebuildLayersSlot());
+
+            root.Bind(serializedObject);
             return root;
+        }
+
+        private void RebuildLayersSlot()
+        {
+            var component = (ScaledCloudDataModelComponent)target;
+            _layersSlot.Clear();
+            component.TryGetComponent(out CoreCelestialBodyData body);
+            _layersSlot.Add(ScaledCloudsInspector.Build(component.ScaledCloudConfiguration, ScaledCloudsInspector.FindConfiguration(body)));
         }
     }
 }

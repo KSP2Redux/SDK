@@ -58,8 +58,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
                     () => CloudSetup.HasClouds(body), PlanetFeatureActions.AddClouds, PlanetFeatureActions.RemoveClouds);
                 if (CloudSetup.HasClouds(body))
                 {
+                    // The scaled clouds sync from this configuration, so their own inspector would repeat its layers.
                     AddInspector(content.Q("clouds-look"), CloudSetup.FindHelper(body));
-                    AddInspector(content.Q("clouds-look"), body.GetComponent<ScaledCloudDataModelComponent>());
                 }
             }
 

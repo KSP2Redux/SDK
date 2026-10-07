@@ -22,7 +22,8 @@
         </engine:Foldout>
 
         <engine:VisualElement name="clouds-layers-host" />
-
+        <engine:Button name="clouds-bake-scaled" text="Bake All Scaled Clouds" tooltip="Bake every enabled layer's scaled clouds with the game's own baker. Each layer needs its distribution map and noise." class="sdk-action-button" />
+        <engine:Label name="clouds-bake-status" class="sdk-hint" />
 
         <engine:Foldout text="Lighting" value="false" class="body-inspector-section">
             <editor:PropertyField binding-path="ambientColor" label="Ambient Color" />

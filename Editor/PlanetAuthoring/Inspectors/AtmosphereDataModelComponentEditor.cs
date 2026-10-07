@@ -10,9 +10,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Custom inspector for <see cref="AtmosphereDataModelComponent" /> on a scaled body.
     /// </summary>
     /// <remarks>
-    /// Shows the wiring Add Atmosphere wrote read-only, then the model it names inline, so the
-    /// atmosphere is authored from the body without opening the model asset. The inline section is
-    /// rebuilt when the model key changes.
+    /// Shows the wiring Add Atmosphere wrote, then the model it names inline, so the atmosphere is
+    /// authored from the body without opening the model asset. The inline section is rebuilt when the
+    /// model key changes.
     /// </remarks>
     [CustomEditor(typeof(AtmosphereDataModelComponent))]
     public class AtmosphereDataModelComponentEditor : UnityEditor.Editor
@@ -28,7 +28,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             var wiring = new Foldout { text = "Wiring", value = false };
             wiring.AddToClassList("body-inspector-section");
-            wiring.tooltip = "Written by Add Atmosphere. Remove and add the atmosphere again rather than editing these.";
+            wiring.tooltip = "Written by Add Atmosphere. Refit writes them again.";
             foreach ((string path, string label) in new[]
                      {
                          ("_atmosphereModelKey", "Model Key"),
@@ -41,9 +41,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 if (property == null)
                     continue;
 
-                var field = new PropertyField(property, label);
-                field.SetEnabled(false);
-                wiring.Add(field);
+                wiring.Add(new PropertyField(property, label));
             }
 
             root.Add(wiring);

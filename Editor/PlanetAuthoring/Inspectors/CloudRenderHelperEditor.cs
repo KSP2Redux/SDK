@@ -7,12 +7,16 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 {
     /// <summary>
-    /// Inspector for <see cref="CloudRenderHelper" />: its wiring read-only, and the cloud configuration it loads edited
-    /// inline.
+    /// Inspector for <see cref="CloudRenderHelper" />: its wiring, and the cloud configuration it loads edited inline.
     /// </summary>
+    /// <remarks>
+    /// The inline configuration is the one High Quality loads, and is rebuilt when that reference changes.
+    /// </remarks>
     [CustomEditor(typeof(CloudRenderHelper))]
     public class CloudRenderHelperEditor : UnityEditor.Editor
     {
+        private VisualElement _configurationSlot;
+
         /// <inheritdoc />
         public override VisualElement CreateInspectorGUI()
         {
@@ -21,7 +25,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             var wiring = new Foldout { text = "Wiring", value = false };
             wiring.AddToClassList("body-inspector-section");
-            wiring.tooltip = "Written by Add Clouds. Refit or remove and add the clouds again rather than editing these.";
+            wiring.tooltip = "Written by Add Clouds. Refit writes the quality tiers and Lights From Star again.";
             foreach ((string path, string label) in new[]
                      {
                          ("HighQualityCloudConfiguration", "High Quality"),
@@ -37,26 +41,39 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 if (property == null)
                     continue;
 
-                var field = new PropertyField(property, label);
-                field.SetEnabled(false);
-                wiring.Add(field);
+                wiring.Add(new PropertyField(property, label));
             }
 
             root.Add(wiring);
-            root.Bind(serializedObject);
 
+            _configurationSlot = new VisualElement();
+            root.Add(_configurationSlot);
+            RebuildConfigurationSlot();
+
+            SerializedProperty highQuality = serializedObject.FindProperty("HighQualityCloudConfiguration");
+            if (highQuality != null)
+            {
+                _configurationSlot.TrackPropertyValue(highQuality, _ => RebuildConfigurationSlot());
+            }
+
+            root.Bind(serializedObject);
+            return root;
+        }
+
+        private void RebuildConfigurationSlot()
+        {
+            _configurationSlot.Clear();
             VolumeCloudConfiguration configuration = CloudSetup.FindConfiguration((CloudRenderHelper)target);
             if (configuration == null)
             {
-                root.Add(new HelpBox(
+                _configurationSlot.Add(new HelpBox(
                     "No cloud configuration in the project to edit. The helper is empty or points at a stock configuration in the game's bundles.",
                     HelpBoxMessageType.Info
                 ));
-                return root;
+                return;
             }
 
-            root.Add(VolumeCloudConfigurationInspector.Build(configuration, new SerializedObject(configuration)));
-            return root;
+            _configurationSlot.Add(VolumeCloudConfigurationInspector.Build(configuration, new SerializedObject(configuration)));
         }
     }
 }

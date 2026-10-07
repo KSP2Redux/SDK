@@ -11,8 +11,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     /// Builds the read-only view of a body's scaled clouds, with the bake that fills them.
     /// </summary>
     /// <remarks>
-    /// Everything a <see cref="ScaledCloudConfiguration" /> holds is derived from the body's volumetric configuration,
-    /// so it is shown rather than edited. Edit the layers in the cloud configuration on the Local prefab's PQS.
+    /// Everything a <see cref="ScaledCloudConfiguration" /> holds is synced from the body's volumetric configuration,
+    /// so it is shown rather than edited. The layers, baked cubemaps included, are edited in the cloud configuration.
     /// </remarks>
     public static class ScaledCloudsInspector
     {
@@ -34,7 +34,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             var layers = new Foldout { text = "Scaled Layers", value = true };
             layers.AddToClassList("body-inspector-section");
-            layers.tooltip = "Derived from the cloud configuration's layers. Edit those and these follow.";
+            layers.tooltip = "Synced from the cloud configuration's layers, baked cubemaps included. Edit those and these follow.";
             var list = new VisualElement();
             layers.Add(list);
             root.Add(layers);
@@ -47,7 +47,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             bake.SetEnabled(configuration != null);
             bake.clicked += () =>
             {
-                SetStatus(status, BakeAll(configuration));
+                ScaledCloudBaker.TryBakeAll(configuration, out string message);
+                SetStatus(status, message);
                 Describe(list, scaled);
             };
             layers.Add(bake);
@@ -91,23 +92,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
                 list.Add(row);
             }
-        }
-
-        private static string BakeAll(VolumeCloudConfiguration configuration)
-        {
-            int baked = 0;
-            for (int i = 0; i < configuration.cumulusList.Count; i++)
-            {
-                if (!configuration.cumulusList[i].isEnable)
-                    continue;
-
-                if (!ScaledCloudBaker.TryBake(configuration, i, out string message))
-                    return message;
-
-                baked++;
-            }
-
-            return baked > 0 ? $"Baked {baked} layer(s)." : "No enabled layers to bake.";
         }
 
         private static T ReadOnly<T>(T field) where T : VisualElement

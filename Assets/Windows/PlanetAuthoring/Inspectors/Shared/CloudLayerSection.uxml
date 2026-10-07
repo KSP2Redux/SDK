@@ -52,12 +52,11 @@
         <engine:Foldout class="sdk-subsection-foldout" text="Scaled" value="false">
             <editor:PropertyField class="unity-base-field__aligned" binding-path="scaleCloudColor" label="Scaled Color" tooltip="Tint of this layer's scaled clouds." />
             <editor:PropertyField class="unity-base-field__aligned" binding-path="normalScale" label="Normal Scale" tooltip="Strength of the scaled clouds' normal map." />
-            <engine:VisualElement enabled="false">
-                <editor:PropertyField class="unity-base-field__aligned" binding-path="bakedScaledTexture" label="Baked Clouds" tooltip="The scaled clouds' color cubemap. Written by Bake Scaled Clouds." />
-                <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudNormalMap" label="Baked Normals" tooltip="The scaled clouds' normal cubemap. Written by Bake Scaled Clouds." />
-                <editor:PropertyField class="unity-base-field__aligned" binding-path="bakedBottomScaledTexture" label="Baked Underside" tooltip="The scaled clouds' underside cubemap. Written by Bake Scaled Clouds." />
-            </engine:VisualElement>
-            <engine:Button name="cloud-layer-bake-scaled" text="Bake Scaled Clouds" tooltip="Render this layer from orbit into the three cubemaps the scaled clouds draw, saved beside the configuration." class="sdk-action-button" />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="bakedScaledTexture" label="Baked Clouds" tooltip="The scaled clouds' color cubemap. Written by Bake Scaled Clouds, or assign your own and skip the bake." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudNormalMap" label="Baked Normals" tooltip="The scaled clouds' normal cubemap. Written by Bake Scaled Clouds, or assign your own and skip the bake." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="bakedBottomScaledTexture" label="Baked Underside" tooltip="The scaled clouds' underside cubemap. Written by Bake Scaled Clouds, or assign your own and skip the bake." />
+            <engine:HelpBox name="cloud-layer-not-baked" text="Not baked, so the game shows no clouds from orbit." message-type="Warning" />
+            <engine:Button name="cloud-layer-bake-scaled" text="Bake Scaled Clouds" tooltip="Render this layer from orbit into the three cubemaps the scaled clouds draw, saved beside the configuration. Asks first if a slot holds a texture that did not come from a bake." class="sdk-action-button" />
             <engine:Label name="cloud-layer-status" class="sdk-hint" />
         </engine:Foldout>
 
