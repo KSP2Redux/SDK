@@ -112,6 +112,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                     {
                         popoutProp.boolValue = false;
                     }
+                    // The new set is a copy of the last one, and its variants' [SerializeReference]
+                    // transformers would be shared with the original rather than duplicated.
+                    var setVariantsProp = entry.FindPropertyRelative("Variants");
+                    if (setVariantsProp != null)
+                    {
+                        setVariantsProp.arraySize = 0;
+                    }
                 },
             });
             root.Add(section);
@@ -156,6 +163,18 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                         if (locProp != null)
                         {
                             locProp.stringValue = string.Empty;
+                        }
+                        var techsProp = variantEntry.FindPropertyRelative("VariantTechs");
+                        if (techsProp != null)
+                        {
+                            techsProp.arraySize = 0;
+                        }
+                        // The new variant is a copy of the last one, and its [SerializeReference]
+                        // transformers would be the same instances rather than duplicates.
+                        var transformersProp = variantEntry.FindPropertyRelative("Transformers");
+                        if (transformersProp != null)
+                        {
+                            transformersProp.arraySize = 0;
                         }
                     },
                 });
