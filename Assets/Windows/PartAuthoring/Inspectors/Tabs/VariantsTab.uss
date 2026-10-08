@@ -1,0 +1,32 @@
+/* Variants tab chrome.
+ * Mirrors the ModulesTab visual vocabulary: same blue tint family for section headers,
+ * spacious padding on the empty-state HelpBox, fixed-width action buttons that don't
+ * stretch to the full container width.
+ */
+
+.variants-tab {
+    flex-direction: column;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.variants-tab-empty-help {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.variants-tab-add-module-btn {
+    width: 220px;
+    align-self: center;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.variants-tab-remove-module-btn {
+    width: 220px;
+    align-self: center;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}

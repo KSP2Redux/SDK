@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:Foldout text="Part Icon Preview" value="true" name="icon-preview-foldout" class="sdk-section sdk-section-vertical-scope">
+
+        <engine:VisualElement class="icon-preview-top-row">
+
+            <engine:VisualElement name="icon-preview-frame" class="icon-preview-frame">
+                <engine:VisualElement name="icon-preview-image" class="icon-preview-image" />
+            </engine:VisualElement>
+
+            <engine:VisualElement class="icon-preview-top-controls">
+
+                <engine:VisualElement class="icon-preview-button-row">
+                    <engine:Button name="icon-save-button"  text="Save Part Icon" class="icon-preview-button" />
+                    <engine:Button name="icon-reset-button" text="Reset"          class="icon-preview-button" />
+                </engine:VisualElement>
+
+                <editor:EnumField    name="icon-preset-field"   label="Preset" />
+                <engine:Slider       name="icon-padding-field"  label="Padding"       low-value="0.1" high-value="3" show-input-field="true" />
+                <engine:Vector3Field name="icon-rotation-field" label="Part Rotation" />
+
+            </engine:VisualElement>
+
+        </engine:VisualElement>
+
+        <engine:Foldout text="Camera" value="false" name="icon-camera-foldout" class="sdk-subsection-inset">
+            <engine:Slider name="icon-yaw-field"                   label="Yaw"               low-value="-180" high-value="180" show-input-field="true" />
+            <engine:Slider name="icon-pitch-field"                 label="Pitch"             low-value="-80"  high-value="80"  show-input-field="true" />
+            <engine:Slider name="icon-roll-field"                  label="Roll"              low-value="-180" high-value="180" show-input-field="true" />
+            <engine:Toggle name="icon-orthographic-override-field" label="Override Camera Size" />
+            <engine:Slider name="icon-orthographic-size-field"     label="Orthographic Size" low-value="0.1" high-value="40"  show-input-field="true" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Lighting" value="false" name="icon-lighting-foldout" class="sdk-subsection-inset">
+            <engine:Slider       name="icon-front-key-intensity" label="Front Key"           low-value="0" high-value="2"   show-input-field="true" />
+            <engine:Vector3Field name="icon-front-key-direction" label="Front Key Direction" />
+            <engine:Slider       name="icon-top-key-intensity"   label="Top Key"             low-value="0" high-value="2"   show-input-field="true" />
+            <engine:Vector3Field name="icon-top-key-direction"   label="Top Key Direction" />
+            <engine:Slider       name="icon-rim-intensity"       label="Rim"                 low-value="0" high-value="1.5" show-input-field="true" />
+            <engine:Vector3Field name="icon-rim-direction"       label="Rim Direction" />
+            <engine:Slider       name="icon-fill-intensity"      label="Uniform Fill"        low-value="0" high-value="1.5" show-input-field="true" />
+            <engine:Slider       name="icon-key-spread"          label="Key Softness"        low-value="0" high-value="35"  show-input-field="true" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Colors" value="false" name="icon-colors-foldout" class="sdk-subsection-inset">
+            <engine:Toggle     name="icon-palette-toggle" label="Use Icon Palette" />
+            <editor:ColorField name="icon-base-color"     label="Base" />
+            <editor:ColorField name="icon-accent-color"   label="Accent" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Outline" value="false" name="icon-outline-foldout" class="sdk-subsection-inset">
+            <engine:Toggle    name="icon-outline-toggle" label="Enabled" />
+            <engine:SliderInt name="icon-outline-radius" label="Radius" low-value="0" high-value="12" show-input-field="true" />
+        </engine:Foldout>
+
+    </engine:Foldout>
+</engine:UXML>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML xmlns="UnityEngine.UIElements">
+    <VisualElement name="root" class="loc-export-modal">
+        <VisualElement class="loc-export-row">
+            <Label class="loc-export-row-label" text="Target CSV:" />
+            <TextField name="targetPath" class="loc-export-path" />
+            <Button name="browse" text="Browse..." class="loc-export-btn" />
+        </VisualElement>
+        <VisualElement class="loc-export-row">
+            <Label class="loc-export-row-label" text="Merge mode:" />
+            <RadioButton name="mode-append" label="Append-only" class="loc-export-radio" />
+            <RadioButton name="mode-refresh" label="Refresh descriptions" class="loc-export-radio" />
+        </VisualElement>
+        <VisualElement class="loc-export-actions">
+            <Button name="preview" text="Preview" class="loc-export-btn" />
+            <Button name="cancel" text="Cancel" class="loc-export-btn" />
+            <Button name="export" text="Export" class="loc-export-btn loc-export-btn--primary" />
+        </VisualElement>
+        <ScrollView name="previewScroll" class="loc-export-preview-host">
+            <Label name="previewLabel" class="loc-export-preview-text" />
+        </ScrollView>
+    </VisualElement>
+</UXML>

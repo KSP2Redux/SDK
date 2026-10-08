@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="scatter-rule-row">
+
+        <engine:VisualElement class="scatter-rule-row__line">
+            <!-- The picker is inserted here in code. It needs the body's resolved stratum table,
+                 which markup has no way to supply. -->
+            <engine:VisualElement name="stratum-host" class="scatter-rule-row__stratum" />
+            <engine:Button name="remove" class="scatter-rule-row__remove" text="x"
+                           tooltip="Remove this rule." />
+        </engine:VisualElement>
+
+        <engine:VisualElement class="scatter-rule-row__line">
+            <engine:Label class="scatter-rule-row__window-label" text="Weight"
+                          tooltip="Blend weight window this stratum must fall inside at the sample point. A weight of 1 means the surface there is entirely this stratum." />
+            <engine:FloatField name="minimum" class="scatter-rule-row__bound"
+                               tooltip="Lowest blend weight that satisfies the rule. Stock leans on values around 0.1, which reads as 'this stratum is present at all'." />
+            <engine:MinMaxSlider name="window" class="scatter-rule-row__slider" low-limit="0" high-limit="1"
+                                 tooltip="The same window as the two numbers, dragged rather than typed." />
+            <engine:FloatField name="maximum" class="scatter-rule-row__bound"
+                               tooltip="Highest blend weight that satisfies the rule. Usually 1, since an upper bound excludes ground that is mostly this stratum." />
+        </engine:VisualElement>
+
+        <engine:Label name="warning" class="scatter-rule-row__warning" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

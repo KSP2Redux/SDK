@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="fade-curve-popup-root">
+        <engine:VisualElement name="graph" class="fade-curve-popup-graph" />
+        <editor:FloatField name="start" label="Start (m)" class="fade-curve-popup-field"
+                           tooltip="Distance (m) at which the fade begins. Below this, opacity holds at Near." />
+        <editor:FloatField name="range" label="Range (m)" class="fade-curve-popup-field"
+                           tooltip="Length of the fade transition (m). Opacity ramps from Near to Far over this distance." />
+        <editor:FloatField name="near" label="Near opacity" class="fade-curve-popup-field"
+                           tooltip="Opacity at distances below Start (closer to the camera)." />
+        <editor:FloatField name="far" label="Far opacity" class="fade-curve-popup-field"
+                           tooltip="Opacity at distances beyond Start + Range (further from the camera)." />
+    </engine:VisualElement>
+
+</engine:UXML>

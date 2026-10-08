@@ -1,0 +1,3 @@
+/* Decal Controller inspector — all rules now live in PlanetAuthoring.uss.
+ * Kept as an empty per-window stylesheet so any future inspector-only
+ * overrides have a place to land without touching the loader plumbing. */

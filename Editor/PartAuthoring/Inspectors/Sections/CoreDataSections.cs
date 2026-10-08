@@ -1,0 +1,416 @@
+using KSP;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
+using Ksp2UnityTools.Editor.PartAuthoring.SceneTools;
+using Ksp2UnityTools.Editor.PartAuthoring.Tools;
+using Ksp2UnityTools.Editor.Widgets;
+using UnityEditor;
+using UnityEditor.UIElements;
+using UnityEngine.UIElements;
+
+namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
+{
+    /// <summary>
+    /// Factory methods for the Core tab's PartData-field sections.
+    /// </summary>
+    /// <remarks>
+    /// Each method returns a UI Toolkit Foldout with <c>sdk-section</c> chrome and a stack of
+    /// fields bound to the supplied SerializedObject. Sections that need extra UI -
+    /// Attachment's auto-detect button, Resources' future-tab notice - are special-cased inline.
+    /// </remarks>
+    internal static class CoreDataSections
+    {
+        /// <summary>
+        /// Builds the Identity section (partName, author, category, family, sizeKey, tags, isCompound).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <param name="target">The CorePartData instance, used by the partName change tracker to sync addresses.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildIdentity(SerializedObject so, CorePartData target)
+        {
+            var foldout = MakeSectionFoldout("Identity");
+            AddPartNameField(foldout, so, target);
+            AddField(foldout, so, "core.data.author");
+            AddField(foldout, so, "core.data.category");
+            AddFamilyField(foldout, so);
+            AddSizeKeyField(foldout, so);
+            AddField(foldout, so, "core.data.tags");
+            AddField(foldout, so, "core.data.isCompound");
+            return Bound(foldout, so);
+        }
+
+        private static void AddPartNameField(VisualElement parent, SerializedObject so, CorePartData target)
+        {
+            var prop = so.FindProperty("core.data.partName");
+            if (prop == null) return;
+            var field = new TextField(prop.displayName) { isDelayed = true };
+            field.AddToClassList("unity-base-field__aligned");
+            field.BindProperty(prop);
+            parent.Add(field);
+
+            string lastSeen = prop.stringValue;
+            field.TrackPropertyValue(prop, p =>
+            {
+                var current = p.stringValue;
+                if (current == lastSeen) return;
+                var previous = lastSeen;
+                lastSeen = current;
+                if (target == null) return;
+                var plan = PartAddressRenameHelper.PlanRename(target, previous, current);
+                if (!plan.HasWork) return;
+                if (!PartAddressRenameHelper.ConfirmAndApply(plan))
+                {
+                    p.stringValue = previous;
+                    p.serializedObject.ApplyModifiedProperties();
+                    lastSeen = previous;
+                }
+            });
+        }
+
+        /// <summary>
+        /// Builds the Mass and Cost and Crew section (mass, cost, crewCapacity).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildMassCostCrew(SerializedObject so)
+        {
+            var foldout = MakeSectionFoldout("Mass & Cost & Crew");
+            AddField(foldout, so, "core.data.mass");
+            AddField(foldout, so, "core.data.cost");
+            AddField(foldout, so, "core.data.crewCapacity");
+            return Bound(foldout, so);
+        }
+
+        /// <summary>
+        /// Builds the Breakage and Thermal section (crashTolerance, breaking force/torque, thermal mass, radiator, etc.).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildBreakageThermal(SerializedObject so)
+        {
+            var foldout = MakeSectionFoldout("Breakage & Thermal");
+            AddField(foldout, so, "core.data.crashTolerance");
+            AddField(foldout, so, "core.data.breakingForce");
+            AddField(foldout, so, "core.data.breakingTorque");
+            AddField(foldout, so, "core.data.explosionPotential");
+            AddField(foldout, so, "core.data.maxTemp");
+            AddField(foldout, so, "core.data.skinMaxTemp");
+            AddField(foldout, so, "core.data.emissiveConstant");
+            AddField(foldout, so, "core.data.heatConductivity");
+            AddField(foldout, so, "core.data.thermalMassModifier");
+            AddField(foldout, so, "core.data.skinMassPerArea");
+            AddField(foldout, so, "core.data.skinInternalConductionMult");
+            AddField(foldout, so, "core.data.radiatorHeadroom");
+            AddField(foldout, so, "core.data.radiatorMax");
+            return Bound(foldout, so);
+        }
+
+        /// <summary>
+        /// Builds the Aerodynamics and Physics section (drag, body lift, physics mode, etc.).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildAerodynamicsPhysics(SerializedObject so)
+        {
+            var foldout = MakeSectionFoldout("Aerodynamics & Physics");
+            AddField(foldout, so, "core.data.angularDrag");
+            AddField(foldout, so, "core.data.maximumDrag");
+            AddField(foldout, so, "core.data.minimumDrag");
+            AddField(foldout, so, "core.data.bodyLiftOnlyUnattachedLift");
+            AddField(foldout, so, "core.data.bodyLiftOnlyAttachName");
+            AddField(foldout, so, "core.data.physicsMode");
+            AddField(foldout, so, "core.data.PartSizeDiameter");
+            AddField(foldout, so, "core.data.maxLength");
+            AddField(foldout, so, "core.data.AllowKinematicPhysicsIfIntersectTerrain");
+            AddField(foldout, so, "core.data.collisionVolumeBoundsScale");
+            return Bound(foldout, so);
+        }
+
+        /// <summary>
+        /// Builds the Attachment section (attachRules, attachNodes list, and the Auto-detect from GO button below it).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <param name="target">The CorePartData instance, used by the auto-detect button.</param>
+        /// <returns>A bound Foldout with the section's content.</returns>
+        public static VisualElement BuildAttachment(SerializedObject so, CorePartData target)
+        {
+            var foldout = MakeSectionFoldout("Attachment");
+            foldout.Add(BuildAttachRulesField(so));
+
+            var holder = new VisualElement();
+            foldout.Add(holder);
+
+            void Rebuild()
+            {
+                holder.Clear();
+                var attachNodesProp = so.FindProperty("core.data.attachNodes");
+                if (attachNodesProp != null) holder.Add(AttachNodesList.Build(attachNodesProp, target));
+            }
+            Rebuild();
+
+            var autoDetectStatus = new HelpBox(string.Empty, HelpBoxMessageType.Info)
+            {
+                style = { display = DisplayStyle.None }
+            };
+
+            var autoBtn = new Button(() =>
+            {
+                var result = AttachNodeAutoGenerator.RegenerateFromHierarchy(target);
+                so.Update();
+                Rebuild();
+                autoDetectStatus.text = result.ToStatusText();
+                autoDetectStatus.style.display = DisplayStyle.Flex;
+            })
+            {
+                text = "Auto-detect from GO",
+                tooltip = "Merge attach nodes from AttachmentNode components and empty marker transforms whose names match known attach-node IDs.",
+            };
+            foldout.Add(autoBtn);
+            foldout.Add(autoDetectStatus);
+
+            AddField(foldout, so, "core.data.fuelCrossFeed");
+            return Bound(foldout, so);
+        }
+
+        private static VisualElement BuildAttachRulesField(SerializedObject so)
+        {
+            var container = new VisualElement();
+            container.AddToClassList("attach-rules-container");
+
+            var header = new Label("Attach Rules");
+            header.AddToClassList("attach-rules-header");
+            container.Add(header);
+
+            var grid = new VisualElement();
+            grid.AddToClassList("attach-rules-grid");
+
+            var rulesProp = so.FindProperty("core.data.attachRules");
+            if (rulesProp != null)
+            {
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("stack"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("srfAttach"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowStack"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowSrfAttach"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowCollision"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowDock"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowRotate"));
+                AddRuleCell(grid, rulesProp.FindPropertyRelative("allowRoot"));
+            }
+
+            container.Add(grid);
+            return container;
+        }
+
+        private static void AddRuleCell(VisualElement grid, SerializedProperty prop)
+        {
+            if (prop == null)
+            {
+                return;
+            }
+            var toggle = new Toggle(prop.displayName);
+            toggle.BindProperty(prop);
+            toggle.AddToClassList("attach-rules-cell");
+            grid.Add(toggle);
+        }
+
+        /// <summary>
+        /// Builds the Staging section (stageOffset, childStageOffset, stageType, inverseStageCarryover, stagingIconAssetAddress).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildStaging(SerializedObject so)
+        {
+            var foldout = MakeSectionFoldout("Staging");
+            AddField(foldout, so, "core.data.stageOffset");
+            AddField(foldout, so, "core.data.childStageOffset");
+            AddField(foldout, so, "core.data.stageType");
+            AddField(foldout, so, "core.data.inverseStageCarryover");
+            AddStagingIconAssetAddressField(foldout, so);
+            return Bound(foldout, so);
+        }
+
+        private static void AddStagingIconAssetAddressField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.stagingIconAssetAddress");
+            if (prop != null)
+            {
+                parent.Add(new StagingIconAddressField(prop, prop.displayName));
+            }
+        }
+
+        /// <summary>
+        /// Builds the Centers and Buoyancy section (CoM / CoL / CoP / buoyancy / displacement offsets and toggles).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <param name="target">The CorePartData instance, used by the SceneView handle fields.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildCentersBuoyancy(SerializedObject so, CorePartData target)
+        {
+            var foldout = MakeSectionFoldout("Centers & Buoyancy");
+            AddPositionHandleField(foldout, so, "core.data.coMassOffset", target);
+            AddPositionHandleField(foldout, so, "core.data.coLiftOffset", target);
+            AddPositionHandleField(foldout, so, "core.data.coPressureOffset", target);
+            AddPositionHandleField(foldout, so, "core.data.coBuoyancy", target);
+            AddPositionHandleField(foldout, so, "core.data.coDisplacement", target);
+            AddField(foldout, so, "core.data.buoyancy");
+            AddField(foldout, so, "core.data.buoyancyUseSine");
+            AddField(foldout, so, "core.data.buoyancyUseCubeNamed");
+            return Bound(foldout, so);
+        }
+
+        private static void AddPositionHandleField(VisualElement parent, SerializedObject so, string path, CorePartData target)
+        {
+            var prop = so.FindProperty(path);
+            if (prop != null)
+            {
+                parent.Add(new VectorHandleField(prop, target, SceneHandlePicker.HandleMode.Position));
+            }
+        }
+
+        /// <summary>
+        /// Builds the Resources section (per-part storage containers, resource cost rollup, report-storage flag).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <returns>A bound Foldout with the section's table widgets and report-storage toggle.</returns>
+        public static VisualElement BuildResources(SerializedObject so)
+        {
+            var foldout = MakeSectionFoldout("Resources");
+
+            var storageTable = new SerializedArrayTable(
+                so,
+                "core.data.resourceContainers",
+                "Storage",
+                "+ Add Container",
+                new[]
+                {
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Name",
+                        PropertyName = "name",
+                        Kind = SerializedTableColumnKind.Custom,
+                        CustomBuilder = prop => new ResourceNameField(prop, string.Empty),
+                        Flex = 1f,
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Capacity",
+                        PropertyName = "capacityUnits",
+                        Kind = SerializedTableColumnKind.Double,
+                        FixedWidth = 80f,
+                        Tooltip = "Maximum stored units of this resource.",
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Initial",
+                        PropertyName = "initialUnits",
+                        Kind = SerializedTableColumnKind.Double,
+                        FixedWidth = 80f,
+                        Tooltip = "Stored units at part spawn.",
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Non-Stageable",
+                        PropertyName = "NonStageable",
+                        Kind = SerializedTableColumnKind.Toggle,
+                        FixedWidth = 90f,
+                        Tooltip = "When true, the resource is hidden from the staging flow rollup.",
+                    },
+                });
+            foldout.Add(storageTable.Build());
+
+            var costsTable = new SerializedArrayTable(
+                so,
+                "core.data.resourceCosts",
+                "Build Costs",
+                "+ Add Cost",
+                new[]
+                {
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Name",
+                        PropertyName = "name",
+                        Kind = SerializedTableColumnKind.Custom,
+                        CustomBuilder = prop => new ResourceNameField(prop, string.Empty),
+                        Flex = 1f,
+                    },
+                    new SerializedTableColumn
+                    {
+                        HeaderLabel = "Units",
+                        PropertyName = "resourceUnits",
+                        Kind = SerializedTableColumnKind.Double,
+                        FixedWidth = 80f,
+                        Tooltip = "Units of this resource required to build one of this part.",
+                    },
+                });
+            foldout.Add(costsTable.Build());
+
+            AddField(foldout, so, "core.data.HasReportStorage");
+            return Bound(foldout, so);
+        }
+
+        /// <summary>
+        /// Builds the OAB and Editor section (category and hide-mode flags for the part assembly editor).
+        /// </summary>
+        /// <param name="so">The CorePartData's SerializedObject.</param>
+        /// <returns>A bound Foldout with the section's PropertyFields.</returns>
+        public static VisualElement BuildOabEditor(SerializedObject so)
+        {
+            var foldout = MakeSectionFoldout("OAB & Editor");
+            AddField(foldout, so, "core.data.oabEditorCategory");
+            AddField(foldout, so, "core.data.partType");
+            AddField(foldout, so, "core.data.partHideMode");
+            AddField(foldout, so, "core.data.PreferredOrientation");
+            AddField(foldout, so, "core.data.MirrorTechnique");
+            AddField(foldout, so, "core.data.CanSuggestOrientation");
+            AddField(foldout, so, "core.data.PickUpPointOffset");
+            AddField(foldout, so, "core.data.PickupRotationPointOffset");
+            AddField(foldout, so, "core.data.hideFromFlightPartsManager");
+            AddField(foldout, so, "core.data.hideFromOABPartsManager");
+            return Bound(foldout, so);
+        }
+
+        private static Foldout MakeSectionFoldout(string title)
+        {
+            var foldout = new Foldout { text = title, value = true };
+            foldout.AddToClassList("sdk-section");
+            return foldout;
+        }
+
+        private static void AddField(VisualElement parent, SerializedObject so, string path)
+        {
+            var prop = so.FindProperty(path);
+            if (prop != null)
+            {
+                parent.Add(new PropertyField(prop));
+            }
+        }
+
+        private static void AddFamilyField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.family");
+            if (prop != null)
+            {
+                parent.Add(new Widgets.FamilyField(prop, "Family"));
+            }
+        }
+
+        private static void AddSizeKeyField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.sizeKey");
+            if (prop != null)
+            {
+                parent.Add(new AutocompleteField(
+                    prop,
+                    "Size Key",
+                    PartAuthoringChoiceCatalog.GetKnownSizeKeys,
+                    detailSource: PartAuthoringChoiceCatalog.GetKnownSizeKeyDetail,
+                    preserveSourceOrderForEqualScores: true));
+            }
+        }
+
+        private static VisualElement Bound(VisualElement element, SerializedObject so)
+        {
+            element.Bind(so);
+            return element;
+        }
+    }
+}

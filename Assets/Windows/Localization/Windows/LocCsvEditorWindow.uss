@@ -1,0 +1,66 @@
+.loc-editor-root {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.loc-editor-toolbar {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 6px;
+    background-color: rgba(70, 100, 140, 0.15);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.5);
+}
+
+.loc-editor-toolbar-path {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    color: rgb(200, 210, 220);
+    padding: 0 6px;
+    overflow: hidden;
+}
+
+.loc-editor-toolbar-btn {
+    margin: 0 0 0 4px;
+    padding: 2px 10px;
+}
+
+.loc-editor-banner-host {
+    flex-shrink: 0;
+}
+
+.loc-editor-banner {
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: rgba(200, 150, 60, 0.25);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.5);
+}
+
+.loc-editor-banner-text {
+    flex-grow: 1;
+    color: rgb(230, 220, 200);
+}
+
+.loc-editor-banner-btn {
+    margin: 0 0 0 4px;
+    padding: 2px 10px;
+}
+
+.loc-editor-table-host {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.loc-editor-status {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-top-width: 1px;
+    border-top-color: rgba(0, 0, 0, 0.5);
+    color: rgb(180, 190, 200);
+    -unity-font-style: normal;
+}

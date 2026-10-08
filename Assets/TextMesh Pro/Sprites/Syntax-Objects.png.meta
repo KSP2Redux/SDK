@@ -1,0 +1,375 @@
+fileFormatVersion: 2
+guid: 41027a931dc501d479eb8efb8f01e165
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: Moon
+  - first:
+      213: 21300002
+    second: Star-System
+  - first:
+      213: 21300004
+    second: Kerbonaut
+  - first:
+      213: 21300006
+    second: Planet
+  - first:
+      213: 21300008
+    second: Vessel
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 12
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 200
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 0
+  flipbookColumns: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Moon
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -13, y: 16}
+        - {x: -16, y: 9}
+        - {x: -16, y: -9}
+        - {x: -7, y: -16}
+        - {x: 4, y: -16}
+        - {x: 9, y: -14.999999}
+        - {x: 16, y: -6}
+        - {x: 16, y: 8}
+        - {x: 9, y: 16}
+      - - {x: -4.9999995, y: 4}
+        - {x: -4, y: 4.9999995}
+        - {x: -3, y: 4}
+        - {x: -4, y: 3}
+        - {x: -4, y: 4}
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad3653a4179f49608a4a142acef422fa
+      internalID: 21300000
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star-System
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -7, y: -4}
+        - {x: -14, y: -4}
+        - {x: -16, y: -6}
+        - {x: -16, y: -16}
+        - {x: -4.9999995, y: -16}
+        - {x: -4, y: -14.999999}
+        - {x: -4, y: -9.999999}
+        - {x: -4.9999995, y: -7}
+      - - {x: 3, y: 4}
+        - {x: -4, y: -1}
+        - {x: -4, y: -12}
+        - {x: -1, y: -16}
+        - {x: 9.999999, y: -16}
+        - {x: 16, y: -9.999999}
+        - {x: 16, y: -4}
+        - {x: 8, y: 4}
+      - - {x: 4, y: 9.999999}
+        - {x: -3, y: 16}
+        - {x: -9.999999, y: 16}
+        - {x: -16, y: 9.999999}
+        - {x: -16, y: 3}
+        - {x: -11, y: -3}
+        - {x: -9, y: -4}
+        - {x: -4.9999995, y: -4}
+        - {x: -4, y: -2}
+        - {x: 4, y: 6}
+      - - {x: 6, y: 16}
+        - {x: 4, y: 12}
+        - {x: 4, y: 7}
+        - {x: 7, y: 4.9999995}
+        - {x: 9.999999, y: 4}
+        - {x: 13, y: 4}
+        - {x: 16, y: 7}
+        - {x: 16, y: 14}
+        - {x: 14, y: 16}
+      tessellationDetail: 0
+      bones: []
+      spriteID: b79235a24630458a865bf67a5ad69305
+      internalID: 21300002
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Kerbonaut
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 6, y: 16}
+        - {x: -7, y: 16}
+        - {x: -14, y: 11}
+        - {x: -14, y: -9.999999}
+        - {x: -11, y: -16}
+        - {x: 11, y: -16}
+        - {x: 14, y: -7}
+        - {x: 14, y: 9}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c5babd2839146d3a4905e1bbf6d5f24
+      internalID: 21300004
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Planet
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -12, y: 16}
+        - {x: -16, y: 9.999999}
+        - {x: -16, y: -12}
+        - {x: -9.999999, y: -16}
+        - {x: 12, y: -16}
+        - {x: 16, y: -9.999999}
+        - {x: 16, y: 12}
+        - {x: 9.999999, y: 16}
+      - - {x: -9, y: -6}
+        - {x: -12, y: -3}
+        - {x: -9.999999, y: -4.9999995}
+        - {x: -8, y: -4.9999995}
+        - {x: -4.9999995, y: -2}
+        - {x: -4.9999995, y: 0}
+        - {x: -1, y: 4}
+        - {x: -3, y: 2}
+        - {x: -3, y: -4}
+        - {x: 0, y: -7}
+        - {x: 3, y: -8}
+        - {x: 9.999999, y: -3}
+        - {x: 11, y: -1}
+        - {x: 9, y: -6}
+        - {x: 4, y: -11}
+        - {x: -4, y: -9.999999}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 28d98da9daf845a184935319ce99a83d
+      internalID: 21300006
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Vessel
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -6, y: 16}
+        - {x: -16, y: 0}
+        - {x: -16, y: -16}
+        - {x: 14.999999, y: -16}
+        - {x: 16, y: -14.999999}
+        - {x: 16, y: -6}
+        - {x: 6, y: 16}
+      tessellationDetail: 0
+      bones: []
+      spriteID: f26ab2d0f6a54e8f87fdfe0447d641c9
+      internalID: 21300008
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Kerbonaut: 21300004
+      Moon: 21300000
+      Planet: 21300006
+      Star-System: 21300002
+      Vessel: 21300008
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

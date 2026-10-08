@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- Inspector for CelestialBodyPostProcess. Binds the PostProcessData asset reference and inlines its altitude-bound and auto-exposure fields. Driven by CelestialBodyPostProcessEditor. -->
+
+    <engine:VisualElement class="body-inspector-root">
+
+        <editor:PropertyField binding-path="data" label="Data" tooltip="The PostProcessData asset that drives this body's altitude-bounded post-processing and auto-exposure." />
+
+        <engine:VisualElement name="post-process-data-slot" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

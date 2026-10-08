@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root">
+
+        <engine:Foldout text="Blender Inputs" value="true" class="sdk-section">
+            <editor:DoubleField name="midlevel-field" label="Mid-Level"
+                                tooltip="Midlevel value from Blender's Displace modifier on the source sphere. The Heightmap Baker reports this as 'Radius (Midlevel)' on a successful bake."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="strength-field" label="Strength"
+                                tooltip="Strength value from Blender's Displace modifier on the source sphere. The Heightmap Baker reports this on a successful bake."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="sea-level-field" label="Sea Level Above Mid-Level"
+                                tooltip="How far the sea surface sits above the mesh's lowest point, in the same units as Mid-Level and Strength. 0 puts sea level at the lowest point, which is right for a body with no ocean."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Target" value="true" class="sdk-section">
+            <engine:DropdownField name="target-type-field" label="Target Type"
+                                  choices="Radius,Max Height" index="0"
+                                  tooltip="Which value you want to drive the result by. Radius scales the mesh so its sea level lands on the target radius. Max Height scales it so the highest peak lands at the target distance from the center."
+                                  class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="target-field" label="Target (m)"
+                                tooltip="Desired body radius (in meters) or desired peak altitude above center (in meters), depending on Target Type."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Result" value="true" class="sdk-section">
+            <editor:DoubleField name="radius-field" label="Radius (m)"
+                                readonly="true"
+                                tooltip="Body radius to assign on CoreCelestialBodyData. This is sea level: the mesh's lowest point plus the sea level input, scaled to hit the target."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="ocean-altitude-field" label="Ocean Altitude (m)"
+                                readonly="true"
+                                tooltip="Value to assign as the body's Ocean Altitude. PQS builds terrain up from radius minus this value, so it is the scaled height of sea level above the lowest point. 0 when the sea level input is 0."
+                                class="sdk-field unity-base-field__aligned" />
+            <editor:DoubleField name="terrain-height-field" label="Terrain Height Scale"
+                                readonly="true"
+                                tooltip="Value to assign as the body's TerrainHeightScale. This is mesh-strength scaled by the same factor that produced the radius, so terrain reaches the intended peak relative to the radius."
+                                class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

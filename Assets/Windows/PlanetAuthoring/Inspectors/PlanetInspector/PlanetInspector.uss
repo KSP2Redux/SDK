@@ -1,0 +1,210 @@
+/* Planet inspector: rules on top of ReduxSDKStyles.uss and PQSInspector.uss.
+ * The header, chips and tab bar are the shared sdk-inspector-* and sdk-tab*
+ * classes. Only what is particular to planets lives here. */
+
+.planet-inspector-thumbnail {
+    width: 52px;
+    height: 52px;
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+    border-bottom-left-radius: 26px;
+    border-bottom-right-radius: 26px;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.planet-inspector-editing-row {
+    margin-top: 4px;
+}
+
+.planet-inspector-editing-row > .sdk-inspector-row-label {
+    width: auto;
+    margin-right: 6px;
+}
+
+.planet-inspector-side {
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    font-size: 11px;
+}
+
+.planet-inspector-side.is-active {
+    background-color: rgba(70, 120, 180, 0.75);
+    color: rgb(250, 252, 255);
+    -unity-font-style: bold;
+}
+
+.planet-inspector-live-banner {
+    -unity-font-style: normal;
+    color: rgb(240, 210, 150);
+    margin-bottom: 4px;
+}
+
+.planet-inspector-preview-readiness {
+    margin-left: 76px;
+}
+
+.planet-inspector-status {
+    margin-top: 2px;
+}
+
+.planet-inspector-jump-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+    padding-left: 2px;
+}
+
+.planet-inspector-jump-link {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    margin-left: 0;
+    margin-right: 8px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 11px;
+    color: rgb(143, 185, 227);
+}
+
+.planet-inspector-jump-link:hover {
+    color: rgb(200, 225, 250);
+}
+
+.planet-inspector-jump-label {
+    font-size: 11px;
+    color: rgb(150, 160, 175);
+    margin-right: 6px;
+}
+
+/* A section's actions, moved into its foldout header by the inspector. */
+
+.planet-section-actions {
+    flex-direction: row;
+    align-items: center;
+    margin-left: auto;
+}
+
+.planet-section-action {
+    font-size: 11px;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 4px;
+    margin-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 7px;
+    padding-right: 7px;
+    height: 18px;
+    -unity-font-style: normal;
+}
+
+.planet-section-action--danger {
+    color: rgb(240, 195, 190);
+}
+
+/* Biome layers grid: channel rows by tier columns. */
+
+.planet-layer-grid {
+    margin-bottom: 6px;
+}
+
+.planet-layer-grid__row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.planet-layer-grid__channel {
+    width: 16px;
+    -unity-text-align: middle-center;
+    color: rgb(170, 180, 195);
+}
+
+.planet-layer-grid__head {
+    flex-grow: 1;
+    flex-basis: 0;
+    -unity-text-align: middle-center;
+    font-size: 11px;
+    color: rgb(170, 180, 195);
+}
+
+.planet-layer-grid__cell {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 22px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    font-size: 11px;
+}
+
+.planet-layer-grid__cell.is-active {
+    background-color: rgba(70, 120, 180, 0.75);
+    color: rgb(250, 252, 255);
+    -unity-font-style: bold;
+}
+
+.planet-inspector-field-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.planet-inspector-field-row__field {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.planet-inspector-field-row__button {
+    flex-shrink: 0;
+    margin-right: 0;
+}
+
+/* Inspectors embedded in a section: an InspectorElement and the embedded inspector's own root both pad their
+ * content, which pushed its sections well right of the section's other content. */
+
+.planet-inspector-tab .unity-inspector-element,
+.planet-inspector-tab .unity-inspector-element__custom-inspector-container,
+.planet-inspector-tab .unity-inspector-element .sdk-root,
+.planet-inspector-tab .unity-inspector-element .body-inspector-root,
+.planet-inspector-tab .unity-inspector-element .pqs-inspector-root,
+.planet-inspector-tab .unity-inspector-element .decal-controller-root,
+.planet-inspector-tab .unity-inspector-element .decal-inspector-root {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* A section inside a section, such as an embedded inspector's own, is drawn as a sub-section, the level it sits at. */
+
+.planet-inspector-tab .sdk-section .sdk-section > .unity-foldout__toggle,
+.planet-inspector-tab .sdk-section .body-inspector-section > .unity-foldout__toggle,
+.planet-inspector-tab .sdk-section .pqs-inspector-section > .unity-foldout__toggle,
+.planet-inspector-tab .sdk-section .decal-controller-section > .unity-foldout__toggle,
+.planet-inspector-tab .sdk-section .decal-inspector-section > .unity-foldout__toggle {
+    background-color: rgba(70, 100, 140, 0.18);
+    border-left-width: 2px;
+    border-left-color: rgba(95, 150, 210, 0.55);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-left: 4px;
+    margin-left: 0;
+}

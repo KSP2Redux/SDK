@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView>
+        <engine:VisualElement class="decal-inspector-root">
+
+            <engine:Foldout text="Existing" value="true" class="sdk-section">
+                <editor:ObjectField name="existing-template-field" label="Template"
+                                    type="PQSDecal, Assembly-CSharp"
+                                    allow-scene-objects="false"
+                                    tooltip="Drop a PQSDecal here to skip creation and place an instance of it instead."
+                                    class="decal-inspector-field unity-base-field__aligned" />
+                <engine:VisualElement name="existing-hint-slot" />
+            </engine:Foldout>
+
+            <engine:Foldout name="new-decal-foldout" text="New decal" value="true" class="sdk-section">
+                <engine:TextField name="name-field" label="Name"
+                                  tooltip="Asset name for the new template."
+                                  class="decal-inspector-field unity-base-field__aligned" />
+                <editor:FloatField name="height-scale-field" label="Height Scale"
+                                   tooltip="Initial height scale of the new template, in meters."
+                                   class="decal-inspector-field unity-base-field__aligned" />
+                <engine:EnumField name="blend-mode-field" label="Blend Mode"
+                                  tooltip="Initial height blend mode of the new template."
+                                  class="decal-inspector-field unity-base-field__aligned" />
+
+                <engine:Label text="Per-decal textures (optional)" class="decal-inspector-section-label" />
+                <engine:VisualElement name="textures-hint-slot" />
+                <editor:ObjectField name="diffuse-field" label="Diffuse"
+                                    type="UnityEngine.Texture2D, UnityEngine"
+                                    allow-scene-objects="false"
+                                    class="decal-inspector-field unity-base-field__aligned" />
+                <editor:ObjectField name="normal-field" label="Normal"
+                                    type="UnityEngine.Texture2D, UnityEngine"
+                                    allow-scene-objects="false"
+                                    class="decal-inspector-field unity-base-field__aligned" />
+                <editor:ObjectField name="alpha-mask-field" label="Alpha Mask Texture"
+                                    type="UnityEngine.Texture2D, UnityEngine"
+                                    allow-scene-objects="false"
+                                    class="decal-inspector-field unity-base-field__aligned" />
+                <editor:ObjectField name="peak-field" label="Peak"
+                                    type="UnityEngine.Texture2D, UnityEngine"
+                                    allow-scene-objects="false"
+                                    class="decal-inspector-field unity-base-field__aligned" />
+                <editor:ObjectField name="slope-field" label="Slope"
+                                    type="UnityEngine.Texture2D, UnityEngine"
+                                    allow-scene-objects="false"
+                                    class="decal-inspector-field unity-base-field__aligned" />
+            </engine:Foldout>
+
+        </engine:VisualElement>
+    </engine:ScrollView>
+
+    <engine:VisualElement class="sdk-button-row" style="margin-top: 8px; margin-left: 8px; margin-right: 8px; margin-bottom: 8px;">
+        <engine:Button name="cancel-button" text="Cancel" />
+        <engine:Button name="confirm-button" text="Create" />
+    </engine:VisualElement>
+
+</engine:UXML>

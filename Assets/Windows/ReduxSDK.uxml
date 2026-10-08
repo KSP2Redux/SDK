@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement class="sdk-root" style="flex-grow: 1;">
+        <ui:Label text="Mods" class="sdk-section-header" />
+        <ui:ScrollView name="ModsContainer" class="modding-mods-scroll" />
+
+        <ui:Label text="Project" class="sdk-section-header" />
+        <ui:Button text="Refresh Mod List" name="RefreshModsButton" class="sdk-action-button" />
+        <ui:Button text="Create Mod" name="CreateModButton" class="sdk-action-button" />
+
+        <ui:Label text="Selected Mods" class="sdk-section-header" />
+        <ui:Button text="Test In Editor" name="TestInEditorButton" class="sdk-action-button" />
+        <ui:Button text="Test In Game" name="TestInPlayerButton" class="sdk-action-button" />
+        <ui:Button text="Deploy To Zip File" name="DeployToZipFileButton" class="sdk-action-button" />
+    </ui:VisualElement>
+</ui:UXML>

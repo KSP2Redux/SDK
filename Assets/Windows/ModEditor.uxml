@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement class="sdk-root">
+        <uie:PropertyField binding-path="id" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="name" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="author" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="description" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="version" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="versionCheck" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="source" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="minKsp2Version" />
+        <uie:PropertyField binding-path="maxKsp2Version" />
+        <uie:PropertyField binding-path="dependencies" />
+        <uie:PropertyField binding-path="incompatibilities" />
+
+        <ui:Label text="Building" class="sdk-section-header" />
+        <ui:Button text="Create Assembly Definition" name="AddCodeButton" class="sdk-action-button" />
+        <ui:Button text="Refresh Addressables Groups" name="RefreshAddressablesButton" class="sdk-action-button" />
+        <ui:Button text="Refresh Thunderkit Pipelines" name="RefreshThunderkitButton" class="sdk-action-button" />
+        <ui:Button text="Convert KSP1 Part Mod" name="ConvertKsp1PartsButton" class="sdk-action-button" />
+
+        <ui:Label text="Deployment And Testing" class="sdk-section-header" />
+        <ui:Button text="Test In Editor" name="TestInEditorButton" class="sdk-action-button" />
+        <ui:Button text="Test In Player" name="TestInPlayerButton" class="sdk-action-button" />
+        <ui:Button text="Deploy To Zip File" name="DeployToZipFileButton" class="sdk-action-button" />
+    </ui:VisualElement>
+</ui:UXML>

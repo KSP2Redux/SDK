@@ -1,0 +1,138 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: vfx_exh_mesh_main_01b
+  m_Shader: {fileID: 4800000, guid: 25a5e69708cb4bb4e898225d84a60102, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 0
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 3001
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _DistortionTexture:
+        m_Texture: {fileID: 2800000, guid: 60f1304c070add941afcf70c01eea68f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTexture:
+        m_Texture: {fileID: 2800000, guid: 60f1304c070add941afcf70c01eea68f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TracesTexture:
+        m_Texture: {fileID: 2800000, guid: d243a9600a0992046b26977432503d94, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AccelerationScaleFactor: 15
+    - _Alpha: 0.5
+    - _BendCenterOffset: 0
+    - _BendCenterOffsetMultipler: 0
+    - _BendRotationOffset: 0
+    - _BumpScale: 1
+    - _CameraDistanceFadeLength: 50
+    - _CameraDistanceFalloff: 1
+    - _CameraDistanceTopGradient: 0.854
+    - _ColorMask: 15
+    - _ColorTintBoost: 0
+    - _ColorTintEndGradient: 0.25
+    - _ColorTintEndOffset: 0.25
+    - _ColorTintFalloff: 0.6
+    - _ColorTintGradient: 1
+    - _ColorTintMiddlePos: 0.08353561
+    - _ColorTintOffset: 0.1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _ErosionAmount: 0.45
+    - _ErosionFalloffGradient: 0.3
+    - _ErosionPosOffset: 0.2
+    - _FresnelInner: 0
+    - _FresnelInnerBeneath: 0
+    - _FresnelOuter: 1.56
+    - _FresnelOuterBeneath: 0.7
+    - _FresnelOuterErosionAmount: 0
+    - _FresnelOuterErosionFalloff: 0.001
+    - _FresnelOuterErosionOffset: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _GradientFalloffBottom: 1
+    - _GradientFalloffTop: 0
+    - _GradientOffsetBottom: 0
+    - _GradientOffsetTop: 0
+    - _Metallic: 0
+    - _Mode: 0
+    - _NoiseAmount: 0.06291363
+    - _NoiseStrength: 1.22
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _ScrollSpeedX: 0.2
+    - _ScrollSpeedY: 6.8800006
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _TdotVScale: 3
+    - _TextureOffsetX: 0.26332688
+    - _TextureOffsetY: 0.58733106
+    - _TextureScale: 1
+    - _TextureScaleX: 2
+    - _TextureScaleY: 4
+    - _TopGradientFalloff: 0
+    - _TopGradientPosOffset: 0
+    - _TracesAmount: 0
+    - _TracesBottomFalloff: 0
+    - _TracesBottomOffset: 0
+    - _TracesCount: 5
+    - _TracesFresnelOuter: 0
+    - _TracesLength: 1
+    - _TracesStrength: 2
+    - _TracesThickness: 2
+    - _TracesTopFalloff: 0
+    - _TracesTopFalloffGradient: 0
+    - _TracesTopOffset: 0
+    - _TracesTopPosOffset: 0
+    - _UVSec: 0
+    - _UseUIAlphaClip: 0
+    - _VertexBendScale: 1
+    - _VertexDispContrast: 0.8
+    - _VertexDispFalloff: 1.21
+    - _VertexDispFalloffGradient: 0.3
+    - _VertexDispOffset: 0.161
+    - _VertexDispPosOffset: 0
+    - _VertexDispScale: 0.2
+    - _ZWrite: 1
+    - __dirty: 0
+    m_Colors:
+    - _AccelerationDir: {r: 0, g: 0, b: 0, a: 0}
+    - _BendForward: {r: 1, g: 0, b: 0, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorTintEnd: {r: 0.0754717, g: 0.0754717, b: 0.0754717, a: 1}
+    - _ColorTintMiddle: {r: 0.7372549, g: 0.50980395, b: 0.7647059, a: 1}
+    - _ColorTintStart: {r: 0.40251565, g: 0.53240335, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _VertexBendDir: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

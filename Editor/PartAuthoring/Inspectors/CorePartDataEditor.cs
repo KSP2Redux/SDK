@@ -1,0 +1,620 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using KSP;
+using KSP.Modules;
+using KSP.Sim.Definitions;
+using Ksp2UnityTools.Editor.CustomEditors;
+using Ksp2UnityTools.Editor.IO;
+using Ksp2UnityTools.Editor.Localization.Export;
+using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs;
+using Ksp2UnityTools.Editor.PartAuthoring.Tools;
+using Ksp2UnityTools.Editor.PartAuthoring.Validation;
+using Ksp2UnityTools.Editor.PartAuthoring.Windows;
+using Ksp2UnityTools.Editor.Validation;
+using Ksp2UnityTools.Editor.Widgets;
+using Redux.VFX.ReentryMeshGeneration;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEditor.UIElements;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
+{
+    /// <summary>
+    /// UI Toolkit custom editor for <see cref="CorePartData" /> that hosts the part-authoring tabs.
+    /// </summary>
+    /// <remarks>
+    /// Header chrome above the tab bar surfaces identity (part name, family, size category), the
+    /// Quick Tools chip row, and a Gizmo Settings foldout. Tabs are Core, Modules, Variants.
+    /// </remarks>
+    [CustomEditor(typeof(CorePartData))]
+    public sealed class CorePartDataEditor : UnityEditor.Editor
+    {
+        private const string UXML_PATH = "/Assets/Windows/PartAuthoring/Inspectors/CorePartDataEditor.uxml";
+        private const string USS_PATH = "/Assets/Windows/PartAuthoring/Inspectors/CorePartDataEditor.uss";
+
+        private const string SESSION_STATE_KEY_ACTIVE_TAB = "PartAuthoring.ActiveTab";
+        private const string DEFAULT_TAB = "core";
+        private const string TAB_ACTIVE_CLASS = "sdk-tab--active";
+
+        private static readonly string[] TAB_IDS = { "core", "modules", "variants" };
+        private static readonly List<Dictionary<PartBehaviourModule, HideFlags>> PendingModuleHideFlagRestores = new();
+        private static readonly FieldInfo ModuleDragDataField =
+            typeof(Module_Drag).GetField("dataDrag", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static bool _restorePendingModuleHideFlagsRegistered;
+
+        private VisualElement _root;
+        private VisualElement _tabContent;
+        private string _activeTab;
+        private Dictionary<PartBehaviourModule, HideFlags> _originalModuleHideFlags;
+
+        private void OnEnable()
+        {
+            _activeTab = SessionState.GetString(SESSION_STATE_KEY_ACTIVE_TAB, DEFAULT_TAB);
+            if (CanMutateInspectorState())
+            {
+                HideModuleComponentEditors();
+            }
+            PartValidationExpensiveCache.Changed += OnExpensiveCacheChanged;
+        }
+
+        private void OnDisable()
+        {
+            RestoreModuleComponentEditors();
+            PartValidationExpensiveCache.Changed -= OnExpensiveCacheChanged;
+        }
+
+        private void OnExpensiveCacheChanged(CorePartData part)
+        {
+            if (IsPlayModeTransitioning()) return;
+            if (_root == null) return;
+            if (part != null && part != target) return;
+            UpdateValidationChip();
+        }
+
+        // Restoration relies on OnDisable, which may not fire during a domain-reload race. The HideFlags
+        // mutation can persist on module components until the next inspector OnEnable rewrites it.
+        private void HideModuleComponentEditors()
+        {
+            _originalModuleHideFlags = new Dictionary<PartBehaviourModule, HideFlags>();
+            if (target is not CorePartData cpd)
+            {
+                return;
+            }
+            foreach (var module in cpd.gameObject.GetComponents<PartBehaviourModule>())
+            {
+                _originalModuleHideFlags[module] = module.hideFlags;
+                module.hideFlags |= HideFlags.HideInInspector;
+            }
+        }
+
+        private void RestoreModuleComponentEditors()
+        {
+            if (_originalModuleHideFlags == null)
+            {
+                return;
+            }
+
+            var originalHideFlags = _originalModuleHideFlags;
+            _originalModuleHideFlags = null;
+            RestoreModuleComponentEditors(originalHideFlags);
+        }
+
+        private static void RestoreModuleComponentEditors(Dictionary<PartBehaviourModule, HideFlags> originalHideFlags)
+        {
+            if (originalHideFlags == null)
+            {
+                return;
+            }
+            if (!CanMutateInspectorState())
+            {
+                PendingModuleHideFlagRestores.Add(originalHideFlags);
+                RegisterPendingModuleHideFlagRestore();
+                return;
+            }
+
+            RestoreModuleComponentEditorsNow(originalHideFlags);
+        }
+
+        private static void RestoreModuleComponentEditorsNow(Dictionary<PartBehaviourModule, HideFlags> originalHideFlags)
+        {
+            foreach (var pair in originalHideFlags)
+            {
+                if (pair.Key != null)
+                {
+                    pair.Key.hideFlags = pair.Value;
+                }
+            }
+        }
+
+        private static void RegisterPendingModuleHideFlagRestore()
+        {
+            if (_restorePendingModuleHideFlagsRegistered)
+            {
+                return;
+            }
+            EditorApplication.playModeStateChanged += OnPlayModeStateChangedForPendingRestore;
+            EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
+            _restorePendingModuleHideFlagsRegistered = true;
+        }
+
+        private static void OnPlayModeStateChangedForPendingRestore(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
+            }
+        }
+
+        private static void FlushPendingModuleHideFlagRestores()
+        {
+            if (!CanMutateInspectorState())
+            {
+                EditorApplication.delayCall += FlushPendingModuleHideFlagRestores;
+                return;
+            }
+
+            foreach (var originalHideFlags in PendingModuleHideFlagRestores)
+            {
+                RestoreModuleComponentEditorsNow(originalHideFlags);
+            }
+            PendingModuleHideFlagRestores.Clear();
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChangedForPendingRestore;
+            _restorePendingModuleHideFlagsRegistered = false;
+        }
+
+        private static bool CanMutateInspectorState()
+        {
+            return !IsPlayModeTransitioning() &&
+                   !EditorApplication.isCompiling &&
+                   !EditorApplication.isUpdating;
+        }
+
+        // True only while Unity is entering or leaving Play Mode, which is the window where mutating
+        // hideFlags races scene serialization. isPlayingOrWillChangePlaymode leads isPlaying on the way
+        // in and lags it on the way out, so the two disagree exactly during a transition. Steady-state
+        // Play Mode is not a transition and does not gate anything here, since the authoring inspector
+        // is just as useful on a live part as on one sitting in Edit Mode.
+        private static bool IsPlayModeTransitioning()
+        {
+            return EditorApplication.isPlayingOrWillChangePlaymode != EditorApplication.isPlaying;
+        }
+
+        /// <inheritdoc />
+        public override VisualElement CreateInspectorGUI()
+        {
+            _root = new VisualElement();
+
+            var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UXML_PATH);
+            if (tree == null)
+            {
+                _root.Add(new Label("Failed to load CorePartDataEditor.uxml"));
+                return _root;
+            }
+            tree.CloneTree(_root);
+
+            Ksp2UnityToolsStyles.Apply(_root, USS_PATH);
+
+            _tabContent = _root.Q<VisualElement>("part-tab-content");
+
+            PopulateIdentityRow();
+            PopulateIcon();
+            PopulateReadinessChips();
+            _root.TrackSerializedObjectValue(serializedObject, _ => PopulateReadinessChips());
+            WireValidationChip();
+            WireQuickToolsChips();
+            WireGizmoSettings();
+
+            foreach (var id in TAB_IDS)
+            {
+                var button = _root.Q<Button>($"tab-{id}");
+                if (button == null)
+                {
+                    continue;
+                }
+                var tabId = id;
+                button.clicked += () => SetActiveTab(tabId);
+            }
+
+            UpdateTabHighlights();
+            RenderActiveTab();
+            return _root;
+        }
+
+        private void PopulateIdentityRow()
+        {
+            var partData = (target as CorePartData)?.Core?.data;
+            if (partData == null)
+            {
+                return;
+            }
+
+            var nameLabel = _root.Q<Label>("header-part-name");
+            if (nameLabel != null)
+            {
+                nameLabel.text = string.IsNullOrWhiteSpace(partData.partName) ? "<unnamed part>" : partData.partName;
+            }
+
+            var familyChip = _root.Q<Label>("header-family-chip");
+            if (familyChip != null)
+            {
+                familyChip.text = $"family: {(string.IsNullOrEmpty(partData.family) ? "(none)" : partData.family)}";
+            }
+
+            var sizeChip = _root.Q<Label>("header-size-chip");
+            if (sizeChip != null)
+            {
+                sizeChip.text = $"sizeKey: {(string.IsNullOrEmpty(partData.sizeKey) ? "(none)" : partData.sizeKey)}";
+            }
+        }
+
+        private void PopulateIcon()
+        {
+            var iconEl = _root.Q<VisualElement>("header-icon");
+            if (iconEl == null)
+            {
+                return;
+            }
+            var cpd = target as CorePartData;
+            if (cpd == null)
+            {
+                return;
+            }
+            string iconPath = TryResolveIconPath(cpd);
+            if (string.IsNullOrEmpty(iconPath))
+            {
+                return;
+            }
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+            if (tex != null)
+            {
+                iconEl.style.backgroundImage = new StyleBackground(tex);
+            }
+        }
+
+        private void PopulateReadinessChips()
+        {
+            var cpd = target as CorePartData;
+            if (cpd == null)
+            {
+                return;
+            }
+
+            var jsonChip = _root.Q<Label>("readiness-chip-json");
+            if (jsonChip != null)
+            {
+                bool exists = JsonSidecarExists(cpd);
+                jsonChip.text = exists ? "JSON saved" : "JSON missing";
+                SetReadinessState(jsonChip, exists ? "is-ok" : "is-warn");
+            }
+
+            var iconChip = _root.Q<Label>("readiness-chip-icon");
+            if (iconChip != null)
+            {
+                bool exists = !string.IsNullOrEmpty(TryResolveIconPath(cpd));
+                iconChip.text = exists ? "Icon baked" : "Icon missing";
+                SetReadinessState(iconChip, exists ? "is-ok" : "is-warn");
+            }
+
+            var reentryChip = _root.Q<Label>("readiness-chip-reentry");
+            if (reentryChip != null)
+            {
+                bool baked = ReentryMeshBaked(cpd);
+                reentryChip.text = baked ? "Reentry baked" : "Reentry missing";
+                SetReadinessState(reentryChip, baked ? "is-ok" : "is-warn");
+            }
+
+            var dragCubeChip = _root.Q<Label>("readiness-chip-drag-cubes");
+            if (dragCubeChip != null)
+            {
+                int cubeCount = CountDragCubes(cpd);
+                bool ready = cubeCount > 0;
+                dragCubeChip.text = ready ? $"Drag cubes: {cubeCount}" : "Drag cubes missing";
+                SetReadinessState(dragCubeChip, ready ? "is-ok" : "is-warn");
+            }
+
+            UpdateValidationChip();
+        }
+
+        private void WireValidationChip()
+        {
+            var validChip = _root?.Q<Button>("readiness-chip-valid");
+            if (validChip == null) return;
+            validChip.clicked += () => PartValidationReportWindow.Open(target as CorePartData);
+            validChip.tooltip = "Open the Part Validation Report.";
+            _root.TrackSerializedObjectValue(serializedObject, _ => UpdateValidationChip());
+        }
+
+        private void UpdateValidationChip()
+        {
+            if (IsPlayModeTransitioning()) return;
+            if (_root == null) return;
+            var validChip = _root.Q<Button>("readiness-chip-valid");
+            if (validChip == null) return;
+            var cpd = target as CorePartData;
+            if (cpd == null)
+            {
+                validChip.text = "Validation: n/a";
+                SetReadinessState(validChip, null);
+                return;
+            }
+
+            var cheap = PartValidationReport.Run(new PartValidationContext(cpd), ValidatorCost.Cheap);
+            var expensive = PartValidationExpensiveCache.Get(cpd);
+            var errors = cheap.ErrorCount;
+            var warnings = cheap.WarningCount;
+            var info = cheap.InfoCount;
+            foreach (var issue in expensive)
+            {
+                switch (issue.Severity)
+                {
+                    case ValidationSeverity.Error: errors++; break;
+                    case ValidationSeverity.Warning: warnings++; break;
+                    case ValidationSeverity.Info: info++; break;
+                }
+            }
+
+            if (errors + warnings + info == 0)
+            {
+                validChip.text = "No issues";
+                SetReadinessState(validChip, "is-ok");
+            }
+            else
+            {
+                validChip.text = $"✕ {errors}  ·  ⚠ {warnings}  ·  ⓘ {info}";
+                SetReadinessState(validChip, errors > 0 ? "is-error" : "is-warn");
+            }
+        }
+
+        private static void SetReadinessState(VisualElement chip, string stateClass)
+        {
+            chip.EnableInClassList("is-ok", stateClass == "is-ok");
+            chip.EnableInClassList("is-warn", stateClass == "is-warn");
+            chip.EnableInClassList("is-error", stateClass == "is-error");
+        }
+
+        private static string TryResolvePrefabDirectory(CorePartData cpd)
+        {
+            string prefabPath = PathUtils.GetPrefabOrAssetPath(cpd, cpd.gameObject);
+            return string.IsNullOrEmpty(prefabPath) ? null : Path.GetDirectoryName(prefabPath);
+        }
+
+        private static string TryResolveIconPath(CorePartData cpd)
+        {
+            string dir = TryResolvePrefabDirectory(cpd);
+            if (string.IsNullOrEmpty(dir))
+            {
+                return null;
+            }
+            string name = !string.IsNullOrWhiteSpace(cpd.Core?.data?.partName)
+                ? cpd.Core.data.partName
+                : cpd.gameObject.name;
+            string iconPath = $"{dir}/{name}_icon.png".Replace('\\', '/');
+            return File.Exists(iconPath) ? iconPath : null;
+        }
+
+        private static bool ReentryMeshBaked(CorePartData cpd)
+        {
+            return cpd.gameObject.GetComponentsInChildren<GeneratedReentryMeshRoot>(true).Length > 0;
+        }
+
+        private static int CountDragCubes(CorePartData cpd)
+        {
+            var module = cpd.GetComponent<Module_Drag>();
+            if (module == null)
+            {
+                return 0;
+            }
+
+            if (module.DataModules.TryGetByType(out Data_Drag dataDrag) && dataDrag?.cubes != null)
+            {
+                return dataDrag.cubes.Count;
+            }
+
+            return ModuleDragDataField?.GetValue(module) is Data_Drag reflectedData && reflectedData.cubes != null
+                ? reflectedData.cubes.Count
+                : 0;
+        }
+
+        private static bool JsonSidecarExists(CorePartData cpd)
+        {
+            string dir = TryResolvePrefabDirectory(cpd);
+            if (string.IsNullOrEmpty(dir))
+            {
+                return false;
+            }
+            return File.Exists($"{dir}/{cpd.name}.json");
+        }
+
+        private void WireQuickToolsChips()
+        {
+            WireChip("chip-bake-icon", () => PartIconBaker.Bake((CorePartData)target));
+            WireChip("chip-bake-reentry", () => ReentryMeshBaker.Bake((CorePartData)target));
+            WireChip("chip-reexport-json", () => PartJsonSaver.Save((CorePartData)target));
+            WireChip("chip-open-prefab", OpenPrefab);
+            WireChip("chip-open-reference-parts", Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows.ReferencePartsWindow.ShowWindow);
+            WireChip("chip-export-localizations", () => LocExportFlow.RunForAsset(((CorePartData)target).gameObject));
+        }
+
+        private void WireChip(string name, Action onClick)
+        {
+            var btn = _root.Q<Button>(name);
+            if (btn != null)
+            {
+                btn.clicked += onClick;
+            }
+        }
+
+        private void OpenPrefab()
+        {
+            if (target is not CorePartData cpd)
+            {
+                return;
+            }
+            string prefabPath = AssetDatabase.GetAssetPath(cpd);
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                var stage = PrefabStageUtility.GetCurrentPrefabStage();
+                if (stage != null && stage.prefabContentsRoot != null && cpd.transform.root == stage.prefabContentsRoot.transform)
+                {
+                    // Already editing this part's prefab.
+                    return;
+                }
+                prefabPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(cpd.gameObject);
+            }
+            if (!string.IsNullOrEmpty(prefabPath))
+            {
+                PrefabStageUtility.OpenPrefab(prefabPath);
+            }
+        }
+
+        private sealed class GizmoPillBinding
+        {
+            public string PillName { get; }
+            public Type GatingModule { get; }
+            public Func<bool> Get { get; }
+            public Action<bool> Set { get; }
+
+            public GizmoPillBinding(string pillName, Type gatingModule, Func<bool> get, Action<bool> set)
+            {
+                PillName = pillName;
+                GatingModule = gatingModule;
+                Get = get;
+                Set = set;
+            }
+        }
+
+        private static readonly GizmoPillBinding[] _gizmoPills =
+        {
+            new("gizmo-pill-com",              null,                          () => PartAuthoringGizmoSettings.ShowCenterOfMass,             v => PartAuthoringGizmoSettings.ShowCenterOfMass = v),
+            new("gizmo-pill-col",              null,                          () => PartAuthoringGizmoSettings.ShowCenterOfLift,             v => PartAuthoringGizmoSettings.ShowCenterOfLift = v),
+            new("gizmo-pill-attach",           null,                          () => PartAuthoringGizmoSettings.ShowAttachNodes,              v => PartAuthoringGizmoSettings.ShowAttachNodes = v),
+            new("gizmo-pill-colliders",        null,                          BuiltinColliderWireframeUtility.GetAllWireframesEnabled,       BuiltinColliderWireframeUtility.SetAllWireframesEnabled),
+            new("gizmo-pill-virtual-parts",    null,                          () => PartAuthoringGizmoSettings.ShowVirtualAttachedParts,     v => PartAuthoringGizmoSettings.ShowVirtualAttachedParts = v),
+            new("gizmo-pill-engine-thrust",    typeof(Module_Engine),         () => PartAuthoringGizmoSettings.ShowEngineThrustTransforms,   v => PartAuthoringGizmoSettings.ShowEngineThrustTransforms = v),
+            new("gizmo-pill-gimbal-cone",      typeof(Module_Gimbal),         () => PartAuthoringGizmoSettings.ShowGimbalCone,               v => PartAuthoringGizmoSettings.ShowGimbalCone = v),
+            new("gizmo-pill-rcs-thrusters",    typeof(Module_RCS),            () => PartAuthoringGizmoSettings.ShowRCSThrusters,             v => PartAuthoringGizmoSettings.ShowRCSThrusters = v),
+            new("gizmo-pill-drag-cubes",       typeof(Module_Drag),           () => PartAuthoringGizmoSettings.ShowDragCubes,                v => PartAuthoringGizmoSettings.ShowDragCubes = v),
+            new("gizmo-pill-fairing-preview",  typeof(Module_Fairing),        () => PartAuthoringGizmoSettings.ShowFairingPreview,           v => PartAuthoringGizmoSettings.ShowFairingPreview = v),
+            new("gizmo-pill-lift-arrow",       typeof(Module_LiftingSurface), () => PartAuthoringGizmoSettings.ShowLiftSurfaceArrow,         v => PartAuthoringGizmoSettings.ShowLiftSurfaceArrow = v),
+            new("gizmo-pill-control-arc",      typeof(Module_ControlSurface), () => PartAuthoringGizmoSettings.ShowControlSurfaceArc,        v => PartAuthoringGizmoSettings.ShowControlSurfaceArc = v),
+            new("gizmo-pill-cargo-volume",     typeof(Module_CargoBay),       () => PartAuthoringGizmoSettings.ShowCargoBayVolume,           v => PartAuthoringGizmoSettings.ShowCargoBayVolume = v),
+            new("gizmo-pill-fairing-ejection", typeof(Module_Fairing),        () => PartAuthoringGizmoSettings.ShowFairingEjection,          v => PartAuthoringGizmoSettings.ShowFairingEjection = v),
+            new("gizmo-pill-decouple-split",   typeof(Module_Decouple),       () => PartAuthoringGizmoSettings.ShowDecoupleSplit,            v => PartAuthoringGizmoSettings.ShowDecoupleSplit = v),
+            new("gizmo-pill-docking-frame",    typeof(Module_DockingNode),    () => PartAuthoringGizmoSettings.ShowDockingFrame,             v => PartAuthoringGizmoSettings.ShowDockingFrame = v),
+            new("gizmo-pill-solar-incidence",  typeof(Module_SolarPanel),     () => PartAuthoringGizmoSettings.ShowSolarPanelIncidence,      v => PartAuthoringGizmoSettings.ShowSolarPanelIncidence = v),
+            new("gizmo-pill-intake-direction", typeof(Module_ResourceIntake), () => PartAuthoringGizmoSettings.ShowResourceIntakeDirection,  v => PartAuthoringGizmoSettings.ShowResourceIntakeDirection = v),
+            new("gizmo-pill-radiator-surface", typeof(Module_ActiveRadiator), () => PartAuthoringGizmoSettings.ShowActiveRadiatorSurface,    v => PartAuthoringGizmoSettings.ShowActiveRadiatorSurface = v),
+        };
+
+        private void WireGizmoSettings()
+        {
+            foreach (var binding in _gizmoPills) BindGizmoPill(binding.PillName, binding.Get, binding.Set);
+            UpdateModuleScopedPillVisibility();
+            _root.TrackSerializedObjectValue(serializedObject, _ => UpdateModuleScopedPillVisibility());
+        }
+
+        private void UpdateModuleScopedPillVisibility()
+        {
+            var part = target as CorePartData;
+            foreach (var binding in _gizmoPills)
+            {
+                if (binding.GatingModule == null) continue;
+                SetPillVisible(binding.PillName, part != null && part.GetComponent(binding.GatingModule) != null);
+            }
+        }
+
+        private void SetPillVisible(string name, bool visible)
+        {
+            var pill = _root?.Q<Button>(name);
+            if (pill == null) return;
+            pill.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        private void BindGizmoPill(string name, System.Func<bool> getter, System.Action<bool> setter)
+        {
+            var pill = _root.Q<Button>(name);
+            if (pill == null)
+            {
+                return;
+            }
+            pill.EnableInClassList("is-active", getter());
+            pill.clicked += () =>
+            {
+                bool newValue = !getter();
+                setter(newValue);
+                pill.EnableInClassList("is-active", newValue);
+                SceneView.RepaintAll();
+            };
+        }
+
+        private void SetActiveTab(string id)
+        {
+            if (id == _activeTab)
+            {
+                return;
+            }
+            _activeTab = id;
+            SessionState.SetString(SESSION_STATE_KEY_ACTIVE_TAB, id);
+            UpdateTabHighlights();
+            RenderActiveTab();
+        }
+
+        private void UpdateTabHighlights()
+        {
+            if (_root == null)
+            {
+                return;
+            }
+            foreach (var id in TAB_IDS)
+            {
+                var button = _root.Q<Button>($"tab-{id}");
+                if (button == null)
+                {
+                    continue;
+                }
+                button.EnableInClassList(TAB_ACTIVE_CLASS, id == _activeTab);
+            }
+        }
+
+        private void RenderActiveTab()
+        {
+            if (_tabContent == null)
+            {
+                return;
+            }
+            _tabContent.Clear();
+            switch (_activeTab)
+            {
+                case "core":
+                    var cpd = (CorePartData)target;
+                    _tabContent.Add(CoreDataSections.BuildIdentity(serializedObject, cpd));
+                    _tabContent.Add(new IconPreviewSection(cpd));
+                    _tabContent.Add(CoreDataSections.BuildMassCostCrew(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildBreakageThermal(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildAerodynamicsPhysics(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildAttachment(serializedObject, cpd));
+                    _tabContent.Add(CoreDataSections.BuildStaging(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildCentersBuoyancy(serializedObject, cpd));
+                    _tabContent.Add(CoreDataSections.BuildResources(serializedObject));
+                    _tabContent.Add(CoreDataSections.BuildOabEditor(serializedObject));
+                    _tabContent.Add(new ReentryMeshSection(cpd));
+                    break;
+                case "modules":
+                    _tabContent.Add(ModulesTab.Build((CorePartData)target));
+                    break;
+                case "variants":
+                    _tabContent.Add(VariantsTab.Build((CorePartData)target));
+                    break;
+                default:
+                    _tabContent.Add(new HelpBox($"Unknown tab '{_activeTab}'.", HelpBoxMessageType.Error));
+                    break;
+            }
+        }
+    }
+}
