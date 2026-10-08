@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
 {
@@ -372,34 +371,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             {
                 pqs.PQSRenderer.RemoveOverlay(overlay);
             }
-            // PQSRenderer.DrawPQSOverlays clears its CommandBuffer at the top of each call,
-            // but it stops being called once the session-end tears down the editor render hook,
-            // so the buffer keeps the last frame's DrawProceduralIndirect commands cached and the
-            // camera replays them every paint. Strip our buffer off every SceneView camera
-            // ourselves so the overlay actually disappears.
-            DetachOverlayCommandBuffersFromSceneViews();
-        }
-
-        private static void DetachOverlayCommandBuffersFromSceneViews()
-        {
-            // Clearing (not removing) keeps the buffer instance attached to the camera and the
-            // PQSRenderer's _overlayCommandBuffer reference live, so the next session's
-            // DrawPQSOverlays naturally re-fills it without needing to re-attach.
-            foreach (var o in SceneView.sceneViews)
-            {
-                if (o is not SceneView sv || sv == null) continue;
-                var cam = sv.camera;
-                if (cam == null) continue;
-                var buffers = cam.GetCommandBuffers(CameraEvent.BeforeForwardAlpha);
-                if (buffers == null) continue;
-                foreach (var buf in buffers)
-                {
-                    if (buf != null && buf.name == "PQS Overlays")
-                    {
-                        buf.Clear();
-                    }
-                }
-            }
+            // The overlays draw through PQSRenderer's render hook, which stops once no overlay is left.
             SceneView.RepaintAll();
         }
 
