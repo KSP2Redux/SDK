@@ -65,6 +65,7 @@
                 <engine:Button name="orbit-create" text="Set Up Orbit" class="sdk-action-button" tooltip="Create this body's orbit, kept in an editor-only asset in its Data folder. The game leaves a body without one out of the galaxy." />
             </engine:VisualElement>
             <engine:VisualElement name="orbit-fields">
+                <engine:VisualElement name="orbit-galaxy-slot" />
                 <engine:VisualElement name="orbit-parent-slot" />
                 <editor:PropertyField binding-path="SemiMajorAxis" label="Semi-Major Axis (m)" tooltip="Half the orbit's longest diameter, in meters." />
                 <editor:PropertyField binding-path="Eccentricity" label="Eccentricity" tooltip="How stretched the orbit is: zero is a circle, and it stays below one." />

@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using KSP;
+using KSP.Sim;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.ResourceMaps;
+using Redux.Packs;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -35,8 +37,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
     }
 
     /// <summary>
-    /// Puts a body in the default galaxy: the patch built into a mod, or the checked-in patch a project without one
-    /// keeps beside the body.
+    /// Puts a body in a galaxy: the patch built into a mod, or the checked-in patch a project without one keeps beside
+    /// the body.
     /// </summary>
     public static class GalaxyEntry
     {
@@ -122,6 +124,35 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
             AddressablesTools.MakeAddressable(group, path, path, PROJECT_PATCH_LABEL);
             AssetDatabase.SaveAssets();
             return $"Wrote {path}.";
+        }
+
+        /// <summary>
+        /// Gets the keys of the galaxy definitions a body could be added to: stock's, and the project's own.
+        /// </summary>
+        /// <returns>The keys, sorted.</returns>
+        public static List<string> KnownGalaxyKeys()
+        {
+            var keys = new SortedSet<string>(StringComparer.Ordinal) { SerializedSavedGame.DEFAULT_GALAXY_DEFINITION_KEY };
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+                return new List<string>(keys);
+
+            foreach (AddressableAssetGroup group in settings.groups)
+            {
+                if (group == null)
+                    continue;
+
+                foreach (AddressableAssetEntry entry in group.entries)
+                {
+                    // A galaxy is loaded by its asset name, which is the file name without its extension
+                    if (entry.labels.Contains(GalaxyDefinitionManager.GALAXY_DEFINITION_LABEL))
+                    {
+                        keys.Add(Path.GetFileNameWithoutExtension(entry.AssetPath));
+                    }
+                }
+            }
+
+            return new List<string>(keys);
         }
 
         /// <summary>

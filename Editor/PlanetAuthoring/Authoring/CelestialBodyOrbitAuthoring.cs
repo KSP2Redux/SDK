@@ -1,13 +1,14 @@
 using System.Globalization;
 using System.Text;
 using KSP;
+using KSP.Sim;
 using Ksp2UnityTools.Editor.Modding;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
 {
     /// <summary>
-    /// Editor-only orbit for a body, and the Patch Manager patch that adds the body to the default galaxy with it.
+    /// Editor-only orbit for a body, and the Patch Manager patch that adds the body to a galaxy with it.
     /// </summary>
     /// <remarks>
     /// A body's orbit is not in its JSON. The game reads it from the galaxy definition, which a body joins through a
@@ -21,6 +22,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         /// The Scaled prefab of the body this orbit belongs to.
         /// </summary>
         public GameObject ScaledPrefab;
+
+        /// <summary>
+        /// The key of the galaxy definition the body is added to.
+        /// </summary>
+        public string GalaxyDefinitionKey = SerializedSavedGame.DEFAULT_GALAXY_DEFINITION_KEY;
 
         /// <summary>
         /// The name of the body this one orbits, as the galaxy knows it.
@@ -131,9 +137,17 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
                 prefabKey = prefabKey.Substring(0, prefabKey.Length - ".prefab".Length);
             }
 
+            // The stock galaxy keeps its own patch call, so patches written before galaxies could be chosen stay current
+            bool isDefaultGalaxy = string.IsNullOrEmpty(GalaxyDefinitionKey) ||
+                GalaxyDefinitionKey == SerializedSavedGame.DEFAULT_GALAXY_DEFINITION_KEY;
+            string galaxyDescription = isDefaultGalaxy ? "the default galaxy" : GalaxyDefinitionKey;
+            string patchCall = isDefaultGalaxy
+                ? $"PM.Planets:PatchDefaultGalaxy(\"Add{bodyName}\")"
+                : $"PM.Planets:PatchGalaxy(\"{GalaxyDefinitionKey}\", \"Add{bodyName}\")";
+
             var lua = new StringBuilder();
-            lua.AppendLine($"-- Adds {bodyName} to the default galaxy. Written by the planet inspector from {name}, so edit the orbit there.");
-            lua.AppendLine($"PM.Planets:PatchDefaultGalaxy(\"Add{bodyName}\"):Early():First():Do(function(galaxy)");
+            lua.AppendLine($"-- Adds {bodyName} to {galaxyDescription}. Written by the planet inspector from {name}, so edit the orbit there.");
+            lua.AppendLine($"{patchCall}:Early():First():Do(function(galaxy)");
             lua.AppendLine($"    galaxy:Add(\"{bodyName}\", function(body)");
             lua.AppendLine($"        body.PrefabKey = \"{prefabKey}\"");
             lua.AppendLine($"        body.referenceBodyGuid = \"{ParentBody}\"");
