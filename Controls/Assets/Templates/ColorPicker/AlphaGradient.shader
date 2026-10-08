@@ -6,7 +6,7 @@ Shader "Redux/UI/ColorPicker/AlphaGradient"
     }
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Transparent" "Queue" = "Transparent" }
         LOD 100
         Pass
         {
@@ -14,10 +14,11 @@ Shader "Redux/UI/ColorPicker/AlphaGradient"
             ZWrite Off
             Cull Off
 
-            CGPROGRAM
+            // Drawn by ColorPicker with Graphics.Blit, so it keeps the plain mesh vertex input.
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct appdata
             {
@@ -31,22 +32,25 @@ Shader "Redux/UI/ColorPicker/AlphaGradient"
                 float4 vertex : SV_POSITION;
             };
 
-            fixed4 _BaseColor;
+            CBUFFER_START(UnityPerMaterial)
+                half4 _BaseColor;
+            CBUFFER_END
 
             v2f vert (appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = TransformObjectToHClip(v.vertex.xyz);
                 o.uv = v.uv;
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            half4 frag (v2f i) : SV_Target
             {
                 float alpha = i.uv.y;
-                return fixed4(_BaseColor.rgb, alpha);
+                return half4(_BaseColor.rgb, alpha);
             }
-            ENDCG
+            ENDHLSL
         }
     }
+    FallBack Off
 }

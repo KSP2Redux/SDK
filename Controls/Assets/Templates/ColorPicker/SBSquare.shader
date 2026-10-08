@@ -6,14 +6,15 @@ Shader "Redux/UI/ColorPicker/SBSquare"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Opaque" }
         LOD 100
         Pass
         {
-            CGPROGRAM
+            // Drawn by ColorPicker with Graphics.Blit, so it keeps the plain mesh vertex input.
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct appdata
             {
@@ -27,7 +28,9 @@ Shader "Redux/UI/ColorPicker/SBSquare"
                 float4 vertex : SV_POSITION;
             };
 
-            float _Hue;
+            CBUFFER_START(UnityPerMaterial)
+                float _Hue;
+            CBUFFER_END
 
             float3 hsv2rgb(float3 c)
             {
@@ -39,12 +42,12 @@ Shader "Redux/UI/ColorPicker/SBSquare"
             v2f vert (appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = TransformObjectToHClip(v.vertex.xyz);
                 o.uv = v.uv;
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            half4 frag (v2f i) : SV_Target
             {
                 float saturation = i.uv.x;
                 float value_linear = i.uv.y;
@@ -54,9 +57,10 @@ Shader "Redux/UI/ColorPicker/SBSquare"
                 float3 hsv = float3(_Hue, saturation, value_gamma_correct);
                 float3 rgb = hsv2rgb(hsv);
 
-                return fixed4(rgb, 1.0);
+                return half4(rgb, 1.0);
             }
-            ENDCG
+            ENDHLSL
         }
     }
+    FallBack Off
 }
