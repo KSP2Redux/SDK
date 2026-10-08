@@ -1,6 +1,8 @@
+using Redux.Rendering;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring
 {
@@ -9,9 +11,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// clip planes plus skybox to defaults on session end.
     /// </summary>
     /// <remarks>
-    /// The SceneView fills its camera's target with the Scene Background preference before the camera renders, and
-    /// the deferred path draws over that rather than clearing it, so the camera's own clear color never shows. A
-    /// command buffer clears the target to black before the G-buffer pass instead.
+    /// The SceneView clears its camera to the Scene Background preference, so the camera's own clear color never
+    /// shows. A render hook clears the SceneView camera color to black before the opaques instead.
     ///
     /// No other prior state is preserved. Session end always lands the SceneView in a known-good default (skybox on,
     /// dynamicClip on) so the user never gets stuck with our tight body-bracketed clip planes after preview.
@@ -19,10 +20,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     [InitializeOnLoad]
     internal static class SessionSceneViewSkyboxOverride
     {
-        private const string BLACK_CLEAR_BUFFER_NAME = "Redux preview black clear";
-        private const CameraEvent BLACK_CLEAR_EVENT = CameraEvent.BeforeGBuffer;
-
-        private static CommandBuffer _blackClear;
+        private static readonly BlackClearHook _blackClear = new();
 
         static SessionSceneViewSkyboxOverride()
         {
@@ -74,7 +72,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         // The skybox goes off so it does not draw over the black.
         private static void EnsureOverride(SceneView sv)
         {
-            EnsureBlackClear(sv.camera);
+            EnsureBlackClear();
             if (!sv.sceneViewState.showSkybox)
                 return;
 
@@ -89,45 +87,30 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // clip-plane reset is needed. The values that SceneViewFraming wrote get overwritten
             // on the next paint.
             sv.cameraSettings.dynamicClip = true;
-            RemoveBlackClear(sv.camera);
+            RemoveBlackClear();
             sv.Repaint();
         }
 
-        // Found by name rather than tracked, so a camera that kept the buffer across a domain reload is not given a
-        // second one.
-        private static void EnsureBlackClear(Camera camera)
+        // Registered on every paint rather than once, because entering play mode clears the hook registry.
+        // Registering again is a no-op.
+        private static void EnsureBlackClear() => CameraRenderHooks.Register(_blackClear);
+
+        private static void RemoveBlackClear() => CameraRenderHooks.Unregister(_blackClear);
+
+        // Clears each SceneView camera's color to black before its opaques while a session is active.
+        private sealed class BlackClearHook : CommandCameraRenderHook
         {
-            if (camera == null)
-                return;
-
-            foreach (CommandBuffer buffer in camera.GetCommandBuffers(BLACK_CLEAR_EVENT))
+            public BlackClearHook() : base("Redux preview black clear")
             {
-                if (buffer.name == BLACK_CLEAR_BUFFER_NAME)
-                    return;
             }
 
-            if (_blackClear == null)
-            {
-                _blackClear = new CommandBuffer { name = BLACK_CLEAR_BUFFER_NAME };
-                _blackClear.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-                _blackClear.ClearRenderTarget(false, true, Color.black);
-            }
+            public override RenderPassEvent Event => RenderPassEvent.BeforeRenderingOpaques;
 
-            camera.AddCommandBuffer(BLACK_CLEAR_EVENT, _blackClear);
-        }
+            public override bool ShouldRender(Camera camera) =>
+                camera.cameraType == CameraType.SceneView && PlanetAuthoringSession.Active != null;
 
-        private static void RemoveBlackClear(Camera camera)
-        {
-            if (camera == null)
-                return;
-
-            foreach (CommandBuffer buffer in camera.GetCommandBuffers(BLACK_CLEAR_EVENT))
-            {
-                if (buffer.name == BLACK_CLEAR_BUFFER_NAME)
-                {
-                    camera.RemoveCommandBuffer(BLACK_CLEAR_EVENT, buffer);
-                }
-            }
+            protected override void Execute(CommandBuffer cmd, in CameraRenderTargets targets) =>
+                cmd.ClearRenderTarget(false, true, Color.black);
         }
     }
 }

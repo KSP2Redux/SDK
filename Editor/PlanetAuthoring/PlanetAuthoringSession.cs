@@ -9,6 +9,7 @@ using Ksp2UnityTools.Editor.PlanetAuthoring.Lighting;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Ocean;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Redux;
+using Redux.Rendering;
 using UnityEditor;
 using UnityEngine;
 
@@ -581,8 +582,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             // OnRenderObject does not fire for the PQS in the editor scene context. Drive DrawPlanet
-            // from onPreCull instead. onPreRender and onPostRender are both too late.
-            Camera.onPreCull += OnCameraPreCull;
+            // from the camera's begin event, which URP raises before it culls. Anything later is too late.
+            CameraRenderEvents.OnBeginCamera += OnCameraPreCull;
         }
 
         private void Unsubscribe()
@@ -590,7 +591,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             EditorApplication.update -= Tick;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            Camera.onPreCull -= OnCameraPreCull;
+            CameraRenderEvents.OnBeginCamera -= OnCameraPreCull;
         }
 
         private void OnCameraPreCull(Camera cam)

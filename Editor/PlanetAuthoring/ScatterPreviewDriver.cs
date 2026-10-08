@@ -15,7 +15,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// <remarks>
     /// Owned by <see cref="PlanetAuthoringSession" /> and pumped from the session's own render hook,
     /// so the driver's lifetime is exactly the session's. A driver holding its own
-    /// <see cref="Camera.onPreCull" /> subscription outlives the session across a domain reload and
+    /// camera event subscription outlives the session across a domain reload and
     /// then ticks against a torn-down PQSDecalController, throwing once per frame and burying the
     /// console.
     ///
@@ -207,7 +207,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// <c>Graphics.DrawMeshInstancedIndirect</c> submits per frame and only takes effect inside
         /// the render loop, so pumping from <c>EditorApplication.update</c> issues the draw where
         /// nothing consumes it and the field silently never appears. This is the same constraint that
-        /// makes the session drive the PQS from onPreCull.
+        /// makes the session drive the PQS from the camera's begin event.
         /// </remarks>
         /// <param name="camera">The camera about to cull, which becomes the scatter system's view.</param>
         public void Pump(Camera camera)
