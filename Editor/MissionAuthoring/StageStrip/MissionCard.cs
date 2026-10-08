@@ -42,6 +42,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
         private TextField _nameField;
         private TextField _descriptionField;
         private MissionGranterKeyField _granterField;
+        private MissionLayerField _layerField;
         private GameModeFeatureIdField _gameModeFeatureIdField;
         private EnumField _typeField;
         private EnumField _ownerField;
@@ -103,6 +104,17 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
             var identity = BuildSection("Identity");
             _idField = MakeText(identity, "ID", MissionData.ID, v => MissionData.ID = v, "Edit mission ID");
             _missionGroupField = MakeText(identity, "Group", MissionData.MissionGroup, v => MissionData.MissionGroup = v, "Edit mission group");
+            _layerField = new MissionLayerField("Layer", MissionData.Layer ?? string.Empty, v =>
+            {
+                Undo.RecordObject(Mission, "Edit mission layer");
+                MissionData.Layer = v;
+                EditorUtility.SetDirty(Mission);
+            })
+            {
+                tooltip = "The mission layer this mission belongs to. A campaign pack loads the missions in the layers it lists.",
+            };
+            _layerField.AddToClassList("mission-card-field");
+            identity.Add(_layerField);
             _nameField = MakeText(identity, "Name", MissionData.name, v => MissionData.name = v, "Edit mission name");
             _descriptionField = MakeText(identity, "Description", MissionData.description, v => MissionData.description = v, "Edit mission description");
             _granterField = new MissionGranterKeyField("Granter", MissionData.MissionGranterKey ?? string.Empty, v =>
@@ -216,6 +228,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.StageStrip
 
             _idField?.SetValueWithoutNotify(MissionData.ID ?? string.Empty);
             _missionGroupField?.SetValueWithoutNotify(MissionData.MissionGroup ?? string.Empty);
+            _layerField?.SetValueWithoutNotify(MissionData.Layer ?? string.Empty);
             _nameField?.SetValueWithoutNotify(MissionData.name ?? string.Empty);
             _descriptionField?.SetValueWithoutNotify(MissionData.description ?? string.Empty);
             _granterField?.SetValueWithoutNotify(MissionData.MissionGranterKey ?? string.Empty);
