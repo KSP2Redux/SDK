@@ -164,6 +164,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 );
                 _hook.Material = _material;
                 _hook.Technique = _model.Technique;
+                _hook.Submit(camera);
                 _pumpedCamera = camera;
                 _consecutiveFailures = 0;
             }
