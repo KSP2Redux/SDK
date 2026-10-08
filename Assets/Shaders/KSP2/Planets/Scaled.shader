@@ -104,7 +104,7 @@ Shader "KSP2/Planets/Scaled"
             #pragma vertex CelestialBodyScaled_ForwardVertex
             #pragma fragment CelestialBodyScaled_ForwardFragment
 
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            #pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
 
             #include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledForward.hlsl"
             ENDHLSL

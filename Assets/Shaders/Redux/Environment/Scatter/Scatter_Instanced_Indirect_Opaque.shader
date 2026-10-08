@@ -92,13 +92,12 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque"
 
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile_local _ SCATTER_SYSTEM
+            // The variant set of the scatter port this pass includes.
+            #pragma multi_compile_local_fragment _ SCATTER_SYSTEM
 
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            #pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
-            #pragma multi_compile_fragment _ _LIGHT_COOKIES
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
-            #pragma multi_compile _ FOG_LINEAR
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
             #define KSP2_SCATTER_FOG 1
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
@@ -120,7 +119,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque"
             #pragma fragment KSP2Scatter_ShadowFragment
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
@@ -139,7 +138,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque"
             #pragma fragment KSP2Scatter_DepthFragment
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }
@@ -156,7 +155,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque"
             #pragma fragment KSP2Scatter_DepthNormalsFragment
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }

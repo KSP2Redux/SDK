@@ -114,17 +114,16 @@ Shader "KSP2/Parts/Paintable"
             #pragma vertex KSP2StandardOpaque_ForwardVertex
             #pragma fragment KSP2StandardOpaque_ForwardFragment
 
-            #pragma multi_compile_local _ _REENTRYEMISSION_ON
-            #pragma multi_compile_local _ _SMOOTHNESSOVERRIDE_ON
-            #pragma multi_compile_local _ USE_TIME_OF_DAY
-            #pragma multi_compile _ RK_GALAXY_CUBEMAP
-            #pragma multi_compile _ RK_OBSERVER_CUBEMAP
+            // The variant set of the Standard (Opaque) port this pass includes.
+            #pragma multi_compile_local_fragment _ _REENTRYEMISSION_ON
+            #pragma multi_compile_local_fragment _ _SMOOTHNESSOVERRIDE_ON
+            #pragma multi_compile_local_fragment _ USE_TIME_OF_DAY
+            #pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
 
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            #pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
-            #pragma multi_compile_fragment _ _LIGHT_COOKIES
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
-            #pragma multi_compile _ FOG_LINEAR
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #pragma dynamic_branch _ FOG_EXP FOG_EXP2
 
             #include "Assets/ReduxAssets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
             ENDHLSL
@@ -143,7 +142,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma target 4.5
             #pragma vertex KSP2_ShadowVertex
             #pragma fragment KSP2_ShadowFragment
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
@@ -162,7 +161,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma target 4.5
             #pragma vertex KSP2_DepthVertex
             #pragma fragment KSP2_DepthFragment
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
@@ -179,7 +178,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma target 4.5
             #pragma vertex KSP2_DepthVertex
             #pragma fragment KSP2_DepthNormalsFragment
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }

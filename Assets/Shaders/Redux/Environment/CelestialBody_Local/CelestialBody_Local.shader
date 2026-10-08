@@ -601,15 +601,14 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma vertex CBL_ForwardVertex
 			#pragma fragment CBL_ForwardFragment
 
-			#pragma multi_compile_local _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
+			// The variant set of the CelestialBody_Local port this pass includes.
+			#pragma multi_compile_local_fragment _ SUB_ZONES_ENABLED
+			#pragma multi_compile_fragment _ ANTI_TILE_QUALITY_ON
 			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
-			#pragma multi_compile _ RK_GALAXY_CUBEMAP
-			#pragma multi_compile _ RK_OBSERVER_CUBEMAP
+			#pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
 
-			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+			#pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
-			#pragma multi_compile_fragment _ _LIGHT_COOKIES
 
 			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
 			ENDHLSL

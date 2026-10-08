@@ -88,11 +88,10 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
 
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            // The variant set of the impostor port this pass includes.
+            #pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
-            #pragma multi_compile_fragment _ _LIGHT_COOKIES
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
-            #pragma multi_compile _ FOG_LINEAR
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
@@ -113,7 +112,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma fragment ImpostorShadowFragment
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
@@ -132,7 +131,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma fragment ImpostorDepthFragment
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
@@ -149,7 +148,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma fragment ImpostorDepthNormalsFragment
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
-            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
