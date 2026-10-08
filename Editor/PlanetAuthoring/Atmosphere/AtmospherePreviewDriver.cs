@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using KSP;
 using KSP.Rendering;
 using KSP.Rendering.Planets;
 using KSP.Rendering.Utility;
+using Redux.Rendering;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
@@ -21,9 +20,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
     /// computed on the GPU at attach and again whenever a table input changes, and handed to the
     /// model as realtime textures, so baked tables on disk are neither needed nor touched.
     ///
-    /// A model rendering with Bruneton is drawn as a mesh, and one rendering with Hillaire is
-    /// composited over each SceneView camera by the game's own command buffer, so switching the
-    /// model's technique switches the preview with it.
+    /// The post atmosphere is composited over the pumped camera by the game's own
+    /// <see cref="PostAtmosphereRenderHook" />, which follows the model's technique, so switching
+    /// it switches the preview with it.
     ///
     /// Solid bodies only. The scaled shells sit inside the metre-scale PQS in the authoring scene,
     /// so the post effect is what shows the atmosphere from every altitude.
@@ -40,13 +39,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         private readonly CoreCelestialBodyData _body;
         private readonly PQS _pqs;
 
-        // Each camera the Hillaire composite is attached to, with the HDR setting it was built for.
-        private readonly Dictionary<Camera, (CommandBuffer Buffer, bool Hdr)> _composites = new();
-
         private AtmosphereModel _model;
         private Shader _stockShader;
         private Material _material;
-        private Mesh _quad;
+        private PostAtmosphereRenderHook _hook;
+
+        // The camera last pumped, which the hook draws on.
+        private Camera _pumpedCamera;
         private int _bakedHash;
         private int _pendingHash;
         private double _pendingSince;
@@ -104,14 +103,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             }
 
             _material = new Material(_model.GetPostAtmosphereShader(_stockShader)) { hideFlags = HideFlags.HideAndDontSave };
-            _quad = AtmosphereScatterManager.CreateFullscreenQuadMesh();
-            _quad.hideFlags = HideFlags.HideAndDontSave;
             if (!Rebake())
             {
                 ReleaseResources();
                 return false;
             }
 
+            _hook = new PostAtmosphereRenderHook(camera => camera == _pumpedCamera);
+            CameraRenderHooks.Register(_hook);
             Booted = true;
             _consecutiveFailures = 0;
             Status = string.Empty;
@@ -134,7 +133,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         {
             if (!Enabled)
             {
-                ReleaseComposites();
+                _pumpedCamera = null;
                 return;
             }
 
@@ -155,7 +154,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 // Transition 0 keeps the post effect at full strength. In game it fades out with
                 // distance in favour of the scaled shells, which the authoring scene cannot show.
                 AtmosphereScatterManager.BindPostAtmosphere(
-                    camera,
                     _model,
                     _material,
                     _pqs.transform.position * AtmosphereConstants.LENGTH_UNIT_IN_KILOMETERS,
@@ -164,16 +162,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                     _pqs.data.heightMapInfo.DitheringScale,
                     Ocean.OceanPreviewDriver.ActiveWaterDepth
                 );
-                if (_model.Technique == AtmosphereRenderTechnique.Hillaire)
-                {
-                    EnsureComposite(camera);
-                }
-                else
-                {
-                    RemoveComposite(camera);
-                    AtmosphereScatterManager.DrawPostAtmosphere(camera, _material, _quad);
-                }
-
+                _hook.Material = _material;
+                _hook.Technique = _model.Technique;
+                _pumpedCamera = camera;
                 _consecutiveFailures = 0;
             }
             catch (Exception e)
@@ -238,52 +229,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             return true;
         }
 
-        // The composite stays on the camera across frames, as the game's does, and is rebuilt only when
-        // the camera's HDR setting changes the scene copy's format.
-        private void EnsureComposite(Camera camera)
-        {
-            bool hdr = camera.allowHDR;
-            if (_composites.TryGetValue(camera, out (CommandBuffer Buffer, bool Hdr) composite))
-            {
-                if (composite.Hdr == hdr)
-                    return;
-
-                RemoveComposite(camera);
-            }
-
-            CommandBuffer buffer = AtmosphereScatterManager.CreateHillaireComposite(_material, _quad, hdr);
-            camera.AddCommandBuffer(AtmosphereScatterManager.HILLAIRE_COMPOSITE_EVENT, buffer);
-            _composites[camera] = (buffer, hdr);
-        }
-
-        private void RemoveComposite(Camera camera)
-        {
-            if (!_composites.TryGetValue(camera, out (CommandBuffer Buffer, bool Hdr) composite))
-                return;
-
-            camera.RemoveCommandBuffer(AtmosphereScatterManager.HILLAIRE_COMPOSITE_EVENT, composite.Buffer);
-            composite.Buffer.Release();
-            _composites.Remove(camera);
-        }
-
-        private void ReleaseComposites()
-        {
-            foreach (KeyValuePair<Camera, (CommandBuffer Buffer, bool Hdr)> composite in _composites)
-            {
-                if (composite.Key != null)
-                {
-                    composite.Key.RemoveCommandBuffer(AtmosphereScatterManager.HILLAIRE_COMPOSITE_EVENT, composite.Value.Buffer);
-                }
-
-                composite.Value.Buffer.Release();
-            }
-
-            _composites.Clear();
-        }
-
         private void ReleaseResources()
         {
-            ReleaseComposites();
+            CameraRenderHooks.Unregister(_hook);
+            _hook = null;
+            _pumpedCamera = null;
 
             // Hands the model back its baked tables, so nothing realtime is left for the game or a
             // later bake to find.
@@ -297,13 +247,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 Object.DestroyImmediate(_material);
             }
 
-            if (_quad != null)
-            {
-                Object.DestroyImmediate(_quad);
-            }
-
             _material = null;
-            _quad = null;
             _bakedHash = 0;
             _pendingHash = 0;
         }
