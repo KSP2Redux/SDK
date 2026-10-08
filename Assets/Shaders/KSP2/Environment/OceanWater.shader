@@ -1,4 +1,5 @@
-// Stand-in for the game's KSP2/Environment/Ocean/OceanWater, which ships in the game's data rather than any project.
+// Stand-in for the game's KSP2/Environment/Ocean/OceanWater, which ships in Redux's replacement shader bundle rather
+// than any project.
 // An ocean material authored on it saves with a real shader reference and shows stock's properties in the inspector.
 // PQSRenderer draws with a copy moved onto the game's shader, so this pass only colours the material preview.
 Shader "KSP2/Environment/Ocean/OceanWater (SDK Stand-in)"
@@ -113,29 +114,75 @@ Shader "KSP2/Environment/Ocean/OceanWater (SDK Stand-in)"
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
-        LOD 200
-        CGPROGRAM
-#pragma surface surf Standard
-#pragma target 3.0
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Opaque" "Queue" = "Geometry" }
 
-        fixed4 _DiffuseColor;
-        half _Smoothness;
-        half _Metalness;
-
-        struct Input
+        Pass
         {
-            float3 worldPos;
-        };
+            Name "ForwardLit"
+            Tags { "LightMode" = "UniversalForward" }
 
-        void surf(Input IN, inout SurfaceOutputStandard o)
-        {
-            o.Albedo = _DiffuseColor.rgb;
-            o.Smoothness = _Smoothness;
-            o.Metallic = _Metalness;
-            o.Alpha = 1;
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _DiffuseColor;
+                float  _Smoothness;
+                float  _Metalness;
+            CBUFFER_END
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+            };
+
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                float3 positionWS : TEXCOORD0;
+                float3 normalWS   : TEXCOORD1;
+            };
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
+                output.positionCS = positionInputs.positionCS;
+                output.positionWS = positionInputs.positionWS;
+                output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+                return output;
+            }
+
+            half4 frag(Varyings input) : SV_Target
+            {
+                InputData inputData = (InputData)0;
+                inputData.positionWS = input.positionWS;
+                inputData.positionCS = input.positionCS;
+                inputData.normalWS = NormalizeNormalPerPixel(input.normalWS);
+                inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+                inputData.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
+                inputData.bakedGI = SampleSH(inputData.normalWS);
+                inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                inputData.shadowMask = half4(1, 1, 1, 1);
+
+                // _DiffuseColor is a Vector property, so it arrives as authored, the way the stock shader reads it.
+                SurfaceData surface = (SurfaceData)0;
+                surface.albedo = _DiffuseColor.rgb;
+                surface.metallic = _Metalness;
+                surface.smoothness = _Smoothness;
+                surface.occlusion = 1.0;
+                surface.alpha = 1.0;
+                return half4(UniversalFragmentPBR(inputData, surface).rgb, 1.0);
+            }
+            ENDHLSL
         }
-        ENDCG
     }
-    Fallback "Diffuse"
+
+    FallBack Off
 }

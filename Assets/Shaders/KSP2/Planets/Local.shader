@@ -431,26 +431,81 @@ Shader "KSP2/Planets/Local"
         [HideInInspector] _LocalSpacePrepassTex4 ("Local Space Prepass Texture 4", 2D) = "white" {}
         [ToggleOff(LOW_QUALITY)] _HighQualityEnabled ("High Quality", Float) = 1
     }
-    //DummyShaderTextExporter
-    SubShader{
-        Tags { "RenderType" = "Opaque" }
-        LOD 200
-        CGPROGRAM
-#pragma surface surf Standard
-#pragma target 3.0
-        sampler2D _AlbedoScaledTex;
+    // Property dump of the game's KSP2/Environment/CelestialBody/CelestialBody_Local, for authoring
+    // materials against its interface. The terrain itself only draws through PQSRenderer, which moves a
+    // material on this shader onto the game's shader (ShaderRefactorProfile). This pass only lights the
+    // scaled-space albedo on a plain mesh, for the material preview.
+    SubShader
+    {
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Opaque" "Queue" = "Geometry" }
 
-        struct Input
+        Pass
         {
-            float2 uv_MainTex;
-        };
+            Name "ForwardLit"
+            Tags { "LightMode" = "UniversalForward" }
 
-        void surf(Input IN, inout SurfaceOutputStandard o)
-        {
-            fixed4 c = tex2D(_AlbedoScaledTex, IN.uv_MainTex);
-            o.Albedo = c.rgb;
-            o.Alpha = 1.0;
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _AlbedoScaledTex_ST;
+            CBUFFER_END
+
+            TEXTURE2D(_AlbedoScaledTex);    SAMPLER(sampler_AlbedoScaledTex);
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+                float2 uv         : TEXCOORD0;
+            };
+
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                float2 uv         : TEXCOORD0;
+                float3 positionWS : TEXCOORD1;
+                float3 normalWS   : TEXCOORD2;
+            };
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
+                output.positionCS = positionInputs.positionCS;
+                output.positionWS = positionInputs.positionWS;
+                output.normalWS = TransformObjectToWorldNormal(input.normalOS);
+                output.uv = input.uv;
+                return output;
+            }
+
+            half4 frag(Varyings input) : SV_Target
+            {
+                InputData inputData = (InputData)0;
+                inputData.positionWS = input.positionWS;
+                inputData.positionCS = input.positionCS;
+                inputData.normalWS = NormalizeNormalPerPixel(input.normalWS);
+                inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+                inputData.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
+                inputData.bakedGI = SampleSH(inputData.normalWS);
+                inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                inputData.shadowMask = half4(1, 1, 1, 1);
+
+                SurfaceData surface = (SurfaceData)0;
+                surface.albedo = SAMPLE_TEXTURE2D(_AlbedoScaledTex, sampler_AlbedoScaledTex, input.uv).rgb;
+                surface.occlusion = 1.0;
+                surface.alpha = 1.0;
+                return half4(UniversalFragmentPBR(inputData, surface).rgb, 1.0);
+            }
+            ENDHLSL
         }
-        ENDCG
     }
+
+    FallBack Off
 }

@@ -1,3 +1,11 @@
+// SDK stand-in for the game's part shader KSP2/Scenery/Standard (Opaque).
+//
+// The game's shader ships in Redux's replacement shader bundle, so a material saved in the SDK or a mod
+// project cannot reference it. Part materials are authored on this shader instead, and the game moves
+// them onto KSP2/Scenery/Standard (Opaque) when a part loads (Redux.Patching.ShaderUtils.HotswapPartShaders).
+// The passes are the URP port's own (Ksp2Redux Assets/ReduxAssets/Shaders/URP/Scenery), included rather
+// than copied, so a part looks the same in the editor as in the game. Keep the SubShader in step with
+// KSP2_Scenery_Standard_Opaque.shader. The properties keep the SDK's labels and authoring defaults.
 Shader "KSP2/Parts/Paintable"
 {
     Properties
@@ -39,7 +47,6 @@ Shader "KSP2/Parts/Paintable"
         _PaintB ("Base Paint", Color) = (0.6549,0.6667,0.6863,1)
         [NoScaleOffset] _PaintMaskGlossMap ("Paint Mask / Paint Smoothness", 2D) = "black" {}
         _PaintGlossMapScale ("Paint Smoothness Strength", Range(0, 1)) = 1
-        _PaintSmoothnessDamping ("Paint Matte Damping", Range(0, 1)) = 0.85
         [Toggle] _SmoothnessOverride ("Use Paint Mask Smoothness", Float) = 0
 
         [Header(Rim)]
@@ -53,354 +60,131 @@ Shader "KSP2/Parts/Paintable"
 
     SubShader
     {
-        Tags { "Queue" = "Geometry" "RenderType" = "Opaque" "PerformanceChecks" = "False" }
-        LOD 300
-        Cull [_Culling]
-        Offset 0, [_Offset]
+        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" }
 
-        CGPROGRAM
-        #pragma surface surf KSPPart fullforwardshadows addshadow vertex:vert
-        #pragma target 5.0
-        #pragma shader_feature_local USE_TIME_OF_DAY
-        #pragma shader_feature_local _REENTRYEMISSION_ON
-        #pragma multi_compile _ RK_OBSERVER_CUBEMAP
-        #pragma multi_compile _ RK_GALAXY_CUBEMAP
+        HLSLINCLUDE
+        #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-        #include "UnityCG.cginc"
-        #include "UnityStandardUtils.cginc"
-        #include "UnityPBSLighting.cginc"
+        CBUFFER_START(UnityPerMaterial)
+            float4 _MainTex_ST;
+            float4 _DetailMask_ST;
+            float4 _PaintMaskGlossMap_ST;
+            float4 _Color;
+            float4 _EmissionColor;
+            float4 _PaintA;
+            float4 _PaintB;
+            float4 _RimColor;
+            float  _Metallic;
+            float  _GlossMapScale;
+            float  _MipBias;
+            float  _DetailBumpScale;
+            float  _DetailBumpTiling;
+            float  _OcclusionStrength;
+            float  _ReentryEmission;
+            float  _UseTimeOfDay;
+            float  _TimeOfDayDotMin;
+            float  _TimeOfDayDotMax;
+            float  _PaintGlossMapScale;
+            float  _SmoothnessOverride;
+            float  _RimFalloff;
+            float  _Culling;
+            float  _Offset;
+            // Reentry heating, fed by ReentryMesh through a MaterialPropertyBlock.
+            float  _ReentryIntensity;
+            float  _ReentryEmissivePow;
+            float  _ReentryNoiseScale;
+            float  _ReentryNoiseIntensity;
+            float  _PartGlowNormalEdgeOffset;
+            float4 _MetallicMinMax;
+            float4 _ReentryColor;
+            float4 _ReentryHeadingWs;
+        CBUFFER_END
+        ENDHLSL
 
-        struct Input
+        Pass
         {
-            float2 uv_MainTex;
-            float2 uv2_PaintMaskGlossMap;
-            float3 viewDir;
-            float3 worldNormal;
-            float3 localPos;
-            INTERNAL_DATA
-        };
+            Name "ForwardLit"
+            Tags { "LightMode" = "UniversalForward" }
+            Cull [_Culling]
+            Offset [_Offset], [_Offset]
 
-        struct SurfaceOutputKSPPart
-        {
-            fixed3 Albedo;
-            float3 Normal;
-            half3 Emission;
-            half Metallic;
-            half Smoothness;
-            half Occlusion;
-            half PaintCoverage;
-            fixed Alpha;
-        };
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex KSP2StandardOpaque_ForwardVertex
+            #pragma fragment KSP2StandardOpaque_ForwardFragment
 
-        fixed4 _Color;
-        sampler2D _MainTex;
+            #pragma multi_compile_local _ _REENTRYEMISSION_ON
+            #pragma multi_compile_local _ _SMOOTHNESSOVERRIDE_ON
+            #pragma multi_compile_local _ USE_TIME_OF_DAY
+            #pragma multi_compile _ RK_GALAXY_CUBEMAP
+            #pragma multi_compile _ RK_OBSERVER_CUBEMAP
 
-        sampler2D _MetallicGlossMap;
-        half _Metallic;
-        half _GlossMapScale;
-        half _MipBias;
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
+            #pragma multi_compile_fragment _ _LIGHT_COOKIES
+            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile _ FOG_LINEAR
 
-        sampler2D _BumpMap;
-        sampler2D _DetailBumpMap;
-        sampler2D _DetailMask;
-        half _DetailBumpScale;
-        half _DetailBumpTiling;
-
-        sampler2D _OcclusionMap;
-        half _OcclusionStrength;
-
-        sampler2D _EmissionMap;
-        fixed4 _EmissionColor;
-        half _ReentryEmission;
-        half _UseTimeOfDay;
-        half _TimeOfDayDotMin;
-        half _TimeOfDayDotMax;
-
-        UNITY_DECLARE_TEXCUBE(_ObserverCubemapTexture);
-        half4 _ObserverCubemapTexture_HDR;
-        UNITY_DECLARE_TEXCUBE(_GalaxyCubemapTexture);
-        half4 _GalaxyCubemapTexture_HDR;
-        half _ReflectionIntensityMultiplier;
-        float4x4 _ReflectionPhysicsWorldToLocalMatrix;
-        float4x4 _ReflectionToSkyboxRotationMatrix;
-
-        sampler2D _PaintMaskGlossMap;
-        fixed4 _PaintA;
-        fixed4 _PaintB;
-        half _SmoothnessOverride;
-        half _PaintGlossMapScale;
-        half _PaintSmoothnessDamping;
-
-        fixed4 _RimColor;
-        half _RimFalloff;
-
-        void vert(inout appdata_full v, out Input o)
-        {
-            UNITY_INITIALIZE_OUTPUT(Input, o);
-            o.localPos = v.vertex.xyz;
+            #include "Assets/ReduxAssets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
+            ENDHLSL
         }
 
-        fixed4 SampleTex2DBias(sampler2D tex, float2 uv)
+        Pass
         {
-            return tex2Dbias(tex, float4(uv, 0.0, _MipBias));
+            Name "ShadowCaster"
+            Tags { "LightMode" = "ShadowCaster" }
+            ZWrite On
+            ZTest LEqual
+            ColorMask 0
+            Cull [_Culling]
+
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex KSP2_ShadowVertex
+            #pragma fragment KSP2_ShadowFragment
+            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            ENDHLSL
         }
 
-        half3 UnpackDetailNormal(float2 uv, half mask)
+        Pass
         {
-            half3 detailNormal = UnpackScaleNormal(tex2D(_DetailBumpMap, uv * _DetailBumpTiling), _DetailBumpScale);
-            return lerp(half3(0, 0, 1), detailNormal, mask);
+            Name "DepthOnly"
+            Tags { "LightMode" = "DepthOnly" }
+            ZWrite On
+            ColorMask R
+            Cull [_Culling]
+            Offset [_Offset], [_Offset]
+
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex KSP2_DepthVertex
+            #pragma fragment KSP2_DepthFragment
+            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            ENDHLSL
         }
 
-        half ApplyPaint(in fixed4 paintMask, inout fixed3 albedo, inout half metallic, inout half smoothness)
+        Pass
         {
-            half paintAWeight = saturate(paintMask.r * _PaintA.a);
-            half paintBWeight = saturate(paintMask.g * _PaintB.a);
-            half paintCoverage = max(paintAWeight, paintBWeight);
+            Name "DepthNormals"
+            Tags { "LightMode" = "DepthNormals" }
+            ZWrite On
+            Cull [_Culling]
+            Offset [_Offset], [_Offset]
 
-            half dirtDarkening = lerp(1.0h, 0.65h, saturate(paintMask.b));
-            albedo = lerp(albedo, _PaintB.rgb * dirtDarkening, paintBWeight);
-            albedo = lerp(albedo, _PaintA.rgb * dirtDarkening, paintAWeight);
-
-            if (_SmoothnessOverride > 0.5h)
-            {
-                half paintSmoothness = saturate(paintMask.a * _PaintGlossMapScale);
-                smoothness = lerp(smoothness, paintSmoothness, paintCoverage);
-            }
-
-            return paintCoverage;
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex KSP2_DepthVertex
+            #pragma fragment KSP2_DepthNormalsFragment
+            #pragma multi_compile _ LOD_FADE_CROSSFADE
+            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            ENDHLSL
         }
-
-        half3 CompressReflection(half3 color)
-        {
-            half peak = max(color.r, max(color.g, color.b));
-            return color / (1.0h + peak);
-        }
-
-        half3 TransformRenderKitReflection(half3 reflection)
-        {
-            half3 physicsReflection = mul((half3x3)_ReflectionPhysicsWorldToLocalMatrix, reflection);
-            return normalize(mul((half3x3)_ReflectionToSkyboxRotationMatrix, physicsReflection));
-        }
-
-        void BuildKspPartSpecular(
-            fixed3 albedo,
-            half metallic,
-            half paintCoverage,
-            out half3 diffuseColor,
-            out half3 specColor,
-            out half oneMinusReflectivity)
-        {
-            half reflectance = smoothstep(0.0h, 1.0h, metallic);
-            half unpaintedMetal = reflectance * saturate(1.0h - paintCoverage * 4.0h);
-            half paintedMetal = reflectance * saturate(paintCoverage);
-            half3 paintedSpecular = max(albedo * 0.45h, half3(0.08h, 0.08h, 0.08h));
-            half3 unpaintedSpecular = saturate(albedo * 0.54h + half3(0.010h, 0.010h, 0.012h));
-            half3 metalSpecular = lerp(unpaintedSpecular, paintedSpecular, saturate(paintCoverage));
-
-            specColor = lerp(unity_ColorSpaceDielectricSpec.rgb, metalSpecular, reflectance);
-            oneMinusReflectivity = 1.0h - max(max(specColor.r, specColor.g), specColor.b);
-            half diffuseScale = lerp(oneMinusReflectivity, 0.055h, unpaintedMetal);
-            diffuseScale = lerp(diffuseScale, 0.16h, paintedMetal);
-            diffuseColor = albedo * diffuseScale;
-        }
-
-        half3 SampleRenderKitSpecular(
-            UnityGIInput data,
-            half smoothness,
-            half3 normal,
-            fixed3 albedo,
-            half metallic,
-            half paintCoverage,
-            half occlusion)
-        {
-            half3 diffuseColor;
-            half3 specColor;
-            half oneMinusReflectivity;
-            BuildKspPartSpecular(albedo, metallic, paintCoverage, diffuseColor, specColor, oneMinusReflectivity);
-            Unity_GlossyEnvironmentData gloss = UnityGlossyEnvironmentSetup(smoothness, data.worldViewDir, normal, specColor);
-            half perceptualRoughness = gloss.roughness * (1.7h - 0.7h * gloss.roughness);
-            half mip = perceptualRoughnessToMipmapLevel(perceptualRoughness);
-            half3 reflection;
-
-            half3 reflectionDir = TransformRenderKitReflection(gloss.reflUVW);
-
-            #if defined(RK_OBSERVER_CUBEMAP)
-                reflection = UNITY_SAMPLE_TEXCUBE_LOD(_ObserverCubemapTexture, reflectionDir, mip).rgb;
-            #elif defined(RK_GALAXY_CUBEMAP)
-                reflection = UNITY_SAMPLE_TEXCUBE_LOD(_GalaxyCubemapTexture, reflectionDir, mip).rgb;
-            #else
-                reflection = half3(0.0h, 0.0h, 0.0h);
-            #endif
-
-            return CompressReflection(max(reflection, 0.0h)) * occlusion;
-        }
-
-        half3 SampleRenderKitSpecularFromView(
-            half3 viewDir,
-            half3 normal,
-            half smoothness,
-            half occlusion)
-        {
-            half perceptualRoughness = SmoothnessToPerceptualRoughness(smoothness);
-            perceptualRoughness = perceptualRoughness * (1.7h - 0.7h * perceptualRoughness);
-            half mip = perceptualRoughnessToMipmapLevel(perceptualRoughness);
-            half3 reflectionDir = TransformRenderKitReflection(reflect(-viewDir, normal));
-            half3 reflection;
-
-            #if defined(RK_OBSERVER_CUBEMAP)
-                reflection = UNITY_SAMPLE_TEXCUBE_LOD(_ObserverCubemapTexture, reflectionDir, mip).rgb;
-            #elif defined(RK_GALAXY_CUBEMAP)
-                reflection = UNITY_SAMPLE_TEXCUBE_LOD(_GalaxyCubemapTexture, reflectionDir, mip).rgb;
-            #else
-                reflection = half3(0.0h, 0.0h, 0.0h);
-            #endif
-
-            return CompressReflection(max(reflection, 0.0h)) * occlusion;
-        }
-
-        inline half4 LightingKSPPart(SurfaceOutputKSPPart s, float3 viewDir, UnityGI gi)
-        {
-            s.Normal = normalize(s.Normal);
-
-            half oneMinusReflectivity;
-            half3 specColor;
-            BuildKspPartSpecular(s.Albedo, s.Metallic, s.PaintCoverage, s.Albedo, specColor, oneMinusReflectivity);
-
-            half outputAlpha;
-            s.Albedo = PreMultiplyAlpha(s.Albedo, s.Alpha, oneMinusReflectivity, outputAlpha);
-
-            half4 color = UNITY_BRDF_PBS(
-                s.Albedo,
-                specColor,
-                oneMinusReflectivity,
-                s.Smoothness,
-                s.Normal,
-                viewDir,
-                gi.light,
-                gi.indirect);
-
-            half unpaintedMetal = saturate(s.Metallic * (1.0h - s.PaintCoverage * 4.0h));
-            half3 metalFloor = s.Albedo * 0.024h;
-            color.rgb = max(color.rgb, metalFloor * unpaintedMetal * s.Occlusion);
-            color.a = outputAlpha;
-            return color;
-        }
-
-        inline half4 LightingKSPPart_Deferred(
-            SurfaceOutputKSPPart s,
-            float3 viewDir,
-            UnityGI gi,
-            out half4 outGBuffer0,
-            out half4 outGBuffer1,
-            out half4 outGBuffer2)
-        {
-            half oneMinusReflectivity;
-            half3 specColor;
-            BuildKspPartSpecular(s.Albedo, s.Metallic, s.PaintCoverage, s.Albedo, specColor, oneMinusReflectivity);
-            half reflectionOcclusion = max(s.Occlusion, saturate(s.Metallic) * 0.85h);
-
-            UnityStandardData data;
-            data.diffuseColor = s.Albedo;
-            data.occlusion = reflectionOcclusion;
-            data.specularColor = specColor;
-            data.smoothness = s.Smoothness;
-            data.normalWorld = s.Normal;
-
-            UnityStandardDataToGbuffer(data, outGBuffer0, outGBuffer1, outGBuffer2);
-
-            half unpaintedMetal = saturate(s.Metallic * (1.0h - s.PaintCoverage * 4.0h));
-
-            #if defined(RK_OBSERVER_CUBEMAP) || defined(RK_GALAXY_CUBEMAP)
-                half3 renderKitReflection = SampleRenderKitSpecularFromView(
-                    viewDir,
-                    s.Normal,
-                    s.Smoothness,
-                    reflectionOcclusion);
-                half3 deferredReflection = renderKitReflection * specColor * saturate(_ReflectionIntensityMultiplier) * saturate(s.Metallic) * 0.12h;
-                half3 metalFloor = s.Albedo * 0.022h * unpaintedMetal;
-                return half4(s.Emission + max(deferredReflection, metalFloor), 1);
-            #endif
-
-            return half4(s.Emission + s.Albedo * 0.020h * unpaintedMetal, 1);
-        }
-
-        inline void LightingKSPPart_GI(SurfaceOutputKSPPart s, UnityGIInput data, inout UnityGI gi)
-        {
-            #if defined(UNITY_PASS_DEFERRED) && UNITY_ENABLE_REFLECTION_BUFFERS
-                gi = UnityGlobalIllumination(data, s.Occlusion, s.Normal);
-            #else
-                half3 diffuseColor;
-                half3 specColor;
-                half oneMinusReflectivity;
-                BuildKspPartSpecular(s.Albedo, s.Metallic, s.PaintCoverage, diffuseColor, specColor, oneMinusReflectivity);
-                Unity_GlossyEnvironmentData gloss = UnityGlossyEnvironmentSetup(s.Smoothness, data.worldViewDir, s.Normal, specColor);
-                gi = UnityGlobalIllumination(data, s.Occlusion, s.Normal, gloss);
-            #endif
-
-            #if (defined(RK_OBSERVER_CUBEMAP) || defined(RK_GALAXY_CUBEMAP)) && !(defined(UNITY_PASS_DEFERRED) && UNITY_ENABLE_REFLECTION_BUFFERS)
-                half reflectionStrength = saturate(_ReflectionIntensityMultiplier) * saturate(s.Metallic) * 0.13h;
-                half3 renderKitSpecular = SampleRenderKitSpecular(
-                    data,
-                    s.Smoothness,
-                    s.Normal,
-                    s.Albedo,
-                    s.Metallic,
-                    s.PaintCoverage,
-                    s.Occlusion) * reflectionStrength;
-                gi.indirect.specular = max(gi.indirect.specular, renderKitSpecular);
-            #endif
-        }
-
-        void surf(Input IN, inout SurfaceOutputKSPPart o)
-        {
-            float2 mainUv = IN.uv_MainTex;
-            float2 paintUv = IN.uv2_PaintMaskGlossMap;
-
-            fixed4 albedoSample = SampleTex2DBias(_MainTex, mainUv) * _Color;
-            fixed4 metalSmoothSample = SampleTex2DBias(_MetallicGlossMap, mainUv);
-            fixed4 paintMask = SampleTex2DBias(_PaintMaskGlossMap, paintUv);
-
-            fixed3 albedo = albedoSample.rgb;
-            half metallic = saturate(metalSmoothSample.g * _Metallic);
-            half smoothness = saturate(metalSmoothSample.a * _GlossMapScale);
-
-            half paintCoverage = ApplyPaint(paintMask, albedo, metallic, smoothness);
-
-            half paintResponse = saturate(paintCoverage);
-            metallic = saturate(metallic * lerp(1.04h, 0.12h, paintResponse));
-            half paintSmoothnessDamping = saturate(_PaintSmoothnessDamping * paintResponse);
-            smoothness = saturate(smoothness * lerp(1.05h, 0.42h, paintSmoothnessDamping));
-            half unpaintedMetal = saturate(metallic * (1.0h - paintCoverage * 4.0h));
-            smoothness = lerp(smoothness, saturate(smoothness * 0.68h + 0.080h), unpaintedMetal * unpaintedMetal * 0.78h);
-
-            half3 baseNormal = UnpackNormal(tex2D(_BumpMap, mainUv));
-            half detailMask = tex2D(_DetailMask, mainUv).a;
-            half3 detailNormal = UnpackDetailNormal(mainUv, detailMask);
-
-            o.Albedo = albedo;
-            o.Metallic = metallic;
-            o.Smoothness = smoothness;
-            o.Normal = BlendNormals(baseNormal, detailNormal);
-            o.Occlusion = lerp(1.0h, tex2D(_OcclusionMap, mainUv).g, _OcclusionStrength);
-            o.PaintCoverage = paintCoverage;
-
-            half3 emission = tex2D(_EmissionMap, mainUv).rgb * _EmissionColor.rgb;
-
-            #if defined(USE_TIME_OF_DAY)
-                half sunDot = dot(WorldNormalVector(IN, o.Normal), _WorldSpaceLightPos0.xyz);
-                half tod = smoothstep(_TimeOfDayDotMin, _TimeOfDayDotMax, sunDot);
-                emission *= tod;
-            #endif
-
-            half rim = 1.0h - saturate(dot(normalize(IN.viewDir), o.Normal));
-            emission += _RimColor.rgb * pow(rim, _RimFalloff) * _RimColor.a;
-
-            o.Emission = emission;
-            o.Alpha = albedoSample.a;
-        }
-        ENDCG
     }
 
     CustomEditor "PaintableShaderGUI"
-    FallBack "Standard"
+    FallBack Off
 }

@@ -76,7 +76,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             }
 
             _utility.DrawMesh(_sphereMesh, Matrix4x4.TRS(Vector3.zero, PreviewRotation, Vector3.one), _previewMaterial, 0);
-            _utility.Render(allowScriptableRenderPipeline: false);
+            // The preview shader is URP only, so the preview has to render through the active pipeline.
+            _utility.Render(allowScriptableRenderPipeline: true);
 
             var rt = _utility.EndPreview() as RenderTexture;
             var tex = CopyToTexture2D(rt, PreviewSize, PreviewSize);

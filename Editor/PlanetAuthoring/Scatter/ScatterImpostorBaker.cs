@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using AwesomeTechnologies;
 using AwesomeTechnologies.VegetationSystem;
-using Redux;
-using Redux.CelestialBody;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -16,8 +14,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Renders the prefab's deferred pass from <see cref="Frames" /> by <see cref="Frames" /> directions
-    /// into one G-buffer atlas, packs it into the four textures
+    /// Renders the ImpostorCapture pass of the prefab's scatter stand-in materials from <see cref="Frames" />
+    /// by <see cref="Frames" /> directions into one G-buffer atlas, packs it into the four textures
     /// <c>Redux/Environment/Impostor/Octahedron_Impostor</c> reads, and writes those with a card mesh,
     /// a material and a prefab beside the source prefab. The layout and sizes match stock impostors.
     /// </para>
@@ -59,6 +57,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         public const string OutputFolderName = "Billboards";
 
         private const string BAKE_SHADER_NAME = "Hidden/Redux/ImpostorBake";
+        // Pass of the Redux/Environment/Scatter stand-ins that writes the surface into the G-buffer atlas.
+        private const string CAPTURE_PASS_NAME = "ImpostorCapture";
         private const int PACK_PASS = 0;
         private const int DILATE_PASS = 1;
         private const int GROW_MASK_PASS = 2;
@@ -179,9 +179,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
             if (string.IsNullOrEmpty(sourcePath))
                 throw new InvalidOperationException($"'{sourcePrefab.name}' is not a prefab asset.");
 
-            // The stand-in scatter shaders only resolve to the real ones once the catalog is loaded.
-            ReduxAssets.ConfigureEditorAssets();
-
             var materialCopies = new List<Material>();
             RenderTexture[] gBuffers = null;
             RenderTexture depth = null;
@@ -247,8 +244,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
             public Matrix4x4 Matrix;
         }
 
-        // Exactly what Vegetation Studio draws for the prefab, with each material copy bound to the real
-        // scatter shader. That is the one mesh SelectMeshObject picks for LOD0, scaled by its object's
+        // Exactly what Vegetation Studio draws for the prefab, with each material copy kept on its scatter
+        // stand-in, whose ImpostorCapture pass writes the surface the game's scatter shader lights. The
+        // game's URP scatter shaders have no pass that writes a G-buffer, so the copies are not moved onto
+        // them. That is the one mesh SelectMeshObject picks for LOD0, scaled by its object's
         // local scale and nothing else. The billboard draw leaves that scale out of its instance
         // matrices, so the impostor has to carry it.
         // Copies are added to the caller's list as they are made, so a failure part way still frees them.
@@ -271,12 +270,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
 
                 var copy = new Material(materials[subMesh]) { hideFlags = HideFlags.HideAndDontSave };
                 materialCopies.Add(copy);
-                ScatterShaderMapping.ApplyBaseGameShader(copy);
-                int pass = copy.FindPass("DEFERRED");
+                int pass = copy.FindPass(CAPTURE_PASS_NAME);
                 if (pass < 0)
                 {
                     throw new InvalidOperationException(
-                        $"'{materials[subMesh].name}' on '{sourcePrefab.name}' uses '{copy.shader.name}', which has no deferred pass to capture.");
+                        $"'{materials[subMesh].name}' on '{sourcePrefab.name}' uses '{copy.shader.name}', which has no {CAPTURE_PASS_NAME} pass. "
+                        + "Put it on a Redux/Environment/Scatter stand-in.");
                 }
 
                 draws.Add(new BakeDraw { Mesh = filter.sharedMesh, SubMesh = subMesh, Material = copy, Pass = pass, Matrix = matrix });
@@ -342,9 +341,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
             commands.SetRenderTarget(colorTargets, depth);
             commands.ClearRenderTarget(true, true, Color.clear, 1f);
 
-            // Linear emission rather than the exp2 encoded light buffer of a non HDR camera.
-            commands.EnableShaderKeyword("UNITY_HDR_ON");
-
             float halfSize = impostorSize * 0.5f;
             Matrix4x4 projection = Matrix4x4.Ortho(-halfSize, halfSize, -halfSize, halfSize, 0f, impostorSize);
             int cellSize = AtlasSize / Frames;
@@ -368,7 +364,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
                 }
             }
 
-            commands.DisableShaderKeyword("UNITY_HDR_ON");
             Graphics.ExecuteCommandBuffer(commands);
             commands.Release();
         }

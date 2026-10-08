@@ -13,7 +13,7 @@ Shader "Redux/PlanetAuthoring/Overlays/ScienceRegionOverlay"
 
     SubShader
     {
-        Tags { "RenderType" = "Transparent" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
 
@@ -26,12 +26,12 @@ Shader "Redux/PlanetAuthoring/Overlays/ScienceRegionOverlay"
 
             #include "OverlayCommon.hlsl"
 
-            sampler2D _OverlayTexture;
-            float     _Strength;
+            TEXTURE2D(_OverlayTexture);     SAMPLER(sampler_OverlayTexture);
+            float _Strength;
 
             float4 frag(overlay_v2f i) : SV_Target
             {
-                float4 c = tex2D(_OverlayTexture, i.uv);
+                float4 c = SAMPLE_TEXTURE2D(_OverlayTexture, sampler_OverlayTexture, i.uv);
                 return OverlayCompose(c.rgb, _Strength);
             }
             ENDHLSL

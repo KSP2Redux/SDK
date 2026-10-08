@@ -1,5 +1,6 @@
 // "Invisible" Unity Occlusion Shader. Useful for AR, Masking, etc
 // Mark Johns / Doomlaser - https://twitter.com/Doomlaser
+// URP: one unlit pass that writes depth and no colour, drawn just before opaque geometry.
 Shader "Redux/DepthMask"
 {
     Properties
@@ -9,36 +10,44 @@ Shader "Redux/DepthMask"
     {
         Tags
         {
+            "RenderPipeline" = "UniversalPipeline"
             "RenderType" = "Transparent"
             "Queue" = "Geometry-1"
         }
         Pass
         {
             ColorMask 0
+            ZWrite On
 
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            struct v2f
+            struct Attributes
             {
-                float4 pos : SV_POSITION;
+                float4 positionOS : POSITION;
             };
 
-            v2f vert(appdata_base v)
+            struct Varyings
             {
-                v2f o;
-                o.pos = UnityObjectToClipPos(v.vertex);
-                return o;
+                float4 positionCS : SV_POSITION;
+            };
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                return output;
             }
 
-            half4 frag(v2f i) : COLOR
+            half4 frag(Varyings input) : SV_Target
             {
-                return float4(1,1,1,1);
+                return half4(1, 1, 1, 1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
+    FallBack Off
 }

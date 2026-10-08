@@ -40,7 +40,7 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
 
     SubShader
     {
-        Tags { "RenderType" = "Transparent" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
 
@@ -90,7 +90,7 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
             Texture2D<float4>  _MidGradienceA;
             Texture2D<float4>  _GlobalGradienceTex;
             Texture2D<float4>  _BiomeMaskTex;
-            SamplerState       sampler_LinearRepeat;
+            // sampler_LinearRepeat comes from URP Core.hlsl (GlobalSamplers).
             float4             _LargeHeightMapUVScales;
             float4             _MediumHeightMapUVScales;
 
@@ -105,7 +105,7 @@ Shader "Redux/PlanetAuthoring/Overlays/HeightDerivedOverlay"
             {
                 QuadMeshData q = GetQuadMeshVert(v);
                 slope_v2f o;
-                o.vertex = UnityObjectToClipPos(q.position);
+                o.vertex = TransformObjectToHClip(q.position);
                 o.uv     = q.uv;
                 o.posH   = float4(q.position, q.height.w);
                 return o;

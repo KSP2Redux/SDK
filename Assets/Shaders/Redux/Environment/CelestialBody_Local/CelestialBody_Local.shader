@@ -1,14 +1,18 @@
 // ============================================================================
 // CelestialBody_Local.shader
 //
-// Properties and pass structure for the local-space (near-camera) PQS terrain
-// shader.  Each Pass dispatches into one of the per-pass-kind cginc files via
-// a PASS_* define.  See CelestialBody_Local.cginc for the include graph.
+// SDK stand-in for the game's PQS terrain shader
+// KSP2/Environment/CelestialBody/CelestialBody_Local.
 //
-// The vertex stage reads its geometry from GPU buffers, and every one of those
-// declarations must be StructuredBuffer to match how PQSRenderer allocates
-// them.  A typed Buffer<uint> view over a structured resource is undefined in
-// D3D11 and reads back zero on some drivers, which clips away every triangle.
+// The game's shader ships in Redux's replacement shader bundle, so a surface
+// material saved in the SDK or a mod project cannot reference it. Surface
+// materials are authored on this shader instead, and PQSRenderer moves them
+// onto the game's shader when the body loads (ShaderRefactorProfile). The
+// properties are documented here for authoring. The passes are the URP
+// port's own (Ksp2Redux Assets/ReduxAssets/Shaders/URP/CelestialBody), with
+// the same pass order, included rather than copied, so the terrain looks the
+// same in the SDK preview as in the game. Keep the SubShader in step with
+// KSP2_Environment_CelestialBody_CelestialBody_Local.shader.
 // ============================================================================
 Shader "Redux/Environment/CelestialBody_Local"
 {
@@ -569,339 +573,181 @@ Shader "Redux/Environment/CelestialBody_Local"
 		[HideInInspector] _LocalSpacePrepassTex3 ("Local Space Prepass Texture 3", 2D) = "white" {}
 		[HideInInspector] _LocalSpacePrepassTex4 ("Local Space Prepass Texture 4", 2D) = "white" {}
 		[ToggleOff(LOW_QUALITY)] _HighQualityEnabled ("High Quality", Float) = 1
-		// Note: Unity walks .shader timestamps but not include-graph timestamps,
-		// so a .cginc-only edit won't recompile this shader.  After editing any
-		// .cginc in this folder, save this .shader file (e.g. add or remove a
-		// trailing space) and force-refresh.
 	}
+
+	// Pass order (C# pass offset 0, see ShaderRefactorProfile):
+	//   0 ForwardLit, 1 ShadowCaster, 2 DepthOnly, 3 DepthNormals,
+	//   4 CustomDepthPass, 5-7 Local Space Prepass NoDecals / 4Decals / InfDecals,
+	//   8 Local Space Deferred Decal Mask Pass.
 	SubShader
 	{
-		// Pass 1: Deferred Base (no decals, zone bit 29)
+		Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" }
+
+		HLSLINCLUDE
+		#include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+		#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalInput.hlsl"
+		#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalCommon.hlsl"
+		ENDHLSL
+
+		// 0: forward lit terrain
 		Pass
 		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
+			Name "ForwardLit"
+			Tags { "LightMode" = "UniversalForward" }
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
+			#pragma vertex CBL_ForwardVertex
+			#pragma fragment CBL_ForwardFragment
+
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#define PASS_DEFERRED_BASE
-			#define DECAL_MODE_NONE
-			#define ZONE_BIT 29
-			#include "CelestialBody_Local.cginc"
+			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
+			#pragma multi_compile _ RK_GALAXY_CUBEMAP
+			#pragma multi_compile _ RK_OBSERVER_CUBEMAP
+
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+			#pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
+			#pragma multi_compile_fragment _ _LIGHT_COOKIES
+
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 2: Deferred Base + 4 packed decals (zone bit 28)
+		// 1: URP shadow caster
 		Pass
 		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
+			Name "ShadowCaster"
+			Tags { "LightMode" = "ShadowCaster" }
+			ZWrite On
+			ZTest LEqual
+			ColorMask 0
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#define PASS_DEFERRED_BASE
-			#define DECAL_MODE_PACKED4
-			#define ZONE_BIT 28
-			#include "CelestialBody_Local.cginc"
+			#pragma vertex CBL_ShadowVertex
+			#pragma fragment CBL_ShadowFragment
+			#pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 3: Deferred Base + N decals (zone bit 27)
+		// 2: URP depth prepass
 		Pass
 		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
+			Name "DepthOnly"
+			Tags { "LightMode" = "DepthOnly" }
+			ZWrite On
+			ColorMask R
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#define PASS_DEFERRED_BASE
-			#define DECAL_MODE_INFINITE
-			#define ZONE_BIT 27
-			#include "CelestialBody_Local.cginc"
+			#pragma vertex CBL_DepthVertex
+			#pragma fragment CBL_DepthFragment
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 4: Deferred Additive Biome R (single-axis triplanar, R-only triangles)
+		// 3: URP depth-normals prepass
 		Pass
 		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
+			Name "DepthNormals"
+			Tags { "LightMode" = "DepthNormals" }
+			ZWrite On
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define BIOME_MASK 1
-			#define BIOME_FRAG_R
-			#include "CelestialBody_Local.cginc"
+			#pragma vertex CBL_DepthVertex
+			#pragma fragment CBL_DepthNormalsFragment
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 5: Deferred Additive Biome G (single-axis triplanar)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define BIOME_MASK 2
-			#define BIOME_FRAG_G
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 6: Deferred Additive Biome B (single-axis triplanar)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define BIOME_MASK 4
-			#define BIOME_FRAG_B
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 7: Deferred Additive Biome A (single-axis triplanar)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define BIOME_MASK 8
-			#define BIOME_FRAG_A
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 8: Deferred Additive Biome R, 3-axis triplanar (additive-bucket triangles)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define ADDITIVE_BIOME
-			#define BIOME_MASK 1
-			#define BIOME_FRAG_R
-			#define TRIPLANAR_3AXIS
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 9: Deferred Additive Biome G, 3-axis triplanar (additive-bucket triangles)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define ADDITIVE_BIOME
-			#define BIOME_MASK 2
-			#define BIOME_FRAG_G
-			#define TRIPLANAR_3AXIS
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 10: Deferred Additive Biome B, 3-axis triplanar (additive-bucket triangles)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define ADDITIVE_BIOME
-			#define BIOME_MASK 4
-			#define BIOME_FRAG_B
-			#define TRIPLANAR_3AXIS
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 11: Deferred Additive Biome A, 3-axis triplanar (additive-bucket triangles)
-		Pass
-		{
-			Tags { "LIGHTMODE" = "DEFERRED" }
-			Blend 0 One One, One One
-			Blend 1 Zero One, One One
-			Blend 2 SrcAlpha OneMinusSrcAlpha, SrcAlpha OneMinusSrcAlpha
-			Blend 3 One One, One One
-			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
-			#pragma target 5.0
-			#pragma multi_compile _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#define PASS_DEFERRED_BIOME
-			#define ADDITIVE_BIOME
-			#define BIOME_MASK 8
-			#define BIOME_FRAG_A
-			#define TRIPLANAR_3AXIS
-			#include "CelestialBody_Local.cginc"
-			ENDHLSL
-		}
-
-		// Pass 12: Custom Depth / Shadow
+		// 4: custom PQS depth prepass
 		Pass
 		{
 			Name "CustomDepthPass"
-			Tags { "SHADOWSUPPORT" = "true" }
+			Tags { "LightMode" = "KSP2PQSDepth" }
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SHADOWS_CUBE
-			#pragma multi_compile _ SHADOWS_DEPTH
-			#define PASS_DEPTH
-			#include "CelestialBody_Local.cginc"
+			#pragma vertex CBL_PositionOnlyVertex
+			#pragma fragment CBL_PQSDepthFragment
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 13: Local Space Prepass (No Decals)
+		// 5: local-space prepass, triangles without decals
 		Pass
 		{
 			Name "Local Space Prepass NoDecals"
-			Tags { }
+			Tags { "LightMode" = "KSP2PQSPrepass" }
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
+			#pragma vertex CBL_PrepassVertex
+			#pragma fragment CBL_PrepassFragment
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile_local _ REDUX_GRADIENCE
-			#define PASS_PREPASS
-			#define DECAL_MODE_NONE
-			#define ZONE_BIT 29
-			#include "CelestialBody_Local.cginc"
+			#define CBL_PREPASS_ZONE CBL_ZONE_NO_DECALS
+			#define CBL_DECALS_NONE
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 14: Local Space Prepass (4 Decals)
+		// 6: local-space prepass, triangles with one to four decals
 		Pass
 		{
 			Name "Local Space Prepass 4Decals"
-			Tags { }
+			Tags { "LightMode" = "KSP2PQSPrepass" }
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#pragma multi_compile _ DECALS_ENABLED
+			#pragma vertex CBL_PrepassVertex
+			#pragma fragment CBL_PrepassFragment
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile_local _ REDUX_GRADIENCE
-			#define PASS_PREPASS
-			#define DECAL_MODE_PACKED4
-			#define ZONE_BIT 28
-			#include "CelestialBody_Local.cginc"
+			#pragma multi_compile_local _ DECALS_ENABLED
+			#define CBL_PREPASS_ZONE CBL_ZONE_4_DECALS
+			#define CBL_DECALS_PACKED4
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 15: Local Space Prepass (Infinite Decals)
+		// 7: local-space prepass, triangles with more than four decals
 		Pass
 		{
 			Name "Local Space Prepass InfDecals"
-			Tags { }
+			Tags { "LightMode" = "KSP2PQSPrepass" }
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#pragma multi_compile _ SUB_ZONES_ENABLED
-			#pragma multi_compile _ UNITY_HDR_ON
-			#pragma multi_compile _ DECALS_ENABLED
+			#pragma vertex CBL_PrepassVertex
+			#pragma fragment CBL_PrepassFragment
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile_local _ REDUX_GRADIENCE
-			#define PASS_PREPASS
-			#define DECAL_MODE_INFINITE
-			#define ZONE_BIT 27
-			#include "CelestialBody_Local.cginc"
+			#pragma multi_compile_local _ DECALS_ENABLED
+			#define CBL_PREPASS_ZONE CBL_ZONE_INF_DECALS
+			#define CBL_DECALS_INFINITE
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 
-		// Pass 16: Deferred Decal Mask
+		// 8: deferred decal mask
 		Pass
 		{
 			Name "Local Space Deferred Decal Mask Pass"
-			Tags { }
+			Tags { "LightMode" = "KSP2PQSDecalMask" }
+
 			HLSLPROGRAM
-			#pragma vertex vert
-			#pragma fragment frag
 			#pragma target 5.0
-			#define PASS_DECAL_MASK
-			#include "CelestialBody_Local.cginc"
+			#pragma vertex CBL_PositionOnlyVertex
+			#pragma fragment CBL_DecalMaskFragment
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 	}
 	CustomEditor "CelestialBodyLocalEditor"
+	FallBack Off
 }
