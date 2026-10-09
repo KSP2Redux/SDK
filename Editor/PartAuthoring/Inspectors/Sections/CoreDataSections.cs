@@ -20,7 +20,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
     internal static class CoreDataSections
     {
         /// <summary>
-        /// Builds the Identity section (partName, author, category, family, sizeKey, tags, isCompound).
+        /// Builds the Identity section (partName, author, category, family, Layer, sizeKey, tags, isCompound).
         /// </summary>
         /// <param name="so">The CorePartData's SerializedObject.</param>
         /// <param name="target">The CorePartData instance, used by the partName change tracker to sync addresses.</param>
@@ -32,6 +32,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             AddField(foldout, so, "core.data.author");
             AddField(foldout, so, "core.data.category");
             AddFamilyField(foldout, so);
+            AddLayerField(foldout, so);
             AddSizeKeyField(foldout, so);
             AddField(foldout, so, "core.data.tags");
             AddField(foldout, so, "core.data.isCompound");
@@ -41,7 +42,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         private static void AddPartNameField(VisualElement parent, SerializedObject so, CorePartData target)
         {
             var prop = so.FindProperty("core.data.partName");
-            if (prop == null) return;
+            if (prop == null)
+                return;
+
             var field = new TextField(prop.displayName) { isDelayed = true };
             field.AddToClassList("unity-base-field__aligned");
             field.BindProperty(prop);
@@ -51,18 +54,21 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             field.TrackPropertyValue(prop, p =>
             {
                 var current = p.stringValue;
-                if (current == lastSeen) return;
+                if (current == lastSeen)
+                    return;
+
                 var previous = lastSeen;
                 lastSeen = current;
-                if (target == null) return;
+                if (target == null)
+                    return;
+
                 var plan = PartAddressRenameHelper.PlanRename(target, previous, current);
-                if (!plan.HasWork) return;
-                if (!PartAddressRenameHelper.ConfirmAndApply(plan))
-                {
-                    p.stringValue = previous;
-                    p.serializedObject.ApplyModifiedProperties();
-                    lastSeen = previous;
-                }
+                if (!plan.HasWork || PartAddressRenameHelper.ConfirmAndApply(plan))
+                    return;
+
+                p.stringValue = previous;
+                p.serializedObject.ApplyModifiedProperties();
+                lastSeen = previous;
             });
         }
 
@@ -203,9 +209,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         private static void AddRuleCell(VisualElement grid, SerializedProperty prop)
         {
             if (prop == null)
-            {
                 return;
-            }
+
             var toggle = new Toggle(prop.displayName);
             toggle.BindProperty(prop);
             toggle.AddToClassList("attach-rules-cell");
@@ -390,6 +395,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             if (prop != null)
             {
                 parent.Add(new Widgets.FamilyField(prop, "Family"));
+            }
+        }
+
+        private static void AddLayerField(VisualElement parent, SerializedObject so)
+        {
+            var prop = so.FindProperty("core.data.Layer");
+            if (prop != null)
+            {
+                parent.Add(new Widgets.PartLayerField(prop, "Layer"));
             }
         }
 
