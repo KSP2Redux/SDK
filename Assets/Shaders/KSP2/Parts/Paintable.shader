@@ -60,7 +60,8 @@ Shader "KSP2/Parts/Paintable"
 
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" }
+        // UniversalMaterialType marks the G-buffer pixels for the deferred Lit light pass (URP reads it here, not on the pass).
+        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" "UniversalMaterialType" = "Lit" }
 
         HLSLINCLUDE
         #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
@@ -105,7 +106,7 @@ Shader "KSP2/Parts/Paintable"
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode" = "UniversalForwardOnly" }
+            Tags { "LightMode" = "UniversalForward" }
             Cull [_Culling]
             Offset [_Offset], [_Offset]
 
@@ -125,6 +126,32 @@ Shader "KSP2/Parts/Paintable"
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma dynamic_branch _ FOG_EXP FOG_EXP2
 
+            #include "Assets/ReduxAssets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "GBuffer"
+            Tags { "LightMode" = "UniversalGBuffer" }
+            Cull [_Culling]
+            Offset [_Offset], [_Offset]
+
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma exclude_renderers gles3 glcore
+            #pragma vertex KSP2StandardOpaque_ForwardVertex
+            #pragma fragment KSP2StandardOpaque_GBufferFragment
+
+            #pragma multi_compile_local_fragment _ _REENTRYEMISSION_ON
+            #pragma multi_compile_local_fragment _ _SMOOTHNESSOVERRIDE_ON
+            #pragma multi_compile_local_fragment _ USE_TIME_OF_DAY
+            #pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+            #pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
+
+            #define KSP2_GBUFFER_PASS
             #include "Assets/ReduxAssets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
             ENDHLSL
         }
