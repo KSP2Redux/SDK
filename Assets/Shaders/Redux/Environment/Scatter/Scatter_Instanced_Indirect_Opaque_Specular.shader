@@ -45,7 +45,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
 
     SubShader
     {
-        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" "UniversalMaterialType" = "Lit" }
 
         HLSLINCLUDE
         #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
@@ -86,7 +86,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode" = "UniversalForwardOnly" }
+            Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
             #pragma target 5.0
@@ -102,6 +102,32 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
+            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
+            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "GBuffer"
+            Tags { "LightMode" = "UniversalGBuffer" }
+
+            HLSLPROGRAM
+            #pragma target 5.0
+            #pragma exclude_renderers gles3 glcore
+            #pragma vertex KSP2Scatter_ForwardVertex
+            #pragma fragment KSP2Scatter_GBufferFragment
+
+            #pragma multi_compile_instancing
+            #pragma instancing_options procedural:setup
+            #pragma multi_compile_local_fragment _ SCATTER_SYSTEM
+
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+            #pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
+
+            #define KSP2_SPECULAR_SETUP
+            #define KSP2_GBUFFER_PASS
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
             #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
