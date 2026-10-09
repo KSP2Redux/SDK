@@ -40,6 +40,8 @@ Shader "KSP2/Planets/Scaled"
         _SouthPoleBlend ("South pole blend", Range(0, 5)) = 0
         _SouthPoleScale ("South pole scale", Range(0, 10)) = 1
         [ShowAsVector2] _SouthPoleOffset ("South pole offset", Vector) = (0,0,0,0)
+        [HideInInspector] _KSP2EclipseOccluderIndices0 ("Eclipse occluders 0", Vector) = (-1,-1,-1,-1)
+        [HideInInspector] _KSP2EclipseOccluderIndices1 ("Eclipse occluders 1", Vector) = (-1,-1,-1,-1)
     }
 
     SubShader
@@ -60,6 +62,8 @@ Shader "KSP2/Planets/Scaled"
             float4 _Body2Direction;
             float4 _NorthPoleOffset;
             float4 _SouthPoleOffset;
+            float4 _KSP2EclipseOccluderIndices0;
+            float4 _KSP2EclipseOccluderIndices1;
             float  _NormalScale;
             float  _AOScale;
             float  _EmissionScale;
