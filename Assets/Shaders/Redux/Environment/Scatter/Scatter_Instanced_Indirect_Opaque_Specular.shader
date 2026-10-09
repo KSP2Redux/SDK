@@ -86,7 +86,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "UniversalForwardOnly" }
 
             HLSLPROGRAM
             #pragma target 5.0

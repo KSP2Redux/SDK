@@ -78,7 +78,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "UniversalForwardOnly" }
 
             HLSLPROGRAM
             #pragma target 5.0

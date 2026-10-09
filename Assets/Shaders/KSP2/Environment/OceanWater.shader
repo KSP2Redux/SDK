@@ -119,7 +119,7 @@ Shader "KSP2/Environment/Ocean/OceanWater (SDK Stand-in)"
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "UniversalForwardOnly" }
 
             HLSLPROGRAM
             #pragma target 4.5

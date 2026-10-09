@@ -105,7 +105,7 @@ Shader "KSP2/Parts/Paintable"
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode" = "UniversalForward" }
+            Tags { "LightMode" = "UniversalForwardOnly" }
             Cull [_Culling]
             Offset [_Offset], [_Offset]
 
