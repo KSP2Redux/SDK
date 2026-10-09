@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="toolbar" class="tech-tree-toolbar">
+        <ui:VisualElement name="layer-host" class="tech-tree-toolbar__layer" />
+        <ui:VisualElement class="tech-tree-toolbar__spacer" />
+        <ui:Toggle name="grid-toggle" text="Grid" value="true" class="tech-tree-toolbar__toggle" />
+        <ui:Toggle name="pages-toggle" text="Tier pages" value="true" class="tech-tree-toolbar__toggle" />
+        <ui:Toggle name="band-toggle" text="Visible band" value="true" class="tech-tree-toolbar__toggle" />
+        <ui:Button name="zoom-out" text="-" class="tech-tree-toolbar__zoom" />
+        <ui:Label name="zoom-label" text="70%" class="tech-tree-toolbar__zoom-label" />
+        <ui:Button name="zoom-in" text="+" class="tech-tree-toolbar__zoom" />
+        <ui:Button name="frame-all" text="Frame all" />
+        <ui:Button name="export-localizations" text="Export Localizations" class="sdk-tool-chip" />
+        <ui:Button name="bake-json" text="Bake JSON" class="sdk-tool-chip sdk-tool-chip--primary" />
+    </ui:VisualElement>
+    <ui:VisualElement name="body" class="tech-tree-body">
+        <ui:ScrollView name="side-panel" class="tech-tree-panel" />
+        <ui:VisualElement name="canvas-host" class="tech-tree-canvas-host" />
+    </ui:VisualElement>
+</ui:UXML>

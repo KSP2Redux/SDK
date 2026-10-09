@@ -1,0 +1,161 @@
+/* Layout: toolbar across the top, the side panel on the left, the canvas filling the rest. */
+/* Canvas colours are the R&D Center's own, read from its prefab, frame sprites and tier art. */
+
+.tech-tree-toolbar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 4px 6px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(35, 35, 35);
+}
+
+.tech-tree-toolbar__layer {
+    width: 260px;
+}
+
+.tech-tree-toolbar__spacer {
+    flex-grow: 1;
+}
+
+.tech-tree-toolbar__toggle {
+    margin-right: 8px;
+}
+
+.tech-tree-toolbar__zoom {
+    width: 22px;
+}
+
+.tech-tree-toolbar__zoom-label {
+    width: 40px;
+    -unity-text-align: middle-center;
+}
+
+.tech-tree-body {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.tech-tree-panel {
+    width: 320px;
+    flex-shrink: 0;
+    border-right-width: 1px;
+    border-right-color: rgb(35, 35, 35);
+}
+
+.tech-tree-panel__title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin: 8px 8px 0 8px;
+}
+
+.tech-tree-panel__id {
+    color: rgb(141, 141, 141);
+    margin: 0 8px 6px 8px;
+}
+
+.tech-tree-panel__heading {
+    -unity-font-style: bold;
+    margin: 8px 8px 2px 8px;
+}
+
+.tech-tree-panel__row {
+    margin: 0 8px 0 16px;
+}
+
+.tech-tree-canvas-host {
+    flex-grow: 1;
+}
+
+.tech-tree-canvas {
+    flex-grow: 1;
+    overflow: hidden;
+    background-color: rgb(8, 8, 20);
+}
+
+.tech-tree-canvas__content {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.tech-tree-canvas__layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.tech-tree-page-label {
+    position: absolute;
+    color: rgb(144, 151, 175);
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+/* The locked frame: 1 unit border on top and sides, a 4 unit lip at the bottom, a darker header band */
+.tech-tree-node {
+    position: absolute;
+    background-color: rgb(38, 42, 51);
+    border-width: 1px 1px 4px 1px;
+    border-color: rgb(82, 89, 99);
+    border-radius: 5px;
+}
+
+.tech-tree-node--selected {
+    border-color: rgb(91, 95, 219);
+    border-width: 2px 2px 5px 2px;
+}
+
+.tech-tree-node__header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 30px;
+    background-color: rgb(29, 37, 44);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.tech-tree-node__icon {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+}
+
+.tech-tree-node__name {
+    position: absolute;
+    width: 134px;
+    color: rgb(255, 255, 255);
+    font-size: 12px;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
+
+.tech-tree-node__cost {
+    position: absolute;
+    width: 65px;
+    height: 16px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.23);
+}
+
+.tech-tree-node__cost > Label {
+    color: rgb(255, 255, 255);
+    font-size: 13px;
+    padding: 0 3px 0 0;
+    margin: 0;
+}
+
+.tech-tree-node__science {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: rgb(95, 191, 228);
+    margin-right: 3px;
+}
