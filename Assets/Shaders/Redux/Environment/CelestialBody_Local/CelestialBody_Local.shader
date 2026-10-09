@@ -614,30 +614,6 @@ Shader "Redux/Environment/CelestialBody_Local"
 			ENDHLSL
 		}
 
-		Pass
-		{
-			Name "GBuffer"
-			Tags { "LightMode" = "UniversalGBuffer" }
-
-			HLSLPROGRAM
-			#pragma target 5.0
-			#pragma exclude_renderers gles3 glcore
-			#pragma vertex CBL_ForwardVertex
-			#pragma fragment CBL_GBufferFragment
-
-			#pragma multi_compile_local_fragment _ SUB_ZONES_ENABLED
-			#pragma multi_compile_fragment _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
-			#pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
-			#pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
-			#pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
-
-			#define KSP2_SPECULAR_SETUP
-			#define KSP2_GBUFFER_PASS
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
-			ENDHLSL
-		}
-
 		// 1: URP shadow caster
 		Pass
 		{
@@ -768,6 +744,31 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma vertex CBL_PositionOnlyVertex
 			#pragma fragment CBL_DecalMaskFragment
 			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
+			ENDHLSL
+		}
+
+		// 9: Deferred+ G-buffer. Last, because PQSRenderer draws passes 4 to 8 by index (ShaderRefactorProfile).
+		Pass
+		{
+			Name "GBuffer"
+			Tags { "LightMode" = "UniversalGBuffer" }
+
+			HLSLPROGRAM
+			#pragma target 5.0
+			#pragma exclude_renderers gles3 glcore
+			#pragma vertex CBL_ForwardVertex
+			#pragma fragment CBL_GBufferFragment
+
+			#pragma multi_compile_local_fragment _ SUB_ZONES_ENABLED
+			#pragma multi_compile_fragment _ ANTI_TILE_QUALITY_ON
+			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
+			#pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
+			#pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
+			#pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
+
+			#define KSP2_SPECULAR_SETUP
+			#define KSP2_GBUFFER_PASS
+			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
 			ENDHLSL
 		}
 	}
