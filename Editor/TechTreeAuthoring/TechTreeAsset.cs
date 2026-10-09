@@ -29,6 +29,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// The nodes in the tree.
         /// </summary>
         public List<TechTreeNode> Nodes = new();
+
+        /// <summary>
+        /// The asset paths the last bake wrote, so the next bake can remove the files of nodes since removed or
+        /// renamed.
+        /// </summary>
+        [HideInInspector] public List<string> BakedFiles = new();
     }
 
     /// <summary>
