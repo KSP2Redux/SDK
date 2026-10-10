@@ -2,7 +2,6 @@ using System;
 using KSP.VFX;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Redux.VFX.Plume.Configs;
 using Redux.VFX.Plume.Volumetric;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -82,7 +81,7 @@ namespace KSP.Editor
         {
             var source = (VolumetricPlumeSource)target;
             JObject json = JObject.FromObject(source.AuthoredProfile,
-                JsonSerializer.Create(PlumeConfig.SerializerSettings));
+                JsonSerializer.Create(VolumetricPlumeJson.SerializerSettings));
             json.AddFirst(new JProperty("PartName", source.transform.root.name));
             EditorGUIUtility.systemCopyBuffer = json.ToString(Formatting.Indented);
         }
@@ -94,7 +93,7 @@ namespace KSP.Editor
             try
             {
                 JsonConvert.PopulateObject(EditorGUIUtility.systemCopyBuffer, source.AuthoredProfile,
-                    PlumeConfig.SerializerSettings);
+                    VolumetricPlumeJson.SerializerSettings);
             }
             catch (Exception exception) when (exception is JsonException or ArgumentException)
             {
