@@ -209,6 +209,24 @@ Shader "KSP2/Parts/Paintable"
             #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
+
+        Pass
+        {
+            Name "MotionVectors"
+            Tags { "LightMode" = "MotionVectors" }
+            ColorMask RG
+            ZWrite On
+            Cull [_Culling]
+            Offset [_Offset], [_Offset]
+
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma vertex KSP2_MotionVectorVertex
+            #pragma fragment KSP2_MotionVectorFragment
+            #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
+            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            ENDHLSL
+        }
     }
 
     CustomEditor "PaintableShaderGUI"
