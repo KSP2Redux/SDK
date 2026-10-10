@@ -1,3 +1,8 @@
+// Hillaire local-space atmosphere composite (HillaireAtmosphereProfile.postShaderName).
+// URP: same name, property and math as the built-in version. PostAtmosphereRenderHook copies the camera
+// colour and draws this pass over the camera with Blitter (Blit.hlsl Vert), reading the copy as
+// _BlitTexture, at BeforeRenderingTransparents with a depth input. View rays come from the URP inverse
+// matrices instead of the BRP frustumCorners matrix.
 Shader "Hidden/KSP/HillaireAtmospherePost"
 {
     Properties
@@ -6,26 +11,29 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
     }
     SubShader
     {
-        Tags { "RenderType" = "Opaque" "Queue" = "Overlay" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Opaque" "Queue" = "Overlay" }
         Cull Off ZWrite Off ZTest Always
         Blend Off
 
         Pass
         {
-            CGPROGRAM
+            Name "HillaireComposite"
+
+            HLSLPROGRAM
             #pragma target 4.5
-            #pragma vertex vert
+            #pragma vertex Vert
             #pragma fragment frag
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "HillaireAtmosphereCommon.hlsl"
 
-            // Rows are the far-plane corners as rays from the camera, so a pixel's interpolated ray reaches the far plane.
-            float4x4 frustumCorners;
+            CBUFFER_START(UnityPerMaterial)
+                float _Transition;
+            CBUFFER_END
+
             float3 planet_center;
-            float _Transition;
-            sampler2D _HillaireSceneColor;
-            UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
-            UNITY_DECLARE_DEPTH_TEXTURE(_OceanDepthTexture);
+            TEXTURE2D(_OceanDepthTexture);
 
             static const float BAYER[16] =
             {
@@ -35,32 +43,8 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
                 15.0 / 16.0, 7.0 / 16.0, 13.0 / 16.0, 5.0 / 16.0
             };
 
-            struct appdata
-            {
-                float4 vertex : POSITION;
-                float2 uv : TEXCOORD0;
-            };
-
-            struct v2f
-            {
-                float4 pos : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float3 ray : TEXCOORD1;
-            };
-
-            v2f vert(appdata v)
-            {
-                v2f o;
-                o.pos = float4(v.vertex.xy, 0.0, 1.0);
-                o.uv = v.uv;
-                float3 bottom = lerp(frustumCorners[3].xyz, frustumCorners[2].xyz, v.uv.x);
-                float3 top = lerp(frustumCorners[0].xyz, frustumCorners[1].xyz, v.uv.x);
-                o.ray = lerp(bottom, top, v.uv.y);
-                return o;
-            }
-
             // Jimenez's interleaved gradient noise, to place each pixel's samples differently along its ray.
-            float InterleavedGradientNoise(float2 pixel)
+            float HillaireInterleavedGradientNoise(float2 pixel)
             {
                 return frac(52.9829189 * frac(dot(pixel, float2(0.06711056, 0.00583715))));
             }
@@ -68,8 +52,8 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
             // The nearer of the scene and ocean depths, or none when both are the far plane.
             bool TrySceneDepth(float2 uv, out float rawDepth)
             {
-                float scene = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, uv);
-                float ocean = SAMPLE_DEPTH_TEXTURE(_OceanDepthTexture, uv);
+                float scene = SampleSceneDepth(uv);
+                float ocean = SAMPLE_TEXTURE2D_LOD(_OceanDepthTexture, sampler_PointClamp, uv, 0.0).r;
                 #if defined(UNITY_REVERSED_Z)
                 rawDepth = max(scene, ocean);
                 return rawDepth > 0.0;
@@ -79,18 +63,29 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
                 #endif
             }
 
-            float4 frag(v2f i) : SV_Target
+            // View-space point on the far plane under the pixel, so its length over the far distance scales eye
+            // depth to distance along the ray.
+            float3 FarPlaneViewPosition(float2 uv)
+            {
+                float4 farCS = ComputeClipSpacePosition(uv, UNITY_RAW_FAR_CLIP_VALUE);
+                float4 farVS = mul(UNITY_MATRIX_I_P, farCS);
+                return farVS.xyz / farVS.w;
+            }
+
+            float4 frag(Varyings input) : SV_Target
             {
                 // Fades the post atmosphere out as the body's scaled shell takes over, the way stock's does.
-                uint2 pixel = (uint2)i.pos.xy;
+                uint2 pixel = (uint2)input.positionCS.xy;
                 if (1.0 - _Transition < BAYER[(pixel.y & 3) * 4 + (pixel.x & 3)])
                 {
                     discard;
                 }
 
-                float4 sceneColor = tex2D(_HillaireSceneColor, i.uv);
+                float2 uv = input.texcoord;
+                float4 sceneColor = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv, 0.0);
+                float3 rayVS = FarPlaneViewPosition(uv);
                 float3 cameraKm = (_WorldSpaceCameraPos - planet_center * 1000.0) * 0.001;
-                float3 direction = normalize(i.ray);
+                float3 direction = normalize(mul((float3x3)UNITY_MATRIX_I_V, rayVS));
                 float tAtmosphereNear;
                 float tAtmosphereFar;
                 if (!HillaireRaySphereInterval(cameraKm, direction, _HillaireTopRadius, tAtmosphereNear, tAtmosphereFar))
@@ -107,10 +102,10 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
                 }
 
                 float rawDepth;
-                if (TrySceneDepth(i.uv, rawDepth))
+                if (TrySceneDepth(uv, rawDepth))
                 {
                     // Eye depth along the far-plane ray scales its length by depth over the far plane.
-                    float sceneDistanceKm = LinearEyeDepth(rawDepth) * length(i.ray) / _ProjectionParams.z * 0.001;
+                    float sceneDistanceKm = LinearEyeDepth(rawDepth, _ZBufferParams) * length(rayVS) / -rayVS.z * 0.001;
                     tEnd = min(tEnd, sceneDistanceKm);
                 }
 
@@ -126,7 +121,7 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
                     direction,
                     tMax,
                     HillaireSampleCount(tMax),
-                    InterleavedGradientNoise(i.pos.xy),
+                    HillaireInterleavedGradientNoise(input.positionCS.xy),
                     transmittance);
 
                 // Stock's exposure, blended from its ground value to its top-of-atmosphere value by camera height.
@@ -141,7 +136,8 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
                     saturate(_HillaireTransmittanceTint));
                 return float4(sceneColor.rgb * tintedTransmittance + luminance * exposure, sceneColor.a);
             }
-            ENDCG
+            ENDHLSL
         }
     }
+    FallBack Off
 }

@@ -37,7 +37,10 @@ float4 _HillaireRayMarchMinMaxSPP;
 
 Texture2D<float4> _HillaireTransmittance;
 Texture2D<float4> _HillaireMultiScattering;
+// URP's Core.hlsl already declares this shared sampler through GlobalSamplers.hlsl.
+#ifndef UNITY_CORE_SAMPLERS_INCLUDED
 SamplerState sampler_LinearClamp;
+#endif
 
 struct HillaireMediumSample
 {
