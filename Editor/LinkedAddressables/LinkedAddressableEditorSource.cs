@@ -151,11 +151,19 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             Type assetType
         )
         {
+            var rootFileName = GetBundleFileNames(descriptor).FirstOrDefault();
+            var rootBundleName = Path.GetFileNameWithoutExtension(rootFileName);
             foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles())
             {
-                if (bundle == null || bundle.isStreamedSceneAssetBundle)
+                if (
+                    bundle == null
+                    || bundle.isStreamedSceneAssetBundle
+                    || (!string.Equals(bundle.name, rootBundleName, StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(bundle.name, rootFileName, StringComparison.OrdinalIgnoreCase))
+                )
                     continue;
 
+                // Numeric internal IDs are local to a bundle and can identify unrelated assets in another bundle.
                 var asset = LoadAsset(bundle, descriptor, assetType);
                 if (asset != null)
                     return asset;

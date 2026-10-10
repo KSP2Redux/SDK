@@ -277,6 +277,10 @@ public static class PrefabVariantPatchCompiler
             )
                 .Where(value => !PrefabUtility.IsDefaultOverride(value))
                 .Where(value => !IsPatchOwnedAddition(value.target))
+                // Shader property IDs depend on the editor or player process. The effects component rebuilds them
+                // from the authored parameter names in Awake, so serializing these caches creates unstable patches.
+                .Where(value => value.target?.GetType().FullName != "KSP.VFX.ThrottleBlendshapeData"
+                    || value.propertyPath?.EndsWith(".ParamHash", StringComparison.Ordinal) != true)
                 .Where(value => !IsRedundantSourceValue(value))
                 .OrderBy(value => SourceSortKey(value.target), StringComparer.Ordinal)
                 // A collection must be resized before applying its new children.
