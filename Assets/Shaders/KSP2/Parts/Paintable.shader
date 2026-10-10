@@ -215,6 +215,14 @@ Shader "KSP2/Parts/Paintable"
             Name "MotionVectors"
             Tags { "LightMode" = "MotionVectors" }
             ColorMask RG
+            // Bit 7 of the motion vector depth's stencil marks object motion, which BodyMotionVectorsPass keeps.
+            Stencil
+            {
+                Ref 128
+                WriteMask 128
+                Comp Always
+                Pass Replace
+            }
             ZWrite On
             Cull [_Culling]
             Offset [_Offset], [_Offset]
