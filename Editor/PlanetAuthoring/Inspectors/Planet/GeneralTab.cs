@@ -101,6 +101,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
             };
             content.Q("orbit-parent-slot").Add(parent);
 
+            // Galaxies a mod creates at runtime are valid targets too, so any key can be typed.
+            var galaxy = new AutocompleteField(orbitObject.FindProperty("GalaxyDefinitionKey"), "Galaxy",
+                GalaxyEntry.KnownGalaxyKeys)
+            {
+                tooltip = "The key of the galaxy definition this body is added to. Stock's and the project's galaxies are suggested, and any key can be typed.",
+            };
+            content.Q("orbit-galaxy-slot").Add(galaxy);
+
             write.clicked += () => view.SetStatus(GalaxyEntry.WriteProjectPatch(orbit));
             view.AddTabRefresh(() =>
             {
