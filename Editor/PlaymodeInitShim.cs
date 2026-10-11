@@ -25,12 +25,13 @@ namespace Ksp2UnityTools.Editor
         private static MethodInfo[] GetAllReduxInitMethods()
         {
             // For some reason, TypeCache.GetMethodsWithAttribute<RuntimeInitializeOnLoadMethodAttribute>(
-            // doesn't return anything from Assembly-CSharp.
+            // doesn't return anything from the game assembly.
             // So manually reflect into the assmebly to find the methods.
+            // The game ships as Ksp2Redux.dll. Assembly-CSharp.dll is only a type-forwarding facade.
             Assembly mainAssembly = null;
             foreach (var thing in CurrentAssemblies.GetLoadedAssemblies())
             {
-                if (thing.FullName.StartsWith("Assembly-CSharp,"))
+                if (thing.FullName.StartsWith("Ksp2Redux,"))
                 {
                     mainAssembly = thing;
                     break;
@@ -48,7 +49,7 @@ namespace Ksp2UnityTools.Editor
 
         private static void RunInitMethodsOfType(RuntimeInitializeLoadType type)
         {
-            Debug.Log($"KSP2UT: Running Assembly-CSharp [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.{type})] methods");
+            Debug.Log($"KSP2UT: Running Ksp2Redux [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.{type})] methods");
 
             foreach (var method in initMethods)
             {
