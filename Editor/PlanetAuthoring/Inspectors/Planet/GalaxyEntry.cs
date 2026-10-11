@@ -7,7 +7,6 @@ using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.ResourceMaps;
-using Redux.Packs;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -145,7 +144,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
                 foreach (AddressableAssetEntry entry in group.entries)
                 {
                     // A galaxy is loaded by its asset name, which is the file name without its extension
-                    if (entry.labels.Contains(GalaxyDefinitionManager.GALAXY_DEFINITION_LABEL))
+                    if (entry.labels.Contains(SerializedGalaxyDefinition.GALAXY_DEFINITION_LABEL))
                     {
                         keys.Add(Path.GetFileNameWithoutExtension(entry.AssetPath));
                     }
