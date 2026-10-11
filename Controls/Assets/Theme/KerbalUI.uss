@@ -65,14 +65,14 @@
 }
 
 .unity-scroller--vertical {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/scrollbar-edges-vertical.png?fileID=21300000&guid=a1b28550181c61e4d9d05ce237499374&type=3#scrollbar-edges-vertical');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/scrollbar-edges-vertical.png?fileID=21300000&guid=a1b28550181c61e4d9d05ce237499374&type=3#scrollbar-edges-vertical');
     margin-left: 2px;
     margin-right: -4px;
     width: 5px;
 }
 
 .unity-scroller--horizontal {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/scrollbar-edges-horizontal.png?fileID=21300000&guid=e8537fdfddf93f54cb1d0055f4247913&type=3#scrollbar-edges-horizontal');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/scrollbar-edges-horizontal.png?fileID=21300000&guid=e8537fdfddf93f54cb1d0055f4247913&type=3#scrollbar-edges-horizontal');
     margin-top: 2px;
     margin-bottom: -4px;
     height: 5px;
@@ -117,13 +117,13 @@
 
 .unity-scroller--vertical .unity-base-slider__drag-container {
     width: 5px;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/scrollbar-path-vertical.png?fileID=21300000&guid=a7bd774c81b4bf9469abdad37eac6272&type=3#scrollbar-path-vertical');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/scrollbar-path-vertical.png?fileID=21300000&guid=a7bd774c81b4bf9469abdad37eac6272&type=3#scrollbar-path-vertical');
     background-size: 5px 8px;
 }
 
 .unity-scroller--horizontal .unity-base-slider__drag-container {
     height: 5px;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/scrollbar-path-horizontal.png?fileID=21300000&guid=9e45d9533b61a06449f92d23eba816c6&type=3#scrollbar-path-horizontal');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/scrollbar-path-horizontal.png?fileID=21300000&guid=9e45d9533b61a06449f92d23eba816c6&type=3#scrollbar-path-horizontal');
     background-size: 8px 5px;
 }
 
@@ -162,13 +162,13 @@
 }
 
 .unity-scroller--vertical > .unity-base-slider > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__dragger {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/scrollbar-grip-vertical.png?fileID=21300000&guid=172f74db8c23df14688f4b20003e6e5a&type=3#scrollbar-grip-vertical');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/scrollbar-grip-vertical.png?fileID=21300000&guid=172f74db8c23df14688f4b20003e6e5a&type=3#scrollbar-grip-vertical');
     margin-left: -3px;
     width: 5px;
 }
 
 .unity-scroller--horizontal > .unity-base-slider > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__dragger {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/scrollbar-grip-horizontal.png?fileID=21300000&guid=98cbb4b2b30aeab448a879557e1b8c50&type=3#scrollbar-grip-horizontal');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/scrollbar-grip-horizontal.png?fileID=21300000&guid=98cbb4b2b30aeab448a879557e1b8c50&type=3#scrollbar-grip-horizontal');
     margin-top: -3px;
     height: 5px;
 }
@@ -274,7 +274,7 @@
 }
 
 .unity-base-slider--horizontal > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/dash.png?fileID=21300000&guid=8bcad968150482849aed7025ed71c162&type=3#dash');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dash.png?fileID=21300000&guid=8bcad968150482849aed7025ed71c162&type=3#dash');
     height: 1px;
     margin: 0 6px;
     background-repeat: repeat-x;
@@ -282,7 +282,7 @@
 }
 
 .unity-base-slider--vertical > .unity-base-field__input > .unity-base-slider__drag-container > .unity-base-slider__tracker {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/dash-vertical.png?fileID=21300000&guid=0e65a876ff1790c4cae165cb75a2e6dd&type=3#dash-vertical');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dash-vertical.png?fileID=21300000&guid=0e65a876ff1790c4cae165cb75a2e6dd&type=3#dash-vertical');
     width: 1px;
     margin: 6px 0;
     background-repeat: repeat-y;
@@ -291,7 +291,7 @@
 
 .unity-min-max-slider > .unity-base-field__input > .unity-min-max-slider__tracker {
     background-color: transparent;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/dash.png?fileID=21300000&guid=8bcad968150482849aed7025ed71c162&type=3#dash');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dash.png?fileID=21300000&guid=8bcad968150482849aed7025ed71c162&type=3#dash');
     -unity-background-image-tint-color: rgb(119, 152, 204);
     background-repeat: repeat;
     background-size: 24px;
@@ -513,7 +513,7 @@
     height: 24px;
     background-color: rgb(0, 0, 0);
     border-radius: 10px;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/control-frame.png?fileID=21300000&guid=a5c196a2bc627c1469f6f790adb266a8&type=3#control-frame');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/control-frame.png?fileID=21300000&guid=a5c196a2bc627c1469f6f790adb266a8&type=3#control-frame');
     -unity-slice-scale: 0.5px;
     -unity-background-image-tint-color: rgb(73, 77, 91);
 }
@@ -721,16 +721,16 @@
     -unity-background-image-tint-color: rgb(214, 224, 255);
     background-size: 16px;
     background-position-y: top 30%;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
 }
 
 .unity-foldout > .unity-foldout__toggle:checked > .unity-toggle__input.unity-base-field__input > .unity-toggle__checkmark {
     rotate: 90deg;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
 }
 
 .unity-foldout > .unity-foldout__toggle:active > .unity-toggle__input.unity-base-field__input > .unity-toggle__checkmark {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/arrow-right.png?fileID=21300000&guid=d0154f67375361c4f8c72ced9b5a34b4&type=3#arrow-right');
     -unity-background-image-tint-color: rgb(214, 224, 255);
 }
 
@@ -761,7 +761,7 @@
 
 #title-bar > .unity-button.unity-text-element.back-button {
     border-width: 0;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/back-button.png?fileID=21300000&guid=412fc87dea660074a900f698a38bb191&type=3#back-button');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/back-button.png?fileID=21300000&guid=412fc87dea660074a900f698a38bb191&type=3#back-button');
 }
 
 #title-bar > .unity-button.unity-text-element:hover {
@@ -808,7 +808,7 @@
 .unity-enum-field__arrow {
     margin-top: 2px;
     margin-right: -7px;
-    background-image: url("project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/dropdown-arrows.png?fileID=21300000&guid=c1b40be4e4feb5f4ab5973a3b0f202e4&type=3#dropdown-arrows");
+    background-image: url("project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dropdown-arrows.png?fileID=21300000&guid=c1b40be4e4feb5f4ab5973a3b0f202e4&type=3#dropdown-arrows");
     -unity-background-image-tint-color: rgb(128, 134, 149);
     height: 14px;
 }
@@ -982,7 +982,7 @@
 .oab-window-header-title {
     letter-spacing: 20px;
     -unity-font-style: normal;
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
     font-size: 11px;
     padding: 0;
     color: rgb(255, 255, 255);
@@ -1075,7 +1075,7 @@
 
 .oab-button.unity-text-element > .oab-button__inner > .oab-button__label {
     color: rgb(34, 38, 46);
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     -unity-font-style: bold;
     -unity-text-generator: advanced;
     -unity-text-auto-size: best-fit 8px 16px;
@@ -1136,7 +1136,7 @@
 }
 
 .unity-button.unity-text-element.oab-close-button {
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     width: 24px;
     height: 24px;
     padding: 0;
@@ -1197,7 +1197,7 @@
 
 .oab-button-toggle > .oab-button-toggle__label {
     color: rgb(34, 38, 46);
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     -unity-font-style: bold;
     -unity-text-generator: advanced;
     -unity-text-auto-size: best-fit 8px 16px;
@@ -1239,7 +1239,7 @@
 
 .oab-button-toggle > .oab-button-toggle-label {
     color: rgb(34, 38, 46);
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&amp;guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
     -unity-font-style: bold;
     -unity-text-generator: advanced;
     -unity-text-auto-size: best-fit 8px 16px;
@@ -1261,7 +1261,7 @@
     margin: 0;
     -unity-background-image-tint-color: rgba(0, 0, 0, 0.3);
     justify-content: center;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/bar-toggle-bg.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#bar-toggle-bg');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/bar-toggle-bg.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#bar-toggle-bg');
     -unity-slice-scale: 0.5px;
     transition-duration: 0.3s;
     /*noinspection CssInvalidPropertyValue*/
@@ -1269,7 +1269,7 @@
 }
 
 .bar-toggle-vertical {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/bar-toggle-bg.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#bar-toggle-bg');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/bar-toggle-bg.png?fileID=21300000&guid=07c6d874f871e1c4ba63a23590b015eb&type=3#bar-toggle-bg');
 }
 
 .bar-toggle.dark {
@@ -1296,7 +1296,7 @@
     right: 2px;
     bottom: 2px;
     left: 2px;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/bracket.png?fileID=2800000&guid=57aeb0876b8ec694e81f46be8cf94188&type=3#bracket');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/bracket.png?fileID=2800000&guid=57aeb0876b8ec694e81f46be8cf94188&type=3#bracket');
     -unity-slice-top: 14;
     -unity-slice-bottom: 14;
     -unity-slice-left: 14;
@@ -1314,12 +1314,12 @@
     width: 8px;
     height: 8px;
     margin: 4px;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand-right');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/icon-expand-right.png?fileID=21300000&guid=ff1108e4a3c4aeb47b4b319bae07bdd5&type=3#icon-expand-right');
     -unity-background-image-tint-color: rgb(170, 178, 204);
 }
 
 .bar-toggle:checked > .bar-toggle-arrow {
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/icon-expand-left.png?fileID=21300000&guid=04691fd6fa6913048b69a2e2144fa29f&type=3#icon-expand-left');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/icon-expand-left.png?fileID=21300000&guid=04691fd6fa6913048b69a2e2144fa29f&type=3#icon-expand-left');
 }
 
 .bar-toggle:hover > .bar-toggle-arrow {
@@ -1417,7 +1417,7 @@
     padding: 0 4px 0 5px;
     height: 11px;
     align-self: center;
-    -unity-font-definition: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
     border-color: rgb(0, 0, 0);
     border-bottom-width: 3px;
     -unity-text-align: upper-right;
@@ -1438,7 +1438,7 @@
     bottom: 6px;
     width: 8px;
     height: 8px;
-    background-image: url('project://database/Packages/uitkforksp2.controls/Assets/Theme/Sprites/resize-handle.png?fileID=21300000&guid=f7dffbf299f76974fbad8b1ffbbec363&type=3#resize-handle');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/resize-handle.png?fileID=21300000&guid=f7dffbf299f76974fbad8b1ffbbec363&type=3#resize-handle');
     -unity-background-scale-mode: scale-to-fit;
 }
 

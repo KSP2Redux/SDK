@@ -226,7 +226,7 @@ namespace Ksp2UnityTools.Editor.Modding.Thunderkit
             {
                 throw new InvalidOperationException(
                     "The installed UITK for KSP 2 package does not provide late-bound UXML support. " +
-                    "Update uitkforksp2.controls before building this mod."
+                    "Update the Redux SDK (ksp2redux.sdk) before building this mod."
                 );
             }
 

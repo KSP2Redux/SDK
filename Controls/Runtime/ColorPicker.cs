@@ -11,9 +11,9 @@ namespace UitkForKsp2.Controls
     [UxmlElement]
     public partial class ColorPicker : BaseField<Color>
     {
-        private const string ColorPickerUxmlAddress = "Packages/uitkforksp2.controls/Assets/Templates/ColorPicker/ColorPickerUI.uxml";
-        private const string SbSquareShaderAddress = "Packages/uitkforksp2.controls/Assets/Templates/ColorPicker/SBSquare.shader";
-        private const string AlphaGradientShaderAddress = "Packages/uitkforksp2.controls/Assets/Templates/ColorPicker/AlphaGradient.shader";
+        private const string ColorPickerUxmlAddress = "Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/ColorPickerUI.uxml";
+        private const string SbSquareShaderAddress = "Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/SBSquare.shader";
+        private const string AlphaGradientShaderAddress = "Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/AlphaGradient.shader";
 
         private static readonly int Hue = Shader.PropertyToID("_Hue");
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");

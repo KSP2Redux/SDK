@@ -1,23 +1,31 @@
-﻿{
-  "name": "ksp2community.ksp2unitytools",
-  "version": "0.9.0",
+{
+  "name": "ksp2redux.sdk",
+  "version": "1.0.0",
   "displayName": "Redux SDK",
-  "description": "A collection of Unity editor scripts and utilities to make developing Kerbal Space Program 2 mods easier.",
-  "unity": "2022.3",
-  "unityRelease": "5f1",
+  "description": "Editor tooling for developing KSP2 Redux mods, and the UI Toolkit controls, theme and templates that KSP2 Redux and its mods share.",
+  "unity": "6000.6",
+  "unityRelease": "0f1",
   "documentationUrl": "https://modding.ksp2redux.org",
   "licensesUrl": "https://raw.githubusercontent.com/KSP2Redux/SDK/main/LICENSE.md",
   "keywords": [
     "parts",
     "ksp2",
-    "mods"
+    "mods",
+    "ui"
   ],
   "author": {
-    "name": "cheese3660"
+    "name": "KSP2 Redux"
   },
   "hideInEditor": false,
   "dependencies": {
-    "com.unity.addressables": "1.21.18",
+    "com.unity.addressables": "2.11.2",
     "com.unity.scriptablebuildpipeline": "1.19.3"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "UI Toolkit controls examples",
+      "description": "Example documents and a binding test for the shared UI Toolkit controls.",
+      "path": "Samples~/Controls"
+    }
+  ]
 }
