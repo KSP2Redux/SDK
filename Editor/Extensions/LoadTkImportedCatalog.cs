@@ -282,14 +282,14 @@ namespace Ksp2UnityTools.Editor.Extensions
                 return ksp2CatalogFullPath;
             }
 
-            // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is
-            // no locator already registerd
-            if (Assembly.GetExecutingAssembly().GetName().Name == "ksp2community.ksp2unitytools.editor")
-            {
-                string reduxCatalogFullPath = Path.Join(Application.dataPath, REDUX_CATALOG_PATH);
-                if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
-                    return reduxCatalogFullPath;
-            }
+            // Load the Redux asset catalog too, but only in a mod project, and only if no locator is registered yet.
+            // The Redux project serves its own assets from the asset database. Loading its built catalog on top of
+            // that resolves every Redux label twice, so patch scripts under redux_patches would run twice.
+#if !REDUX
+            string reduxCatalogFullPath = Path.Join(Application.dataPath, REDUX_CATALOG_PATH);
+            if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
+                return reduxCatalogFullPath;
+#endif
 
             return null;
         }
