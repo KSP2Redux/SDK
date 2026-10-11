@@ -1,5 +1,8 @@
-#if !REDUX
-using ThunderKit.Core.Config;
+using System.Runtime.CompilerServices;
 
-[assembly: ImportExtensions]
+// The KSP2 Redux game project covers parts of this assembly with its EditMode suite.
+[assembly: InternalsVisibleTo("Ksp2Redux.Editor.Tests")]
+
+#if !REDUX
+[assembly: ThunderKit.Core.Config.ImportExtensions]
 #endif
