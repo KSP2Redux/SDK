@@ -21,7 +21,7 @@
     border-color: white;
     border-radius: 16px;
     border-color: rgba(0, 0, 0, 0);
-    background-image: url('project://database/Packages/UitkForKsp2.Unity/Assets/Templates/ColorPicker/color-handle.png?fileID=2800000&guid=291b6dc25bcc19d4e81c6c0fec4d7e0b&type=3#color-handle');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/color-handle.png?fileID=2800000&guid=291b6dc25bcc19d4e81c6c0fec4d7e0b&type=3#color-handle');
 }
 
 #ColorPicker .unity-slider__input > .unity-base-slider__drag-container > .unity-base-slider__dragger {
@@ -31,7 +31,7 @@
     border-color: white;
     border-radius: 16px;
     border-color: rgba(0, 0, 0, 0);
-    background-image: url('project://database/Packages/UitkForKsp2.Unity/Assets/Templates/ColorPicker/color-handle.png?fileID=2800000&guid=291b6dc25bcc19d4e81c6c0fec4d7e0b&type=3#color-handle');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/color-handle.png?fileID=2800000&guid=291b6dc25bcc19d4e81c6c0fec4d7e0b&type=3#color-handle');
     background-color: rgba(0, 0, 0, 0);
 }
 
@@ -68,7 +68,7 @@
     padding: 0;
     width: 24px;
     min-height: auto;
-    background-image: url('project://database/Assets/ReduxAssets/UI/Component/ColorPicker/transparent-grid.png?fileID=2800000&guid=3e45c337d76f62d438ee01e5d542c78b&type=3#transparent-grid');
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/transparent-grid.png?fileID=2800000&guid=3e45c337d76f62d438ee01e5d542c78b&type=3#transparent-grid');
     -unity-background-scale-mode: scale-to-fit;
     background-repeat: repeat;
     background-size: 24px 24px;

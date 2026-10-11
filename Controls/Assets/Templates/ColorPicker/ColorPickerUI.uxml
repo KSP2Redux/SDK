@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
-    <Style src="project://database/Packages/UitkForKsp2.Unity/Assets/Templates/ColorPicker/ColorPickerUI.uss?fileID=7433441132597879392&amp;guid=1f2c53d82160dff44a6bf621910ef831&amp;type=3#ColorPickerUI" />
+    <Style src="project://database/Packages/ksp2redux.sdk/Controls/Assets/Templates/ColorPicker/ColorPickerUI.uss?fileID=7433441132597879392&amp;guid=1f2c53d82160dff44a6bf621910ef831&amp;type=3#ColorPickerUI" />
     <ui:VisualElement name="ColorPicker">
         <ui:Slider name="HueSlider" orientation="Horizontal" low-value="0" high-value="255" />
         <ui:VisualElement name="SBSquareAlphaSliderContainer">
