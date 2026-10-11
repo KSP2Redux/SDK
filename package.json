@@ -19,6 +19,7 @@
   "hideInEditor": false,
   "dependencies": {
     "com.unity.addressables": "2.11.2",
+    "com.unity.render-pipelines.universal": "17.6.0",
     "com.unity.scriptablebuildpipeline": "1.19.3"
   },
   "samples": [
