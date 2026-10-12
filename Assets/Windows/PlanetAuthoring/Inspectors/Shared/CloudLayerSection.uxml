@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!--
+        One cloud layer. Binding paths are relative to the list element, which the host arranges by
+        binding this subtree to the element's SerializedProperty rather than to the configuration.
+        Heights are meters above the configuration's planet radius.
+    -->
+
+    <engine:VisualElement name="cloud-layer-root">
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Shape" value="true">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="isEnable" label="Enabled" tooltip="Draw this layer." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudHeightRange" label="Height Range (m)" tooltip="Bottom and top of the layer, in meters above the planet radius. The scaled layer sits at the bottom." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="castShadow" label="Cast Shadow" tooltip="Let this layer cast shadows when the configuration's shadows are on." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="coverageScale" label="Coverage" tooltip="How much of the distribution map turns into cloud." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudsDensity" label="Density" tooltip="How thick the clouds are." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudsMaskBias" label="Mask Bias" tooltip="Shifts the distribution map up or down before coverage is applied." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="evanish" label="Vanish" tooltip="How strongly clouds thin out at their edges." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="upperFalloff" label="Upper Falloff" tooltip="How sharply density falls toward the layer's top." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="lowerFalloff" label="Lower Falloff" tooltip="How sharply density falls toward the layer's bottom." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="topOffset" label="Top Offset" tooltip="Shears the layer's tops sideways along the wind." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Distribution" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="distributionMap" label="Distribution Map" tooltip="Cubemap of where clouds form over the body, its coverage mask. Generate one below or import one." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudColorMap" label="Color Map" tooltip="Optional cubemap tinting the layer, used when Use Color Maps is on." />
+            <engine:VisualElement name="cloud-layer-distribution-generator" />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Noise" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="baseTexture" label="Base Noise" tooltip="3D noise that shapes the clouds. Use Stock Noise links stock's." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="baseTexureTile" label="Base Noise Tiling" tooltip="How many times the base noise repeats." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="enableDetailTexture" label="Use Detail Noise" tooltip="Erode the cloud edges with the detail noise." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="detailTexture" label="Detail Noise" tooltip="3D noise that erodes the cloud edges. Use Stock Noise links stock's." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="detailTextureTile" label="Detail Noise Tiling" tooltip="How many times the detail noise repeats." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="detailStrength" label="Detail Strength" tooltip="How hard the detail noise erodes." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="detailAmount" label="Detail Amount" tooltip="How much of each cloud the detail noise reaches." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="detailAltitudeShift" label="Detail Altitude Shift" tooltip="Moves the detail noise's effect up or down through the layer." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Wind" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="enableWind" label="Wind" tooltip="Move and evolve the layer over time." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="windDirection" label="Wind Direction" tooltip="The axis the layer drifts around." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="movementSpeed" label="Movement Speed" tooltip="How fast the layer drifts." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="evolveSpeed" label="Evolve Speed" tooltip="How fast the clouds change shape." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudsLayerRotate" label="Rotation" tooltip="This layer's rotation, in degrees." />
+        </engine:Foldout>
+
+        <engine:Foldout class="sdk-subsection-foldout" text="Scaled" value="false">
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="scaleCloudColor" label="Scaled Color" tooltip="Tint of this layer's scaled clouds." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="normalScale" label="Normal Scale" tooltip="Strength of the scaled clouds' normal map." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="bakedScaledTexture" label="Baked Clouds" tooltip="The scaled clouds' color cubemap. Written by Bake Scaled Clouds, or assign your own and skip the bake." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="cloudNormalMap" label="Baked Normals" tooltip="The scaled clouds' normal cubemap. Written by Bake Scaled Clouds, or assign your own and skip the bake." />
+            <editor:PropertyField class="unity-base-field__aligned" binding-path="bakedBottomScaledTexture" label="Baked Underside" tooltip="The scaled clouds' underside cubemap. Written by Bake Scaled Clouds, or assign your own and skip the bake." />
+            <engine:HelpBox name="cloud-layer-not-baked" text="Not baked, so the game shows no clouds from orbit." message-type="Warning" />
+            <engine:Button name="cloud-layer-bake-scaled" text="Bake Scaled Clouds" tooltip="Render this layer from orbit into the three cubemaps the scaled clouds draw, saved beside the configuration. Asks first if a slot holds a texture that did not come from a bake." class="sdk-action-button" />
+            <engine:Label name="cloud-layer-status" class="sdk-hint" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

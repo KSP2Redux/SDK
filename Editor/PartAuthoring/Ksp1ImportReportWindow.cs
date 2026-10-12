@@ -46,7 +46,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             rootVisualElement.Add(root);
 
             Label title = new("KSP1 Import Report");
-            title.AddToClassList("part-inspector-section-label");
+            title.AddToClassList("sdk-inspector-label");
             title.AddToClassList("ksp1-converter-section-title");
             root.Add(title);
 

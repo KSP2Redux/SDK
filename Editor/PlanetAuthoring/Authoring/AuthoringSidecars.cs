@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
+using KSP.Rendering;
 using KSP.Rendering.Planets;
+using KSP.VolumeCloud;
 using Ksp2UnityTools.Editor.ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
@@ -19,6 +21,30 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
     public static class AuthoringSidecars
     {
         private const string DataFolderName = "Data";
+
+        /// <summary>Returns the atmosphere model sidecar for <paramref name="model" />, creating one if absent.</summary>
+        public static AtmosphereModelAuthoring GetOrCreate(AtmosphereModel model) =>
+            GetOrCreateSidecar<AtmosphereModelAuthoring>(model);
+
+        /// <summary>Looks up the atmosphere model sidecar for <paramref name="model" />, or null when absent.</summary>
+        public static AtmosphereModelAuthoring Find(AtmosphereModel model) =>
+            FindSidecar<AtmosphereModelAuthoring>(model);
+
+        /// <summary>Returns the cloud configuration sidecar for <paramref name="configuration" />, creating one if absent.</summary>
+        public static VolumeCloudConfigurationAuthoring GetOrCreate(VolumeCloudConfiguration configuration) =>
+            GetOrCreateSidecar<VolumeCloudConfigurationAuthoring>(configuration);
+
+        /// <summary>Looks up the cloud configuration sidecar for <paramref name="configuration" />, or null when absent.</summary>
+        public static VolumeCloudConfigurationAuthoring Find(VolumeCloudConfiguration configuration) =>
+            FindSidecar<VolumeCloudConfigurationAuthoring>(configuration);
+
+        /// <summary>Returns the ocean sidecar for the ocean material <paramref name="material" />, creating one if absent.</summary>
+        public static OceanMaterialAuthoring GetOrCreateOcean(Material material) =>
+            GetOrCreateSidecar<OceanMaterialAuthoring>(material);
+
+        /// <summary>Looks up the ocean sidecar for the ocean material <paramref name="material" />, or null when absent.</summary>
+        public static OceanMaterialAuthoring FindOcean(Material material) =>
+            FindSidecar<OceanMaterialAuthoring>(material);
 
         /// <summary>Returns the PQSData sidecar for <paramref name="pqsData" />, creating one if absent.</summary>
         public static PQSDataAuthoring GetOrCreate(PQSData pqsData) =>
@@ -51,6 +77,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         /// <summary>Looks up the decal-template sidecar for <paramref name="decal" />, or null when absent.</summary>
         public static PQSDecalTemplateAuthoring Find(PQSDecal decal) =>
             FindSidecar<PQSDecalTemplateAuthoring>(decal);
+
+        /// <summary>Returns the orbit sidecar for the body on <paramref name="scaledPrefab" />, creating one if absent.</summary>
+        public static CelestialBodyOrbitAuthoring GetOrCreateOrbit(GameObject scaledPrefab)
+        {
+            CelestialBodyOrbitAuthoring orbit = GetOrCreateSidecar<CelestialBodyOrbitAuthoring>(scaledPrefab);
+            if (orbit != null && orbit.ScaledPrefab == null)
+            {
+                orbit.ScaledPrefab = scaledPrefab;
+                EditorUtility.SetDirty(orbit);
+            }
+
+            return orbit;
+        }
+
+        /// <summary>Looks up the orbit sidecar for the body on <paramref name="scaledPrefab" />, or null when absent.</summary>
+        public static CelestialBodyOrbitAuthoring FindOrbit(GameObject scaledPrefab) =>
+            FindSidecar<CelestialBodyOrbitAuthoring>(scaledPrefab);
 
         /// <summary>Enumerates every <see cref="PQSDataAuthoring" /> sidecar in the project.</summary>
         public static IEnumerable<PQSDataAuthoring> AllPQSDataAuthorings() => FindAllOfType<PQSDataAuthoring>();

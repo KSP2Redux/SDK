@@ -15,14 +15,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// <remarks>
     /// Owned by <see cref="PlanetAuthoringSession" /> and pumped from the session's own render hook,
     /// so the driver's lifetime is exactly the session's. A driver holding its own
-    /// <see cref="Camera.onPreCull" /> subscription outlives the session across a domain reload and
+    /// camera event subscription outlives the session across a domain reload and
     /// then ticks against a torn-down PQSDecalController, throwing once per frame and burying the
     /// console.
     ///
     /// Nothing here is reachable from the EditMode suite, which runs headless with no scene. Boot
     /// ordering and teardown ordering are verified by running a preview.
     /// </remarks>
-    public sealed class ScatterPreviewDriver
+    public class ScatterPreviewDriver : IPreviewDriver
     {
         /// <summary>
         /// Consecutive pump failures tolerated before the driver switches itself off.
@@ -207,7 +207,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// <c>Graphics.DrawMeshInstancedIndirect</c> submits per frame and only takes effect inside
         /// the render loop, so pumping from <c>EditorApplication.update</c> issues the draw where
         /// nothing consumes it and the field silently never appears. This is the same constraint that
-        /// makes the session drive the PQS from onPreCull.
+        /// makes the session drive the PQS from the camera's begin event.
         /// </remarks>
         /// <param name="camera">The camera about to cull, which becomes the scatter system's view.</param>
         public void Pump(Camera camera)

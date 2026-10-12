@@ -39,7 +39,9 @@
             <editor:ObjectField name="sun-light-field" label="Sun Light" tooltip="Directional Light treated as the sun. Auto-resolves to the brightest directional light in the scene if left empty." type="UnityEngine.Light, UnityEngine" allow-scene-objects="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="sun-azimuth-slider" label="Azimuth (°)" tooltip="Compass direction the sunlight comes from. 0 = north, 90 = east, 180 = south, 270 = west." low-value="0" high-value="360" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Slider name="sun-elevation-slider" label="Elevation (°)" tooltip="Angle of the sun above the horizon. -90 = directly below, 0 = on the horizon, +90 = directly above." low-value="-90" high-value="90" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
-            <engine:Slider name="sun-intensity-slider" label="Intensity" tooltip="Directional Light intensity multiplier. 1 is the typical mid-day value." low-value="0" high-value="3" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:Slider name="sun-star-brightness-slider" label="Brightness" tooltip="How bright the body's star is, as a multiple of Kerbol. 1 is Kerbol." low-value="0" high-value="3" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+            <engine:FloatField name="sun-star-distance-field" label="Distance (Gm)" tooltip="How far the body orbits from its star, in gigameters. A moon uses its planet's distance. Moho is 5.3, Kerbin 13.6, Duna 20.7, Jool 68.8. The light falls off along Kerbol's curve, steeply near the star and to nothing at 500 Gm." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="sun-light-readout" class="sdk-hint" />
             <engine:VisualElement class="preview-button-row">
                 <engine:Button name="sun-day-button" text="Day side" tooltip="Jump the SceneView camera to the sun-facing hemisphere of the body, preserving zoom." />
                 <engine:Button name="sun-night-button" text="Night side" tooltip="Jump the SceneView camera to the anti-sun (night) hemisphere of the body, preserving zoom." />
@@ -52,6 +54,17 @@
                 <engine:Button name="tod-reset-button" text="Reset" tooltip="Stop the rotation animation and restore the body's rotation to the value it had when the preview session began." />
             </engine:VisualElement>
             <engine:Slider name="tod-speed-slider" label="Speed (°/s)" tooltip="Rotation speed in degrees per second. Higher values cycle day/night faster." low-value="0" high-value="180" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Environment" value="true" class="preview-section">
+            <engine:Toggle name="game-look-enabled" label="Game exposure" tooltip="Render the SceneView in HDR through the game's flight post-processing (auto exposure, tonemapping, bloom). Without it the SceneView clips everything brighter than white." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="game-look-status" class="sdk-hint" />
+            <engine:Toggle name="atmosphere-enabled" label="Draw atmosphere" tooltip="Draw the body's atmosphere through the game's post atmosphere shader. Its lookup tables are recomputed live, about a third of a second after a table setting stops changing." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="atmosphere-status" class="sdk-hint" />
+            <engine:Toggle name="clouds-enabled" label="Draw clouds" tooltip="Draw the body's volumetric clouds through the game's cloud renderer, from the High quality configuration on the PQS's cloud helper. Clouds composite inside the atmosphere when it is drawn." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="clouds-status" class="sdk-hint" />
+            <engine:Toggle name="ocean-enabled" label="Draw ocean" tooltip="Draw the body's ocean through the game's water renderer, from the spectrum and material on the PQS renderer. The underwater effect is not drawn, since only the game camera draws it." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Label name="ocean-status" class="sdk-hint" />
         </engine:Foldout>
 
         <engine:Foldout text="Scatter" value="true" class="preview-section">
@@ -76,6 +89,7 @@
             <engine:Slider name="overlay-slope-step-slider" label="Slope step (°)" tooltip="Bin the slope overlay's colors to multiples of this many degrees. 0 produces the continuous ramp. Matches the stretched-degree scale the runtime trapezoid windows use." low-value="0" high-value="30" show-input-field="true" class="preview-coord-field unity-base-field__aligned" />
             <engine:Toggle name="overlay-altitude-toggle" label="Altitude contours" tooltip="Draw thin topographic contour lines at every multiple of the contour interval below. Every fifth line is highlighted as a major contour. Useful for reading elevation gradients and tuning per-layer altitude windows." class="preview-coord-field unity-base-field__aligned" />
             <engine:FloatField name="overlay-band-height-field" label="Contour interval (m)" tooltip="Vertical spacing between minor contour lines in meters. Only affects the Altitude contours overlay." class="preview-coord-field unity-base-field__aligned" />
+            <engine:Toggle name="overlay-sea-level-toggle" label="Sea level" tooltip="Tint terrain that sits below the ocean surface and draw the shoreline. The ocean surface is always at the body radius. Draws nothing when Has Ocean is off." class="preview-coord-field unity-base-field__aligned" />
             <engine:Toggle name="overlay-active-layer-toggle" label="Active layer" tooltip="Show which of the 16 small-biome layers wins per pixel. Hue is the biome (R/G/B/A). Brightness is the layer index within that biome (1 = darkest, 4 = brightest). Click cells in the grid below to mute individual layers." class="preview-coord-field unity-base-field__aligned" />
             <engine:VisualElement name="overlay-active-layer-grid" />
             <engine:Toggle name="overlay-science-region-toggle" label="Science region" tooltip="Show this body's science region map as a colored overlay. Use the mode dropdown below to compare the post-bake palette against the source texture you're authoring." class="preview-coord-field unity-base-field__aligned" />

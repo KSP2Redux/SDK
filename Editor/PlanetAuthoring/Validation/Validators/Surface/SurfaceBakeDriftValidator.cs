@@ -63,7 +63,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
                 {
                     new ValidationFix(
                         "Re-bake Body Surface",
-                        () => BodySurfaceBakeSection.BakeWithPersistedSettings(capturedBody)),
+                        () => BodySurfaceBakeSection.RebakeEverything(capturedBody)),
                 });
         }
 

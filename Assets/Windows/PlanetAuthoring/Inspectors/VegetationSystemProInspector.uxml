@@ -83,8 +83,6 @@
         </engine:Foldout>
 
         <engine:Foldout text="Hand placement" value="false" class="pqs-inspector-section">
-            <engine:Label text="Storage for individually placed instances. The scene tool that authors them is not built yet, so this is reference only."
-                          class="sdk-hint" />
             <editor:PropertyField class="unity-base-field__aligned" binding-path="PersistentVegetationStorage" label="Persistent Storage"
                                   tooltip="Component storing individually placed instances. Absent on a body whose scatter is entirely procedural." />
         </engine:Foldout>

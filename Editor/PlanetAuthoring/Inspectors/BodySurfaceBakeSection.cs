@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
@@ -25,8 +24,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         // Prefs key prefix kept as the legacy "ScaledSpaceBake." string so users' saved settings
         // survive the C# rename to BodySurfaceBakerOperation.
         private const string PrefsPrefix = "Ksp2UnityTools.ScaledSpaceBake.";
-        private static readonly Color DefaultOceanColor = new(0.05f, 0.15f, 0.4f, 1f);
-        private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
         /// <summary>
         /// Wires the bake-section widgets inside <paramref name="root" /> against
@@ -36,9 +33,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// <param name="resolveBody">Called on each bake click to resolve the body the bake should target. Returning null aborts the bake with a status message.</param>
         public static void Wire(VisualElement root, Func<CoreCelestialBodyData> resolveBody)
         {
+            var gradience = root.Q<Toggle>("body-surface-bake-gradience");
+            var textures = root.Q<Toggle>("body-surface-bake-textures");
+            var mesh = root.Q<Toggle>("body-surface-bake-mesh");
             var resolution = root.Q<DropdownField>("body-surface-bake-resolution");
-            var includeOcean = root.Q<Toggle>("body-surface-bake-include-ocean");
-            var oceanColor = root.Q<ColorField>("body-surface-bake-ocean-color");
             var bake = root.Q<Button>("body-surface-bake-button");
             var status = root.Q<Label>("body-surface-bake-status");
             if (bake == null) return;
@@ -46,18 +44,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             int resIndex = EditorPrefs.GetInt(PrefsPrefix + "MeshResIndex", 1);
             if (resolution != null && resIndex >= 0 && resIndex < resolution.choices.Count)
                 resolution.SetValueWithoutNotify(resolution.choices[resIndex]);
-            includeOcean?.SetValueWithoutNotify(EditorPrefs.GetBool(PrefsPrefix + "IncludeOcean", false));
-            oceanColor?.SetValueWithoutNotify(LoadOceanColor());
+            gradience?.SetValueWithoutNotify(EditorPrefs.GetBool(PrefsPrefix + "BakeGradience", true));
+            textures?.SetValueWithoutNotify(EditorPrefs.GetBool(PrefsPrefix + "BakeTextures", true));
+            mesh?.SetValueWithoutNotify(EditorPrefs.GetBool(PrefsPrefix + "BakeMesh", true));
 
             bake.clicked += () =>
             {
                 int currentResIndex = resolution?.index ?? 1;
-                bool currentIncludeOcean = includeOcean?.value ?? false;
-                Color currentOceanColor = oceanColor?.value ?? DefaultOceanColor;
 
                 EditorPrefs.SetInt(PrefsPrefix + "MeshResIndex", currentResIndex);
-                EditorPrefs.SetBool(PrefsPrefix + "IncludeOcean", currentIncludeOcean);
-                StoreOceanColor(currentOceanColor);
+                EditorPrefs.SetBool(PrefsPrefix + "BakeGradience", gradience?.value ?? true);
+                EditorPrefs.SetBool(PrefsPrefix + "BakeTextures", textures?.value ?? true);
+                EditorPrefs.SetBool(PrefsPrefix + "BakeMesh", mesh?.value ?? true);
 
                 var body = resolveBody?.Invoke();
                 if (body == null)
@@ -76,10 +74,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         /// Runs a body-surface bake against <paramref name="body" /> using the artist's persisted EditorPrefs settings.
         /// </summary>
         /// <remarks>
-        /// Used by the surface-bake-drift validator's re-bake fix so a validator-triggered bake
-        /// honors the same settings the inspector's bake button would use. Without this the
-        /// validator would silently re-bake with hardcoded defaults, dropping ocean / resolution
-        /// choices the artist set in the inspector.
+        /// Used by the Quick Tools bake button, so it bakes what the section has ticked.
         /// </remarks>
         /// <param name="body">The body to bake.</param>
         /// <returns>The bake result.</returns>
@@ -88,33 +83,31 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             return BodySurfaceBakerOperation.Bake(body, LoadSettings());
         }
 
+        /// <summary>
+        /// Runs a full body-surface bake against <paramref name="body" />, every output, at the artist's persisted
+        /// resolution.
+        /// </summary>
+        /// <remarks>
+        /// Used by the surface-bake-drift validator's re-bake fix. It honors the resolution the artist set in the
+        /// inspector rather than a hardcoded default, but bakes every output whatever is ticked, since only a full bake
+        /// clears the drift.
+        /// </remarks>
+        /// <param name="body">The body to bake.</param>
+        /// <returns>The bake result.</returns>
+        internal static BodySurfaceBakerOperation.Result RebakeEverything(CoreCelestialBodyData body)
+        {
+            return BodySurfaceBakerOperation.Bake(
+                body,
+                BodySurfaceBakerOperation.Settings.Everything(EditorPrefs.GetInt(PrefsPrefix + "MeshResIndex", 1))
+            );
+        }
+
         private static BodySurfaceBakerOperation.Settings LoadSettings() => new()
         {
             MeshResolutionIndex = EditorPrefs.GetInt(PrefsPrefix + "MeshResIndex", 1),
-            IncludeOcean = EditorPrefs.GetBool(PrefsPrefix + "IncludeOcean", false),
-            OceanColor = LoadOceanColor(),
+            BakeGradience = EditorPrefs.GetBool(PrefsPrefix + "BakeGradience", true),
+            BakeTextures = EditorPrefs.GetBool(PrefsPrefix + "BakeTextures", true),
+            BakeMesh = EditorPrefs.GetBool(PrefsPrefix + "BakeMesh", true),
         };
-
-        private static Color LoadOceanColor()
-        {
-            var packed = EditorPrefs.GetString(PrefsPrefix + "OceanColor", null);
-            if (string.IsNullOrEmpty(packed)) return DefaultOceanColor;
-            var parts = packed.Split(',');
-            if (parts.Length == 4
-                && float.TryParse(parts[0], NumberStyles.Float, Invariant, out var r)
-                && float.TryParse(parts[1], NumberStyles.Float, Invariant, out var g)
-                && float.TryParse(parts[2], NumberStyles.Float, Invariant, out var b)
-                && float.TryParse(parts[3], NumberStyles.Float, Invariant, out var a))
-            {
-                return new Color(r, g, b, a);
-            }
-            return DefaultOceanColor;
-        }
-
-        private static void StoreOceanColor(Color c)
-        {
-            var packed = string.Format(Invariant, "{0},{1},{2},{3}", c.r, c.g, c.b, c.a);
-            EditorPrefs.SetString(PrefsPrefix + "OceanColor", packed);
-        }
     }
 }

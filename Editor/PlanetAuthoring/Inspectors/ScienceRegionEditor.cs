@@ -28,11 +28,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
     [CustomEditor(typeof(ScienceRegionData))]
     public class ScienceRegionEditor : UnityEditor.Editor
     {
-        private const string UxmlPath = "/Assets/Windows/PlanetAuthoring/Inspectors/ScienceRegionInspector.uxml";
-        private const string UssPath = "/Assets/Windows/PlanetAuthoring/Inspectors/ScienceRegionInspector.uss";
+        private const string UXML_PATH = "/Assets/Windows/PlanetAuthoring/Inspectors/ScienceRegionInspector.uxml";
+        private const string USS_PATH = "/Assets/Windows/PlanetAuthoring/Inspectors/ScienceRegionInspector.uss";
 
         // Two regions whose colors are within this normalized distance trigger a color-collision warning.
-        private const float ColorCollisionTolerance = ScienceRegionConstants.ColorCollisionTolerance;
+        private const float COLOR_COLLISION_TOLERANCE = ScienceRegionConstants.ColorCollisionTolerance;
 
         private VisualElement _root;
         private Label _sourceMapStatsLabel;
@@ -66,14 +66,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         {
             _root = new VisualElement();
 
-            var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UxmlPath);
+            var tree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(SDKConfiguration.BasePath + UXML_PATH);
             if (tree == null)
             {
                 _root.Add(new Label("Failed to load ScienceRegionInspector.uxml"));
                 return _root;
             }
             tree.CloneTree(_root);
-            Ksp2UnityToolsStyles.Apply(_root, UssPath);
+            Ksp2UnityToolsStyles.Apply(_root, USS_PATH);
 
             _sourceMapStatsLabel = _root.Q<Label>("source-map-stats-label");
             _sourceMapWarnings = _root.Q<VisualElement>("source-map-warnings");
@@ -106,7 +106,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshAll()
         {
-            if (Target == null) return;
+            if (Target == null)
+                return;
             RefreshSourceMapSection();
             RefreshRegionsSection();
             RefreshDiscoverablesSection();
@@ -115,7 +116,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshReadOnlySections()
         {
-            if (Target == null) return;
+            if (Target == null)
+                return;
             RefreshSourceMapSection();
             RefreshBakeStatus();
 
@@ -146,7 +148,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshSourceMapSection()
         {
-            if (Target == null || _sourceMapStatsLabel == null) return;
+            if (Target == null || _sourceMapStatsLabel == null)
+                return;
             _sourceMapWarnings?.Clear();
             if (Target.scienceRegionMap == null)
             {
@@ -176,7 +179,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshRegionsSection()
         {
-            if (Target == null || _regionsList == null) return;
+            if (Target == null || _regionsList == null)
+                return;
             _regionsList.Clear();
             var defs = Target.information?.ScienceRegionDefinitions;
             var bakedCount = CountBakedRegions(defs);
@@ -184,10 +188,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 ? "No baked-map regions defined. Use 'Import & cluster colors' or '+ Add region'."
                 : $"{bakedCount} baked-map region{(bakedCount == 1 ? string.Empty : "s")} defined. Discoverable-only regions live in the Discoverables section below.";
 
-            if (defs == null) return;
+            if (defs == null)
+                return;
             for (var i = 0; i < defs.Length; i++)
             {
-                if (defs[i] == null || defs[i].MapId < 0) continue;
+                if (defs[i] == null || defs[i].MapId < 0)
+                    continue;
                 var capturedIndex = i;
                 _regionsList.Add(BuildRegionRow(defs[i], capturedIndex, defs));
             }
@@ -195,7 +201,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static int CountBakedRegions(ScienceRegionData.ExtendedScienceRegionDefinition[] defs)
         {
-            if (defs == null) return 0;
+            if (defs == null)
+                return 0;
             var n = 0;
             foreach (var def in defs)
             {
@@ -281,7 +288,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
             if (collisionIdx >= 0)
             {
-                var warn = new Label($"Color within {ColorCollisionTolerance:0.00} of '{all[collisionIdx].Id}' (MapId {all[collisionIdx].MapId}). Bake may misclassify boundary pixels.");
+                var warn = new Label($"Color within {COLOR_COLLISION_TOLERANCE:0.00} of '{all[collisionIdx].Id}' (MapId {all[collisionIdx].MapId}). Bake may misclassify boundary pixels.");
                 warn.AddToClassList("science-region-region-row-warning");
                 row.Add(warn);
             }
@@ -339,17 +346,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             // Only baked-map regions participate in the source-map nearest-color match. Discoverable
             // regions (MapId < 0) have no pixel coverage, so colliding with one doesn't affect the
             // bake at all. Skip them on both sides of the comparison.
-            if (self == null || self.MapId < 0) return -1;
-            var toleranceSq = ColorCollisionTolerance * ColorCollisionTolerance * 3f;
+            if (self == null || self.MapId < 0)
+                return -1;
+            var toleranceSq = COLOR_COLLISION_TOLERANCE * COLOR_COLLISION_TOLERANCE * 3f;
             for (var i = 0; i < all.Length; i++)
             {
-                if (i == selfIndex) continue;
-                if (all[i] == null || all[i].MapId < 0) continue;
+                if (i == selfIndex)
+                    continue;
+                if (all[i] == null || all[i].MapId < 0)
+                    continue;
                 var other = all[i].RegionColor;
                 var dr = self.RegionColor.r - other.r;
                 var dg = self.RegionColor.g - other.g;
                 var db = self.RegionColor.b - other.b;
-                if (dr * dr + dg * dg + db * db <= toleranceSq) return i;
+                if (dr * dr + dg * dg + db * db <= toleranceSq)
+                    return i;
             }
             return -1;
         }
@@ -387,7 +398,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnRegionDeleteClicked(int index)
         {
-            if (Target?.information?.ScienceRegionDefinitions == null) return;
+            if (Target?.information?.ScienceRegionDefinitions == null)
+                return;
             if (!EditorUtility.DisplayDialog(
                     "Delete region",
                     $"Delete region '{Target.information.ScienceRegionDefinitions[index].Id}'?",
@@ -405,7 +417,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnAddRegionClicked()
         {
-            if (Target == null) return;
+            if (Target == null)
+                return;
             if (Target.information == null)
                 Target.information = new ScienceRegionData.ScienceRegionDataInformation();
 
@@ -438,7 +451,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void MutateDefinitions(Action<ScienceRegionData.ExtendedScienceRegionDefinition[]> mutator, string undoLabel)
         {
-            if (Target?.information?.ScienceRegionDefinitions == null) return;
+            if (Target?.information?.ScienceRegionDefinitions == null)
+                return;
             Undo.RecordObject(Target, undoLabel);
             mutator(Target.information.ScienceRegionDefinitions);
             EditorUtility.SetDirty(Target);
@@ -450,7 +464,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshDiscoverablesSection()
         {
-            if (Target == null || _discoverablesList == null) return;
+            if (Target == null || _discoverablesList == null)
+                return;
             _discoverablesList.Clear();
 
             var defs = Target.information?.ScienceRegionDefinitions;
@@ -467,7 +482,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             {
                 for (var i = 0; i < defs.Length; i++)
                 {
-                    if (defs[i] == null || defs[i].MapId >= 0) continue;
+                    if (defs[i] == null || defs[i].MapId >= 0)
+                        continue;
                     var capturedIndex = i;
                     _discoverablesList.Add(BuildMergedDiscoverableRow(defs[i], capturedIndex));
                 }
@@ -492,8 +508,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 for (var i = 0; i < Target.discoverables.Count; i++)
                 {
                     var pos = Target.discoverables[i];
-                    if (pos == null) continue;
-                    if (HasDiscoverableRegion(defs, pos.ScienceRegionId)) continue;
+                    if (pos == null)
+                        continue;
+                    if (HasDiscoverableRegion(defs, pos.ScienceRegionId))
+                        continue;
                     var capturedIndex = i;
                     _discoverablesList.Add(BuildOrphanPositionRow(pos, capturedIndex));
                 }
@@ -502,7 +520,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private static int CountDiscoverableRegions(ScienceRegionData.ExtendedScienceRegionDefinition[] defs)
         {
-            if (defs == null) return 0;
+            if (defs == null)
+                return 0;
             var n = 0;
             foreach (var def in defs)
             {
@@ -518,11 +537,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             List<CelestialBodyDiscoverablePosition> positions,
             ScienceRegionData.ExtendedScienceRegionDefinition[] defs)
         {
-            if (positions == null) return 0;
+            if (positions == null)
+                return 0;
             var n = 0;
             foreach (var p in positions)
             {
-                if (p == null) continue;
+                if (p == null)
+                    continue;
                 if (!HasDiscoverableRegion(defs, p.ScienceRegionId))
                 {
                     n++;
@@ -534,10 +555,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private static bool HasDiscoverableRegion(
             ScienceRegionData.ExtendedScienceRegionDefinition[] defs, string regionId)
         {
-            if (defs == null || string.IsNullOrEmpty(regionId)) return false;
+            if (defs == null || string.IsNullOrEmpty(regionId))
+                return false;
             foreach (var def in defs)
             {
-                if (def != null && def.MapId < 0 && def.Id == regionId) return true;
+                if (def != null && def.MapId < 0 && def.Id == regionId)
+                    return true;
             }
             return false;
         }
@@ -727,7 +750,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             // lon = atan2(z, x). Earlier my atan2 args were swapped, which produced bogus longitudes.
             Vector3d p = pos.Position;
             var r = Math.Sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-            if (r < 1e-3) return (0, 0);
+            if (r < 1e-3)
+                return (0, 0);
             var lat = Math.Asin(p.y / r) * 180.0 / Math.PI;
             var lon = Math.Atan2(p.z, p.x) * 180.0 / Math.PI;
             return (lat, lon);
@@ -739,14 +763,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         // surface hit IS the "where I clicked" intent.
         private void OnDiscoverableLatLonEdited(int posIndex, float lat, float lon)
         {
-            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count) return;
+            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count)
+                return;
             var altitude = DecomposeAltitude(Target.discoverables[posIndex]);
             SetDiscoverablePosition(posIndex, lat, lon, altitude);
         }
 
         private void OnDiscoverableAltitudeEdited(int posIndex, float altitude)
         {
-            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count) return;
+            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count)
+                return;
             var (lat, lon) = ComputeLatLon(Target.discoverables[posIndex]);
             SetDiscoverablePosition(posIndex, lat, lon, altitude);
         }
@@ -765,9 +791,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private static double SampleTerrainDistance(Vector3d localRadial)
         {
             var planet = PlanetAuthoringSession.Active?.Pqs;
-            if (planet == null) return 0;
+            if (planet == null)
+                return 0;
             var t = planet.GetSurfaceHeight(localRadial.normalized, true);
-            if (t > 0) return t;
+            if (t > 0)
+                return t;
             return BodyResolver.FindBody(planet)?.Data?.radius ?? 0;
         }
 
@@ -776,13 +804,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             var (lat, lon) = ComputeLatLon(pos);
             var localRadial = LatLon.GetRelSurfaceNVector(lat, lon);
             var terrainDistance = SampleTerrainDistance(localRadial);
-            if (terrainDistance <= 0) return 0;
+            if (terrainDistance <= 0)
+                return 0;
             return pos.Position.magnitude - terrainDistance;
         }
 
         private void OnDiscoverableCopyClicked(int posIndex)
         {
-            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count) return;
+            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count)
+                return;
             var (lat, lon) = ComputeLatLon(Target.discoverables[posIndex]);
             EditorGUIUtility.systemCopyBuffer =
                 $"{lat.ToString("0.000000", CultureInfo.InvariantCulture)},{lon.ToString("0.000000", CultureInfo.InvariantCulture)}";
@@ -791,11 +821,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         private void OnDiscoverablePasteClicked(int posIndex)
         {
             var clip = EditorGUIUtility.systemCopyBuffer;
-            if (string.IsNullOrWhiteSpace(clip)) return;
+            if (string.IsNullOrWhiteSpace(clip))
+                return;
             var parts = clip.Split(',');
-            if (parts.Length != 2) return;
-            if (!float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lat)) return;
-            if (!float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lon)) return;
+            if (parts.Length != 2)
+                return;
+            if (!float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lat))
+                return;
+            if (!float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lon))
+                return;
             OnDiscoverableLatLonEdited(posIndex, lat, lon);
         }
 
@@ -837,31 +871,32 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private int FindMatchingPositionIndex(string regionId)
         {
-            if (string.IsNullOrEmpty(regionId) || Target.discoverables == null) return -1;
+            if (string.IsNullOrEmpty(regionId) || Target.discoverables == null)
+                return -1;
             for (var i = 0; i < Target.discoverables.Count; i++)
             {
                 if (Target.discoverables[i] != null && Target.discoverables[i].ScienceRegionId == regionId)
-                {
                     return i;
-                }
             }
             return -1;
         }
 
+        // Delegates rather than repeating the inverse, which is how the two drifted apart before.
         private static string FormatLatLon(CelestialBodyDiscoverablePosition pos)
         {
             Vector3d p = pos.Position;
-            var r = Math.Sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
-            if (r < 1e-3) return "(at body center)";
-            var lat = Math.Asin(p.y / r) * 180.0 / Math.PI;
-            var lon = Math.Atan2(p.x, p.z) * 180.0 / Math.PI;
+            if (p.magnitude < 1e-3)
+                return "(at body center)";
+            var (lat, lon) = ComputeLatLon(pos);
             return $"({lat:0.00}°, {lon:0.00}°)";
         }
 
         private void OnDiscoverableRegionRenamed(int regionIndex, string oldId, string newId)
         {
-            if (Target?.information?.ScienceRegionDefinitions == null) return;
-            if (string.IsNullOrEmpty(newId) || newId == oldId) return;
+            if (Target?.information?.ScienceRegionDefinitions == null)
+                return;
+            if (string.IsNullOrEmpty(newId) || newId == oldId)
+                return;
             Undo.RecordObject(Target, "Rename discoverable");
             Target.information.ScienceRegionDefinitions[regionIndex].Id = newId;
             // Cascade rename to every position that referenced the old id so they stay linked.
@@ -881,7 +916,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnDiscoverablePositionRadiusChanged(int posIndex, float value)
         {
-            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count) return;
+            if (Target?.discoverables == null || posIndex < 0 || posIndex >= Target.discoverables.Count)
+                return;
             Undo.RecordObject(Target, "Edit discoverable radius");
             Target.discoverables[posIndex].Radius = Math.Max(0.0, value);
             EditorUtility.SetDirty(Target);
@@ -889,7 +925,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnDiscoverableCascadeDelete(int regionIndex, string regionId)
         {
-            if (Target?.information?.ScienceRegionDefinitions == null) return;
+            if (Target?.information?.ScienceRegionDefinitions == null)
+                return;
             if (!EditorUtility.DisplayDialog(
                     "Delete discoverable",
                     $"Delete discoverable '{regionId}'? Both the region and its position will be removed.",
@@ -931,7 +968,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnDiscoverableDeleteClicked(int index)
         {
-            if (Target?.discoverables == null || index < 0 || index >= Target.discoverables.Count) return;
+            if (Target?.discoverables == null || index < 0 || index >= Target.discoverables.Count)
+                return;
             if (!EditorUtility.DisplayDialog(
                     "Delete discoverable",
                     $"Delete discoverable '{Target.discoverables[index].ScienceRegionId ?? "(unset)"}' at index {index}?",
@@ -951,7 +989,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshBakeStatus()
         {
-            if (Target == null || _bakeStatusLabel == null) return;
+            if (Target == null || _bakeStatusLabel == null)
+                return;
             RefreshBakePathsPreview();
 
             var baked = ScienceRegionAssetLocator.FindBakedMap(Target);
@@ -962,7 +1001,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
                 return;
             }
             var bakedPath = AssetDatabase.GetAssetPath(baked);
-            if (string.IsNullOrEmpty(bakedPath)) return;
+            if (string.IsNullOrEmpty(bakedPath))
+                return;
             var fullPath = Path.GetFullPath(bakedPath);
             if (!File.Exists(fullPath))
             {
@@ -985,7 +1025,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void RefreshBakePathsPreview()
         {
-            if (_bakePathsLabel == null || Target == null) return;
+            if (_bakePathsLabel == null || Target == null)
+                return;
             var body = Target.information?.BodyName;
             if (string.IsNullOrWhiteSpace(body))
             {
@@ -1000,7 +1041,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnBakeClicked()
         {
-            if (Target == null) return;
+            if (Target == null)
+                return;
             var bakedPath = ScienceRegionBaker.Bake(Target);
             if (!string.IsNullOrEmpty(bakedPath))
             {
@@ -1035,7 +1077,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             toggle.RegisterValueChangedCallback(evt =>
             {
                 var s = AuthoringSidecars.GetOrCreate(Target);
-                if (s == null) return;
+                if (s == null)
+                    return;
                 Undo.RecordObject(s, "Toggle discoverable orbs");
                 s.ShowDiscoverableOrbs = evt.newValue;
                 EditorUtility.SetDirty(s);
@@ -1050,20 +1093,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
 
         private void OnSceneViewGui(SceneView _)
         {
-            if (Target?.discoverables == null || Target.discoverables.Count == 0) return;
+            if (Target?.discoverables == null || Target.discoverables.Count == 0)
+                return;
             var session = PlanetAuthoringSession.Active;
             var planet = session?.Pqs;
-            if (planet == null) return;
-            var body = BodyResolver.FindBody(planet);
-            if (body == null) return;
+            if (planet == null)
+                return;
 
             var showOrbs = AuthoringSidecars.Find(Target)?.ShowDiscoverableOrbs ?? true;
 
             for (var i = 0; i < Target.discoverables.Count; i++)
             {
                 var pos = Target.discoverables[i];
-                if (pos == null) continue;
-                var worldPos = body.transform.position + body.transform.rotation * (Vector3)pos.Position;
+                if (pos == null)
+                    continue;
+                // Must be the PQS transform, the one PlaceDiscoverableTool inverts against.
+                // SceneViewFraming rotates it on every camera jump.
+                var worldPos = planet.transform.TransformPoint((Vector3)pos.Position);
 
                 if (showOrbs && pos.Radius > 0)
                 {
@@ -1095,9 +1141,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
         // and the editor's bold yellow loses contrast against tan/rocky terrain.
         private static void DrawDiscoverableLabel(Vector3 worldPos, string id)
         {
-            if (string.IsNullOrEmpty(id)) return;
+            if (string.IsNullOrEmpty(id))
+                return;
             var guiPos = HandleUtility.WorldToGUIPoint(worldPos);
-            if (float.IsInfinity(guiPos.x) || float.IsInfinity(guiPos.y)) return;
+            if (float.IsInfinity(guiPos.x) || float.IsInfinity(guiPos.y))
+                return;
             var size = LabelFg.CalcSize(new GUIContent(id));
             Handles.BeginGUI();
             var shadowRect = new Rect(guiPos.x + 1, guiPos.y + 1, size.x, size.y);

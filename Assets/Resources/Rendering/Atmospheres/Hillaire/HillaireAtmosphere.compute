@@ -1,0 +1,127 @@
+#pragma kernel GenerateTransmittance
+#pragma kernel GenerateMultiScattering
+
+#include "HillaireAtmosphereCommon.hlsl"
+
+RWTexture2D<float4> _HillaireTransmittanceRW;
+RWTexture2D<float4> _HillaireMultiScatteringRW;
+
+float4 _HillaireTextureSize;
+
+float3 HillaireIntegrateOpticalDepth(float3 position, float3 direction, float tMax, int sampleCount)
+{
+    float3 opticalDepth = 0.0;
+    float dt = tMax / max(1, sampleCount);
+    [loop]
+    for (int i = 0; i < sampleCount; i++)
+    {
+        HillaireMediumSample medium = HillaireSampleMedium(position + direction * ((i + 0.5) * dt));
+        opticalDepth += medium.extinction * dt;
+    }
+
+    return opticalDepth;
+}
+
+[numthreads(8, 8, 1)]
+void GenerateTransmittance(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_HillaireTextureSize.x || id.y >= (uint)_HillaireTextureSize.y)
+    {
+        return;
+    }
+
+    float2 uv = (float2(id.xy) + 0.5) / _HillaireTextureSize.xy;
+    float viewHeight;
+    float viewZenithCosAngle;
+    HillaireUvToTransmittanceParams(uv, viewHeight, viewZenithCosAngle);
+    float3 position = float3(0.0, 0.0, viewHeight);
+    float3 direction = float3(sqrt(saturate(1.0 - viewZenithCosAngle * viewZenithCosAngle)), 0.0, viewZenithCosAngle);
+    float tTop = HillaireRaySphereNearest(position, direction, _HillaireTopRadius);
+    float3 transmittance = tTop > 0.0 ? exp(-HillaireIntegrateOpticalDepth(position, direction, tTop, 40)) : 1.0;
+    _HillaireTransmittanceRW[id.xy] = float4(transmittance, 1.0);
+}
+
+// Paper section 5.5. From a point at this texel's height, with the sun at this texel's angle, integrate over 64 even
+// directions the light scattered once toward the point (second order, isotropic phase, plus ground bounce) and the
+// fraction f_ms of light it would scatter again. Every higher order repeats f_ms, so their sum is the geometric
+// series 1 / (1 - f_ms). Stored for unit sun illuminance.
+[numthreads(8, 8, 1)]
+void GenerateMultiScattering(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_HillaireTextureSize.x || id.y >= (uint)_HillaireTextureSize.y)
+    {
+        return;
+    }
+
+    const int SQRT_DIRECTIONS = 8;
+    const int STEPS = 20;
+    const float ISOTROPIC_PHASE = 1.0 / (4.0 * HILLAIRE_PI);
+
+    float2 uv = (float2(id.xy) + 0.5) / _HillaireTextureSize.xy;
+    float sunZenithCosAngle = uv.x * 2.0 - 1.0;
+    float viewHeight = _HillaireBottomRadius + HILLAIRE_PLANET_OFFSET +
+        uv.y * (_HillaireTopRadius - _HillaireBottomRadius - 2.0 * HILLAIRE_PLANET_OFFSET);
+    float3 origin = float3(0.0, 0.0, viewHeight);
+    float3 sunDir = float3(sqrt(saturate(1.0 - sunZenithCosAngle * sunZenithCosAngle)), 0.0, sunZenithCosAngle);
+
+    float3 secondOrder = 0.0;
+    float3 transferFraction = 0.0;
+
+    [loop]
+    for (int i = 0; i < SQRT_DIRECTIONS; i++)
+    {
+        [loop]
+        for (int j = 0; j < SQRT_DIRECTIONS; j++)
+        {
+            float azimuth = 2.0 * HILLAIRE_PI * (i + 0.5) / SQRT_DIRECTIONS;
+            float cosPolar = 1.0 - 2.0 * (j + 0.5) / SQRT_DIRECTIONS;
+            float sinPolar = sqrt(saturate(1.0 - cosPolar * cosPolar));
+            float3 direction = float3(cos(azimuth) * sinPolar, sin(azimuth) * sinPolar, cosPolar);
+
+            float tGround = HillaireRaySphereNearest(origin, direction, _HillaireBottomRadius);
+            float tTop = HillaireRaySphereNearest(origin, direction, _HillaireTopRadius);
+            bool hitsGround = tGround > 0.0;
+            float tMax = hitsGround ? tGround : max(0.0, tTop);
+
+            float3 luminance = 0.0;
+            float3 fraction = 0.0;
+            float3 throughput = 1.0;
+            float dt = tMax / STEPS;
+
+            [loop]
+            for (int s = 0; s < STEPS; s++)
+            {
+                float3 position = origin + direction * ((s + 0.3) * dt);
+                float height = length(position);
+                HillaireMediumSample medium = HillaireSampleMedium(position);
+                float3 sunTransmittance = HillaireSunTransmittance(height, dot(position / height, sunDir));
+                float3 extinction = max(medium.extinction, 1e-6);
+                float3 stepTransmittance = exp(-extinction * dt);
+
+                float3 source = sunTransmittance * medium.scattering * ISOTROPIC_PHASE;
+                luminance += throughput * (source - source * stepTransmittance) / extinction;
+                fraction += throughput * (medium.scattering - medium.scattering * stepTransmittance) / extinction;
+                throughput *= stepTransmittance;
+            }
+
+            if (hitsGround)
+            {
+                float3 groundPosition = origin + direction * tGround;
+                float3 groundNormal = normalize(groundPosition);
+                float sunCos = dot(groundNormal, sunDir);
+                float3 sunAtGround = HillaireSunTransmittance(length(groundPosition), sunCos);
+                luminance += throughput * sunAtGround * saturate(sunCos) * _HillaireGroundAlbedo / HILLAIRE_PI;
+            }
+
+            secondOrder += luminance;
+            transferFraction += fraction;
+        }
+    }
+
+    // Each direction's solid angle, 4 pi over the count, times the isotropic phase is one over the count.
+    float directionWeight = 1.0 / (SQRT_DIRECTIONS * SQRT_DIRECTIONS);
+    secondOrder *= directionWeight;
+    transferFraction *= directionWeight;
+    float3 multipleScattering = secondOrder / max(1.0 - transferFraction, 0.001);
+    _HillaireMultiScatteringRW[id.xy] = float4(multipleScattering, 1.0);
+}

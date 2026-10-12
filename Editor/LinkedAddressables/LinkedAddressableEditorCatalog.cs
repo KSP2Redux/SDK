@@ -31,9 +31,9 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
 
         public static IReadOnlyList<LinkedAddressableCatalogEntry> Entries => entries;
 
-        public static bool IsLoaded =>
-            catalogLocator != null
-            && Addressables.ResourceLocators.Contains(catalogLocator);
+        // The locator is kept for its locations and its id, which link identities are built from, but it is not left
+        // registered with Addressables. See Load.
+        public static bool IsLoaded => catalogLocator != null && entries.Count > 0;
 
         public static string SourceRoot => sourceRoot;
 
@@ -109,21 +109,8 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             try
             {
                 LastError = null;
-                if (
-                    catalogLocator != null
-                    && (
-                        force
-                        || !string.Equals(
-                            sourceRoot,
-                            configuredSourceRoot,
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
-                )
-                {
-                    Addressables.RemoveResourceLocator(catalogLocator);
-                    catalogLocator = null;
-                }
+                // The previous locator is never left registered by this catalog, so there is nothing to unregister.
+                catalogLocator = null;
 
                 sourceRoot = configuredSourceRoot;
                 var settingsPath = Path.Combine(sourceRoot, "settings.json");
@@ -143,11 +130,20 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                 catalogLocator = Addressables.ResourceLocators.FirstOrDefault(
                     locator => PathsEqual(locator.LocatorId, catalogPath)
                 );
-                if (catalogLocator == null)
+                bool loadedHere = catalogLocator == null;
+                if (loadedHere)
                     catalogLocator = LoadCatalog(catalogPath);
 
                 entries.Clear();
                 entries.AddRange(EnumerateEntries(catalogLocator));
+
+                // Links only read the catalog's locations, and materialization opens bundles itself, so the locator
+                // has no reason to stay registered. Left registered it duplicates every stock key when the
+                // ThunderKit-imported copy of the same catalog is also loaded, and Addressables then reopens bundles
+                // the other copy already holds, which fails with "another AssetBundle with the same files is already
+                // loaded". A locator registered by someone else is theirs to keep.
+                if (loadedHere)
+                    Addressables.RemoveResourceLocator(catalogLocator);
                 if (entries.Count == 0)
                 {
                     throw new InvalidOperationException(

@@ -12,7 +12,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Audio
     /// <remarks>
     /// This duplicates <c>PartAudioPresetRegistry.GetAuthoringPresetIds</c> rather than calling
     /// it. That method sits behind <c>#if UNITY_EDITOR</c> in the game code because it uses
-    /// <see cref="AssetDatabase" />, so it is compiled out of the shipped Assembly-CSharp this
+    /// <see cref="AssetDatabase" />, so it is compiled out of the shipped game assembly this
     /// package builds against. Calling it works inside the Redux repo and fails everywhere else.
     /// The scan belongs on this side of the boundary anyway, since this package is editor only
     /// and has <see cref="AssetDatabase" /> available.

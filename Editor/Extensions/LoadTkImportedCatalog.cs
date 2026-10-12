@@ -17,15 +17,15 @@ namespace Ksp2UnityTools.Editor.Extensions
     public class LoadTkImportedCatalog : AssetPostprocessor
     {
         // This must be the same as the output of the ImportKsp2ToEditor pipeline.
-        private const string loadTkImportedCatalogPath = "DoNotDistribute/aa/catalog.json";
+        private const string LOAD_TK_IMPORTED_CATALOG_PATH = "DoNotDistribute/aa/catalog.json";
 
         // Path must be relative to Assets directory.
-        private const string reduxCatalogPath = "../Redux/Addressables/StandaloneWindows64/catalog.json";
+        private const string REDUX_CATALOG_PATH = "../Redux/Addressables/StandaloneWindows64/catalog.json";
 
-        private const string PlaySessionInitializedKey =
+        private const string PLAY_SESSION_INITIALIZED_KEY =
             "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
 
-        private const string BaseGameCatalogProbeKey = "kspFlow.unity";
+        private const string BASE_GAME_CATALOG_PROBE_KEY = "kspFlow.unity";
 
         private static bool _catalogLoadScheduled;
         private static bool _catalogLoadInProgress;
@@ -65,22 +65,24 @@ namespace Ksp2UnityTools.Editor.Extensions
                     // SessionState survives domain reloads. Clear it before every new play
                     // transition so a previous interrupted/hot-reloaded session cannot suppress
                     // catalog registration for the next benchmark process.
-                    SessionState.SetBool(PlaySessionInitializedKey, false);
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
                     return;
                 case PlayModeStateChange.ExitingPlayMode:
-                    SessionState.SetBool(PlaySessionInitializedKey, false);
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
                     return;
                 case PlayModeStateChange.EnteredEditMode:
                     UnloadLeakedAssetBundles();
+                    EditorApplication.delayCall -= ReloadImportedCatalogsForEditMode;
+                    EditorApplication.delayCall += ReloadImportedCatalogsForEditMode;
                     return;
                 // BeforeSceneLoad prepares the imported catalogs after Addressables resets its context.
                 // Recheck them here so manual and automated transitions share the same idempotent path.
                 // SessionState protects against stale duplicate callbacks left behind by a script hot
                 // reload.
-                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PlaySessionInitializedKey, false):
+                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PLAY_SESSION_INITIALIZED_KEY, false):
                     return;
                 case PlayModeStateChange.EnteredPlayMode:
-                    SessionState.SetBool(PlaySessionInitializedKey, EnsureImportedCatalogsLoaded());
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, EnsureImportedCatalogsLoaded());
                     break;
             }
         }
@@ -90,8 +92,8 @@ namespace Ksp2UnityTools.Editor.Extensions
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void PrepareAddressablesForPlayMode()
         {
-            SessionState.SetBool(PlaySessionInitializedKey, false);
-            SessionState.SetBool(PlaySessionInitializedKey, EnsureImportedCatalogsLoaded());
+            SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
+            SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, EnsureImportedCatalogsLoaded());
         }
 
         // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
@@ -108,9 +110,7 @@ namespace Ksp2UnityTools.Editor.Extensions
             foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles().ToArray())
             {
                 if (bundle == null || bundle.name == "ksp2")
-                {
                     continue;
-                }
                 bundle.Unload(true);
             }
         }
@@ -129,9 +129,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         )
         {
             if (!didDomainReload)
-            {
                 return;
-            }
 
             ScheduleImportedCatalogLoad();
         }
@@ -142,9 +140,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static void ScheduleImportedCatalogLoad()
         {
             if (_catalogLoadScheduled || _catalogLoadInProgress)
-            {
                 return;
-            }
 
             _catalogLoadScheduled = true;
             EditorApplication.delayCall += BeginImportedCatalogLoad;
@@ -163,9 +159,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
             string catalogPath = GetNextMissingCatalogPath();
             if (catalogPath == null)
-            {
                 return;
-            }
 
             EnsureThunderKitInternalIdRedirect();
             _catalogLoadInProgress = true;
@@ -194,8 +188,18 @@ namespace Ksp2UnityTools.Editor.Extensions
             BeginImportedCatalogLoad();
         }
 
+        /// <summary>
+        /// Registers the ThunderKit-imported content catalogs with Addressables now, if they are missing.
+        /// </summary>
+        /// <remarks>
+        /// For edit-mode code that needs a base-game key before the deferred post-reload load has
+        /// finished. Blocks until the catalogs are loaded. Idempotent.
+        /// </remarks>
+        public static void EnsureRegistered() => EnsureImportedCatalogsLoaded();
+
         // Registers the ThunderKit-imported content catalog(s) with Addressables if they are not already
         // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
+        // Returns false when a catalog failed to load.
         private static bool EnsureImportedCatalogsLoaded()
         {
             EditorApplication.delayCall -= BeginImportedCatalogLoad;
@@ -205,9 +209,7 @@ namespace Ksp2UnityTools.Editor.Extensions
             {
                 AsyncOperationHandle<IResourceLocator> operation = _catalogLoadOperation;
                 if (!operation.IsValid())
-                {
                     break;
-                }
 
                 IResourceLocator locator;
                 try
@@ -233,9 +235,7 @@ namespace Ksp2UnityTools.Editor.Extensions
 
             string catalogPath = GetNextMissingCatalogPath();
             if (catalogPath == null)
-            {
                 return true;
-            }
 
             EnsureThunderKitInternalIdRedirect();
             while (catalogPath != null)
@@ -260,34 +260,30 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static string GetNextMissingCatalogPath()
         {
-            string ksp2CatalogFullPath = Path.Join(Application.dataPath, loadTkImportedCatalogPath);
+            string ksp2CatalogFullPath = Path.Join(Application.dataPath, LOAD_TK_IMPORTED_CATALOG_PATH);
             if (!File.Exists(ksp2CatalogFullPath))
-            {
                 return null;
-            }
 
             // BundleKit and other editor integrations can register the stock
             // catalog under its catalog ID instead of this imported file path.
             // Loading it again duplicates every stock location and can leave
             // systems such as cloud rendering with mismatched result lists.
             if (
-                !CatalogKeyIsRegistered(BaseGameCatalogProbeKey)
+                !CatalogKeyIsRegistered(BASE_GAME_CATALOG_PROBE_KEY)
                 && !IsCatalogLoaded(ksp2CatalogFullPath)
             )
             {
                 return ksp2CatalogFullPath;
             }
 
-            // Load the Redux asset catalog too, if and only if this is the package version of Redux SDK and there is
-            // no locator already registerd
-            if (Assembly.GetExecutingAssembly().GetName().Name == "ksp2community.ksp2unitytools.editor")
-            {
-                string reduxCatalogFullPath = Path.Join(Application.dataPath, reduxCatalogPath);
-                if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
-                {
-                    return reduxCatalogFullPath;
-                }
-            }
+            // Load the Redux asset catalog too, but only in a mod project, and only if no locator is registered yet.
+            // The Redux project serves its own assets from the asset database. Loading its built catalog on top of
+            // that resolves every Redux label twice, so patch scripts under redux_patches would run twice.
+#if !REDUX
+            string reduxCatalogFullPath = Path.Join(Application.dataPath, REDUX_CATALOG_PATH);
+            if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
+                return reduxCatalogFullPath;
+#endif
 
             return null;
         }
@@ -316,9 +312,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static void EnsureThunderKitInternalIdRedirect()
         {
             if (Addressables.InternalIdTransformFunc != null)
-            {
                 return;
-            }
 
             MethodInfo redirectMethod = typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings)
                 .GetMethod(
@@ -355,6 +349,19 @@ namespace Ksp2UnityTools.Editor.Extensions
             );
             Addressables.Release(initialization);
             return load;
+        }
+
+        // Addressables 4 disposes its instance when Play Mode exits, so edit mode starts on a fresh
+        // instance without the imported catalogs. Register them again once the editor is back in edit
+        // mode, or edit-mode previews such as the planet preview lose base-game content after a play
+        // session.
+        private static void ReloadImportedCatalogsForEditMode()
+        {
+            EditorApplication.delayCall -= ReloadImportedCatalogsForEditMode;
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
+            EnsureImportedCatalogsLoaded();
         }
 
 #endif

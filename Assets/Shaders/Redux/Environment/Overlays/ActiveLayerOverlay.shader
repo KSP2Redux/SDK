@@ -40,7 +40,7 @@ Shader "Redux/PlanetAuthoring/Overlays/ActiveLayerOverlay"
 
     SubShader
     {
-        Tags { "RenderType" = "Transparent" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
 
@@ -53,11 +53,11 @@ Shader "Redux/PlanetAuthoring/Overlays/ActiveLayerOverlay"
 
             #include "OverlayCommon.hlsl"
 
-            sampler2D _LocalSpacePrepassTex0;
-            sampler2D _LocalSpacePrepassTex1;
-            sampler2D _LocalSpacePrepassTex2;
-            sampler2D _LocalSpacePrepassTex3;
-            sampler2D _BiomeMaskTex;
+            TEXTURE2D(_LocalSpacePrepassTex0);  SAMPLER(sampler_LocalSpacePrepassTex0);
+            TEXTURE2D(_LocalSpacePrepassTex1);  SAMPLER(sampler_LocalSpacePrepassTex1);
+            TEXTURE2D(_LocalSpacePrepassTex2);  SAMPLER(sampler_LocalSpacePrepassTex2);
+            TEXTURE2D(_LocalSpacePrepassTex3);  SAMPLER(sampler_LocalSpacePrepassTex3);
+            TEXTURE2D(_BiomeMaskTex);           SAMPLER(sampler_BiomeMaskTex);
 
             float  _Strength;
             float  _WeightFloor;
@@ -85,9 +85,9 @@ Shader "Redux/PlanetAuthoring/Overlays/ActiveLayerOverlay"
             {
                 QuadMeshData q = GetQuadMeshVert(v);
                 v2f o;
-                o.vertex = UnityObjectToClipPos(q.position);
+                o.vertex = TransformObjectToHClip(q.position);
                 o.uv     = q.uv;
-                o.screen = ComputeScreenPos(o.vertex);
+                o.screen = OverlayScreenPos(o.vertex);
                 return o;
             }
 
@@ -96,15 +96,15 @@ Shader "Redux/PlanetAuthoring/Overlays/ActiveLayerOverlay"
                 float2 screenUV = i.screen.xy / max(i.screen.w, 1e-5);
 
                 // Per-biome activeness from the planet's biome mask.
-                float4 biomeMask = tex2D(_BiomeMaskTex, i.uv);
+                float4 biomeMask = SAMPLE_TEXTURE2D(_BiomeMaskTex, sampler_BiomeMaskTex, i.uv);
 
                 // 16 weights = 4 layers x 4 biomes. Each prepass texture stores
                 // one biome's 4-layer weights as the four channels of a float4. Per-layer
                 // enable masks zero out layers the artist has hidden in the Preview Controls grid.
-                float4 wR = tex2D(_LocalSpacePrepassTex0, screenUV) * biomeMask.r * _LayerEnableR;
-                float4 wG = tex2D(_LocalSpacePrepassTex1, screenUV) * biomeMask.g * _LayerEnableG;
-                float4 wB = tex2D(_LocalSpacePrepassTex2, screenUV) * biomeMask.b * _LayerEnableB;
-                float4 wA = tex2D(_LocalSpacePrepassTex3, screenUV) * biomeMask.a * _LayerEnableA;
+                float4 wR = SAMPLE_TEXTURE2D(_LocalSpacePrepassTex0, sampler_LocalSpacePrepassTex0, screenUV) * biomeMask.r * _LayerEnableR;
+                float4 wG = SAMPLE_TEXTURE2D(_LocalSpacePrepassTex1, sampler_LocalSpacePrepassTex1, screenUV) * biomeMask.g * _LayerEnableG;
+                float4 wB = SAMPLE_TEXTURE2D(_LocalSpacePrepassTex2, sampler_LocalSpacePrepassTex2, screenUV) * biomeMask.b * _LayerEnableB;
+                float4 wA = SAMPLE_TEXTURE2D(_LocalSpacePrepassTex3, sampler_LocalSpacePrepassTex3, screenUV) * biomeMask.a * _LayerEnableA;
 
                 // Find the winning (biome, layer) pair by argmax over all 16 values.
                 float bestWeight = _WeightFloor;

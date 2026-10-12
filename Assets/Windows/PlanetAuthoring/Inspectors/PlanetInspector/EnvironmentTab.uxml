@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:Template name="OceanSection" src="../Shared/OceanSection.uxml" />
+
+    <!--
+        The Environment tab. Each feature keeps its physics and its look together. The planet-section-actions row
+        moves into its foldout's header, where its buttons add, refit or remove the feature. binding-paths here are on the body, the slots hold the feature's own inspectors.
+    -->
+
+    <engine:VisualElement class="planet-inspector-tab">
+
+        <engine:Foldout name="section-atmosphere" text="Atmosphere" value="true" class="sdk-section">
+            <engine:VisualElement class="planet-section-actions">
+                <engine:Button name="atmosphere-add" text="Add" class="planet-section-action" tooltip="Create this body's Bruneton atmosphere model, bake its lookup tables, register it as addressable and wire the atmosphere component and shells into the scaled prefab. Needs Has Atmosphere on, a positive Atmosphere Depth and a baked scaled mesh. Run again to refit after changing the radius, which re-bakes without touching the model's visual height or optics." />
+                <engine:Button name="atmosphere-remove" text="Remove" class="planet-section-action planet-section-action--danger" tooltip="Take the visual atmosphere off this body: the atmosphere component and shells, the model's addressable entry, and the model with its baked tables, which go to the trash. The physics below is left alone." />
+            </engine:VisualElement>
+            <engine:Foldout name="atmosphere-physics" text="Physics" value="true" class="sdk-subsection-foldout">
+                <editor:PropertyField binding-path="core.data.hasAtmosphere" label="Has Atmosphere" tooltip="Body has an atmospheric layer. Required for aerodynamics, jet engines, parachutes, and atmospheric reentry effects." />
+                <editor:PropertyField binding-path="core.data.atmosphereContainsOxygen" label="Contains Oxygen" tooltip="Atmosphere contains breathable oxygen. Required for jet engine air intakes, atmospheric engine VFX, and kerbal helmet removal." />
+                <editor:PropertyField binding-path="core.data.atmosphereDepth" label="Atmosphere Depth (m)" tooltip="Altitude above sea level at which the atmosphere ends, in meters." />
+                <editor:PropertyField binding-path="core.data.atmosphereTemperatureSeaLevel" label="Sea-Level Temperature (K)" tooltip="Atmospheric temperature at sea level, in Kelvin. Earth-like default is 288 K." />
+                <editor:PropertyField binding-path="core.data.atmospherePressureSeaLevel" label="Sea-Level Pressure (kPa)" tooltip="Atmospheric pressure at sea level, in kilopascals. Earth-like default is 101.325 kPa (1 atm)." />
+                <editor:PropertyField binding-path="core.data.atmosphereMolarMass" label="Molar Mass (kg/mol)" tooltip="Average molar mass of the atmospheric gas mix, in kilograms per mole. Earth-like default is 0.0289644 kg/mol." />
+                <editor:PropertyField binding-path="core.data.atmosphereAdiabaticIndex" label="Adiabatic Index" tooltip="Ratio of specific heats (Cp/Cv) for the atmospheric gas. Default 1.4 matches diatomic gases like air." />
+                <editor:PropertyField binding-path="core.data.reentryHarshness" label="Reentry Harshness" tooltip="Multiplier on reentry heating in this atmosphere. Heating already follows airspeed and air density, so this covers everything else that makes an atmosphere more or less punishing, such as its chemistry. Kerbin is 1, Laythe 1.15, Eve 3.1, Duna 3.5 and Jool 0.046." />
+                <editor:PropertyField binding-path="core.data.atmosphericReentryVFXGradient" label="Reentry VFX Gradient Key" tooltip="Addressable key for the Texture2D gradient used by reentry VFX. Empty string falls back to the default reentry gradient." />
+                <engine:Foldout text="Curves" value="false" class="sdk-subsection-foldout">
+                    <editor:PropertyField binding-path="core.data.useAtmospherePressureCurve" label="Use Pressure Curve" tooltip="When true, the Pressure Curve below overrides the analytic pressure formula." />
+                    <editor:PropertyField binding-path="core.data.atmospherePressureCurve" label="Pressure Curve" tooltip="Pressure as a function of altitude. Used when Use Pressure Curve is enabled." />
+                    <editor:PropertyField binding-path="core.data.useAtmosphereTemperatureCurve" label="Use Temperature Curve" tooltip="When true, the Temperature Curve below overrides the analytic temperature lapse rate." />
+                    <editor:PropertyField binding-path="core.data.BodyAltitudeTemperatureCurve" label="Temperature Curve" tooltip="Temperature as a function of altitude. Used when Use Temperature Curve is enabled." />
+                    <editor:PropertyField binding-path="core.data.useAtmosphereHumidityCurve" label="Use Humidity Curve" tooltip="When true, atmospheric humidity is sampled from the Humidity Curve below." />
+                    <editor:PropertyField binding-path="core.data.BodyAltitudeRelativeHumidityCurve" label="Humidity Curve" tooltip="Relative humidity as a function of altitude. Used when Use Humidity Curve is enabled." />
+                </engine:Foldout>
+            </engine:Foldout>
+            <engine:VisualElement name="atmosphere-look" />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-clouds" text="Clouds" value="true" class="sdk-section">
+            <engine:VisualElement class="planet-section-actions">
+                <engine:Button name="clouds-add" text="Add" class="planet-section-action" tooltip="Create this body's cloud configuration, starting from stock Kerbin's settings, and its scaled counterpart. Registers the configuration as addressable, adds the cloud helper to the Local prefab's PQS with High and Medium quality pointing at it and Low at a mirror that draws scaled clouds only, as stock's Low tiers do, and adds the scaled cloud component to the Scaled prefab. Run again to refit after changing the radius, which leaves the layer settings alone." />
+                <engine:Button name="clouds-remove" text="Remove" class="planet-section-action planet-section-action--danger" tooltip="Take the clouds off this body: the cloud helper and the scaled cloud component, the configuration's addressable entry, and the configuration with its scaled counterpart and everything generated into its Clouds folder, which go to the trash. Textures kept outside that folder are left alone." />
+            </engine:VisualElement>
+            <engine:VisualElement name="clouds-look" />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-ocean" text="Ocean" value="true" class="sdk-section">
+            <engine:VisualElement class="planet-section-actions">
+                <engine:Button name="ocean-add" text="Add" class="planet-section-action" tooltip="Create this body's ocean wave spectrum and water material as copies of stock Kerbin's, and wire them into the Local prefab's PQS renderer. Needs Has Ocean on. Stock's ocean textures stay in the game, so the body's own caustics, foam and normal maps are generated beside the material. Run again to re-wire, which leaves the assets alone." />
+                <engine:Button name="ocean-remove" text="Remove" class="planet-section-action planet-section-action--danger" tooltip="Take the ocean off this body: the PQS renderer's spectrum and material references, and the spectrum, material and generated textures in its Ocean folder, which go to the trash. Has Ocean and Ocean Altitude are left alone, since they also shape the terrain and the physics." />
+            </engine:VisualElement>
+            <engine:VisualElement name="ocean-physics">
+                <editor:PropertyField binding-path="core.data.hasOcean" label="Has Ocean" tooltip="Body has a liquid ocean layer. The ocean is rendered separately from atmosphere and uses Ocean Altitude and Ocean Density below." />
+                <editor:PropertyField binding-path="core.data.oceanAltitude" label="Ocean Altitude (m)" tooltip="How far the terrain base sits below the ocean surface, in meters. The ocean surface is always at the body radius. Terrain heights are measured up from radius minus this value, so raising it lowers the land relative to the sea." />
+                <editor:PropertyField binding-path="core.data.oceanDensity" label="Ocean Density" tooltip="Density of the ocean liquid. Used for buoyancy and drag calculations." />
+            </engine:VisualElement>
+            <engine:VisualElement name="ocean-renderer">
+                <engine:Instance template="OceanSection" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout name="section-lighting" text="Lighting" value="false" class="sdk-section">
+            <engine:VisualElement name="lighting-slot" />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-post" text="Post-processing" value="false" class="sdk-section">
+            <engine:VisualElement name="post-slot" />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-heat" text="Heat" value="false" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.BodySurfaceFluxMapPath" label="Surface Flux Map Key" tooltip="Addressable key for a Texture2D encoding the per-pixel surface heat flux map. Sampled by latitude and longitude during thermal simulation. Empty string means no surface flux map." />
+            <editor:PropertyField binding-path="core.data.BodySurfaceFluxScale" label="Surface Flux Scale" tooltip="Multiplier scaling the magnitude of surface heat flux values decoded from the flux map." />
+            <editor:PropertyField binding-path="core.data.BodyAltitudeSurfaceFluxCurve" label="Surface Heat Flux Curve" tooltip="Altitude scaling applied to the surface heat-flux map. Multiplies the base surface flux at each altitude." />
+            <editor:PropertyField binding-path="core.data.BodyAltitudeFluxCurve" label="Local Environmental Flux Curve" tooltip="Local environmental heat flux as a function of altitude. Combined with each part's wetted area to compute the body's thermal contribution." />
+        </engine:Foldout>
+
+        <engine:Foldout name="section-rings" text="Rings" value="false" class="sdk-section">
+            <editor:PropertyField binding-path="core.data.ringGroupData" label="Ring Groups" tooltip="List of rings on this body. Each entry has an inner radius and outer radius in meters from the body center, plus a density curve sampled across the ring width." />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

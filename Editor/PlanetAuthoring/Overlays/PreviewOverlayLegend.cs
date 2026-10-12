@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using AwesomeTechnologies.VegetationSystem;
+using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Scatter;
 using UnityEditor;
@@ -27,6 +28,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         private static readonly Color SlopeVertical = new(1.00f, 0.10f, 0.10f);
         private static readonly Color ContourMinor = new(0.85f, 0.85f, 0.95f);
         private static readonly Color ContourMajor = new(1.00f, 0.85f, 0.30f);
+        private static readonly Color SeaUnderwater = new(0.10f, 0.35f, 0.95f);
+        private static readonly Color SeaShoreline = new(0.55f, 1.00f, 1.00f);
         private static readonly float[] LayerBrightness = { 0.35f, 0.55f, 0.80f, 1.00f };
 
         private const float PanelWidth = 230f;
@@ -112,6 +115,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             PreviewOverlayKind.SubzoneMask   => RowHeight + RowHeight,
             PreviewOverlayKind.Slope         => SlopeLegendHeight(),                        // title + gradient (+ degree row when quantized)
             PreviewOverlayKind.AltitudeBands => RowHeight + RowHeight + RowHeight,          // title + minor + major
+            PreviewOverlayKind.SeaLevel      => RowHeight + RowHeight + RowHeight,          // title + underwater + shoreline
             PreviewOverlayKind.ActiveLayer   => RowHeight + RowHeight + 4f * SwatchSize + 4f, // title + biome row + 4x4 grid
             PreviewOverlayKind.ScienceRegion => ScienceRegionLegendHeight(),                // title + mode + optional stale row
             PreviewOverlayKind.ScatterBiome  => RowHeight * 5f,                             // title + one row per channel
@@ -143,6 +147,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             PreviewOverlayKind.SubzoneMask   => DrawChannelSwatches(r, DrawTitle(r, r.y, "Subzone mask")),
             PreviewOverlayKind.Slope         => DrawSlopeGradient(r, DrawTitle(r, r.y, "Slope")),
             PreviewOverlayKind.AltitudeBands => DrawContourLegend(r, DrawTitle(r, r.y, "Altitude contours")),
+            PreviewOverlayKind.SeaLevel      => DrawSeaLevelLegend(r, DrawTitle(r, r.y, "Sea level")),
             PreviewOverlayKind.ActiveLayer   => DrawActiveLayerGrid(r, DrawTitle(r, r.y, "Active small-biome layer")),
             PreviewOverlayKind.ScienceRegion => DrawScienceRegionLegend(r, DrawTitle(r, r.y, "Science region")),
             PreviewOverlayKind.ScatterBiome  => DrawScatterBiomeLegend(r, DrawTitle(r, r.y, "Scatter biomes")),
@@ -334,6 +339,32 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             GUI.Label(
                 new Rect(majorSwatch.xMax + 6f, y, r.width - ContourSwatchWidth - 6f, RowHeight),
                 $"Major every {bandHeight * majorEvery:0} m",
+                _smallStyle);
+            return y + RowHeight;
+        }
+
+        private static float DrawSeaLevelLegend(Rect r, float y)
+        {
+            CoreCelestialBodyData body = PlanetAuthoringSession.Active?.Body;
+            if (body == null || body.Data == null || !body.Data.hasOcean)
+            {
+                // The overlay draws nothing without an ocean, so say why rather than show swatches.
+                GUI.Label(new Rect(r.x, y, r.width, RowHeight), "Has Ocean is off for this body.", _smallStyle);
+                return y + RowHeight * 2f;
+            }
+
+            DrawSwatch(new Rect(r.x, y + 2f, SwatchSize, SwatchSize), SeaUnderwater);
+            GUI.Label(
+                new Rect(r.x + SwatchSize + 4f, y, r.width - SwatchSize - 4f, RowHeight),
+                "Below sea level",
+                _smallStyle);
+            y += RowHeight;
+
+            var shoreSwatch = new Rect(r.x, y + RowHeight * 0.5f - 1f, ContourSwatchWidth, 2f);
+            DrawSwatch(shoreSwatch, SeaShoreline);
+            GUI.Label(
+                new Rect(shoreSwatch.xMax + 6f, y, r.width - ContourSwatchWidth - 6f, RowHeight),
+                $"Shoreline at {body.Data.radius:0} m radius",
                 _smallStyle);
             return y + RowHeight;
         }

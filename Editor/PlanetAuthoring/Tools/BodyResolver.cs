@@ -1,6 +1,7 @@
 using System.IO;
 using KSP;
 using KSP.Rendering.Planets;
+using KSP.Sim.impl;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +14,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
     /// </summary>
     /// <remarks>
     /// Authoring scenes hold exactly one celestial body, so the first body / PQS found in the scene
-    /// is unambiguous.
+    /// is unambiguous. In play mode the game holds every body at once, so a live body and its PQS are
+    /// matched through the <see cref="CelestialBodyBehavior" /> that loaded them instead.
     /// </remarks>
     public static class BodyResolver
     {
@@ -25,6 +27,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         public static CoreCelestialBodyData FindBody(Component hint)
         {
             if (hint == null) return null;
+            if (Application.isPlaying && hint is PQS livePqs && livePqs.CoreCelestialBodyData != null)
+                return livePqs.CoreCelestialBodyData;
             // GetComponentInParent includes the hint itself, so this also covers hint-IS-body.
             var body = hint.GetComponentInParent<CoreCelestialBodyData>();
             return body != null ? body : FindBodyInScene(hint.gameObject);
@@ -38,7 +42,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         public static PQS FindPqs(CoreCelestialBodyData body)
         {
             if (body == null) return null;
-            var pqs = body.GetComponentInChildren<PQS>(true);
+            var pqs = Application.isPlaying ? FindLivePqs(body) : null;
+            if (pqs != null) return pqs;
+            pqs = body.GetComponentInChildren<PQS>(true);
             return pqs != null ? pqs : FindPqsInScene(body.gameObject);
         }
 
@@ -98,6 +104,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="hint">Any object in the scene to search.</param>
         /// <returns>The PQS, or null if none was found.</returns>
         public static PQS FindPqsInScene(GameObject hint) => FindInSceneRoots<PQS>(hint);
+
+        // The behaviour that loaded a live body holds both its data and, once local space has loaded, its PQS.
+        private static PQS FindLivePqs(CoreCelestialBodyData body)
+        {
+            foreach (CelestialBodyBehavior behavior in Object.FindObjectsByType<CelestialBodyBehavior>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (behavior.CelestialBodyData == body && behavior.PqsController != null)
+                    return behavior.PqsController;
+            }
+
+            return null;
+        }
 
         private static T FindInSceneRoots<T>(GameObject hint) where T : Component
         {

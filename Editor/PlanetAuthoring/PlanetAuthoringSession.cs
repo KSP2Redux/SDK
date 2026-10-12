@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Clouds;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Lighting;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Ocean;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Redux;
+using Redux.Rendering;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,7 +21,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// <remarks>
     /// One active session at a time. Hosts the PQS update tick, scene-view binding, and domain-reload teardown.
     /// </remarks>
-    public sealed class PlanetAuthoringSession
+    public class PlanetAuthoringSession
     {
         /// <summary>
         /// Classification of the body for preview purposes.
@@ -121,7 +126,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         // Throttle for Tick's bind/sync work only. The render pipeline runs unthrottled from
         // OnCameraPreCull, so this doesn't gate visible drawing.
-        private const double TickIntervalSeconds = 1.0 / 30.0;
+        private const double TICK_INTERVAL_SECONDS = 1.0 / 30.0;
 
         /// <summary>
         /// Gets the currently-active session, or null if no preview is running.
@@ -148,6 +153,30 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         public ScatterPreviewDriver ScatterDriver { get; }
         /// <summary>Gets the scatter preview readout, or null for non-solid bodies.</summary>
         public ScatterPreviewState ScatterState { get; }
+        /// <summary>Gets the atmosphere preview driver, or null for non-solid bodies.</summary>
+        /// <remarks>
+        /// Non-null even when the body has no atmosphere, which it reports through its status.
+        /// </remarks>
+        public AtmospherePreviewDriver AtmosphereDriver { get; }
+        /// <summary>Gets the volumetric cloud preview driver, or null for non-solid bodies.</summary>
+        /// <remarks>
+        /// Non-null even when the body has no clouds, which it reports through its status.
+        /// </remarks>
+        public CloudPreviewDriver CloudDriver { get; }
+        /// <summary>Gets the ocean preview driver, or null for non-solid bodies.</summary>
+        /// <remarks>
+        /// Non-null even when the body has no ocean, which it reports through its status.
+        /// </remarks>
+        public OceanPreviewDriver OceanDriver { get; }
+        /// <summary>Gets the driver that gives the SceneView the game's exposure and sunlight, or null for non-solid bodies.</summary>
+        public GameLookPreviewDriver GameLookDriver { get; }
+
+        /// <summary>
+        /// Gets every preview driver the session runs, in attach and pump order.
+        /// </summary>
+        public IReadOnlyList<IPreviewDriver> Drivers => _drivers;
+
+        private readonly List<IPreviewDriver> _drivers = new();
 
         private double _lastTickTime;
         private bool _hasSnapshot;
@@ -173,7 +202,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         {
             "Pqs",
             "SourceCamera",
-            "CreateColliders",
         };
 
         private static void RevertBootHarnessOverrides(PQS pqs)
@@ -204,8 +232,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         // forward into TryBootPqs's _initialBodyRotation snapshot.
         private static void RevertBodyRotationOverride(CoreCelestialBodyData body)
         {
-            if (body == null) return;
-            if (!PrefabUtility.IsPartOfPrefabInstance(body.transform)) return;
+            if (body == null)
+                return;
+
+            if (!PrefabUtility.IsPartOfPrefabInstance(body.transform))
+                return;
+
             var so = new SerializedObject(body.transform);
             var prop = so.FindProperty("m_LocalRotation");
             if (prop != null)
@@ -223,6 +255,37 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             PreviewState = pqs != null ? new PlanetPreviewState(body, pqs) : null;
             ScatterDriver = pqs != null ? new ScatterPreviewDriver(pqs) : null;
             ScatterState = ScatterDriver != null ? new ScatterPreviewState(ScatterDriver) : null;
+            AtmosphereDriver = pqs != null ? new AtmospherePreviewDriver(body, pqs) : null;
+            CloudDriver = pqs != null ? new CloudPreviewDriver(pqs, AtmosphereDriver) : null;
+            OceanDriver = pqs != null ? new OceanPreviewDriver(body, pqs) : null;
+            GameLookDriver = pqs != null ? new GameLookPreviewDriver() : null;
+            // First, so the camera is in HDR and the sun at game brightness before anything draws against them.
+            if (GameLookDriver != null)
+            {
+                _drivers.Add(GameLookDriver);
+            }
+
+            if (ScatterDriver != null)
+            {
+                _drivers.Add(ScatterDriver);
+            }
+
+            // Before the atmosphere and clouds, which read the water depth it renders.
+            if (OceanDriver != null)
+            {
+                _drivers.Add(OceanDriver);
+            }
+
+            if (AtmosphereDriver != null)
+            {
+                _drivers.Add(AtmosphereDriver);
+            }
+
+            // After the atmosphere, which the clouds bind and composite inside.
+            if (CloudDriver != null)
+            {
+                _drivers.Add(CloudDriver);
+            }
         }
 
         /// <summary>
@@ -346,11 +409,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 return null;
             }
 
-            // Scatter boots after the PQS, because the spawner samples the terrain bridge which in
-            // turn needs a live PQS and an initialized decal controller. A body with no scatter
-            // system, or one that fails to boot, still gets a working terrain preview - scatter is
-            // additive and must never be able to take the session down with it.
-            session.ScatterDriver?.Attach();
+            // Drivers boot after the PQS, because scatter samples the terrain bridge, which in turn
+            // needs a live PQS and an initialized decal controller. A driver that has nothing to do or
+            // fails to boot still leaves a working terrain preview - drivers are additive and must
+            // never be able to take the session down with them.
+            foreach (IPreviewDriver driver in session._drivers)
+            {
+                driver.Attach();
+            }
 
             session.Subscribe();
             session.IsAlive = true;
@@ -362,8 +428,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         private bool TryBootPqs()
         {
-            // Clear stale overrides from any previous run that crashed before End. A leaked
-            // CreateColliders=false override would skip the collider native containers and NRE.
+            // Clear stale overrides from any previous run that crashed before End.
             RevertBootHarnessOverrides(Pqs);
             _hasSnapshot = true;
             // Revert any leaked body rotation override BEFORE snapshotting so a previous crashed
@@ -401,9 +466,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             if (pqs.PQSRenderer.Pqs == null)
                 pqs.PQSRenderer.Pqs = pqs;
 
-            // CreateUpdateListsJob.ActiveColliderMap is read regardless of this flag, so the
-            // collider native containers must be allocated for the job to schedule.
-            pqs.PQSRenderer.CreateColliders = true;
             pqs.PQSRenderer.BootForEditor();
 
             if (pqs.PQSRenderer.PqsDecalController == null)
@@ -457,10 +519,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
             Unsubscribe();
             CameraDriver?.Unbind();
-            // Scatter comes down before anything touches the PQS. Its compute buffers are built from
-            // the terrain bridge, whose own resources are derived from a live sphere, so tearing the
-            // sphere down first would dispose what the scatter side is still holding.
-            ScatterDriver?.Detach();
+            // Drivers come down, in reverse, before anything touches the PQS. Scatter's compute buffers
+            // are built from the terrain bridge, whose own resources are derived from a live sphere,
+            // so tearing the sphere down first would dispose what the scatter side is still holding.
+            for (int i = _drivers.Count - 1; i >= 0; i--)
+            {
+                _drivers[i].Detach();
+            }
             // Force-complete the in-flight PQS subdivision job before any path that disables the
             // decal controller. PQSDecalController.OnDisable disposes its native arrays, and the
             // subdivision job is still reading them otherwise.
@@ -517,8 +582,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             // OnRenderObject does not fire for the PQS in the editor scene context. Drive DrawPlanet
-            // from onPreCull instead. onPreRender and onPostRender are both too late.
-            Camera.onPreCull += OnCameraPreCull;
+            // from the camera's begin event, which URP raises before it culls. Anything later is too late.
+            CameraRenderEvents.OnBeginCamera += OnCameraPreCull;
         }
 
         private void Unsubscribe()
@@ -526,7 +591,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             EditorApplication.update -= Tick;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            Camera.onPreCull -= OnCameraPreCull;
+            CameraRenderEvents.OnBeginCamera -= OnCameraPreCull;
         }
 
         private void OnCameraPreCull(Camera cam)
@@ -543,11 +608,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             Pqs.UpdateSphere();
             Pqs.PQSRenderer.LateUpdateForEditor();
             Pqs.PQSRenderer.DrawPlanet();
-            // Scatter is pumped from here rather than from Tick for the same reason the PQS is.
-            // Graphics.DrawMeshInstancedIndirect only takes effect inside the render loop, so a
-            // submission made from an editor tick lands where nothing consumes it. Runs after the
-            // terrain draw, on the same camera, so culling and drawing agree on the view.
-            ScatterDriver?.Pump(cam);
+            // Drivers are pumped from here rather than from Tick for the same reason the PQS is.
+            // Graphics draws only take effect inside the render loop, so a submission made from an
+            // editor tick lands where nothing consumes it. They run after the terrain draw, on the
+            // same camera, so culling and drawing agree on the view.
+            foreach (IPreviewDriver driver in _drivers)
+            {
+                driver.Pump(cam);
+            }
         }
 
         private void Tick()
@@ -564,7 +632,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             }
 
             double now = EditorApplication.timeSinceStartup;
-            if (now - _lastTickTime < TickIntervalSeconds)
+            if (now - _lastTickTime < TICK_INTERVAL_SECONDS)
                 return;
             _lastTickTime = now;
 

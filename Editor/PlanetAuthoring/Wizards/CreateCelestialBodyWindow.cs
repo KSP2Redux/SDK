@@ -440,7 +440,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
             return data;
         }
 
-        private static ScienceRegionData CreateScienceRegionData(string key, string folder, List<string> createdPaths)
+        /// <summary>
+        /// Creates a body's science region data, named for <paramref name="key" /> and set to that body.
+        /// </summary>
+        /// <param name="key">The body's key, which is its name.</param>
+        /// <param name="folder">The body's folder.</param>
+        /// <param name="createdPaths">Receives the created asset's path.</param>
+        /// <returns>The created data.</returns>
+        internal static ScienceRegionData CreateScienceRegionData(string key, string folder, List<string> createdPaths)
         {
             ScienceRegionData data = ScriptableObject.CreateInstance<ScienceRegionData>();
             // Pre-populate BodyName so the asset locator can match this asset to the new body

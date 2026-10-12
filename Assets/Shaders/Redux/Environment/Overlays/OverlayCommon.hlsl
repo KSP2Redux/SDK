@@ -13,8 +13,11 @@
 // NOTE: each overlay shader declares `#pragma multi_compile_local _USE_PQS_BUFFER`
 // in its own HLSLPROGRAM. Including the pragma here is unreliable across the
 // Unity shader compiler when this file is pulled in via #include.
+//
+// URP: PQSRenderer's PqsOverlayHook draws pass 0 by index from a command buffer
+// before transparents, so the passes need no LightMode.
 
-#include "UnityCG.cginc"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 struct QuadMeshData
 {
@@ -46,13 +49,23 @@ QuadMeshData GetQuadMeshVert(appdata v)
     uint meshIndex = VisibleQuadMeshIndices[v.vertexID];
     data = QuadMeshDataBuffer[meshIndex];
     #else
-    data.position = v.vertex;
-    data.normal   = v.normal;
+    data.position = v.vertex.xyz;
+    data.normal   = v.normal.xyz;
     data.uv       = v.uv;
     data.tangent  = v.tangent;
     data.height   = 0;
     #endif
     return data;
+}
+
+// Screen position the way the Built-in ComputeScreenPos built it (xy / w is the UV), which is how
+// the terrain samples its local-space prepass targets (CBL_PrepassScreenPos).
+float4 OverlayScreenPos(float4 positionCS)
+{
+    float4 o = positionCS * 0.5;
+    o.xy = float2(o.x, o.y * _ProjectionParams.x) + o.w;
+    o.zw = positionCS.zw;
+    return o;
 }
 
 struct overlay_v2f
@@ -71,7 +84,7 @@ overlay_v2f OverlayVert(appdata v)
     QuadMeshData q = GetQuadMeshVert(v);
 
     overlay_v2f o;
-    o.vertex = UnityObjectToClipPos(q.position);
+    o.vertex = TransformObjectToHClip(q.position);
     o.uv     = q.uv;
     o.posH   = float4(q.position, q.height.w);
     o.geomN  = q.tangent;

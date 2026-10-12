@@ -407,7 +407,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             EditorGUIUtility.PingObject(go);
         }
 
-        private static (double lat, double lon) LatLonFromTransform(Transform t, Transform pqsTransform)
+        /// <summary>
+        /// Gets the latitude and longitude of a transform on a body, in degrees.
+        /// </summary>
+        /// <param name="t">The transform.</param>
+        /// <param name="pqsTransform">The body's PQS transform.</param>
+        /// <returns>The latitude and longitude in degrees.</returns>
+        internal static (double lat, double lon) LatLonFromTransform(Transform t, Transform pqsTransform)
         {
             Vector3d p = pqsTransform.InverseTransformPoint(t.position);
             return LatLonFromBodyLocal(p);

@@ -20,7 +20,7 @@ Shader "Redux/PlanetAuthoring/Overlays/MaskOverlay"
 
     SubShader
     {
-        Tags { "RenderType" = "Transparent" }
+        Tags { "RenderPipeline" = "UniversalPipeline" "RenderType" = "Transparent" }
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
 
@@ -33,7 +33,7 @@ Shader "Redux/PlanetAuthoring/Overlays/MaskOverlay"
 
             #include "OverlayCommon.hlsl"
 
-            sampler2D _MaskTex;
+            TEXTURE2D(_MaskTex);    SAMPLER(sampler_MaskTex);
             float     _Strength;
             float     _ChannelMode;
             float4    _ColorR;
@@ -43,7 +43,7 @@ Shader "Redux/PlanetAuthoring/Overlays/MaskOverlay"
 
             float4 frag(overlay_v2f i) : SV_Target
             {
-                float4 m = tex2D(_MaskTex, i.uv);
+                float4 m = SAMPLE_TEXTURE2D(_MaskTex, sampler_MaskTex, i.uv);
 
                 int mode = (int)round(_ChannelMode);
                 float3 rgb;

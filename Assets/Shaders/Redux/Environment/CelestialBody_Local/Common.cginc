@@ -41,10 +41,10 @@
 #if defined(PASS_DEFERRED_BASE) || defined(PASS_DEFERRED_BIOME)
 struct GBufferOutput
 {
-    float4 albedoSmoothness  : SV_Target0;
-    float4 specularOcclusion : SV_Target1;
-    float4 normalProjRatio   : SV_Target2;
-    float4 emission          : SV_Target3;
+    float4 albedoOcclusion    : SV_Target0;
+    float4 specularSmoothness : SV_Target1;
+    float4 normalProjRatio    : SV_Target2;
+    float4 emission           : SV_Target3;
 };
 #endif
 

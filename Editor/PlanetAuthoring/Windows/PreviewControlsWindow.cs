@@ -5,6 +5,7 @@ using System.Linq;
 using AwesomeTechnologies.VegetationStudio;
 using KSP;
 using KSP.Rendering.Planets;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Lighting;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Overlays;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using UnityEditor;
@@ -30,6 +31,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Label _altitudeLabel;
         private Label _scatterStatus;
         private Toggle _scatterEnabled;
+        private Label _atmosphereStatus;
+        private Toggle _atmosphereEnabled;
+        private Label _cloudsStatus;
+        private Toggle _cloudsEnabled;
+        private Label _oceanStatus;
+        private Toggle _oceanEnabled;
+        private Label _gameLookStatus;
+        private Toggle _gameLookEnabled;
         private Label _scatterCells;
         private Label _scatterDistances;
         private Button _scatterReadCounts;
@@ -54,7 +63,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private ObjectField _sunLightField;
         private Slider _sunAzimuthSlider;
         private Slider _sunElevationSlider;
-        private Slider _sunIntensitySlider;
+        private Slider _sunStarBrightnessSlider;
+        private FloatField _sunStarDistanceField;
+        private Label _sunLightReadout;
         private Button _sunDayButton;
         private Button _sunNightButton;
         private bool _suppressSunUpdates;
@@ -65,6 +76,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private Toggle _overlaySubzoneToggle;
         private Toggle _overlaySlopeToggle;
         private Toggle _overlayAltitudeToggle;
+        private Toggle _overlaySeaLevelToggle;
         private Toggle _overlayActiveLayerToggle;
         private VisualElement _overlayActiveLayerGrid;
         private VisualElement[,] _overlayActiveLayerCells;
@@ -140,6 +152,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             if (_scatterReadCounts != null)
                 _scatterReadCounts.clicked += OnScatterReadCountsClicked;
 
+            _atmosphereStatus = root.Q<Label>("atmosphere-status");
+            _atmosphereEnabled = root.Q<Toggle>("atmosphere-enabled");
+            BindDriverToggle(_atmosphereEnabled, session => session.AtmosphereDriver);
+            _cloudsStatus = root.Q<Label>("clouds-status");
+            _cloudsEnabled = root.Q<Toggle>("clouds-enabled");
+            BindDriverToggle(_cloudsEnabled, session => session.CloudDriver);
+            _oceanStatus = root.Q<Label>("ocean-status");
+            _oceanEnabled = root.Q<Toggle>("ocean-enabled");
+            BindDriverToggle(_oceanEnabled, session => session.OceanDriver);
+            _gameLookStatus = root.Q<Label>("game-look-status");
+            _gameLookEnabled = root.Q<Toggle>("game-look-enabled");
+            BindDriverToggle(_gameLookEnabled, session => session.GameLookDriver);
+
             _scatterDensityQuality = root.Q<DropdownField>("scatter-density-quality");
             _scatterDrawQuality = root.Q<DropdownField>("scatter-draw-quality");
             if (_scatterDensityQuality != null)
@@ -191,14 +216,28 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _sunLightField = root.Q<ObjectField>("sun-light-field");
             _sunAzimuthSlider = root.Q<Slider>("sun-azimuth-slider");
             _sunElevationSlider = root.Q<Slider>("sun-elevation-slider");
-            _sunIntensitySlider = root.Q<Slider>("sun-intensity-slider");
+            _sunStarBrightnessSlider = root.Q<Slider>("sun-star-brightness-slider");
+            _sunStarDistanceField = root.Q<FloatField>("sun-star-distance-field");
+            _sunLightReadout = root.Q<Label>("sun-light-readout");
             _sunDayButton = root.Q<Button>("sun-day-button");
             _sunNightButton = root.Q<Button>("sun-night-button");
             _sunLightField.objectType = typeof(Light);
             _sunLightField.RegisterValueChangedCallback(_ => RefreshSunFromLight());
             _sunAzimuthSlider.RegisterValueChangedCallback(_ => ApplySunSliders());
             _sunElevationSlider.RegisterValueChangedCallback(_ => ApplySunSliders());
-            _sunIntensitySlider.RegisterValueChangedCallback(_ => ApplySunSliders());
+            _sunStarBrightnessSlider.SetValueWithoutNotify(StarLight.StarBrightness);
+            _sunStarDistanceField.SetValueWithoutNotify(StarLight.DistanceGigameters);
+            _sunStarBrightnessSlider.RegisterValueChangedCallback(evt =>
+            {
+                StarLight.StarBrightness = evt.newValue;
+                ApplySunSliders();
+            });
+            _sunStarDistanceField.RegisterValueChangedCallback(evt =>
+            {
+                StarLight.DistanceGigameters = evt.newValue;
+                ApplySunSliders();
+            });
+            RefreshSunLightReadout();
             _sunDayButton.clicked += () => JumpToSunRelative(antiSolar: false);
             _sunNightButton.clicked += () => JumpToSunRelative(antiSolar: true);
 
@@ -213,6 +252,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlaySubzoneToggle = root.Q<Toggle>("overlay-subzone-toggle");
             _overlaySlopeToggle = root.Q<Toggle>("overlay-slope-toggle");
             _overlayAltitudeToggle = root.Q<Toggle>("overlay-altitude-toggle");
+            _overlaySeaLevelToggle = root.Q<Toggle>("overlay-sea-level-toggle");
             _overlayActiveLayerToggle = root.Q<Toggle>("overlay-active-layer-toggle");
             _overlayActiveLayerGrid = root.Q<VisualElement>("overlay-active-layer-grid");
             _overlayScienceRegionToggle = root.Q<Toggle>("overlay-science-region-toggle");
@@ -226,6 +266,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             BindOverlayToggle(_overlaySubzoneToggle, PreviewOverlayKind.SubzoneMask);
             BindOverlayToggle(_overlaySlopeToggle, PreviewOverlayKind.Slope);
             BindOverlayToggle(_overlayAltitudeToggle, PreviewOverlayKind.AltitudeBands);
+            BindOverlayToggle(_overlaySeaLevelToggle, PreviewOverlayKind.SeaLevel);
             BindOverlayToggle(_overlayActiveLayerToggle, PreviewOverlayKind.ActiveLayer);
             BindOverlayToggle(_overlayScienceRegionToggle, PreviewOverlayKind.ScienceRegion);
             BindOverlayToggle(_overlayScatterBiomeToggle, PreviewOverlayKind.ScatterBiome);
@@ -365,6 +406,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _overlaySubzoneToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.SubzoneMask));
             _overlaySlopeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.Slope));
             _overlayAltitudeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.AltitudeBands));
+            _overlaySeaLevelToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.SeaLevel));
             _overlayActiveLayerToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ActiveLayer));
             _overlayScienceRegionToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ScienceRegion));
             _overlayScatterBiomeToggle.SetValueWithoutNotify(PreviewOverlayManager.IsEnabled(PreviewOverlayKind.ScatterBiome));
@@ -485,6 +527,73 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             sun.transform.rotation = Quaternion.AngleAxis(speed * dt, polarAxisWorld) * sun.transform.rotation;
             RefreshSunFromLight();
             SceneView.RepaintAll();
+        }
+
+        private void RefreshEnvironmentSection(PlanetAuthoringSession session, bool active)
+        {
+            RefreshDriverRow(
+                _gameLookEnabled,
+                _gameLookStatus,
+                active ? session.GameLookDriver : null,
+                active,
+                "No game exposure for this body."
+            );
+            RefreshDriverRow(
+                _atmosphereEnabled,
+                _atmosphereStatus,
+                active ? session.AtmosphereDriver : null,
+                active,
+                "No atmosphere preview for this body."
+            );
+            RefreshDriverRow(
+                _cloudsEnabled,
+                _cloudsStatus,
+                active ? session.CloudDriver : null,
+                active,
+                "No cloud preview for this body."
+            );
+            RefreshDriverRow(
+                _oceanEnabled,
+                _oceanStatus,
+                active ? session.OceanDriver : null,
+                active,
+                "No ocean preview for this body."
+            );
+        }
+
+        private static void BindDriverToggle(Toggle toggle, Func<PlanetAuthoringSession, IPreviewDriver> selectDriver)
+        {
+            toggle?.RegisterValueChangedCallback(evt =>
+            {
+                PlanetAuthoringSession session = PlanetAuthoringSession.Active;
+                IPreviewDriver driver = session != null ? selectDriver(session) : null;
+                if (driver == null)
+                    return;
+
+                driver.Enabled = evt.newValue;
+                SceneView.RepaintAll();
+            });
+        }
+
+        private static void RefreshDriverRow(Toggle toggle, Label status, IPreviewDriver driver, bool active, string noDriverText)
+        {
+            if (toggle == null || status == null)
+                return;
+
+            if (driver == null)
+            {
+                toggle.SetEnabled(false);
+                status.text = active ? noDriverText : "No active preview.";
+                status.style.display = DisplayStyle.Flex;
+                return;
+            }
+
+            toggle.SetEnabled(driver.Booted);
+            toggle.SetValueWithoutNotify(driver.Enabled);
+
+            // Only speaks when something is wrong, like the scatter status below.
+            status.text = driver.Status;
+            status.style.display = string.IsNullOrEmpty(driver.Status) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
         private void RefreshScatterSection(PlanetAuthoringSession session, bool active)
@@ -652,6 +761,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             EnsureSunLightAssigned();
             RefreshSunFromLight();
 
+            RefreshEnvironmentSection(session, active);
             RefreshScatterSection(session, active);
 
             if (!active)
@@ -749,7 +859,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             var hasLight = light != null;
             _sunAzimuthSlider.SetEnabled(hasLight);
             _sunElevationSlider.SetEnabled(hasLight);
-            _sunIntensitySlider.SetEnabled(hasLight);
+            _sunStarBrightnessSlider.SetEnabled(hasLight);
+            _sunStarDistanceField.SetEnabled(hasLight);
             _sunDayButton.SetEnabled(hasLight);
             _sunNightButton.SetEnabled(hasLight);
             if (!hasLight) return;
@@ -763,8 +874,21 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             _suppressSunUpdates = true;
             _sunAzimuthSlider.SetValueWithoutNotify(azimuth);
             _sunElevationSlider.SetValueWithoutNotify(elevation);
-            _sunIntensitySlider.SetValueWithoutNotify(light.intensity);
             _suppressSunUpdates = false;
+
+            // The sun is lit from the star settings rather than read back, so a light picked or found here takes the
+            // game's brightness and colour straight away.
+            StarLight.Apply(light);
+            SceneView.RepaintAll();
+        }
+
+        private void RefreshSunLightReadout()
+        {
+            if (_sunLightReadout == null)
+                return;
+
+            float relative = StarLight.CalculateRelativeToKerbin(StarLight.StarBrightness, StarLight.DistanceGigameters);
+            _sunLightReadout.text = $"Sunlight at the body: {relative:P0} of what Kerbin gets.";
         }
 
         private void JumpToSunRelative(bool antiSolar)
@@ -783,6 +907,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
 
         private void ApplySunSliders()
         {
+            RefreshSunLightReadout();
             if (_suppressSunUpdates)
                 return;
             if (_sunLightField.value is not Light light)
@@ -794,9 +919,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
             Vector3 sunDir = new(cosElev * Mathf.Sin(azimRad), Mathf.Sin(elevRad), cosElev * Mathf.Cos(azimRad));
 
             Undo.RecordObject(light.transform, "Set Sun Direction");
-            Undo.RecordObject(light, "Set Sun Intensity");
+            Undo.RecordObject(light, "Set Sun Light");
             light.transform.rotation = Quaternion.LookRotation(-sunDir);
-            light.intensity = _sunIntensitySlider.value;
+            StarLight.Apply(light);
             EditorUtility.SetDirty(light);
             EditorUtility.SetDirty(light.transform);
         }

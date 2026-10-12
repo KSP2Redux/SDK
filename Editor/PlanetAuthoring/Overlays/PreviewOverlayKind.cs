@@ -16,7 +16,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         SubzoneMask,
 
         /// <summary>
-        /// Slope visualization derived from the surface shader's prepass world-normal RT.
+        /// Slope visualization derived from the gradience heightmaps the surface prepass samples.
         /// </summary>
         Slope,
 
@@ -24,6 +24,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         /// Altitude contour bands derived from elevation above the planet radius.
         /// </summary>
         AltitudeBands,
+
+        /// <summary>
+        /// Terrain below the ocean surface tinted, with the shoreline drawn where it meets the sea.
+        /// </summary>
+        SeaLevel,
 
         /// <summary>
         /// Per-pixel winner of the 16 small-biome layers, colorized by biome channel and layer index.
