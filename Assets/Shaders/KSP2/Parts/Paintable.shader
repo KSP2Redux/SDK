@@ -10,6 +10,16 @@ Shader "KSP2/Parts/Paintable"
 {
     Properties
     {
+        // The port's reentry values, set at runtime through a material or property block. Declared like the port
+        // declares them, so the batcher keeps both alike and the game's swap finds every property it expects.
+        [HideInInspector] _ReentryIntensity ("_ReentryIntensity", Float) = 0
+        [HideInInspector] _ReentryEmissivePow ("_ReentryEmissivePow", Float) = 0
+        [HideInInspector] _ReentryNoiseScale ("_ReentryNoiseScale", Float) = 0
+        [HideInInspector] _ReentryNoiseIntensity ("_ReentryNoiseIntensity", Float) = 0
+        [HideInInspector] _PartGlowNormalEdgeOffset ("_PartGlowNormalEdgeOffset", Float) = 0
+        [HideInInspector] _MetallicMinMax ("_MetallicMinMax", Vector) = (0,0,0,0)
+        [HideInInspector] _ReentryColor ("_ReentryColor", Vector) = (0,0,0,0)
+        [HideInInspector] _ReentryHeadingWs ("_ReentryHeadingWs", Vector) = (0,0,0,0)
         [Header(Surface)]
         _Color ("Albedo Tint", Color) = (1,1,1,1)
         _MainTex ("Albedo", 2D) = "white" {}
