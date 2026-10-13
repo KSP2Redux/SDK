@@ -98,6 +98,10 @@
             <editor:PropertyField binding-path="core.data.StarLuminosity" label="Star Luminosity (W)" tooltip="Total radiant power output of the star, in watts. Solar flux at any point is L / (4π × distance²)." />
         </engine:Foldout>
 
+        <engine:Foldout name="section-features" text="Features" value="false" class="sdk-section">
+            <engine:VisualElement name="features-slot" />
+        </engine:Foldout>
+
         <engine:Foldout name="section-output" text="Saving and registration" value="true" class="sdk-section">
             <engine:Label name="json-status" class="sdk-hint" />
             <engine:Button name="save-json" text="Save Body JSON" class="sdk-action-button" tooltip="Write this body's JSON next to the Scaled prefab and register it as addressable with the celestial_bodies label." />

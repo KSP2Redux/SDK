@@ -43,6 +43,16 @@ namespace Ksp2UnityTools.Editor.API
                 entry.SetLabel(label, true, true, false);
             }
 
+#if REDUX
+            // The game treats an untagged Redux asset as an error, so new Redux content takes its kind's category
+            string categoryLabel = Modding.AssetFeatureLabels.ReduxCategoryLabelFor(entry.labels);
+            if (categoryLabel != null)
+            {
+                EnsureLabelIsDefined(settings, categoryLabel);
+                entry.SetLabel(categoryLabel, true, true, false);
+            }
+#endif
+
             entry.address = name;
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
         }

@@ -110,6 +110,12 @@ namespace Ksp2UnityTools.Editor.Modding
         {
         };
 
+        [Tooltip("The relations of the mod's own feature beyond what its dependencies and conflicts give it")]
+        public ModFeature ownFeature = new();
+
+        [Tooltip("The features the mod declares besides its own")]
+        public List<ModFeature> features = new();
+
 
         public bool SyncPickerDisplayName()
         {
@@ -200,7 +206,60 @@ namespace Ksp2UnityTools.Editor.Modding
                 jObject["main_assembly"] = $"{id}.dll";
             }
 
+            JObject featuresObj = FeaturesJson();
+            if (featuresObj.Count > 0)
+            {
+                jObject["features"] = featuresObj;
+            }
+
             return jObject.ToString();
+        }
+
+        /// <summary>
+        /// Builds swinfo's features block: the mod's own feature when it has relations of its own, then every other
+        /// feature, each with only the lists it fills.
+        /// </summary>
+        /// <returns>The features by id.</returns>
+        public JObject FeaturesJson()
+        {
+            var featuresObj = new JObject();
+            JObject own = FeatureJson(ownFeature);
+            if (own.Count > 0)
+            {
+                featuresObj[id] = own;
+            }
+
+            foreach (ModFeature feature in features.Where(feature => !string.IsNullOrWhiteSpace(feature.id)))
+            {
+                featuresObj[feature.id.Trim()] = FeatureJson(feature);
+            }
+
+            return featuresObj;
+        }
+
+        private static JObject FeatureJson(ModFeature feature)
+        {
+            var featureObj = new JObject();
+            AddIds(featureObj, "requires", feature.requires);
+            AddIds(featureObj, "conflicts", feature.conflicts);
+            AddIds(featureObj, "provides", feature.provides);
+            if (feature.recommended)
+            {
+                featureObj["recommended"] = true;
+            }
+
+            return featureObj;
+        }
+
+        private static void AddIds(JObject featureObj, string key, IEnumerable<string> ids)
+        {
+            string[] filled = ids.Where(featureId => !string.IsNullOrWhiteSpace(featureId))
+                .Select(featureId => featureId.Trim())
+                .ToArray();
+            if (filled.Length > 0)
+            {
+                featureObj[key] = new JArray(filled);
+            }
         }
 
         public void GeneratePipeline(

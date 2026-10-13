@@ -5,9 +5,11 @@ using System.Reflection;
 using KSP;
 using KSP.Modules;
 using KSP.Sim.Definitions;
+using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.CustomEditors;
 using Ksp2UnityTools.Editor.IO;
 using Ksp2UnityTools.Editor.Localization.Export;
+using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.Editor.PartAuthoring.Gizmos;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs;
@@ -378,6 +380,37 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             chip.EnableInClassList("is-error", stateClass == "is-error");
         }
 
+        // The gate filters the part's JSON, which names the prefab and icon, so only the JSON carries the features
+        private static VisualElement BuildFeatures(CorePartData cpd)
+        {
+            var section = new VisualElement();
+            section.AddToClassList("data-editor-section");
+            var header = new Label("Features");
+            header.AddToClassList("data-editor-section-header");
+            section.Add(header);
+
+            string prefabPath = PathUtils.GetPrefabOrAssetPath(cpd, cpd.gameObject);
+            Mod owner = string.IsNullOrEmpty(prefabPath)
+                ? null
+                : KSP2UnityTools.FindParentMod(AssetDatabase.LoadMainAssetAtPath(prefabPath));
+            section.Add(AssetFeaturesSection.Build(() => PartJsonPath(cpd), owner));
+            return section;
+        }
+
+        private static IReadOnlyList<string> PartJsonPath(CorePartData cpd)
+        {
+            string dir = TryResolvePrefabDirectory(cpd);
+            if (string.IsNullOrEmpty(dir))
+            {
+                return Array.Empty<string>();
+            }
+
+            string name = !string.IsNullOrWhiteSpace(cpd.Core?.data?.partName)
+                ? cpd.Core.data.partName
+                : cpd.gameObject.name;
+            return new[] { $"{dir}/{name}.json".Replace('\\', '/') };
+        }
+
         private static string TryResolvePrefabDirectory(CorePartData cpd)
         {
             string prefabPath = PathUtils.GetPrefabOrAssetPath(cpd, cpd.gameObject);
@@ -594,6 +627,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 case "core":
                     var cpd = (CorePartData)target;
                     _tabContent.Add(CoreDataSections.BuildIdentity(serializedObject, cpd));
+                    _tabContent.Add(BuildFeatures(cpd));
                     _tabContent.Add(new IconPreviewSection(cpd));
                     _tabContent.Add(CoreDataSections.BuildMassCostCrew(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildBreakageThermal(serializedObject));

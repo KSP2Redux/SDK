@@ -1,4 +1,5 @@
 using Ksp2UnityTools.Editor.LinkedAddressables;
+using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.PrefabPatchingAuthoring;
 using PatchManager.PrefabPatching;
 using Redux.IO;
@@ -10,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Newtonsoft.Json;
+using SpaceWarp2.API.Features;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -79,7 +81,9 @@ public static class PrefabVariantPatchCompiler
 #else
             modInfo.AllGroup,
 #endif
-            addressablesLabel
+            addressablesLabel,
+            metadata.Features,
+            metadata.NoFeatures
         );
     }
 
@@ -101,7 +105,9 @@ public static class PrefabVariantPatchCompiler
         IEnumerable<string> configurationInputs = null,
         bool makeAddressable = true,
         AddressableAssetGroup targetAddressablesGroup = null,
-        string addressablesLabel = null
+        string addressablesLabel = null,
+        IEnumerable<string> features = null,
+        IEnumerable<string> noFeatures = null
     )
     {
         var diagnostics = new List<string>();
@@ -174,7 +180,9 @@ public static class PrefabVariantPatchCompiler
             AfterPatches = Sorted(afterPatches),
             BeforeMods = Sorted(beforeMods),
             AfterMods = Sorted(afterMods),
-            ConfigurationInputs = Sorted(configurationInputs)
+            ConfigurationInputs = Sorted(configurationInputs),
+            Features = QualifiedFeatures(modId, features),
+            NoFeatures = QualifiedFeatures(modId, noFeatures)
         };
 
         CompileProperties(
@@ -244,7 +252,9 @@ public static class PrefabVariantPatchCompiler
                 string.IsNullOrWhiteSpace(addressablesLabel)
                     ? modId.Trim()
                         + PrefabPatchSchema.AddressablesLabelSuffix
-                    : addressablesLabel.Trim()
+                    : addressablesLabel.Trim(),
+                manifest.Features,
+                manifest.NoFeatures
             );
         AssetDatabase.SaveAssets();
         PrefabPatchOwnership.Bind(manifest, modId);
@@ -1753,6 +1763,17 @@ public static class PrefabVariantPatchCompiler
             W = value.w
         };
 
+    // Bare ids belong to the owning mod, as PrefabPatchBuilder.Feature has them
+    private static string[] QualifiedFeatures(
+        string modId,
+        IEnumerable<string> features
+    ) =>
+        Sorted(
+            (features ?? Array.Empty<string>())
+                .Where(feature => !string.IsNullOrWhiteSpace(feature))
+                .Select(feature => FeatureRegistry.Qualify(modId, feature.Trim()))
+        );
+
     private static string[] Sorted(IEnumerable<string> values) =>
         (values ?? Array.Empty<string>())
             .Where(value => !string.IsNullOrWhiteSpace(value))
@@ -1829,7 +1850,9 @@ public static class PrefabVariantPatchCompiler
     private static void MakeManifestAddressable(
         string outputPath,
         AddressableAssetGroup requestedGroup,
-        string addressablesLabel
+        string addressablesLabel,
+        IReadOnlyCollection<string> features,
+        IReadOnlyCollection<string> noFeatures
     )
     {
         var addressableSettings =
@@ -1866,6 +1889,35 @@ public static class PrefabVariantPatchCompiler
             entry,
             true
         );
+#if REDUX
+        // Redux content states its feature on the asset, and the manifest's
+        // own features say which. A patch with none keeps any label it was
+        // given by hand.
+        if (features.Count == 0)
+        {
+            if (!entry.labels.Any(label =>
+                    label.StartsWith(
+                        FeatureSelector.FEATURE_TAG_PREFIX,
+                        StringComparison.Ordinal
+                    )))
+            {
+                Debug.LogError(
+                    $"The Redux prefab patch '{outputPath}' requires no "
+                        + "feature. Set its Required Features so campaigns "
+                        + "without them skip it."
+                );
+            }
+
+            return;
+        }
+
+        AssetFeatureLabels.Apply(
+            new[] { outputPath },
+            FeatureCatalog.REDUX_MOD_ID,
+            features,
+            noFeatures
+        );
+#endif
     }
 }
 }

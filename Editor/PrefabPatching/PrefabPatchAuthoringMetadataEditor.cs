@@ -1,10 +1,14 @@
 using System.IO;
 using Ksp2UnityTools.Editor.LinkedAddressables;
+using Ksp2UnityTools.Editor.Modding;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.PrefabPatchingAuthoring;
 using PatchManager.PrefabPatching;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.PrefabPatching
 {
@@ -17,211 +21,119 @@ namespace Ksp2UnityTools.Editor.PrefabPatching
 internal sealed class PrefabPatchAuthoringMetadataEditor
     : UnityEditor.Editor
 {
-    private bool showAdvanced;
-    private string statusMessage;
-    private MessageType statusType;
+    private const string UXML_PATH =
+        "/Assets/Windows/PrefabPatchAuthoringMetadataEditor.uxml";
 
-    public override void OnInspectorGUI()
+    private HelpBox ownershipStatus;
+    private HelpBox sourceStatus;
+    private HelpBox manifestStatus;
+    private HelpBox actionStatus;
+    private Button selectJson;
+
+    private PrefabPatchAuthoringMetadata Metadata =>
+        (PrefabPatchAuthoringMetadata)target;
+
+    public override VisualElement CreateInspectorGUI()
     {
-        serializedObject.Update();
+        var root = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+            SDKConfiguration.BasePath + UXML_PATH
+        ).CloneTree();
+        Ksp2UnityToolsStyles.Apply(root);
 
-        EditorGUILayout.HelpBox(
-            "This component configures the prefab patch compiler. Make visual "
-                + "changes on this prefab variant; saving the variant rebuilds "
-                + "the runtime JSON when Auto Compile On Save is enabled.",
-            MessageType.Info
-        );
+        ownershipStatus = root.Q<HelpBox>("ownership-status");
+        sourceStatus = root.Q<HelpBox>("source-status");
+        manifestStatus = root.Q<HelpBox>("manifest-status");
+        actionStatus = root.Q<HelpBox>("action-status");
+        actionStatus.style.display = DisplayStyle.None;
 
+        var owningMod = root.Q<ObjectField>("owning-mod");
 #if REDUX
-        DrawSection(
-            "Patch",
-            nameof(PrefabPatchAuthoringMetadata.PatchName)
+        owningMod.style.display = DisplayStyle.None;
+#else
+        owningMod.objectType =
+            PrefabPatchModAssetUtility.ModType ?? typeof(ScriptableObject);
+        owningMod.RegisterValueChangedCallback(_ =>
+        {
+            RefreshStatus();
+            BuildFeatures(root.Q("features-slot"));
+        });
+#endif
+        BuildFeatures(root.Q("features-slot"));
+
+        var variant = PrefabPatchAuthoringWorkflow.GetVariantAsset(Metadata);
+        var openVariant = root.Q<Button>("open-variant");
+        openVariant.SetEnabled(variant != null);
+        openVariant.clicked += () => AssetDatabase.OpenAsset(variant);
+        var compile = root.Q<Button>("compile");
+        compile.SetEnabled(variant != null);
+        compile.clicked += Compile;
+        var preview = root.Q<Button>("preview");
+        preview.SetEnabled(variant != null);
+        preview.clicked += Preview;
+        selectJson = root.Q<Button>("select-json");
+        selectJson.clicked += SelectJson;
+
+        RefreshStatus();
+        return root;
+    }
+
+    // Bare feature ids belong to the owning mod, which Redux's own patches
+    // have none of
+    private void BuildFeatures(VisualElement slot)
+    {
+        slot.Clear();
+#if REDUX
+        Mod owner = null;
+#else
+        var owner = Metadata.OwningMod as Mod;
+#endif
+        slot.Add(
+            InlineStringListBlock.Build(
+                serializedObject.FindProperty(
+                    nameof(PrefabPatchAuthoringMetadata.Features)
+                ),
+                "Required Features",
+                entry => new FeatureField(entry, null, owner)
+            )
         );
-        EditorGUILayout.HelpBox(
+        slot.Add(
+            InlineStringListBlock.Build(
+                serializedObject.FindProperty(
+                    nameof(PrefabPatchAuthoringMetadata.NoFeatures)
+                ),
+                "Excluded Features",
+                entry => new FeatureField(entry, null, owner)
+            )
+        );
+    }
+
+    private void RefreshStatus()
+    {
+        var metadata = Metadata;
+        SetOwnershipStatus(metadata);
+        SetSourceStatus(metadata);
+        SetManifestStatus(metadata);
+
+        var manifestPath =
+            PrefabPatchAuthoringWorkflow.GetOutputManifestPath(metadata);
+        selectJson.SetEnabled(
+            !string.IsNullOrWhiteSpace(manifestPath)
+            && AssetDatabase.LoadAssetAtPath<TextAsset>(manifestPath) != null
+        );
+    }
+
+    private void SetOwnershipStatus(PrefabPatchAuthoringMetadata metadata)
+    {
+#if REDUX
+        Show(
+            ownershipStatus,
             $"Owned by {PrefabPatchAuthoringWorkflow.ReduxModId}. Runtime "
                 + "ownership comes from Redux's swinfo descriptor and "
                 + $"'{PrefabPatchAuthoringWorkflow.ReduxPrefabPatchLabel}' "
                 + "label.",
-            MessageType.None
+            HelpBoxMessageType.None
         );
 #else
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Patch", EditorStyles.boldLabel);
-        DrawOwningModProperty();
-        DrawProperties(nameof(PrefabPatchAuthoringMetadata.PatchName));
-        DrawModOwnershipStatus(
-            (PrefabPatchAuthoringMetadata)target
-        );
-#endif
-        DrawSection(
-            "Composition",
-            nameof(PrefabPatchAuthoringMetadata.Pass),
-            nameof(PrefabPatchAuthoringMetadata.Ordering)
-        );
-        DrawSection(
-            "Output",
-            nameof(PrefabPatchAuthoringMetadata.AutoCompileOnSave)
-        );
-
-        showAdvanced = EditorGUILayout.Foldout(
-            showAdvanced,
-            "Dependencies & Advanced Ordering",
-            true
-        );
-        if (showAdvanced)
-        {
-            EditorGUI.indentLevel++;
-            DrawProperties(
-                nameof(PrefabPatchAuthoringMetadata.NeedsMods),
-                nameof(PrefabPatchAuthoringMetadata.ConflictsMods),
-                nameof(PrefabPatchAuthoringMetadata.NeedsPatches),
-                nameof(PrefabPatchAuthoringMetadata.ConflictsPatches),
-                nameof(PrefabPatchAuthoringMetadata.BeforePatches),
-                nameof(PrefabPatchAuthoringMetadata.AfterPatches),
-                nameof(PrefabPatchAuthoringMetadata.BeforeMods),
-                nameof(PrefabPatchAuthoringMetadata.AfterMods),
-                nameof(PrefabPatchAuthoringMetadata.ConfigurationInputs)
-            );
-            EditorGUI.indentLevel--;
-        }
-
-        serializedObject.ApplyModifiedProperties();
-
-        var metadata = (PrefabPatchAuthoringMetadata)target;
-        DrawSourceStatus(metadata);
-        DrawManifestStatus(metadata);
-
-        if (!string.IsNullOrWhiteSpace(statusMessage))
-            EditorGUILayout.HelpBox(statusMessage, statusType);
-
-        EditorGUILayout.Space();
-        var variant =
-            PrefabPatchAuthoringWorkflow.GetVariantAsset(metadata);
-        using (new EditorGUI.DisabledScope(variant == null))
-        {
-            if (
-                GUILayout.Button(
-                    "Open Variant for Editing",
-                    GUILayout.Height(28f)
-                )
-            )
-            {
-                AssetDatabase.OpenAsset(variant);
-            }
-
-            if (GUILayout.Button("Compile JSON Now", GUILayout.Height(28f)))
-                Compile(metadata);
-
-            if (GUILayout.Button("Open Effective Prefab Preview"))
-            {
-                try
-                {
-                    metadata = SaveAndReload(metadata);
-                    var plan =
-                        PrefabPatchEffectivePreviewStage.Show(metadata);
-                    statusMessage =
-                        $"Preview contains {plan.OrderedPatchIds.Length} "
-                        + $"ordered patch(es) and {plan.Diagnostics.Count} "
-                        + "diagnostic(s).";
-                    statusType = MessageType.Info;
-                }
-                catch (System.Exception exception)
-                {
-                    ReportFailure(exception);
-                }
-            }
-        }
-
-        var manifestPath =
-            PrefabPatchAuthoringWorkflow.GetOutputManifestPath(metadata);
-        using (
-            new EditorGUI.DisabledScope(
-                string.IsNullOrWhiteSpace(manifestPath)
-                || AssetDatabase.LoadAssetAtPath<TextAsset>(manifestPath) == null
-            )
-        )
-        {
-            if (GUILayout.Button("Select Compiled JSON"))
-            {
-                var manifest = AssetDatabase.LoadAssetAtPath<TextAsset>(
-                    manifestPath
-                );
-                Selection.activeObject = manifest;
-                EditorGUIUtility.PingObject(manifest);
-            }
-        }
-    }
-
-    private void DrawSection(string label, params string[] properties)
-    {
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
-        DrawProperties(properties);
-    }
-
-    private void DrawProperties(params string[] properties)
-    {
-        foreach (var propertyName in properties)
-        {
-            var property = serializedObject.FindProperty(propertyName);
-            if (property != null)
-                EditorGUILayout.PropertyField(property, true);
-        }
-    }
-
-    private static void DrawSourceStatus(
-        PrefabPatchAuthoringMetadata metadata
-    )
-    {
-        var variant =
-            PrefabPatchAuthoringWorkflow.GetVariantAsset(metadata);
-        var basePrefab =
-            PrefabUtility.GetCorrespondingObjectFromSource(variant)
-            as GameObject;
-        if (
-            variant == null
-            || basePrefab == null
-            || !LinkedAddressableEditorIdentity.TryGet(
-                    basePrefab,
-                    out var identity
-                )
-        )
-        {
-            EditorGUILayout.HelpBox(
-                "This component must be on the root of a prefab variant based "
-                    + "directly on a Redux SDK linked prefab.",
-                MessageType.Error
-            );
-            return;
-        }
-
-        EditorGUILayout.HelpBox(
-            $"Linked target: {identity.Address}\n"
-                + $"Descriptor: {identity.DescriptorPath}",
-            MessageType.None
-        );
-    }
-
-#if !REDUX
-    private void DrawOwningModProperty()
-    {
-        var property = serializedObject.FindProperty(
-            nameof(PrefabPatchAuthoringMetadata.OwningMod)
-        );
-        var selected = EditorGUILayout.ObjectField(
-            property.displayName,
-            property.objectReferenceValue,
-            PrefabPatchModAssetUtility.ModType ?? typeof(ScriptableObject),
-            false
-        );
-        if (selected != property.objectReferenceValue)
-            property.objectReferenceValue = selected;
-    }
-
-    private static void DrawModOwnershipStatus(
-        PrefabPatchAuthoringMetadata metadata
-    )
-    {
         if (
             !PrefabPatchModAssetUtility.TryGetInfo(
                 metadata.OwningMod,
@@ -231,25 +143,60 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
             )
         )
         {
-            EditorGUILayout.HelpBox(error, MessageType.Warning);
+            Show(ownershipStatus, error, HelpBoxMessageType.Warning);
             return;
         }
 
         var group = info.AllGroup == null
             ? "missing all-assets Addressables group"
             : $"Addressables group '{info.AllGroup.Name}'";
-        EditorGUILayout.HelpBox(
+        Show(
+            ownershipStatus,
             $"Owned by {info.Id}; compiled JSON uses {group} and label "
                 + $"'{info.PrefabPatchLabel}'. Runtime ownership comes from "
                 + "this mod's swinfo descriptor.",
-            info.AllGroup == null ? MessageType.Warning : MessageType.None
+            info.AllGroup == null
+                ? HelpBoxMessageType.Warning
+                : HelpBoxMessageType.None
+        );
+#endif
+    }
+
+    private void SetSourceStatus(PrefabPatchAuthoringMetadata metadata)
+    {
+        var variant =
+            PrefabPatchAuthoringWorkflow.GetVariantAsset(metadata);
+        var basePrefab = variant == null
+            ? null
+            : PrefabUtility.GetCorrespondingObjectFromSource(variant)
+                as GameObject;
+        if (
+            variant == null
+            || basePrefab == null
+            || !LinkedAddressableEditorIdentity.TryGet(
+                    basePrefab,
+                    out var identity
+                )
+        )
+        {
+            Show(
+                sourceStatus,
+                "This component must be on the root of a prefab variant based "
+                    + "directly on a Redux SDK linked prefab.",
+                HelpBoxMessageType.Error
+            );
+            return;
+        }
+
+        Show(
+            sourceStatus,
+            $"Linked target: {identity.Address}\n"
+                + $"Descriptor: {identity.DescriptorPath}",
+            HelpBoxMessageType.None
         );
     }
-#endif
 
-    private static void DrawManifestStatus(
-        PrefabPatchAuthoringMetadata metadata
-    )
+    private void SetManifestStatus(PrefabPatchAuthoringMetadata metadata)
     {
         var path =
             PrefabPatchAuthoringWorkflow.GetOutputManifestPath(metadata);
@@ -258,9 +205,10 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
             : AssetDatabase.LoadAssetAtPath<TextAsset>(path);
         if (manifestAsset == null)
         {
-            EditorGUILayout.HelpBox(
+            Show(
+                manifestStatus,
                 $"JSON has not been generated yet.\nOutput: {path}",
-                MessageType.Warning
+                HelpBoxMessageType.Warning
             );
             return;
         }
@@ -275,38 +223,72 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
             var timestamp = File.Exists(fullPath)
                 ? File.GetLastWriteTime(fullPath).ToString("g")
                 : "unknown";
-            EditorGUILayout.HelpBox(
+            Show(
+                manifestStatus,
                 $"Compiled: {manifest.PatchName}\n"
                     + $"Operations: {manifest.Operations.Count}\n"
                     + $"Updated: {timestamp}",
-                MessageType.Info
+                HelpBoxMessageType.Info
             );
         }
         catch (System.Exception exception)
         {
-            EditorGUILayout.HelpBox(
+            Show(
+                manifestStatus,
                 $"The compiled JSON could not be read: {exception.Message}",
-                MessageType.Error
+                HelpBoxMessageType.Error
             );
         }
     }
 
-    private void Compile(PrefabPatchAuthoringMetadata metadata)
+    private void Compile()
     {
         try
         {
-            metadata = SaveAndReload(metadata);
+            var metadata = SaveAndReload(Metadata);
             var result = PrefabPatchAuthoringWorkflow.Compile(metadata);
             PrefabPatchAutoCompiler.DiscardPending(result.VariantPath);
-            statusMessage =
-                $"Compiled {result.Manifest.Operations.Count} operation(s) to "
-                + result.OutputPath;
-            statusType = MessageType.Info;
+            Show(
+                actionStatus,
+                $"Compiled {result.Manifest.Operations.Count} operation(s) "
+                    + $"to {result.OutputPath}",
+                HelpBoxMessageType.Info
+            );
         }
         catch (System.Exception exception)
         {
             ReportFailure(exception);
         }
+
+        RefreshStatus();
+    }
+
+    private void Preview()
+    {
+        try
+        {
+            var metadata = SaveAndReload(Metadata);
+            var plan = PrefabPatchEffectivePreviewStage.Show(metadata);
+            Show(
+                actionStatus,
+                $"Preview contains {plan.OrderedPatchIds.Length} ordered "
+                    + $"patch(es) and {plan.Diagnostics.Count} diagnostic(s).",
+                HelpBoxMessageType.Info
+            );
+        }
+        catch (System.Exception exception)
+        {
+            ReportFailure(exception);
+        }
+    }
+
+    private void SelectJson()
+    {
+        var manifest = AssetDatabase.LoadAssetAtPath<TextAsset>(
+            PrefabPatchAuthoringWorkflow.GetOutputManifestPath(Metadata)
+        );
+        Selection.activeObject = manifest;
+        EditorGUIUtility.PingObject(manifest);
     }
 
     private static PrefabPatchAuthoringMetadata SaveAndReload(
@@ -329,9 +311,19 @@ internal sealed class PrefabPatchAuthoringMetadataEditor
 
     private void ReportFailure(System.Exception exception)
     {
-        statusMessage = exception.Message;
-        statusType = MessageType.Error;
+        Show(actionStatus, exception.Message, HelpBoxMessageType.Error);
         Debug.LogException(exception);
+    }
+
+    private static void Show(
+        HelpBox box,
+        string text,
+        HelpBoxMessageType type
+    )
+    {
+        box.text = text;
+        box.messageType = type;
+        box.style.display = DisplayStyle.Flex;
     }
 }
 }

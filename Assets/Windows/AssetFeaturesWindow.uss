@@ -1,0 +1,47 @@
+.asset-features {
+    flex-grow: 1;
+}
+
+.asset-features__mod-slot {
+    width: 240px;
+}
+
+.asset-features__kind-slot {
+    width: 180px;
+    margin-left: 8px;
+}
+
+.asset-features__spacer {
+    flex-grow: 1;
+}
+
+.asset-features__search {
+    width: 260px;
+}
+
+.asset-features__list {
+    flex-grow: 1;
+}
+
+.asset-features__bar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    height: 30px;
+    padding: 0 6px;
+    border-top-width: 1px;
+    border-top-color: rgb(35, 35, 35);
+}
+
+.asset-features__count {
+    width: 90px;
+}
+
+.asset-features__feature-slot {
+    width: 260px;
+    margin-right: 6px;
+}
+
+.asset-features__button {
+    width: 80px;
+}

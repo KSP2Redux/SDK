@@ -842,6 +842,17 @@
     color: rgb(180, 195, 215);
 }
 
+.data-editor-inline-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.data-editor-inline-row__grow {
+    flex-grow: 1;
+    margin-right: 4px;
+}
+
 .sdk-card__remove-btn,
 .data-editor-card-remove-btn {
     width: 22px;

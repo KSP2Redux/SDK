@@ -1,13 +1,18 @@
 using System.Collections.Generic;
+using System.Linq;
 using KSP;
 using KSP.Sim.Definitions;
+using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Localization.Export;
+using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Tools;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Validation;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Windows;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -48,6 +53,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
             WireBlenderHeights(content, body);
             content.Q<Button>("save-json").clicked += view.SaveJson;
             content.Q<Button>("export-localizations").clicked += () => LocExportFlow.RunForAsset(context.Body);
+            content.Q("features-slot").Add(AssetFeaturesSection.Build(
+                () => BodyAssetPaths(context),
+                KSP2UnityTools.FindParentMod(context.ScaledPrefabAsset())
+            ));
 
             view.AddTabRefresh(() =>
             {
@@ -55,6 +64,23 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
                 PlanetInspectorView.SetShown(content.Q("section-orbit"), context.BodyClass != BodyClassFlags.Star);
                 PlanetInspectorView.SetShown(content.Q("terrain-heights"), context.BodyClass == BodyClassFlags.SolidSurface);
             });
+        }
+
+        // A body's JSON, science regions and resources each load under their own label, so the section is given
+        // every addressable in the body's folder and keeps the content-labelled ones
+        private static IReadOnlyList<string> BodyAssetPaths(PlanetInspectorContext context)
+        {
+            string folder = context.BodyFolder();
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (string.IsNullOrEmpty(folder) || settings == null)
+                return new List<string>();
+
+            return settings.groups
+                .Where(group => group != null)
+                .SelectMany(group => group.entries)
+                .Select(entry => entry.AssetPath)
+                .Where(path => path.StartsWith(folder + "/", System.StringComparison.Ordinal))
+                .ToList();
         }
 
         // The orbit lives in an editor-only sidecar beside the Scaled prefab, since the game reads it from the galaxy

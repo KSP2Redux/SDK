@@ -12,11 +12,15 @@
         <uie:PropertyField binding-path="dependencies" />
         <uie:PropertyField binding-path="incompatibilities" />
 
+        <ui:Label text="Features" class="sdk-section-header" />
+        <ui:VisualElement name="FeaturesSlot" />
+
         <ui:Label text="Building" class="sdk-section-header" />
         <ui:Button text="Create Assembly Definition" name="AddCodeButton" class="sdk-action-button" />
         <ui:Button text="Refresh Addressables Groups" name="RefreshAddressablesButton" class="sdk-action-button" />
         <ui:Button text="Refresh Thunderkit Pipelines" name="RefreshThunderkitButton" class="sdk-action-button" />
         <ui:Button text="Convert KSP1 Part Mod" name="ConvertKsp1PartsButton" class="sdk-action-button" />
+        <ui:Button text="Open Asset Features" name="OpenAssetFeaturesButton" class="sdk-action-button" />
 
         <ui:Label text="Deployment And Testing" class="sdk-section-header" />
         <ui:Button text="Test In Editor" name="TestInEditorButton" class="sdk-action-button" />

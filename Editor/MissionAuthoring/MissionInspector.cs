@@ -1,4 +1,7 @@
+using System.IO;
+using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.MissionAuthoring.Windows;
+using Ksp2UnityTools.Editor.Modding;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -27,6 +30,16 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring
             row.Add(new Button(() => MissionAuthoringActions.BakeToJson(mission)) { text = "Bake to JSON" });
             row.Add(new Button(() => MissionEditorWindow.OpenFor(mission)) { text = "Open in Editor" });
             root.Add(row);
+
+            // The baked JSON is what the game loads, so its labels carry the mission's features
+            var features = new VisualElement();
+            features.AddToClassList("data-editor-section");
+            var header = new Label("Features");
+            header.AddToClassList("data-editor-section-header");
+            features.Add(header);
+            string jsonPath = Path.ChangeExtension(AssetDatabase.GetAssetPath(mission), ".json").Replace('\\', '/');
+            features.Add(AssetFeaturesSection.Build(() => new[] { jsonPath }, KSP2UnityTools.FindParentMod(mission)));
+            root.Add(features);
 
             var iter = serializedObject.GetIterator();
             bool enterChildren = true;
