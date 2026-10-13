@@ -2,11 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 using Ksp2UnityTools.Editor.PartAuthoring.StockStats.Extractors;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Redux.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
     public static class StockStatsBaker
     {
         /// <summary>Bake settings. Currently only the verbose flag is exposed.</summary>
-        public sealed class BakeOptions
+        public class BakeOptions
         {
             /// <summary>When true, populates <see cref="BakeResult.VerboseLog" /> with per-file diagnostic messages.</summary>
             public bool Verbose;
@@ -32,7 +31,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         }
 
         /// <summary>Summary returned to the bake window for display after each run.</summary>
-        public sealed class BakeResult
+        public class BakeResult
         {
             /// <summary>Number of part files successfully scanned.</summary>
             public int PartsScanned;
@@ -67,13 +66,10 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             var result = new BakeResult { OutputAssetPath = outputAssetPath };
 
             if (string.IsNullOrEmpty(sourceDir) || !Directory.Exists(sourceDir))
-            {
                 throw new InvalidOperationException($"Source folder not found: {sourceDir}");
-            }
+
             if (string.IsNullOrEmpty(outputAssetPath))
-            {
                 throw new ArgumentException("Output asset path required.", nameof(outputAssetPath));
-            }
 
             var partTokens = new List<JObject>();
             var rawMass = new Dictionary<string, float>(StringComparer.Ordinal);
@@ -88,9 +84,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             foreach (var pair in recipes)
             {
                 if (massPerUnit.ContainsKey(pair.Key))
-                {
                     continue;
-                }
+
                 float resolved = ResolveRecipe(pair.Key, pair.Value, recipes, massPerUnit, new HashSet<string>(StringComparer.Ordinal));
                 if (float.IsNaN(resolved))
                 {
@@ -125,9 +120,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                     continue;
                 }
                 if (part?.Data == null || string.IsNullOrEmpty(part.Data.partName))
-                {
                     continue;
-                }
+
                 string sizeKey = !string.IsNullOrWhiteSpace(part.Data.sizeKey)
                     ? part.Data.sizeKey
                     : StockStatsLookup.NormalizeSizeKey(part.Data.sizeCategory);
@@ -185,9 +179,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         public static string ComputeSourceHash(string sourceDir)
         {
             if (string.IsNullOrEmpty(sourceDir) || !Directory.Exists(sourceDir))
-            {
                 return string.Empty;
-            }
+
             long totalBytes = 0;
             long totalMtime = 0;
             int count = 0;
@@ -198,15 +191,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 totalMtime += info.LastWriteTimeUtc.Ticks;
                 count++;
             }
-            string combined = $"{count}-{totalBytes}-{totalMtime}";
-            using SHA256 sha = SHA256.Create();
-            byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(combined));
-            var sb = new StringBuilder(hash.Length * 2);
-            for (int i = 0; i < hash.Length; i++)
-            {
-                sb.Append(hash[i].ToString("x2"));
-            }
-            return sb.ToString();
+            return Sha256.OfString($"{count}-{totalBytes}-{totalMtime}");
         }
 
         private static void ClassifyFile(
@@ -228,14 +213,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                 return;
             }
             if (string.IsNullOrEmpty(text))
-            {
                 return;
-            }
+
             char first = SkipWhitespace(text);
             if (first != '{' && first != '[')
-            {
                 return;
-            }
 
             JObject top;
             try
@@ -259,9 +241,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 
             JToken data = top["data"];
             if (data == null)
-            {
                 return;
-            }
 
             string partName = data["partName"]?.ToString();
             if (!string.IsNullOrEmpty(partName))
@@ -299,9 +279,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             {
                 char c = text[i];
                 if (c != ' ' && c != '\t' && c != '\r' && c != '\n')
-                {
                     return c;
-                }
             }
             return '\0';
         }
@@ -314,17 +292,14 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
             HashSet<string> visiting)
         {
             if (resolved.TryGetValue(name, out float cached))
-            {
                 return cached;
-            }
+
             if (recipe?.ingredients == null || recipe.ingredients.Count == 0)
-            {
                 return float.NaN;
-            }
+
             if (!visiting.Add(name))
-            {
                 return float.NaN;
-            }
+
             float total = 0f;
             foreach (RecipeIngredientMirror ing in recipe.ingredients)
             {
@@ -376,13 +351,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                     foreach (var (fieldName, value) in ex.Extract(part, ctx))
                     {
                         if (float.IsNaN(value) || float.IsInfinity(value))
-                        {
                             continue;
-                        }
+
                         if (string.IsNullOrEmpty(fieldName))
-                        {
                             continue;
-                        }
+
                         values[fieldName] = value;
                     }
                 }
@@ -412,9 +385,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
                     }
                 }
                 if (samples.Count == 0)
-                {
                     continue;
-                }
+
                 samples.Sort();
                 bucket.Fields.Add(new StockField
                 {
@@ -453,13 +425,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         {
             int n = sortedSamples.Count;
             if (n == 0)
-            {
                 return 0f;
-            }
+
             if ((n & 1) == 1)
-            {
                 return sortedSamples[n / 2];
-            }
+
             return 0.5f * (sortedSamples[n / 2 - 1] + sortedSamples[n / 2]);
         }
 
@@ -467,9 +437,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         {
             string dir = Path.GetDirectoryName(assetPath);
             if (string.IsNullOrEmpty(dir) || Directory.Exists(dir))
-            {
                 return;
-            }
+
             Directory.CreateDirectory(dir);
             AssetDatabase.Refresh();
         }

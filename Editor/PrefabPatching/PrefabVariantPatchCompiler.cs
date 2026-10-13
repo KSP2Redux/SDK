@@ -1,6 +1,7 @@
 using Ksp2UnityTools.Editor.LinkedAddressables;
 using Ksp2UnityTools.PrefabPatchingAuthoring;
 using PatchManager.PrefabPatching;
+using Redux.IO;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -220,7 +221,9 @@ public static class PrefabVariantPatchCompiler
             throw new PrefabPatchCompileException(diagnostics);
 
         for (var index = 0; index < manifest.Operations.Count; index++)
+        {
             manifest.Operations[index].PatchId = patchNameValue;
+        }
         manifest.DeclaredCapabilities = manifest.Operations
             .Select(value => value.Kind.ToString())
             .Distinct(StringComparer.Ordinal)
@@ -730,8 +733,8 @@ public static class PrefabVariantPatchCompiler
             var fragment = CompileComponent(
                 component,
                 "component-"
-                    + PrefabPatchJson
-                        .Sha256(
+                    + Sha256
+                        .OfString(
                             target.CanonicalKey
                                 + ":"
                                 + component.GetType().AssemblyQualifiedName
@@ -1532,8 +1535,8 @@ public static class PrefabVariantPatchCompiler
                     {
                         var componentId =
                             "component-"
-                            + PrefabPatchJson
-                                .Sha256(
+                            + Sha256
+                                .OfString(
                                     hostTarget.CanonicalKey
                                         + ":"
                                         + addedComponent
@@ -1759,7 +1762,7 @@ public static class PrefabVariantPatchCompiler
 
     private static string OperationId(params string[] parts) =>
         "op-"
-        + PrefabPatchJson.Sha256(
+        + Sha256.OfString(
             string.Join("|", parts.Select(value => value ?? ""))
         ).Substring(0, 16);
 
