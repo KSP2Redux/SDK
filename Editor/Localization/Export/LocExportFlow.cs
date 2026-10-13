@@ -4,6 +4,7 @@ using KSP;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Localization.Windows;
 using Ksp2UnityTools.Editor.MissionAuthoring;
+using Ksp2UnityTools.Editor.TechTreeAuthoring;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ namespace Ksp2UnityTools.Editor.Localization.Export
         private const string PartsFilename = "parts_loc.csv";
         private const string CelestialBodyFilename = "celestialbody_loc.csv";
         private const string MissionsFilename = "missions_loc.csv";
+        private const string TechTreeFilename = "techtree_loc.csv";
         private const string ModSubpath = "Copied/localizations";
         private const string ProjectLocFolder = "Assets/ReduxAssets/Localizations";
 
@@ -54,6 +56,11 @@ namespace Ksp2UnityTools.Editor.Localization.Export
             {
                 entries = MissionLocalizationExtractor.Extract(mission);
                 defaultFilename = MissionsFilename;
+            }
+            else if (asset is TechTreeAsset techTree)
+            {
+                entries = TechTreeLocalizationExtractor.Extract(techTree);
+                defaultFilename = TechTreeFilename;
             }
 
             if (entries == null || defaultFilename == null)
