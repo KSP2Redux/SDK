@@ -154,39 +154,48 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         /// <remarks>
         /// Two models with the same hash bake the same tables, so a change that leaves it alone, such
         /// as exposure or a tint, needs new material values but no rebake. Covers exactly the fields
-        /// the precompute binds.
+        /// the precompute binds. The value is stored with the bake and compared in later editor
+        /// sessions, so it comes from <see cref="Hash128" />, not <see cref="HashCode" />, whose seed
+        /// changes with every process.
         /// </remarks>
         /// <param name="model">The atmosphere model.</param>
         /// <returns>The hash of the model's table inputs.</returns>
         public static int ComputeLutInputHash(AtmosphereModel model)
         {
-            var hash = new HashCode();
-            hash.Add(model.SolarIrradiance);
-            hash.Add(model.RayleighScattering);
-            hash.Add(model.RayleighScatteringScale);
-            hash.Add(model.RayleighExponentialDistribution);
-            hash.Add(model.MieScattering);
-            hash.Add(model.MieScatteringScale);
-            hash.Add(model.MieExponentialDistribution);
-            hash.Add(model.MieAnisotropy);
-            hash.Add(model.Absorption);
-            hash.Add(model.AbsorptionScale);
-            hash.Add(model.AbsorptionMaxDensity);
-            hash.Add(model.AbsorptionHeightMinMax);
-            hash.Add(model.GroundAlbedo);
-            hash.Add(model.SunAngleRadius);
-            hash.Add(model.BottomRadius);
-            hash.Add(model.AtmosphereHeight);
+            var hash = new Hash128();
+            Vector3 solarIrradiance = model.SolarIrradiance;
+            Vector3 rayleighScattering = model.RayleighScattering;
+            Vector3 mieScattering = model.MieScattering;
+            Vector3 absorption = model.Absorption;
+            Vector2 absorptionHeightMinMax = model.AbsorptionHeightMinMax;
+            Color groundAlbedo = model.GroundAlbedo;
+            hash.Append(ref solarIrradiance);
+            hash.Append(ref rayleighScattering);
+            hash.Append(model.RayleighScatteringScale);
+            hash.Append(model.RayleighExponentialDistribution);
+            hash.Append(ref mieScattering);
+            hash.Append(model.MieScatteringScale);
+            hash.Append(model.MieExponentialDistribution);
+            hash.Append(model.MieAnisotropy);
+            hash.Append(ref absorption);
+            hash.Append(model.AbsorptionScale);
+            hash.Append(model.AbsorptionMaxDensity);
+            hash.Append(ref absorptionHeightMinMax);
+            hash.Append(ref groundAlbedo);
+            hash.Append(model.SunAngleRadius);
+            hash.Append(model.BottomRadius);
+            hash.Append(model.AtmosphereHeight);
 
             // Every cutoff up to stock's bakes the same tables, so only one past it joins the hash,
             // which leaves the hash of every table baked at 120 unchanged.
             float bakeSunZenithAngle = BakeSunZenithAngle(model);
             if (bakeSunZenithAngle > STOCK_BAKE_SUN_ZENITH_ANGLE)
             {
-                hash.Add(bakeSunZenithAngle);
+                hash.Append(bakeSunZenithAngle);
             }
 
-            return hash.ToHashCode();
+            // The first 32 of the 128 bits, as the int the sidecar stores
+            return Convert.ToInt32(hash.ToString().Substring(0, 8), 16);
         }
 
         // The tables cover sun angles down to this cutoff. Past it the shaders clamp to the last row, which
