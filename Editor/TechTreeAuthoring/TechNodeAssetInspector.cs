@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Localization.Export;
 using Ksp2UnityTools.Editor.Modding;
+using Ksp2UnityTools.Editor.TechTreeAuthoring.Validation;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -11,7 +13,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
     /// <summary>
     /// The inspector of a <see cref="TechNodeAsset" />: bake and export actions, its features and reference tree, the
-    /// reference tree drawn with the node in it, and the node's options.
+    /// reference tree drawn with the node in it, the node's problems, and the node's options.
     /// </summary>
     /// <remarks>
     /// The canvas moves and links the node as the tech tree editor does, and draws the reference tree read only. The
@@ -29,6 +31,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private TechTreeCanvas _canvas;
 
         private TechTreeNodePanel _panel;
+
+        private TechTreeIssueList _issueList;
 
         private List<TechTreeNode> _reference = new();
 
@@ -55,7 +59,18 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _canvas.style.flexGrow = 0f;
             _canvas.OnRefused += Notify;
             _canvas.OnTreeEdited += RefreshPanel;
+            _canvas.OnRebuilt += Revalidate;
             root.Add(_canvas);
+
+            _issueList = new TechTreeIssueList();
+            _issueList.OnNodeRequested += nodeId => _canvas.CentreOn(nodeId);
+            _issueList.OnFixApplied += () =>
+            {
+                serializedObject.Update();
+                _canvas.Rebuild();
+                RefreshPanel();
+            };
+            root.Add(_issueList);
 
             _panel = new TechTreeNodePanel();
             _panel.OnNodeRequested += nodeId =>
@@ -143,6 +158,22 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _canvas.SetTree(_asset, _reference);
             _canvas.Select(_asset.Node.Data.ID);
             RefreshPanel();
+        }
+
+        // The node is checked against the reference tree, and only the node is ever reported
+        private void Revalidate()
+        {
+            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(
+                _asset,
+                _reference,
+                _canvas.SnapsToGrid,
+                knownIcons: TechTreePickerCatalog.GetIconAddresses()
+            ));
+            _issueList.Show(issues);
+            _canvas.SetBadges(issues
+                .Where(issue => issue.NodeId != null)
+                .GroupBy(issue => issue.NodeId)
+                .ToDictionary(group => group.Key, group => group.Max(issue => issue.Issue.Severity)));
         }
 
         private void RefreshPanel() => _panel.Show(_asset, serializedObject, _asset.Node?.Data.ID, _reference);

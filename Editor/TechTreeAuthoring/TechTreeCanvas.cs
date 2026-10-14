@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ksp2UnityTools.Editor.Validation;
 using Redux.TechTree;
 using UnityEditor;
 using UnityEngine;
@@ -47,6 +48,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private static readonly Color DependentLineColor = new(0.357f, 0.373f, 0.859f);
 
+        private static readonly Color UnlockableLineColor = new(0f, 1f, 0.4f);
+
         private readonly VisualElement _content;
 
         private readonly VisualElement _backdrop;
@@ -69,6 +72,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private readonly HashSet<string> _referenceIds = new();
 
         private List<TechTreeNode> _drawnNodes = new();
+
+        private IReadOnlyDictionary<string, ValidationSeverity> _badges = new Dictionary<string, ValidationSeverity>();
+
+        private bool _previewsUnlocks;
+
+        private HashSet<string> _unlocked = new();
 
         private string _selectedId;
 
@@ -146,6 +155,27 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Gets or sets the ID of the node the first view centres on, or null to fit every node.
         /// </summary>
         public string FrameTarget { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the canvas previews a campaign unlocking the tree, where a click unlocks or locks a
+        /// node and frames and lines take the R&amp;D Center's state colours. Nothing is edited while it is on.
+        /// </summary>
+        public bool PreviewsUnlocks
+        {
+            get => _previewsUnlocks;
+            set
+            {
+                _previewsUnlocks = value;
+                _unlocked = value ? TechTreePreview.GetStartingUnlocked(_drawnNodes) : new HashSet<string>();
+                RefreshNodeStates();
+                _lines.MarkDirtyRepaint();
+            }
+        }
+
+        /// <summary>
+        /// Raised after the canvas redraws its nodes.
+        /// </summary>
+        public event Action OnRebuilt;
 
         /// <summary>
         /// Gets the selected node's ID, or null when nothing is selected.
@@ -302,8 +332,20 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             RefreshSelection();
+            RefreshNodeStates();
             _backdrop.MarkDirtyRepaint();
             _lines.MarkDirtyRepaint();
+            OnRebuilt?.Invoke();
+        }
+
+        /// <summary>
+        /// Marks nodes with the worst problem validation found with each.
+        /// </summary>
+        /// <param name="worstByNode">The worst severity by node ID. Nodes missing from it get no mark.</param>
+        public void SetBadges(IReadOnlyDictionary<string, ValidationSeverity> worstByNode)
+        {
+            _badges = worstByNode;
+            RefreshNodeStates();
         }
 
         /// <summary>
@@ -401,6 +443,21 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
         }
 
+        // Badges outside the preview, state colours in it
+        private void RefreshNodeStates()
+        {
+            foreach (TechTreeNode node in _drawnNodes)
+            {
+                if (!_nodeElements.TryGetValue(node.Data.ID, out TechTreeNodeElement element))
+                    continue;
+
+                element.SetPreviewState(_previewsUnlocks ? TechTreePreview.GetState(node, _unlocked) : null);
+                element.SetBadge(!_previewsUnlocks && _badges.TryGetValue(node.Data.ID, out ValidationSeverity severity)
+                    ? severity
+                    : null);
+            }
+        }
+
         private void RefreshSelection()
         {
             foreach (KeyValuePair<string, TechTreeNodeElement> pair in _nodeElements)
@@ -466,7 +523,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             var node = (evt.target as VisualElement)?.GetFirstOfType<TechTreeNodeElement>();
             if (evt.button == 1)
             {
-                ShowContextMenu(node?.NodeId, evt.position);
+                if (!_previewsUnlocks)
+                {
+                    ShowContextMenu(node?.NodeId, evt.position);
+                }
+
                 evt.StopPropagation();
                 return;
             }
@@ -476,13 +537,26 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             if (_tree != null && evt.button == 0)
             {
+                if (node != null && _previewsUnlocks)
+                {
+                    Select(node.NodeId);
+                    if (TechTreePreview.Toggle(_drawnNodes, _unlocked, node.NodeId))
+                    {
+                        RefreshNodeStates();
+                        _lines.MarkDirtyRepaint();
+                    }
+
+                    evt.StopPropagation();
+                    return;
+                }
+
                 if (node != null)
                 {
                     PressNode(node.NodeId, evt);
                     return;
                 }
 
-                if (evt.clickCount == 2 && CanAddAndRemoveNodes)
+                if (evt.clickCount == 2 && CanAddAndRemoveNodes && !_previewsUnlocks)
                 {
                     AddNodeAt(evt.position);
                     evt.StopPropagation();
@@ -625,7 +699,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (evt.keyCode != KeyCode.Delete && evt.keyCode != KeyCode.Backspace)
                 return;
 
-            if (!CanAddAndRemoveNodes || _referenceIds.Contains(_selectedId))
+            if (!CanAddAndRemoveNodes || _previewsUnlocks || _referenceIds.Contains(_selectedId))
                 return;
 
             DeleteNode(_selectedId);
@@ -901,6 +975,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 {
                     if (!_positions.TryGetValue(prerequisiteId, out Vector2 prerequisite))
                         continue;
+
+                    if (_previewsUnlocks)
+                    {
+                        // The game colours a line by the state of the node it leads to
+                        bool isOpen = TechTreePreview.GetState(node, _unlocked) != TechTreePreviewState.Locked;
+                        StrokeConnector(painter, prerequisite, position, isOpen ? UnlockableLineColor : LockedLineColor);
+                        continue;
+                    }
 
                     StrokeConnector(painter, prerequisite, position, LockedLineColor);
                     if (id == _selectedId)

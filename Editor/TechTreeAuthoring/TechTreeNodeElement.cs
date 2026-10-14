@@ -1,3 +1,4 @@
+using Ksp2UnityTools.Editor.Validation;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +17,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private const string SELECTED_CLASS = "tech-tree-node--selected";
 
         private const string REFERENCE_CLASS = "tech-tree-node--reference";
+
+        private const string UNLOCKABLE_CLASS = "tech-tree-node--unlockable";
+
+        private const string UNLOCKED_CLASS = "tech-tree-node--unlocked";
+
+        private const string BADGE_ERROR_CLASS = "tech-tree-node__badge--error";
+
+        private VisualElement _badge;
 
         // The prefab lays children out in the 164 by 102 rect, and the frame is inset from it by this much
         private const float RECT_INSET = 6f;
@@ -84,6 +93,39 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="isReference">True for a reference node, false otherwise.</param>
         public void SetReference(bool isReference) => EnableInClassList(REFERENCE_CLASS, isReference);
+
+        /// <summary>
+        /// Draws the node in the frame colours of a preview state, or in the editor's own look.
+        /// </summary>
+        /// <param name="state">The state, or null outside the preview.</param>
+        public void SetPreviewState(TechTreePreviewState? state)
+        {
+            EnableInClassList(UNLOCKABLE_CLASS, state == TechTreePreviewState.Unlockable);
+            EnableInClassList(UNLOCKED_CLASS, state == TechTreePreviewState.Unlocked);
+        }
+
+        /// <summary>
+        /// Shows a mark in the frame's corner for the worst problem validation found with the node.
+        /// </summary>
+        /// <param name="severity">The worst problem, or null for none worth marking.</param>
+        public void SetBadge(ValidationSeverity? severity)
+        {
+            if (severity is not (ValidationSeverity.Error or ValidationSeverity.Warning))
+            {
+                _badge?.RemoveFromHierarchy();
+                _badge = null;
+                return;
+            }
+
+            if (_badge == null)
+            {
+                _badge = new VisualElement { pickingMode = PickingMode.Ignore };
+                _badge.AddToClassList("tech-tree-node__badge");
+                Add(_badge);
+            }
+
+            _badge.EnableInClassList(BADGE_ERROR_CLASS, severity == ValidationSeverity.Error);
+        }
 
         /// <summary>
         /// Shows or clears the selection outline.

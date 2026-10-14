@@ -109,6 +109,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private void ShowTreeSettings()
         {
             AddLabel(this, _tree.name, "tech-tree-panel__title");
+            Add(new AutocompleteField(
+                _serializedTree.FindProperty(nameof(TechTreeAsset.StartNodeId)),
+                "Start node",
+                () => _tree.Nodes.Select(node => node.Data?.ID).Where(id => !string.IsNullOrEmpty(id))
+            ));
+
             var tiers = new PropertyField(_serializedTree.FindProperty(nameof(TechTreeAsset.Tiers)));
             tiers.Bind(_serializedTree);
             Add(tiers);

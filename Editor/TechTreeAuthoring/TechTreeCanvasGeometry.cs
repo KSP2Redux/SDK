@@ -107,6 +107,32 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         /// <summary>
+        /// Gets the highest a node can sit and still show whole in the band.
+        /// </summary>
+        /// <param name="snapsToGrid">Whether to keep to a row of the stock grid.</param>
+        /// <returns>The highest tech tree y.</returns>
+        public static float GetHighestY(bool snapsToGrid)
+        {
+            float highest = BAND_HEIGHT - PLACEMENT_OFFSET - NODE_HEIGHT / 2f;
+            return snapsToGrid ? GRID_Y_ORIGIN + Mathf.Floor((highest - GRID_Y_ORIGIN) / GRID_Y) * GRID_Y : highest;
+        }
+
+        /// <summary>
+        /// Gets the lowest a node can sit and still show whole in the band without scrolling.
+        /// </summary>
+        /// <returns>The lowest tech tree y.</returns>
+        public static float GetLowestY() => NODE_HEIGHT / 2f - PLACEMENT_OFFSET;
+
+        /// <summary>
+        /// Checks whether two nodes' visible frames overlap.
+        /// </summary>
+        /// <param name="a">One node's tech tree position.</param>
+        /// <param name="b">The other's.</param>
+        /// <returns>True if the frames overlap.</returns>
+        public static bool FramesOverlap(Vector2 a, Vector2 b) =>
+            Mathf.Abs(a.x - b.x) < FRAME_WIDTH && Mathf.Abs(a.y - b.y) < FRAME_HEIGHT;
+
+        /// <summary>
         /// Snaps a tech tree position to the stock grid.
         /// </summary>
         /// <param name="techTreePosition">The position to snap.</param>

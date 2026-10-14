@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ksp2UnityTools.Editor.Localization.Export;
+using Ksp2UnityTools.Editor.TechTreeAuthoring.Validation;
+using Ksp2UnityTools.Editor.Validation;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -35,6 +37,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private ScrollView _sidePanel;
 
         private TechTreeNodePanel _panel;
+
+        private TechTreeIssueList _issueList;
+
+        private Button _readinessChip;
+
+        // The side panel lists the tree's issues instead of the selected node's options while this is on
+        private bool _showsIssues;
 
         private Label _zoomLabel;
 
@@ -105,6 +114,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _canvas.OnZoomChanged += zoom => _zoomLabel.text = $"{Mathf.RoundToInt(zoom * 100f)}%";
             _canvas.OnTreeEdited += RefreshSidePanel;
             _canvas.OnRefused += message => ShowNotification(new GUIContent(message));
+            _canvas.OnRebuilt += Revalidate;
             rootVisualElement.Q("canvas-host").Add(_canvas);
 
             _panel = new TechTreeNodePanel();
@@ -124,10 +134,38 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             };
             _sidePanel.Add(_panel);
 
+            _issueList = new TechTreeIssueList();
+            _issueList.OnNodeRequested += nodeId =>
+            {
+                _showsIssues = false;
+                _canvas.Select(nodeId);
+                _canvas.CentreOn(nodeId);
+                RefreshSidePanel();
+            };
+            _issueList.OnFixApplied += () =>
+            {
+                _serializedTree?.Update();
+                _canvas.Rebuild();
+                RefreshSidePanel();
+            };
+            _sidePanel.Add(_issueList);
+
+            _readinessChip = rootVisualElement.Q<Button>("readiness-chip");
+            _readinessChip.clicked += () =>
+            {
+                _showsIssues = !_showsIssues;
+                RefreshSidePanel();
+            };
+
             var find = new AutocompleteField(string.Empty, null, FindSuggestions, FindNode) { tooltip = "Find node" };
             rootVisualElement.Q("find-host").Add(find);
 
-            BindToggle("snap-toggle", value => _canvas.SnapsToGrid = value);
+            BindToggle("snap-toggle", value =>
+            {
+                _canvas.SnapsToGrid = value;
+                Revalidate();
+            });
+            BindToggle("preview-toggle", value => _canvas.PreviewsUnlocks = value);
             BindToggle("grid-toggle", value => _canvas.ShowsGrid = value);
             BindToggle("pages-toggle", value => _canvas.ShowsPages = value);
             BindToggle("band-toggle", value => _canvas.ShowsBand = value);
@@ -177,8 +215,50 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             RefreshSidePanel();
         }
 
-        // The selected node's options, or the tree's settings when nothing is selected
-        private void RefreshSidePanel() => _panel.Show(_tree, _serializedTree, _canvas.SelectedId);
+        // The selected node's options, the tree's settings when nothing is selected, or the issue list
+        private void RefreshSidePanel()
+        {
+            _panel.style.display = _showsIssues ? DisplayStyle.None : DisplayStyle.Flex;
+            _issueList.style.display = _showsIssues ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!_showsIssues)
+            {
+                _panel.Show(_tree, _serializedTree, _canvas.SelectedId);
+                return;
+            }
+
+            // The list runs the expensive validators too, which check parts and missions against the project
+            _issueList.Show(TechTreeValidationReport.Run(
+                new TechTreeValidationContext(
+                    _tree,
+                    null,
+                    _canvas.SnapsToGrid,
+                    TechTreePickerCatalog.GetPartNames(),
+                    TechTreePickerCatalog.GetMissionIds(),
+                    TechTreePickerCatalog.GetIconAddresses()
+                ),
+                null
+            ));
+        }
+
+        // The chip and the node badges follow every redraw
+        private void Revalidate()
+        {
+            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(
+                _tree,
+                null,
+                _canvas.SnapsToGrid,
+                knownIcons: TechTreePickerCatalog.GetIconAddresses()
+            ));
+            ValidationSeverity? worst = TechTreeIssueList.GetWorst(issues);
+            _readinessChip.text = TechTreeIssueList.GetSummary(issues);
+            _readinessChip.EnableInClassList("is-ok", worst is null or ValidationSeverity.Info);
+            _readinessChip.EnableInClassList("is-warn", worst == ValidationSeverity.Warning);
+            _readinessChip.EnableInClassList("is-error", worst == ValidationSeverity.Error);
+            _canvas.SetBadges(issues
+                .Where(issue => issue.NodeId != null)
+                .GroupBy(issue => issue.NodeId)
+                .ToDictionary(group => group.Key, group => group.Max(issue => issue.Issue.Severity)));
+        }
 
         // An edit typed into the panel must not rebuild the field being typed in
         private bool IsEditingInPanel() =>

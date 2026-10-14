@@ -15,6 +15,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     public class TechTreeAsset : ScriptableObject
     {
         /// <summary>
+        /// The node the R&amp;D Center focuses on when it first opens, unless a tree names another.
+        /// </summary>
+        public const string DEFAULT_START_NODE_ID = "tNode_1v_start";
+
+        /// <summary>
+        /// The ID of the node the R&amp;D Center focuses on when it first opens, or empty for
+        /// <see cref="DEFAULT_START_NODE_ID" />.
+        /// </summary>
+        public string StartNodeId;
+
+        /// <summary>
         /// The tiers, the first tier first. A tier without an English name is shown in game by its number.
         /// </summary>
         public List<TechTreeTier> Tiers = new();

@@ -1,7 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:VisualElement name="toolbar" class="tech-tree-toolbar">
         <ui:VisualElement name="find-host" class="tech-tree-toolbar__find" />
+        <ui:Button name="readiness-chip" class="sdk-readiness-chip tech-tree-toolbar__chip" />
         <ui:VisualElement class="tech-tree-toolbar__spacer" />
+        <ui:Toggle name="preview-toggle" text="Preview unlocks" value="false" class="tech-tree-toolbar__toggle" />
         <ui:Toggle name="snap-toggle" text="Snap" value="true" class="tech-tree-toolbar__toggle" />
         <ui:Toggle name="grid-toggle" text="Grid" value="true" class="tech-tree-toolbar__toggle" />
         <ui:Toggle name="pages-toggle" text="Tier pages" value="true" class="tech-tree-toolbar__toggle" />

@@ -14,6 +14,10 @@
     width: 240px;
 }
 
+.tech-tree-toolbar__chip {
+    margin: 0 0 0 6px;
+}
+
 .tech-tree-toolbar__spacer {
     flex-grow: 1;
 }
@@ -110,6 +114,48 @@
     border-width: 1px 1px 4px 1px;
     border-color: rgb(82, 89, 99);
     border-radius: 5px;
+}
+
+/* The R&D Center's unlockable and unlocked frames */
+.tech-tree-node--unlockable {
+    border-color: rgb(181, 190, 214);
+    background-color: rgb(93, 98, 112);
+}
+
+.tech-tree-node--unlockable > .tech-tree-node__header {
+    background-color: rgb(74, 78, 90);
+}
+
+.tech-tree-node--unlocked {
+    border-color: rgb(0, 170, 66);
+    background-color: rgb(0, 74, 29);
+}
+
+.tech-tree-node--unlocked > .tech-tree-node__header {
+    background-color: rgb(0, 60, 24);
+}
+
+/* Warning and error marks use the SDK's validation colours */
+.tech-tree-node__badge {
+    position: absolute;
+    left: -5px;
+    top: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: rgb(220, 165, 80);
+}
+
+.tech-tree-node__badge--error {
+    background-color: rgb(220, 80, 80);
+}
+
+.tech-tree-issues {
+    margin: 8px;
+}
+
+.tech-tree-issues__row--linked:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .tech-tree-node--reference {

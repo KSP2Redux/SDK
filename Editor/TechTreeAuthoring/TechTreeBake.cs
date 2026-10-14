@@ -103,7 +103,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         /// <summary>
-        /// Builds every file a tree bakes to: one per node, and the tree data when the tree has tiers.
+        /// Builds every file a tree bakes to: one per node, and the tree data when the tree has tiers or names its
+        /// start node.
         /// </summary>
         /// <param name="tree">The tree to bake.</param>
         /// <param name="ownerId">The id of the mod the tree belongs to, which scopes its keys.</param>
@@ -122,12 +123,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 outputs.Add(new TechTreeBakeOutput($"{data.ID}.json", TechTreeJson.ToJson(data), NODE_LABEL));
             }
 
-            if (tree.Tiers.Count == 0)
+            if (tree.Tiers.Count == 0 && string.IsNullOrEmpty(tree.StartNodeId))
                 return outputs;
 
             // A tier without a name gets an empty key, which the game shows by the tier's number
             var treeData = new TechTreeData
             {
+                StartNodeId = tree.StartNodeId,
                 TierNameKeys = tree.Tiers
                     .Select((tier, index) => string.IsNullOrEmpty(tier.EnglishName)
                         ? string.Empty
