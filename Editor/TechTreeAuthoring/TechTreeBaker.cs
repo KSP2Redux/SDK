@@ -20,6 +20,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private const string PATCHES_GROUP_NAME = "PM Patches";
 
         /// <summary>
+        /// Gets what baking a tree is called: a patch bakes to a patch, with JSON only for the nodes it adds.
+        /// </summary>
+        /// <param name="tree">The tree.</param>
+        /// <returns>The name of the bake action.</returns>
+        public static string GetBakeLabel(TechTreeAsset tree) => tree is TechTreePatchAsset ? "Bake Patch" : "Bake JSON";
+
+        /// <summary>
         /// Bakes a tree beside its asset, registers every file it writes, and removes the files of the last bake that
         /// this one no longer writes.
         /// </summary>
@@ -30,14 +37,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             string assetPath = AssetDatabase.GetAssetPath(tree);
             if (string.IsNullOrEmpty(assetPath))
             {
-                EditorUtility.DisplayDialog("Bake JSON", "Save the tech tree as an asset before baking it.", "OK");
+                EditorUtility.DisplayDialog(GetBakeLabel(tree), "Save the tech tree as an asset before baking it.", "OK");
                 return false;
             }
 
             List<string> problems = TechTreeBake.FindBlockingProblems(tree);
             if (problems.Count > 0)
             {
-                EditorUtility.DisplayDialog("Bake JSON", "Fix these first:\n\n" + string.Join("\n", problems), "OK");
+                EditorUtility.DisplayDialog(GetBakeLabel(tree), "Fix these first:\n\n" + string.Join("\n", problems), "OK");
                 return false;
             }
 

@@ -24,7 +24,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             var actions = new VisualElement();
             actions.AddToClassList("sdk-button-row");
             actions.Add(new Button(() => TechTreeEditorWindow.OpenFor(tree)) { text = "Open Editor" });
-            actions.Add(new Button(() => TechTreeBaker.Bake(tree)) { text = "Bake JSON" });
+            actions.Add(new Button(() => TechTreeBaker.Bake(tree)) { text = TechTreeBaker.GetBakeLabel(tree) });
             actions.Add(new Button(() => LocExportFlow.RunForAsset(tree)) { text = "Export Localizations" });
             root.Add(actions);
 

@@ -200,6 +200,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private void Bind()
         {
             titleContent = new GUIContent(_tree != null ? _tree.name : "Tech Tree Editor");
+            if (_tree != null)
+            {
+                rootVisualElement.Q<Button>("chip-bake-json").text = TechTreeBaker.GetBakeLabel(_tree);
+            }
+
             LoadReference();
             if (_tree == null)
                 return;
