@@ -170,8 +170,11 @@ namespace UitkForKsp2.Controls
                 return;
             }
 
-            // Update UI for external changes
-            UpdateUIFromColor(evt.newValue);
+            // UI Toolkit queues a change event raised while another event is handled, so a listener such as the
+            // sticker window can replace the value before this runs. Follow the field's current color and never
+            // write the event's stale color back, or the field raises another change event and the two undo each
+            // other until UI Toolkit's recursion limit (Redux issue #1780).
+            UpdateUIFromColor(value);
         }
 
         private void SetupTextures(Shader sbShader, Shader alphaShader)
@@ -372,8 +375,6 @@ namespace UitkForKsp2.Controls
             {
                 return;
             }
-
-            value = color;
 
             Color.RGBToHSV(color, out float h, out float s, out float v);
 
