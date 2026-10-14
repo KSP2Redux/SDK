@@ -64,9 +64,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Wizards
         [MenuItem("Assets/Redux SDK/Planet Authoring/Celestial Body", priority = KSP2UnityTools.MenuPriority)]
         public static void ShowWindow()
         {
-            var window = GetWindow<CreateCelestialBodyWindow>();
+            var window = CreateInstance<CreateCelestialBodyWindow>();
             window.titleContent = new GUIContent("Create Celestial Body");
             window.minSize = new Vector2(420, 220);
+            window.ShowUtility();
         }
 
         /// <summary>
