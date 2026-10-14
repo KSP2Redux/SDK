@@ -89,7 +89,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="prerequisiteId">The node it would require.</param>
         /// <param name="reference">The reference nodes the tree is placed against, or null for none.</param>
         /// <returns>True if the two are the same node or the prerequisite already requires the node, directly or
-        /// through others.</returns>
+        /// through others, false otherwise.</returns>
         public static bool WouldCreateLoop(
             TechTreeAsset tree,
             string nodeId,
@@ -293,7 +293,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="patch">The patch.</param>
         /// <param name="nodeId">The reference node's ID.</param>
-        /// <returns>True if the node was removed and is now back.</returns>
+        /// <returns>True if the node was removed and is now back, false otherwise.</returns>
         public static bool RestoreReferenceNode(TechTreePatchAsset patch, string nodeId) => patch.RemovedNodeIds.Remove(nodeId);
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="patch">The patch.</param>
         /// <param name="nodeId">The node's ID.</param>
-        /// <returns>True if the node was an override.</returns>
+        /// <returns>True if the node was an override, false otherwise.</returns>
         public static bool RevertOverride(TechTreePatchAsset patch, string nodeId)
         {
             TechTreeNode baseline = patch.FindBaseline(nodeId);

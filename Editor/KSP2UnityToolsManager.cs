@@ -14,6 +14,13 @@ using File = System.IO.File;
 
 namespace Ksp2UnityTools.Editor
 {
+    /// <summary>
+    /// Sets the SDK up in a project when the editor loads, and builds, tests and deploys mods through their pipelines.
+    /// </summary>
+    /// <remarks>
+    /// On load it creates or loads the SDK's settings asset and, outside Redux itself, copies in the boot scene and the
+    /// game import asset a mod project needs.
+    /// </remarks>
     [InitializeOnLoad]
     public static class KSP2UnityToolsManager
     {
@@ -21,6 +28,10 @@ namespace Ksp2UnityTools.Editor
         private const string PreferredBootKspScenePath = "Assets/boot-ksp.unity";
         private const string SettingsAssetPath = "Assets/ReduxSDKSettings.asset";
         private const string LegacySettingsAssetPath = "Assets/KSP2UTSettings.asset";
+
+        /// <summary>
+        /// The SDK's settings for this project.
+        /// </summary>
         public static readonly KSP2UnityToolsSettings Settings;
 
         static KSP2UnityToolsManager()
@@ -69,11 +80,18 @@ namespace Ksp2UnityTools.Editor
 
             string error = AssetDatabase.MoveAsset(legacyPath, currentPath);
             if (!string.IsNullOrEmpty(error))
-                UnityEngine.Debug.LogError(
-                    $"Redux SDK could not rename '{legacyPath}' to '{currentPath}': {error}"
-                );
+            {
+                UnityEngine.Debug.LogError($"Redux SDK could not rename '{legacyPath}' to '{currentPath}': {error}");
+            }
         }
 
+        /// <summary>
+        /// Builds mods into the project's testing folder and enters play mode from the boot scene.
+        /// </summary>
+        /// <param name="mods">The mods to test.</param>
+        /// <returns>The build and launch.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when a mod's build fails, before play mode starts.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when a mod has no pipeline, or the project has no boot scene.</exception>
         public static async Task TestModsInPlayMode(params Mod[] mods)
         {
             if (Directory.Exists("Assets/Mods/__Testing"))
@@ -125,6 +143,13 @@ namespace Ksp2UnityTools.Editor
                 .FirstOrDefault();
         }
 
+        /// <summary>
+        /// Builds mods into the installed game's testing folder and launches the game.
+        /// </summary>
+        /// <param name="mods">The mods to test.</param>
+        /// <returns>The build and launch.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when a mod's build fails, before the game launches.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when a mod has no pipeline.</exception>
         public static async Task TestModsInBuiltGame(params Mod[] mods)
         {
             var settings = ThunderKitSetting.GetOrCreateSettings<ThunderKitSettings>();
@@ -150,6 +175,13 @@ namespace Ksp2UnityTools.Editor
             Process.Start(info);
         }
 
+        /// <summary>
+        /// Builds each mod into a zip file to publish, writing its version check swinfo first.
+        /// </summary>
+        /// <param name="mods">The mods to deploy.</param>
+        /// <returns>The builds.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when a mod's build fails, before the next mod builds.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when a mod has no pipeline.</exception>
         public static async Task DeployMods(params Mod[] mods)
         {
             foreach (Mod mod in mods)

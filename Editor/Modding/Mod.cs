@@ -21,47 +21,89 @@ using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.Modding
 {
+    /// <summary>
+    /// A mod authored in the SDK: its swinfo fields, Addressables groups, and the ThunderKit pipelines that build it.
+    /// </summary>
     public class Mod : TextAssetGenerator
     {
         private const string Ksp2PackageReferenceDirectory = "Packages/KSP2_x64";
         private static string[] _precompiledReferences;
 
-        // The basic information needed for a mod
+        /// <inheritdoc />
         public override string PathInMod => "swinfo.json";
+
+        /// <inheritdoc />
         public override bool ShouldGenerate => true;
 
+        /// <summary>
+        /// The mod's id, which names its feature, labels, groups and assembly.
+        /// </summary>
         [Tooltip(
             "The Mod ID, if this changes, you have to refresh the pipelines and addressables bundles, and delete the old assembly definition, recreating it."
         )]
         public string id = "sampleMod";
 
+        /// <summary>
+        /// Gets the Addressables label the mod's Lua patches load under.
+        /// </summary>
         public string AddressableScriptLabel => $"{id}_patches";
+
+        /// <summary>
+        /// Gets the Addressables label the mod's prefab patches load under.
+        /// </summary>
         public string AddressablePrefabPatchLabel =>
             $"{id}_prefab_patches";
 
+        /// <summary>
+        /// The mod's name, as the mods menu shows it.
+        /// </summary>
         [Tooltip("The name of the mod that gets shown in the settings menu")]
         public string name = "Sample Mod";
 
+        /// <summary>
+        /// The mod's author.
+        /// </summary>
         [Tooltip("The author of the mod")] public string author = "nobody";
 
+        /// <summary>
+        /// The mod's description.
+        /// </summary>
         [Multiline] [Tooltip("The description of the mod")]
         public string description = "A sample mod for KSP2";
 
+        /// <summary>
+        /// The mod's version, in semantic versioning.
+        /// </summary>
         [Tooltip("The mod version, should follow semantic versioning")]
         public string version = "0.1.0";
 
+        /// <summary>
+        /// The URL of a remote swinfo.json the game checks the mod's version against, or empty for none.
+        /// </summary>
         [Tooltip("A location of a remote copy of swinfo.json for automatic version checking to work")]
         public string versionCheck = "";
 
+        /// <summary>
+        /// The lowest game version the mod supports, or * for any.
+        /// </summary>
         [Tooltip("The minimum KSP2 version this supports")] [InspectorName("Minimum KSP2 Version")]
         public string minKsp2Version = "*";
 
+        /// <summary>
+        /// The highest game version the mod supports, or * for any.
+        /// </summary>
         [Tooltip("The maximum KSP2 version this supports")] [InspectorName("Maximum KSP2 Version")]
         public string maxKsp2Version = "*";
 
+        /// <summary>
+        /// The URL of the mod's source code, or empty for none.
+        /// </summary>
         [Tooltip("A repository that contains the source code for this mod")]
         public string source = "";
 
+        /// <summary>
+        /// Gets the name the mod asset takes in pickers: the mod's name and id, or the id alone when they match.
+        /// </summary>
         public string PickerDisplayName
         {
             get
@@ -77,23 +119,70 @@ namespace Ksp2UnityTools.Editor.Modding
             }
         }
 
+        /// <summary>
+        /// Gets the folder the mod asset sits in, the root of the mod's files.
+        /// </summary>
         public string Folder => Path.GetDirectoryName(AssetDatabase.GetAssetPath(this));
+
+        /// <summary>
+        /// Gets the path of the mod's assembly definition.
+        /// </summary>
         public string AssemblyPath => Folder + $"/Code/{id}.asmdef";
+
+        /// <summary>
+        /// Gets the path of the mod's plugin class.
+        /// </summary>
         public string MainPluginPath => Folder + $"/Code/{id}Plugin.cs";
 
+        /// <summary>
+        /// The group for the mod's Addressables of no particular kind.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup allGroup;
+
+        /// <summary>
+        /// The group for the mod's part data.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup partsGroup;
+
+        /// <summary>
+        /// The group for the mod's missions.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup missionsGroup;
+
+        /// <summary>
+        /// The group for the mod's celestial bodies.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup celestialBodiesGroup;
+
+        /// <summary>
+        /// The group for the mod's science experiments.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup scienceExperimentGroup;
+
+        /// <summary>
+        /// The group for the mod's tech nodes and tech tree data.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup techNodeDataGroup;
+
+        /// <summary>
+        /// The group for the mod's resources.
+        /// </summary>
         [HideInInspector] public AddressableAssetGroup resourcesGroup;
 
+        /// <summary>
+        /// Gets every Addressables group the mod owns.
+        /// </summary>
         public AddressableAssetGroup[] AllGroups => new[]
             { allGroup, partsGroup, missionsGroup, celestialBodiesGroup, scienceExperimentGroup, techNodeDataGroup, resourcesGroup };
 
+        /// <summary>
+        /// The id of the Addressables profile that builds the mod's groups to its own load path.
+        /// </summary>
         [HideInInspector] public string addressablesProfileId;
 
+        /// <summary>
+        /// The mods the mod needs, with the versions it accepts.
+        /// </summary>
         [SerializeField] [Tooltip("The mods that this mod depends on")]
         public List<ModDependency> dependencies = new()
         {
@@ -105,18 +194,31 @@ namespace Ksp2UnityTools.Editor.Modding
             }
         };
 
+        /// <summary>
+        /// The mods the mod cannot run beside, with the versions that conflict.
+        /// </summary>
         [SerializeField] [Tooltip("The mods that this mod cannot run with")] [InspectorName("Conflicts")]
         public List<ModDependency> incompatibilities = new()
         {
         };
 
+        /// <summary>
+        /// The relations of the mod's own feature beyond what its dependencies and conflicts give it.
+        /// </summary>
         [Tooltip("The relations of the mod's own feature beyond what its dependencies and conflicts give it")]
         public ModFeature ownFeature = new();
 
+        /// <summary>
+        /// The features the mod declares besides its own.
+        /// </summary>
         [Tooltip("The features the mod declares besides its own")]
         public List<ModFeature> features = new();
 
 
+        /// <summary>
+        /// Renames the mod asset to <see cref="PickerDisplayName" /> when it differs.
+        /// </summary>
+        /// <returns>True if the asset was renamed, false otherwise.</returns>
         public bool SyncPickerDisplayName()
         {
             if (!ModPickerDisplayNameSync.CanTouchAssets())
@@ -145,6 +247,7 @@ namespace Ksp2UnityTools.Editor.Modding
             SyncPickerDisplayName();
         }
 
+        /// <inheritdoc />
         public override string Generate()
         {
             var deps = new JArray();
@@ -262,6 +365,19 @@ namespace Ksp2UnityTools.Editor.Modding
             }
         }
 
+        /// <summary>
+        /// Creates one ThunderKit pipeline that builds the mod to a folder, and the manifest it builds from.
+        /// </summary>
+        /// <remarks>
+        /// The pipeline bakes the mod's assets first, then stages its copied files and generated text, and with
+        /// <paramref name="includeBuiltObjects" /> its Addressables and assembly.
+        /// </remarks>
+        /// <param name="targetLocation">The folder the mod is built to.</param>
+        /// <param name="manifestPath">The asset path the manifest is created at.</param>
+        /// <param name="pipelinePath">The asset path the pipeline is created at.</param>
+        /// <param name="manifestId">A name told apart from the mod's in the manifest's identity, or null for the mod's id alone.</param>
+        /// <param name="includeBuiltObjects">Whether the build includes the mod's Addressables and assembly.</param>
+        /// <param name="buildZip">Whether the build ends by zipping the folder.</param>
         public void GeneratePipeline(
             string targetLocation,
             string manifestPath,
@@ -355,6 +471,9 @@ namespace Ksp2UnityTools.Editor.Modding
             pipeline.manifest = manifest;
         }
 
+        /// <summary>
+        /// Recreates the mod's three pipelines: build for the editor, build for the player, and deploy to a zip file.
+        /// </summary>
         public void RefreshPipelines()
         {
             string pipelinesFolder = Folder + "/Pipelines";
@@ -443,6 +562,9 @@ namespace %MOD%
 }
 ";
 
+        /// <summary>
+        /// Creates the mod's assembly definition and a plugin class to start from, unless the assembly exists.
+        /// </summary>
         public void CreateAssembly()
         {
             if (File.Exists(AssemblyPath))
@@ -518,6 +640,9 @@ namespace %MOD%
             "resources"
         };
 
+        /// <summary>
+        /// Creates the mod's Addressables groups, labels and profile, reusing any that exist.
+        /// </summary>
         public void CreateAddressablesGroups()
         {
             if (AddressableAssetSettingsDefaultObject.Settings == null)
@@ -605,6 +730,9 @@ namespace %MOD%
             AssetDatabase.SaveAssetIfDirty(this);
         }
 
+        /// <summary>
+        /// Writes the mod's swinfo.json beside the mod asset, the copy a version check URL can point at.
+        /// </summary>
         public void CreateVersionCheckSwinfo()
         {
             string text = Generate();

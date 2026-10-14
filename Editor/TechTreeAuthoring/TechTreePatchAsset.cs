@@ -58,7 +58,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Checks whether one of the patch's nodes is an override of a reference node rather than a new node.
         /// </summary>
         /// <param name="nodeId">The node's ID.</param>
-        /// <returns>True if the node is an override.</returns>
+        /// <returns>True if the node is an override, false otherwise.</returns>
         public bool IsOverride(string nodeId) => FindBaseline(nodeId) != null;
 
         /// <summary>
