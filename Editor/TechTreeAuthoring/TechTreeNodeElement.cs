@@ -18,6 +18,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private const string REFERENCE_CLASS = "tech-tree-node--reference";
 
+        private const string REMOVED_CLASS = "tech-tree-node--removed";
+
         private const string UNLOCKABLE_CLASS = "tech-tree-node--unlockable";
 
         private const string UNLOCKED_CLASS = "tech-tree-node--unlocked";
@@ -93,6 +95,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="isReference">True for a reference node, false otherwise.</param>
         public void SetReference(bool isReference) => EnableInClassList(REFERENCE_CLASS, isReference);
+
+        /// <summary>
+        /// Shows the node as one a patch removes, or clears that look.
+        /// </summary>
+        /// <param name="isRemoved">True for a removed node, false otherwise.</param>
+        public void SetRemoved(bool isRemoved) => EnableInClassList(REMOVED_CLASS, isRemoved);
 
         /// <summary>
         /// Draws the node in the frame colours of a preview state, or in the editor's own look.

@@ -4,6 +4,8 @@ using System.Linq;
 using Ksp2UnityTools.Editor.API;
 using Ksp2UnityTools.Editor.Modding;
 using UnityEditor;
+using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet;
+using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
@@ -14,6 +16,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// </summary>
     public static class TechTreeBaker
     {
+        // The group Redux's own Lua patches are in
+        private const string PATCHES_GROUP_NAME = "PM Patches";
+
         /// <summary>
         /// Bakes a tree beside its asset, registers every file it writes, and removes the files of the last bake that
         /// this one no longer writes.
@@ -46,15 +51,19 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 );
             }
 
-            // The tree's features live on its baked files, so files new to this bake take them from the last one
+            // A tree's features live on its baked files, so files new to this bake take them from the last one. A
+            // patch keeps its own, since its Lua has no labels to carry them.
             string ownerId = TechTreeBake.GetOwnerId(tree);
-            (List<string> features, List<string> noFeatures) = AssetFeatureLabels.ReadAll(
-                tree.BakedFiles
-                    .Select(AssetFeatureLabels.EntryOf)
-                    .Where(entry => entry != null)
-                    .Select(entry => entry.labels),
-                ownerId
-            );
+            var patch = tree as TechTreePatchAsset;
+            (List<string> features, List<string> noFeatures) = patch != null
+                ? (patch.Features.ToList(), patch.ExcludedFeatures.ToList())
+                : AssetFeatureLabels.ReadAll(
+                    tree.BakedFiles
+                        .Select(AssetFeatureLabels.EntryOf)
+                        .Where(entry => entry != null)
+                        .Select(entry => entry.labels),
+                    ownerId
+                );
 
             var written = new List<string>();
             foreach (TechTreeBakeOutput output in TechTreeBake.BuildOutputs(tree, ownerId))
@@ -76,6 +85,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 AssetFeatureLabels.Apply(written, ownerId, features, noFeatures);
             }
 
+            if (patch != null)
+            {
+                string patchPath = WritePatch(patch, assetPath, ownerId);
+                if (patchPath != null)
+                {
+                    written.Add(patchPath);
+                }
+            }
+
             // The files of nodes removed or renamed since the last bake would otherwise stay in the game
             foreach (string stale in tree.BakedFiles.Except(written))
             {
@@ -88,6 +106,50 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             AssetDatabase.SaveAssets();
             Debug.Log($"[TechTreeBaker] Baked {written.Count} file(s) for {assetPath} into {folder}.");
             return true;
+        }
+
+        // In a mod the patch is a sidecar the mod's build writes, as a body's orbit is. Anywhere else it is a Lua file
+        // beside the asset under the project's patch label. Returns the path of a Lua file written, or null.
+        private static string WritePatch(TechTreePatchAsset patch, string assetPath, string ownerId)
+        {
+            string folder = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
+            if (KSP2UnityTools.FindParentMod(patch) != null)
+            {
+                string scriptPath = $"{folder}/{patch.name}_Patch.asset";
+                var script = AssetDatabase.LoadAssetAtPath<TechTreePatchScript>(scriptPath);
+                if (script == null)
+                {
+                    script = ScriptableObject.CreateInstance<TechTreePatchScript>();
+                    script.Patch = patch;
+                    AssetDatabase.CreateAsset(script, scriptPath);
+                }
+                else if (script.Patch != patch)
+                {
+                    script.Patch = patch;
+                    EditorUtility.SetDirty(script);
+                }
+
+                return null;
+            }
+
+            string luaPath = $"{folder}/{TechTreePatchBake.GetPatchFileName(patch)}";
+            File.WriteAllText(luaPath, TechTreePatchBake.BuildLua(patch, ownerId));
+            AssetDatabase.ImportAsset(luaPath, ImportAssetOptions.ForceUpdate);
+
+            // A patch already registered stays in its group
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            AddressableAssetEntry existing = settings != null ? settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(luaPath)) : null;
+            AddressableAssetGroup group = existing != null
+                ? existing.parentGroup
+                : settings?.groups.FirstOrDefault(candidate => candidate != null && candidate.Name == PATCHES_GROUP_NAME);
+            if (group == null)
+            {
+                Debug.LogWarning($"[TechTreeBaker] No {PATCHES_GROUP_NAME} group found, so {luaPath} is not registered.");
+                return luaPath;
+            }
+
+            AddressablesTools.MakeAddressable(group, luaPath, luaPath, GalaxyEntry.PROJECT_PATCH_LABEL);
+            return luaPath;
         }
     }
 }

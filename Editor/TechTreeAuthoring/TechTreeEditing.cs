@@ -222,6 +222,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <returns>True if the node was deleted, false if it was missing.</returns>
         public static bool DeleteNode(TechTreeAsset tree, string nodeId)
         {
+            // Deleting an override removes the reference node it changes
+            if (tree is TechTreePatchAsset patch && patch.IsOverride(nodeId))
+                return RemoveReferenceNode(patch, nodeId);
+
             TechTreeNode node = Find(tree, nodeId);
             if (node == null)
                 return false;
@@ -232,6 +236,67 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 RemovePrerequisite(tree, dependent, nodeId);
             }
 
+            return true;
+        }
+
+        /// <summary>
+        /// Takes a reference node into a patch to change it, with a baseline copy of it as it is now.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <param name="referenceNode">The reference node.</param>
+        /// <returns>The patch's copy of the node, the one already taken when it was.</returns>
+        public static TechTreeNode TakeReferenceNode(TechTreePatchAsset patch, TechTreeNode referenceNode)
+        {
+            string nodeId = referenceNode.Data.ID;
+            TechTreeNode taken = Find(patch, nodeId);
+            if (taken != null)
+                return taken;
+
+            patch.RemovedNodeIds.Remove(nodeId);
+            patch.Baselines.Add(CopyNode(referenceNode));
+            taken = CopyNode(referenceNode);
+            patch.Nodes.Add(taken);
+            return taken;
+        }
+
+        /// <summary>
+        /// Removes a reference node, dropping any change the patch made to it.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <param name="nodeId">The reference node's ID.</param>
+        /// <returns>True if the node is now removed, false if it was already.</returns>
+        public static bool RemoveReferenceNode(TechTreePatchAsset patch, string nodeId)
+        {
+            RevertOverride(patch, nodeId);
+            if (patch.RemovedNodeIds.Contains(nodeId))
+                return false;
+
+            patch.RemovedNodeIds.Add(nodeId);
+            return true;
+        }
+
+        /// <summary>
+        /// Brings back a reference node the patch removed.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <param name="nodeId">The reference node's ID.</param>
+        /// <returns>True if the node was removed and is now back.</returns>
+        public static bool RestoreReferenceNode(TechTreePatchAsset patch, string nodeId) => patch.RemovedNodeIds.Remove(nodeId);
+
+        /// <summary>
+        /// Drops a patch's changes to a reference node, so the reference's node shows again.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <param name="nodeId">The node's ID.</param>
+        /// <returns>True if the node was an override.</returns>
+        public static bool RevertOverride(TechTreePatchAsset patch, string nodeId)
+        {
+            TechTreeNode baseline = patch.FindBaseline(nodeId);
+            if (baseline == null)
+                return false;
+
+            patch.Baselines.Remove(baseline);
+            patch.Nodes.RemoveAll(node => node.Data?.ID == nodeId);
             return true;
         }
 
@@ -249,6 +314,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (node == null || string.IsNullOrWhiteSpace(newId) || Find(tree, newId) != null)
                 return false;
 
+            // An override patches the reference node by its ID, so it keeps the ID
+            if (tree is TechTreePatchAsset patch && patch.IsOverride(oldId))
+                return false;
+
             foreach (TechTreeNode other in tree.Nodes.Where(other => other.Data?.RequiredTechNodeIDs != null))
             {
                 other.Data.RequiredTechNodeIDs = other.Data.RequiredTechNodeIDs
@@ -259,5 +328,18 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             node.Data.ID = newId;
             return true;
         }
+
+        /// <summary>
+        /// Copies a node, its data included, so the copy shares nothing with the original.
+        /// </summary>
+        /// <param name="node">The node to copy.</param>
+        /// <returns>The copy.</returns>
+        public static TechTreeNode CopyNode(TechTreeNode node) =>
+            new()
+            {
+                Data = TechTreePatchBake.Copy(node.Data),
+                EnglishName = node.EnglishName,
+                EnglishDescription = node.EnglishDescription,
+            };
     }
 }

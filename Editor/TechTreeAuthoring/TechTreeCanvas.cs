@@ -327,6 +327,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
                 var element = new TechTreeNodeElement(node, ToLocal(position) - FrameHalfSize);
                 element.SetReference(_referenceIds.Contains(node.Data.ID));
+                element.SetRemoved(IsRemoved(node.Data.ID));
                 _nodeLayer.Add(element);
                 _nodeElements[node.Data.ID] = element;
             }
@@ -639,12 +640,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             if (!_isDragging)
             {
-                if (delta.magnitude <= CLICK_SLOP || _referenceIds.Contains(_pressedNodeId))
+                if (delta.magnitude <= CLICK_SLOP || !CanChange(_pressedNodeId))
                     return;
 
                 // The whole drag is one undo step, so one Ctrl+Z puts a node dragged by accident back
                 Undo.IncrementCurrentGroup();
                 _dragUndoGroup = Undo.GetCurrentGroup();
+                Undo.RecordObject(_tree, "Move Tech Node");
+                TakeIfReference(_pressedNodeId);
                 _isDragging = true;
             }
 
@@ -727,7 +730,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (evt.keyCode != KeyCode.Delete && evt.keyCode != KeyCode.Backspace)
                 return;
 
-            if (!CanAddAndRemoveNodes || _previewsUnlocks || _referenceIds.Contains(_selectedId))
+            if (!CanAddAndRemoveNodes || _previewsUnlocks || (_referenceIds.Contains(_selectedId) && Patch == null))
                 return;
 
             DeleteNode(_selectedId);
@@ -761,7 +764,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     }
                 }
 
-                if (isEditable && CanAddAndRemoveNodes)
+                if (Patch != null && (_referenceIds.Contains(nodeId) || Patch.IsOverride(nodeId)))
+                {
+                    AddPatchItems(menu, nodeId);
+                    hasItems = true;
+                }
+                else if (isEditable && CanAddAndRemoveNodes)
                 {
                     menu.AddItem("Duplicate", false, () => DuplicateNode(nodeId));
                     menu.AddItem("Delete", false, () => DeleteNode(nodeId));
@@ -775,12 +783,37 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
         }
 
-        // Links the selected node and the clicked one either way, or removes a link between them. Only a node of
-        // the tree can gain or lose a prerequisite, never a reference node.
+        // What a patch can do to a node of the tree it changes
+        private void AddPatchItems(GenericDropdownMenu menu, string nodeId)
+        {
+            if (IsRemoved(nodeId))
+            {
+                menu.AddItem("Restore", false, () => Edit("Restore Tech Node", () => TechTreeEditing.RestoreReferenceNode(Patch, nodeId)));
+                return;
+            }
+
+            if (Patch.IsOverride(nodeId))
+            {
+                menu.AddItem("Revert to Reference", false, () => Edit("Revert Tech Node", () => TechTreeEditing.RevertOverride(Patch, nodeId)));
+            }
+            else
+            {
+                menu.AddItem("Change", false, () => Edit("Change Tech Node", () =>
+                {
+                    TakeIfReference(nodeId);
+                    return true;
+                }));
+            }
+
+            menu.AddItem("Remove", false, () => DeleteNode(nodeId));
+        }
+
+        // Links the selected node and the clicked one either way, or removes a link between them. A node of a tree
+        // the canvas only shows never gains or loses a prerequisite, though a patch takes one in to change it.
         private bool AddLinkItems(GenericDropdownMenu menu, string selectedId, string clickedId)
         {
-            bool isClickedEditable = !_referenceIds.Contains(clickedId);
-            bool isSelectedEditable = !_referenceIds.Contains(selectedId);
+            bool isClickedEditable = CanChange(clickedId);
+            bool isSelectedEditable = CanChange(selectedId);
             if (isClickedEditable)
             {
                 AddLinkItem(menu, clickedId, selectedId);
@@ -796,8 +829,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (canUnlink)
             {
                 menu.AddItem("Remove Link", false, () => Edit("Unlink Tech Nodes", () =>
-                    TechTreeEditing.RemovePrerequisite(_tree, selectedId, clickedId)
-                    | TechTreeEditing.RemovePrerequisite(_tree, clickedId, selectedId)));
+                    Unlink(selectedId, clickedId) | Unlink(clickedId, selectedId)));
             }
 
             return isClickedEditable || isSelectedEditable;
@@ -822,7 +854,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private void Link(string nodeId, string prerequisiteId)
         {
-            if (_referenceIds.Contains(nodeId))
+            if (!CanChange(nodeId))
             {
                 OnRefused?.Invoke($"{DisplayName(nodeId)} belongs to the reference tree, so it cannot gain a prerequisite.");
                 return;
@@ -834,7 +866,54 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
-            Edit("Link Tech Nodes", () => TechTreeEditing.TryAddPrerequisite(_tree, nodeId, prerequisiteId, _reference));
+            Edit("Link Tech Nodes", () =>
+            {
+                TakeIfReference(nodeId);
+                return TechTreeEditing.TryAddPrerequisite(_tree, nodeId, prerequisiteId, _reference);
+            });
+        }
+
+        // Only a node that has the link loses it, taken into a patch first when it is a reference node
+        private bool Unlink(string nodeId, string prerequisiteId)
+        {
+            if (!IsLinked(nodeId, prerequisiteId) || !CanChange(nodeId))
+                return false;
+
+            TakeIfReference(nodeId);
+            return TechTreeEditing.RemovePrerequisite(_tree, nodeId, prerequisiteId);
+        }
+
+        private TechTreePatchAsset Patch => _tree as TechTreePatchAsset;
+
+        // A node of the tree, or a reference node a patch can take in to change
+        private bool CanChange(string nodeId) =>
+            !_referenceIds.Contains(nodeId) || (Patch != null && !IsRemoved(nodeId));
+
+        private bool IsRemoved(string nodeId) => Patch != null && Patch.RemovedNodeIds.Contains(nodeId);
+
+        // Takes a reference node into the patch, so the edit about to be made changes the patch's copy. The caller
+        // records the asset for undo first.
+        private void TakeIfReference(string nodeId)
+        {
+            if (Patch == null || !_referenceIds.Contains(nodeId))
+                return;
+
+            TechTreeNode reference = _reference.FirstOrDefault(node => node.Data?.ID == nodeId);
+            if (reference == null)
+                return;
+
+            TechTreeNode taken = TechTreeEditing.TakeReferenceNode(Patch, reference);
+            _referenceIds.Remove(nodeId);
+            int index = _drawnNodes.FindIndex(node => node.Data?.ID == nodeId);
+            if (index >= 0)
+            {
+                _drawnNodes[index] = taken;
+            }
+
+            if (_nodeElements.TryGetValue(nodeId, out TechTreeNodeElement element))
+            {
+                element.SetReference(false);
+            }
         }
 
         private void AddNodeAt(Vector2 pointer)
@@ -874,6 +953,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (nodeId == _selectedId)
             {
                 Select(null);
+            }
+
+            // A patch removes a reference node rather than deleting it
+            if (Patch != null && _referenceIds.Contains(nodeId))
+            {
+                Edit("Remove Tech Node", () => TechTreeEditing.RemoveReferenceNode(Patch, nodeId));
+                return;
             }
 
             Edit("Delete Tech Node", () => TechTreeEditing.DeleteNode(_tree, nodeId));
@@ -996,12 +1082,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             foreach (TechTreeNode node in _drawnNodes)
             {
                 string id = node.Data?.ID;
-                if (string.IsNullOrEmpty(id) || !_positions.TryGetValue(id, out Vector2 position))
+                if (string.IsNullOrEmpty(id) || IsRemoved(id) || !_positions.TryGetValue(id, out Vector2 position))
                     continue;
 
                 foreach (string prerequisiteId in node.Data.RequiredTechNodeIDs ?? Array.Empty<string>())
                 {
-                    if (!_positions.TryGetValue(prerequisiteId, out Vector2 prerequisite))
+                    if (IsRemoved(prerequisiteId) || !_positions.TryGetValue(prerequisiteId, out Vector2 prerequisite))
                         continue;
 
                     if (_previewsUnlocks)

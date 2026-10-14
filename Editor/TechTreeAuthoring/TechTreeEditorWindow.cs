@@ -38,6 +38,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private TechTreeNodePanel _panel;
 
+        // The tree a patch changes, drawn read only beside the patch's own nodes, or empty for a tree
+        private List<TechTreeNode> _reference = new();
+
         private Button _readinessChip;
 
         private Button _featuresChip;
@@ -149,6 +152,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             };
             _panel.OnTreeEdited += () => _canvas.Rebuild();
             _panel.OnRefused += message => ShowNotification(new GUIContent(message));
+            _panel.OnReferenceChanged += LoadReference;
 
             // Selecting the new ID before the rebuild keeps the renamed node selected
             _panel.OnNodeRenamed += (_, newId) =>
@@ -196,7 +200,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private void Bind()
         {
             titleContent = new GUIContent(_tree != null ? _tree.name : "Tech Tree Editor");
-            _canvas.SetTree(_tree);
+            LoadReference();
             if (_tree == null)
                 return;
 
@@ -225,12 +229,23 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         // The selected node's options, or the tree's settings when nothing is selected
-        private void RefreshSidePanel() => _panel.Show(_tree, _serializedTree, _canvas.SelectedId);
+        private void RefreshSidePanel() => _panel.Show(_tree, _serializedTree, _canvas.SelectedId, _reference);
+
+        // A patch is drawn over the tree it changes, a tree on its own
+        private void LoadReference()
+        {
+            _reference = _tree is TechTreePatchAsset patch ? TechTreeReference.Load(patch) : new List<TechTreeNode>();
+            _canvas.SetTree(_tree, _reference);
+            if (_serializedTree != null)
+            {
+                RefreshSidePanel();
+            }
+        }
 
         // The chip and the node badges follow every redraw
         private void Revalidate()
         {
-            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(_tree, null, _canvas.SnapsToGrid));
+            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(_tree, _reference, _canvas.SnapsToGrid));
             TechTreeValidationReportWindow.ShowOnChip(_readinessChip, issues);
             _canvas.SetBadges(TechTreeValidationReportWindow.WorstByNode(issues));
             RefreshFeaturesChip();

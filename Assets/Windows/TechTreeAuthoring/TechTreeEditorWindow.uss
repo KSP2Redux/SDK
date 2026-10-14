@@ -243,3 +243,13 @@
 .tech-tree-overlay__modes {
     flex-wrap: nowrap;
 }
+
+/* A node the patch removes stays on the canvas, faded and edged in the validation error colour, so it can be restored */
+.tech-tree-node--removed {
+    opacity: 0.3;
+    border-color: rgb(220, 80, 80);
+}
+
+.tech-tree-panel__actions {
+    margin: 0 0 4px 0;
+}

@@ -32,15 +32,25 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="asset">The node asset.</param>
         /// <returns>The reference nodes, empty when the asset names no usable reference.</returns>
-        public static List<TechTreeNode> Load(TechNodeAsset asset)
-        {
-            if (asset.ReferenceSource == TechNodeReferenceSource.GameNodes)
-                return LoadGameNodes(asset.BakedFiles);
+        public static List<TechTreeNode> Load(TechNodeAsset asset) => Load(asset, asset.ReferenceSource, asset.Reference);
 
-            if (asset.Reference is TechTreeAsset tree && tree != asset)
+        /// <summary>
+        /// Loads the tree a patch changes.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <returns>The reference nodes, empty when the patch names no usable reference.</returns>
+        public static List<TechTreeNode> Load(TechTreePatchAsset patch) => Load(patch, patch.ReferenceSource, patch.Reference);
+
+        // The asset's own baked files are left out of the game's nodes, and an asset is never its own reference
+        private static List<TechTreeNode> Load(TechTreeAsset self, TechNodeReferenceSource source, UnityEngine.Object reference)
+        {
+            if (source == TechNodeReferenceSource.GameNodes)
+                return LoadGameNodes(self.BakedFiles);
+
+            if (reference is TechTreeAsset tree && tree != self)
                 return tree.Nodes.Where(node => !string.IsNullOrEmpty(node.Data?.ID)).ToList();
 
-            string folder = asset.Reference != null ? AssetDatabase.GetAssetPath(asset.Reference) : null;
+            string folder = reference != null ? AssetDatabase.GetAssetPath(reference) : null;
             return !string.IsNullOrEmpty(folder) && AssetDatabase.IsValidFolder(folder)
                 ? FromJson(Directory.GetFiles(folder, "*.json", SearchOption.AllDirectories).Select(File.ReadAllText))
                 : new List<TechTreeNode>();

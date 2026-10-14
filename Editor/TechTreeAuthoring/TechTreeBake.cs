@@ -112,8 +112,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public static List<TechTreeBakeOutput> BuildOutputs(TechTreeAsset tree, string ownerId)
         {
             var outputs = new List<TechTreeBakeOutput>();
+            var patch = tree as TechTreePatchAsset;
             foreach (TechTreeNode node in tree.Nodes)
             {
+                // A patch's overrides change reference nodes through its Lua, only its new nodes are JSON
+                if (patch != null && patch.IsOverride(node.Data?.ID))
+                    continue;
+
                 // A copy, so the bake never changes the asset
                 if (!TechTreeJson.TryFromJson(TechTreeJson.ToJson(node.Data), out TechNodeData data))
                     continue;

@@ -18,6 +18,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             ProjectWindowUtil.CreateAsset(tree, "NewTechTree.asset");
         }
 
+        [MenuItem("Assets/Redux SDK/New Tech Tree Patch", priority = KSP2UnityTools.MenuPriority)]
+        private static void NewTechTreePatch()
+        {
+            var patch = ScriptableObject.CreateInstance<TechTreePatchAsset>();
+            ProjectWindowUtil.CreateAsset(patch, "NewTechTreePatch.asset");
+        }
+
         [MenuItem("Assets/Redux SDK/New Tech Node", priority = KSP2UnityTools.MenuPriority)]
         private static void NewTechNode()
         {

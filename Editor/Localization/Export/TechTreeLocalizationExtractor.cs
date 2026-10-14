@@ -22,23 +22,34 @@ namespace Ksp2UnityTools.Editor.Localization.Export
 
             string ownerId = TechTreeBake.GetOwnerId(tree);
             string assetPath = AssetDatabase.GetAssetPath(tree);
+            var patch = tree as TechTreePatchAsset;
             foreach (TechTreeNode node in tree.Nodes)
             {
                 string id = node.Data?.ID;
                 if (string.IsNullOrEmpty(id))
                     continue;
 
+                // A patch's override keeps the reference's text, and its keys, unless the patch changes it
+                TechTreeNode baseline = patch?.FindBaseline(id);
+                List<string> changed = baseline != null ? TechTreePatchBake.GetChangedFields(baseline, node) : null;
                 string sourceHint = LocalizationSourceHint.Format("TechNode", id, assetPath);
-                entries.Add(new LocalizationKeyEntry(
-                    TechTreeKeys.GetNameKey(ownerId, id),
-                    node.EnglishName ?? string.Empty,
-                    $"Tech node name for {id}",
-                    sourceHint));
-                entries.Add(new LocalizationKeyEntry(
-                    TechTreeKeys.GetDescriptionKey(ownerId, id),
-                    node.EnglishDescription ?? string.Empty,
-                    $"Tech node description for {id}",
-                    sourceHint));
+                if (changed == null || changed.Contains(TechTreePatchBake.NAME_FIELD))
+                {
+                    entries.Add(new LocalizationKeyEntry(
+                        TechTreeKeys.GetNameKey(ownerId, id),
+                        node.EnglishName ?? string.Empty,
+                        $"Tech node name for {id}",
+                        sourceHint));
+                }
+
+                if (changed == null || changed.Contains(TechTreePatchBake.DESCRIPTION_FIELD))
+                {
+                    entries.Add(new LocalizationKeyEntry(
+                        TechTreeKeys.GetDescriptionKey(ownerId, id),
+                        node.EnglishDescription ?? string.Empty,
+                        $"Tech node description for {id}",
+                        sourceHint));
+                }
             }
 
             // An unnamed tier is shown by its number, so it has no key to export

@@ -9,9 +9,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
     /// <summary>
     /// The inspector of a <see cref="TechTreeAsset" /> asset: bake and export actions, then its features, tiers and
-    /// nodes.
+    /// nodes. A <see cref="TechTreePatchAsset" /> gets the actions only.
     /// </summary>
-    [CustomEditor(typeof(TechTreeAsset))]
+    [CustomEditor(typeof(TechTreeAsset), true)]
     public class TechTreeInspector : UnityEditor.Editor
     {
         /// <inheritdoc />
@@ -27,6 +27,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             actions.Add(new Button(() => TechTreeBaker.Bake(tree)) { text = "Bake JSON" });
             actions.Add(new Button(() => LocExportFlow.RunForAsset(tree)) { text = "Export Localizations" });
             root.Add(actions);
+
+            // A patch's reference, features and changes are edited in the editor window, over the tree it changes
+            if (tree is TechTreePatchAsset)
+                return root;
 
             // The baked files are what the game loads, so their labels carry the tree's features
             var features = new VisualElement();

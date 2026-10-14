@@ -60,6 +60,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public event Action<string> OnRefused;
 
         /// <summary>
+        /// Raised after the panel changes which tree a patch changes.
+        /// </summary>
+        public event Action OnReferenceChanged;
+
+        /// <summary>
         /// Creates an empty panel.
         /// </summary>
         public TechTreeNodePanel()
@@ -93,13 +98,28 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _serializedTree.Update();
 
             TechTreeNode node = TechTreeEditing.Find(_tree, nodeId);
+            if (node == null && _tree is TechTreePatchAsset patch
+                && TechTreeEditing.FindAny(_tree, _reference, nodeId) is { } referenceNode)
+            {
+                ShowReferenceNode(patch, referenceNode);
+                return;
+            }
+
             if (node == null)
             {
                 ShowTreeSettings();
                 return;
             }
 
-            Label title = AddHeader(DisplayName(node), node.Data.ID);
+            var owner = _tree as TechTreePatchAsset;
+            bool isOverride = owner != null && owner.IsOverride(node.Data.ID);
+            Label title = AddHeader(DisplayName(node), isOverride ? $"{node.Data.ID}, changed by this patch" : node.Data.ID);
+            if (isOverride)
+            {
+                AddPatchActions(BuildChip("Revert to Reference", () =>
+                    EditAndShow("Revert Tech Node", () => TechTreeEditing.RevertOverride(owner, node.Data.ID), node.Data.ID)));
+            }
+
             AddIdentity(node, title);
             AddCost(node);
             AddPrerequisites(node);
@@ -110,9 +130,84 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             AlignFields();
         }
 
+        // A reference node is shown as it is, read only, until the patch takes it in to change or removes it
+        private void ShowReferenceNode(TechTreePatchAsset patch, TechTreeNode node)
+        {
+            string nodeId = node.Data.ID;
+            bool isRemoved = patch.RemovedNodeIds.Contains(nodeId);
+            Label title = AddHeader(DisplayName(node), isRemoved ? $"{nodeId}, removed by this patch" : $"{nodeId}, in the reference tree");
+            if (isRemoved)
+            {
+                AddPatchActions(BuildChip("Restore", () =>
+                    EditAndShow("Restore Tech Node", () => TechTreeEditing.RestoreReferenceNode(patch, nodeId), nodeId)));
+            }
+            else
+            {
+                AddPatchActions(
+                    BuildChip("Change", () => EditAndShow("Change Tech Node", () =>
+                    {
+                        TechTreeEditing.TakeReferenceNode(patch, node);
+                        return true;
+                    }, nodeId)),
+                    BuildChip("Remove", () =>
+                        EditAndShow("Remove Tech Node", () => TechTreeEditing.RemoveReferenceNode(patch, nodeId), nodeId))
+                );
+            }
+
+            var sections = new VisualElement();
+            Add(sections);
+            int before = childCount;
+            AddIdentity(node, title);
+            AddCost(node);
+            AddPrerequisites(node);
+            AddParts(node);
+            AddGates(node);
+            AddVisibility(node);
+            AddPosition(node);
+            while (childCount > before)
+            {
+                sections.Add(ElementAt(before));
+            }
+
+            sections.SetEnabled(false);
+            AlignFields();
+        }
+
+        private void AddPatchActions(params VisualElement[] chips)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("sdk-inspector-chip-row");
+            row.AddToClassList("tech-tree-panel__actions");
+            foreach (VisualElement chip in chips)
+            {
+                row.Add(chip);
+            }
+
+            Add(row);
+        }
+
+        private static Button BuildChip(string text, Action clicked)
+        {
+            var chip = new Button(clicked) { text = text };
+            chip.AddToClassList("sdk-tool-chip");
+            return chip;
+        }
+
+        // An edit that changes which nodes the patch holds, so the panel shows the node again afterwards
+        private void EditAndShow(string undoName, Func<bool> change, string nodeId)
+        {
+            EditIf(undoName, change);
+            Show(_tree, _serializedTree, nodeId, _reference);
+        }
+
         private void ShowTreeSettings()
         {
             AddHeader(_tree.name, $"{_tree.Nodes.Count} nodes");
+            if (_tree is TechTreePatchAsset patch)
+            {
+                ShowPatchSettings(patch);
+                return;
+            }
 
             // The baked files are what the game loads, so their labels carry the tree's features
             Foldout features = AddSection("Features");
@@ -128,6 +223,80 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             Foldout tiers = AddSection("Tiers");
             tiers.Add(BuildTierList());
             AlignFields();
+        }
+
+        // A patch names the tree it changes and the features it loads under. Tier names and the start node belong to
+        // the tree it changes.
+        private void ShowPatchSettings(TechTreePatchAsset patch)
+        {
+            Foldout reference = AddSection("Reference Tree");
+            SerializedProperty sourceProperty = _serializedTree.FindProperty(nameof(TechTreePatchAsset.ReferenceSource));
+            SerializedProperty referenceProperty = _serializedTree.FindProperty(nameof(TechTreePatchAsset.Reference));
+            var source = new PropertyField(sourceProperty, "Source");
+            var asset = new ObjectField("Tree or folder")
+            {
+                objectType = typeof(UnityEngine.Object),
+                allowSceneObjects = false,
+                bindingPath = nameof(TechTreePatchAsset.Reference),
+            };
+            asset.style.display = patch.ReferenceSource == TechNodeReferenceSource.Asset ? DisplayStyle.Flex : DisplayStyle.None;
+            reference.Add(source);
+            reference.Add(asset);
+            reference.TrackPropertyValue(sourceProperty, _ =>
+            {
+                asset.style.display = patch.ReferenceSource == TechNodeReferenceSource.Asset ? DisplayStyle.Flex : DisplayStyle.None;
+                OnReferenceChanged?.Invoke();
+            });
+            reference.TrackPropertyValue(referenceProperty, _ => OnReferenceChanged?.Invoke());
+            reference.Bind(_serializedTree);
+
+            // A patch's Lua has no labels to carry features, so the patch keeps them itself
+            Foldout features = AddSection("Features");
+            Mod owner = KSP2UnityTools.FindParentMod(patch);
+            features.Add(BuildFeatureList("Features", () => patch.Features, owner));
+            features.Add(BuildFeatureList("Excluded Features", () => patch.ExcludedFeatures, owner));
+            AlignFields();
+        }
+
+        private VisualElement BuildFeatureList(string title, Func<List<string>> read, Mod owner)
+        {
+            CardListSection.ListHandle handle = null;
+            handle = CardListSection.BuildFromList(() => read(), new CardListSection.ListConfig<string>
+            {
+                Title = title,
+                AddButtonText = "+ Add",
+                OnAddClicked = () =>
+                {
+                    Edit($"Add Tech Tree Patch {title}", () => read().Add(string.Empty));
+                    handle.Rebuild();
+                },
+                BuildCard = (value, index) =>
+                {
+                    var row = new VisualElement();
+                    row.AddToClassList("data-editor-inline-row");
+                    var field = new FeatureField(value ?? string.Empty, null, owner, newValue =>
+                        Edit($"Change Tech Tree Patch {title}", () =>
+                        {
+                            List<string> ids = read();
+                            if (index < ids.Count)
+                            {
+                                ids[index] = newValue;
+                            }
+                        }));
+                    field.AddToClassList("data-editor-inline-row__grow");
+                    row.Add(field);
+
+                    var remove = new Button(() =>
+                    {
+                        Edit($"Remove Tech Tree Patch {title}", () => read().RemoveAt(index));
+                        handle.Rebuild();
+                    }) { text = "X" };
+                    remove.AddToClassList("data-editor-card-remove-btn");
+                    row.Add(remove);
+                    return row;
+                },
+            });
+            return handle.Root;
         }
 
         // One name per tier page, the first page first. A tier without a name shows by its number in game.
@@ -201,6 +370,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             var id = new TextField("ID") { isDelayed = true, value = node.Data.ID };
             id.RegisterValueChangedCallback(evt => Rename(node, id, evt.newValue));
+
+            // An override patches the reference node by its ID
+            id.SetEnabled(!(_tree is TechTreePatchAsset patch && patch.IsOverride(node.Data.ID)));
             section.Add(id);
 
             var englishName = new TextField("Name") { isDelayed = true, value = node.EnglishName ?? string.Empty };

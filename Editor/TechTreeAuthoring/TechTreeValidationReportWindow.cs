@@ -177,8 +177,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
-            // A node asset is checked against the tree it is placed in
-            IReadOnlyList<TechTreeNode> reference = _tree is TechNodeAsset node ? TechTreeReference.Load(node) : null;
+            // A node asset is checked against the tree it is placed in, a patch against the tree it changes
+            IReadOnlyList<TechTreeNode> reference = _tree switch
+            {
+                TechNodeAsset node => TechTreeReference.Load(node),
+                TechTreePatchAsset patch => TechTreeReference.Load(patch),
+                _ => null,
+            };
             _issues = TechTreeValidationReport.Run(new TechTreeValidationContext(_tree, reference, _snapsToGrid), null);
             _hasRun = true;
             _lastRunUtc = DateTime.UtcNow;

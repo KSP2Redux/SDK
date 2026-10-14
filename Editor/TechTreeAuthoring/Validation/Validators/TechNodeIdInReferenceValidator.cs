@@ -17,7 +17,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(TechNodeValidationContext context)
         {
-            if (!context.Tree.ReferenceIds.Contains(context.Id))
+            // A patch's override shares its ID with the reference node on purpose
+            bool isOverride = context.Tree.Tree is TechTreePatchAsset patch && patch.IsOverride(context.Id);
+            if (isOverride || !context.Tree.ReferenceIds.Contains(context.Id))
                 yield break;
 
             yield return new ValidationIssue(
