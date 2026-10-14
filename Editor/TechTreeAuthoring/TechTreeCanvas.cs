@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Redux.TechTree;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
     /// <summary>
-    /// The tech tree editor's canvas: a tree drawn where and how the R&amp;D Center draws it, which pans and zooms.
+    /// The tech tree editor's canvas: a tree drawn where and how the R&amp;D Center draws it, which pans and zooms, and
+    /// where nodes are added, moved, linked, duplicated and deleted.
     /// </summary>
     /// <remarks>
     /// Everything is laid out in content space, one unit to one unit of the game's tree, and the content element is
@@ -87,6 +89,22 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private bool _showsBand = true;
 
+        // The node a left press started on, and whether that press moves it or links it to another
+        private string _pressedNodeId;
+
+        private Vector2 _pressStart;
+
+        private bool _isLinking;
+
+        private bool _isDragging;
+
+        private Vector2 _dragStartPosition;
+
+        private int _dragUndoGroup;
+
+        // Where a link being dragged ends, in content space
+        private Vector2 _linkEnd;
+
         /// <summary>
         /// Raised with the selected node's ID when the selection changes, or null when nothing is selected.
         /// </summary>
@@ -96,6 +114,21 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Raised with the zoom whenever it changes.
         /// </summary>
         public event Action<float> OnZoomChanged;
+
+        /// <summary>
+        /// Raised after the canvas changes the tree.
+        /// </summary>
+        public event Action OnTreeEdited;
+
+        /// <summary>
+        /// Raised with the reason when the canvas refuses an edit.
+        /// </summary>
+        public event Action<string> OnRefused;
+
+        /// <summary>
+        /// Gets or sets whether moved and added nodes snap to the stock grid.
+        /// </summary>
+        public bool SnapsToGrid { get; set; } = true;
 
         /// <summary>
         /// Gets the selected node's ID, or null when nothing is selected.
@@ -148,6 +181,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public TechTreeCanvas()
         {
             AddToClassList("tech-tree-canvas");
+            focusable = true;
 
             _content = new VisualElement { name = "tech-tree-content" };
             _content.AddToClassList("tech-tree-canvas__content");
@@ -165,6 +199,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<PointerMoveEvent>(OnPointerMove);
             RegisterCallback<PointerUpEvent>(OnPointerUp);
+            RegisterCallback<KeyDownEvent>(OnKeyDown);
             RegisterCallback<GeometryChangedEvent>(_ => FrameOnce());
         }
 
@@ -185,6 +220,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         public void Rebuild()
         {
+            // A drag moves its node's element itself and rebuilds once it is dropped
+            if (_isDragging)
+                return;
+
             _nodeLayer.Clear();
             _pageLabels.Clear();
             _nodeElements.Clear();
@@ -385,15 +424,32 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private void OnPointerDown(PointerDownEvent evt)
         {
+            Focus();
+            var node = (evt.target as VisualElement)?.GetFirstOfType<TechTreeNodeElement>();
+            if (evt.button == 1)
+            {
+                ShowContextMenu(node?.NodeId, evt.position);
+                evt.StopPropagation();
+                return;
+            }
+
             if (evt.button != 0 && evt.button != 2)
                 return;
 
-            var node = (evt.target as VisualElement)?.GetFirstOfType<TechTreeNodeElement>();
-            if (node != null && evt.button == 0)
+            if (_tree != null && evt.button == 0)
             {
-                Select(node.NodeId);
-                evt.StopPropagation();
-                return;
+                if (node != null)
+                {
+                    PressNode(node.NodeId, evt);
+                    return;
+                }
+
+                if (evt.clickCount == 2)
+                {
+                    AddNodeAt(evt.position);
+                    evt.StopPropagation();
+                    return;
+                }
             }
 
             _isPanning = true;
@@ -404,20 +460,87 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             evt.StopPropagation();
         }
 
+        // Shift starts a link from the node, anything else a move once the pointer leaves the click slop
+        private void PressNode(string nodeId, PointerDownEvent evt)
+        {
+            Select(nodeId);
+            _pressedNodeId = nodeId;
+            _pressStart = evt.position;
+            _isLinking = evt.shiftKey;
+            _linkEnd = ToContentLocal(evt.position);
+            _dragStartPosition = TechTreeEditing.Find(_tree, nodeId).Data.TechTreePosition;
+            this.CapturePointer(evt.pointerId);
+            evt.StopPropagation();
+        }
+
         private void OnPointerMove(PointerMoveEvent evt)
         {
-            if (!_isPanning || !this.HasPointerCapture(evt.pointerId))
+            if (!this.HasPointerCapture(evt.pointerId))
                 return;
 
-            Vector2 delta = (Vector2)evt.position - _panStart;
+            Vector2 delta = (Vector2)evt.position - (_pressedNodeId != null ? _pressStart : _panStart);
+            if (_pressedNodeId != null)
+            {
+                DragNode(evt.position, delta);
+                return;
+            }
+
+            if (!_isPanning)
+                return;
+
             _hasPanMoved |= delta.magnitude > CLICK_SLOP;
             _pan = _panOrigin + delta;
             ApplyTransform();
         }
 
+        private void DragNode(Vector2 pointer, Vector2 delta)
+        {
+            if (_isLinking)
+            {
+                _linkEnd = ToContentLocal(pointer);
+                _lines.MarkDirtyRepaint();
+                return;
+            }
+
+            if (!_isDragging)
+            {
+                if (delta.magnitude <= CLICK_SLOP)
+                    return;
+
+                // The whole drag is one undo step, so one Ctrl+Z puts a node dragged by accident back
+                Undo.IncrementCurrentGroup();
+                _dragUndoGroup = Undo.GetCurrentGroup();
+                Undo.RecordObject(_tree, "Move Tech Node");
+                _isDragging = true;
+            }
+
+            // Content y runs down, tech tree y up
+            Vector2 position = _dragStartPosition + new Vector2(delta.x, -delta.y) / _zoom;
+            if (SnapsToGrid)
+            {
+                position = TechTreeCanvasGeometry.Snap(position);
+            }
+
+            TechTreeEditing.Find(_tree, _pressedNodeId).Data.TechTreePosition = position;
+            _positions[_pressedNodeId] = position;
+            if (_nodeElements.TryGetValue(_pressedNodeId, out TechTreeNodeElement element))
+            {
+                element.MoveTo(ToLocal(position) - FrameHalfSize);
+            }
+
+            _lines.MarkDirtyRepaint();
+        }
+
         // A click on empty space, rather than a drag, clears the selection
         private void OnPointerUp(PointerUpEvent evt)
         {
+            if (_pressedNodeId != null)
+            {
+                this.ReleasePointer(evt.pointerId);
+                DropNode(evt.position);
+                return;
+            }
+
             if (!_isPanning)
                 return;
 
@@ -428,6 +551,185 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 Select(null);
             }
         }
+
+        private void DropNode(Vector2 pointer)
+        {
+            string nodeId = _pressedNodeId;
+            _pressedNodeId = null;
+            if (_isLinking)
+            {
+                _isLinking = false;
+                _lines.MarkDirtyRepaint();
+                string targetId = PickNode(pointer)?.NodeId;
+                if (targetId != null && targetId != nodeId)
+                {
+                    Link(targetId, nodeId);
+                }
+
+                return;
+            }
+
+            if (!_isDragging)
+                return;
+
+            _isDragging = false;
+            Undo.CollapseUndoOperations(_dragUndoGroup);
+            EditorUtility.SetDirty(_tree);
+            Rebuild();
+            OnTreeEdited?.Invoke();
+        }
+
+        private void OnKeyDown(KeyDownEvent evt)
+        {
+            if (_tree == null || _selectedId == null)
+                return;
+
+            if (evt.keyCode != KeyCode.Delete && evt.keyCode != KeyCode.Backspace)
+                return;
+
+            DeleteNode(_selectedId);
+            evt.StopPropagation();
+        }
+
+        private void ShowContextMenu(string nodeId, Vector2 pointer)
+        {
+            if (_tree == null)
+                return;
+
+            var menu = new GenericDropdownMenu();
+            if (nodeId == null)
+            {
+                menu.AddItem("Add Node Here", false, () => AddNodeAt(pointer));
+            }
+            else
+            {
+                if (_selectedId != null && _selectedId != nodeId && _positions.ContainsKey(_selectedId))
+                {
+                    AddLinkItems(menu, _selectedId, nodeId);
+                    menu.AddSeparator(string.Empty);
+                }
+
+                menu.AddItem("Duplicate", false, () => DuplicateNode(nodeId));
+                menu.AddItem("Delete", false, () => DeleteNode(nodeId));
+            }
+
+            menu.DropDown(new Rect(pointer, Vector2.zero), this, DropdownMenuSizeMode.Auto);
+        }
+
+        // Links the selected node and the clicked one either way, or removes a link between them
+        private void AddLinkItems(GenericDropdownMenu menu, string selectedId, string clickedId)
+        {
+            AddLinkItem(menu, clickedId, selectedId);
+            AddLinkItem(menu, selectedId, clickedId);
+            if (IsLinked(selectedId, clickedId) || IsLinked(clickedId, selectedId))
+            {
+                menu.AddItem("Remove Link", false, () => Edit("Unlink Tech Nodes", () =>
+                    TechTreeEditing.RemovePrerequisite(_tree, selectedId, clickedId)
+                    | TechTreeEditing.RemovePrerequisite(_tree, clickedId, selectedId)));
+            }
+        }
+
+        private void AddLinkItem(GenericDropdownMenu menu, string nodeId, string prerequisiteId)
+        {
+            string label = $"{DisplayName(nodeId)} requires {DisplayName(prerequisiteId)}";
+            if (IsLinked(nodeId, prerequisiteId))
+            {
+                menu.AddDisabledItem(label, true);
+            }
+            else if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId))
+            {
+                menu.AddDisabledItem(label, false);
+            }
+            else
+            {
+                menu.AddItem(label, false, () => Link(nodeId, prerequisiteId));
+            }
+        }
+
+        private void Link(string nodeId, string prerequisiteId)
+        {
+            if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId))
+            {
+                OnRefused?.Invoke($"{DisplayName(prerequisiteId)} already requires {DisplayName(nodeId)}, so the link would make a loop.");
+                return;
+            }
+
+            Edit("Link Tech Nodes", () => TechTreeEditing.TryAddPrerequisite(_tree, nodeId, prerequisiteId));
+        }
+
+        private void AddNodeAt(Vector2 pointer)
+        {
+            Vector2 position = ToTechTree(ToContentLocal(pointer));
+            if (SnapsToGrid)
+            {
+                position = TechTreeCanvasGeometry.Snap(position);
+            }
+
+            string addedId = null;
+            Edit("Add Tech Node", () =>
+            {
+                addedId = TechTreeEditing.AddNode(_tree, position).Data.ID;
+                return true;
+            });
+            Select(addedId);
+        }
+
+        // The copy goes one stock row below the original
+        private void DuplicateNode(string nodeId)
+        {
+            string copyId = null;
+            Edit("Duplicate Tech Node", () =>
+            {
+                copyId = TechTreeEditing.DuplicateNode(_tree, nodeId, new Vector2(0f, -TechTreeCanvasGeometry.GRID_Y))?.Data.ID;
+                return copyId != null;
+            });
+            if (copyId != null)
+            {
+                Select(copyId);
+            }
+        }
+
+        private void DeleteNode(string nodeId)
+        {
+            if (nodeId == _selectedId)
+            {
+                Select(null);
+            }
+
+            Edit("Delete Tech Node", () => TechTreeEditing.DeleteNode(_tree, nodeId));
+        }
+
+        private void Edit(string undoName, Func<bool> change)
+        {
+            Undo.RecordObject(_tree, undoName);
+            if (!change())
+                return;
+
+            EditorUtility.SetDirty(_tree);
+            Rebuild();
+            OnTreeEdited?.Invoke();
+        }
+
+        private bool IsLinked(string nodeId, string prerequisiteId) =>
+            TechTreeEditing.Find(_tree, nodeId)?.Data.RequiredTechNodeIDs?.Contains(prerequisiteId) == true;
+
+        private string DisplayName(string nodeId)
+        {
+            TechTreeNode node = TechTreeEditing.Find(_tree, nodeId);
+            return node == null || string.IsNullOrEmpty(node.EnglishName) ? nodeId : node.EnglishName;
+        }
+
+        private TechTreeNodeElement PickNode(Vector2 pointer) =>
+            (panel?.Pick(pointer))?.GetFirstOfType<TechTreeNodeElement>();
+
+        private Vector2 ToContentLocal(Vector2 pointer) => (this.WorldToLocal(pointer) - _pan) / _zoom;
+
+        // The inverse of ToLocal
+        private static Vector2 ToTechTree(Vector2 contentLocal) =>
+            new(
+                contentLocal.x - TechTreeCanvasGeometry.PLACEMENT_OFFSET,
+                TechTreeCanvasGeometry.BAND_HEIGHT - contentLocal.y - TechTreeCanvasGeometry.PLACEMENT_OFFSET
+            );
 
         private void DrawBackdrop(MeshGenerationContext context)
         {
@@ -537,6 +839,16 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             foreach ((Vector2 from, Vector2 to, Color color) in highlighted)
             {
                 StrokeConnector(painter, from, to, color);
+            }
+
+            // A link being dragged runs straight from its node to the pointer
+            if (_isLinking && _pressedNodeId != null && _positions.TryGetValue(_pressedNodeId, out Vector2 source))
+            {
+                painter.strokeColor = DependentLineColor;
+                painter.BeginPath();
+                painter.MoveTo(ToLocal(source));
+                painter.LineTo(_linkEnd);
+                painter.Stroke();
             }
         }
 

@@ -32,8 +32,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         {
             NodeId = node.Data.ID;
             AddToClassList("tech-tree-node");
-            style.left = contentTop.x;
-            style.top = contentTop.y;
+            MoveTo(contentTop);
             style.width = TechTreeCanvasGeometry.FRAME_WIDTH;
             style.height = TechTreeCanvasGeometry.FRAME_HEIGHT;
 
@@ -66,6 +65,16 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             name.style.left = 15f - RECT_INSET;
             name.style.top = 40f - RECT_INSET;
             Add(name);
+        }
+
+        /// <summary>
+        /// Moves the element.
+        /// </summary>
+        /// <param name="contentTop">The top of the node's frame in the canvas content.</param>
+        public void MoveTo(Vector2 contentTop)
+        {
+            style.left = contentTop.x;
+            style.top = contentTop.y;
         }
 
         /// <summary>

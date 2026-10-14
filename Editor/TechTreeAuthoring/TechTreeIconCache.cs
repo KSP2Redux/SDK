@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -9,8 +12,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// Loads tech node icons by their Addressables address for the tech tree editor, once per address.
     /// </summary>
     /// <remarks>
-    /// Stock icons resolve when the editor has the game's catalog loaded. An address no catalog knows is remembered as
-    /// missing and the node is drawn without an icon, as the editor never draws a placeholder.
+    /// Stock icons resolve when the editor has the game's catalog loaded, and the project's own through its
+    /// Addressables settings. An address neither knows is remembered as missing and the node is drawn without an
+    /// icon, as the editor never draws a placeholder.
     /// </remarks>
     public static class TechTreeIconCache
     {
@@ -35,9 +39,26 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 var handle = Addressables.LoadAssetAsync<Sprite>(address);
                 icon = handle.WaitForCompletion();
             }
+            else
+            {
+                icon = LoadProjectIcon(address);
+            }
 
             Icons[address] = icon;
             return icon;
+        }
+
+        // The project's own icons are not in any runtime catalog until its Addressables are built
+        private static Sprite LoadProjectIcon(string address)
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            AddressableAssetEntry entry = settings != null
+                ? settings.groups
+                    .Where(group => group != null)
+                    .SelectMany(group => group.entries)
+                    .FirstOrDefault(candidate => candidate.address == address)
+                : null;
+            return entry != null ? AssetDatabase.LoadAssetAtPath<Sprite>(entry.AssetPath) : null;
         }
     }
 }

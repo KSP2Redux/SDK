@@ -10,6 +10,10 @@
     border-bottom-color: rgb(35, 35, 35);
 }
 
+.tech-tree-toolbar__find {
+    width: 240px;
+}
+
 .tech-tree-toolbar__spacer {
     flex-grow: 1;
 }
@@ -50,13 +54,22 @@
     margin: 0 8px 6px 8px;
 }
 
-.tech-tree-panel__heading {
-    -unity-font-style: bold;
-    margin: 8px 8px 2px 8px;
+.tech-tree-panel__section {
+    margin: 4px 4px 0 4px;
 }
 
-.tech-tree-panel__row {
-    margin: 0 8px 0 16px;
+.tech-tree-panel__subheading {
+    -unity-font-style: bold;
+    margin: 6px 0 2px 3px;
+}
+
+.tech-tree-panel__description TextInput {
+    min-height: 48px;
+    white-space: normal;
+}
+
+.tech-tree-panel__node-link {
+    -unity-text-align: middle-left;
 }
 
 .tech-tree-canvas-host {

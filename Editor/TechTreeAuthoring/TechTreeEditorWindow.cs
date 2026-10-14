@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Ksp2UnityTools.Editor.Localization.Export;
+using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.UIElements;
@@ -31,6 +33,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private TechTreeCanvas _canvas;
 
         private ScrollView _sidePanel;
+
+        private TechTreeNodePanel _panel;
 
         private Label _zoomLabel;
 
@@ -91,15 +95,38 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             visualTree.CloneTree(rootVisualElement);
             rootVisualElement.style.flexGrow = 1f;
-            Ksp2UnityToolsStyles.Apply(rootVisualElement, USS_PATH);
+            Ksp2UnityToolsStyles.Apply(rootVisualElement, "/Assets/Windows/DataEditors.uss", USS_PATH);
 
             _sidePanel = rootVisualElement.Q<ScrollView>("side-panel");
             _zoomLabel = rootVisualElement.Q<Label>("zoom-label");
             _canvas = new TechTreeCanvas();
             _canvas.OnSelectionChanged += _ => RefreshSidePanel();
             _canvas.OnZoomChanged += zoom => _zoomLabel.text = $"{Mathf.RoundToInt(zoom * 100f)}%";
+            _canvas.OnTreeEdited += RefreshSidePanel;
+            _canvas.OnRefused += message => ShowNotification(new GUIContent(message));
             rootVisualElement.Q("canvas-host").Add(_canvas);
 
+            _panel = new TechTreeNodePanel();
+            _panel.OnNodeRequested += nodeId =>
+            {
+                _canvas.Select(nodeId);
+                _canvas.CentreOn(nodeId);
+            };
+            _panel.OnTreeEdited += () => _canvas.Rebuild();
+            _panel.OnRefused += message => ShowNotification(new GUIContent(message));
+
+            // Selecting the new ID before the rebuild keeps the renamed node selected
+            _panel.OnNodeRenamed += (_, newId) =>
+            {
+                _canvas.Select(newId);
+                _canvas.Rebuild();
+            };
+            _sidePanel.Add(_panel);
+
+            var find = new AutocompleteField(string.Empty, null, FindSuggestions, FindNode) { tooltip = "Find node" };
+            rootVisualElement.Q("find-host").Add(find);
+
+            BindToggle("snap-toggle", value => _canvas.SnapsToGrid = value);
             BindToggle("grid-toggle", value => _canvas.ShowsGrid = value);
             BindToggle("pages-toggle", value => _canvas.ShowsPages = value);
             BindToggle("band-toggle", value => _canvas.ShowsBand = value);
@@ -131,7 +158,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             rootVisualElement.TrackSerializedObjectValue(_serializedTree, _ =>
             {
                 _canvas.Rebuild();
-                RefreshSidePanel();
+                if (!IsEditingInPanel())
+                {
+                    RefreshSidePanel();
+                }
             });
             RefreshSidePanel();
         }
@@ -146,53 +176,37 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             RefreshSidePanel();
         }
 
-        // The selected node's details, or the tree's tiers when nothing is selected
-        private void RefreshSidePanel()
+        // The selected node's options, or the tree's settings when nothing is selected
+        private void RefreshSidePanel() => _panel.Show(_tree, _serializedTree, _canvas.SelectedId);
+
+        // An edit typed into the panel must not rebuild the field being typed in
+        private bool IsEditingInPanel() =>
+            rootVisualElement.focusController?.focusedElement is VisualElement focused && _sidePanel.Contains(focused);
+
+        // Finds by exact ID first, then by name
+        private void FindNode(string query)
         {
-            _sidePanel.Clear();
-            if (_tree == null)
+            if (_tree == null || string.IsNullOrWhiteSpace(query))
                 return;
 
-            TechTreeNode node = _tree.Nodes.FirstOrDefault(x => x.Data != null && x.Data.ID == _canvas.SelectedId);
+            TechTreeNode node = TechTreeEditing.Find(_tree, query) ?? _tree.Nodes.FirstOrDefault(candidate =>
+                string.Equals(candidate.EnglishName, query, StringComparison.OrdinalIgnoreCase));
             if (node == null)
-            {
-                AddPanelLabel(_tree.name, "tech-tree-panel__title");
-                var tiers = new PropertyField(_serializedTree.FindProperty(nameof(TechTreeAsset.Tiers)));
-                tiers.Bind(_serializedTree);
-                _sidePanel.Add(tiers);
                 return;
-            }
 
-            AddPanelLabel(string.IsNullOrEmpty(node.EnglishName) ? node.Data.ID : node.EnglishName, "tech-tree-panel__title");
-            AddPanelLabel(node.Data.ID, "tech-tree-panel__id");
-            AddPanelLabel($"Science: {node.Data.RequiredSciencePoints}", "tech-tree-panel__row");
-            AddPanelList("Prerequisites", node.Data.RequiredTechNodeIDs);
-            AddPanelList("Parts", node.Data.UnlockedPartsIDs);
-            AddPanelList("Missions", node.Data.RequiredMissionIDs);
+            _canvas.Select(node.Data.ID);
+            _canvas.CentreOn(node.Data.ID);
         }
 
-        private void AddPanelList(string heading, string[] items)
-        {
-            AddPanelLabel(heading, "tech-tree-panel__heading");
-            string[] shown = items ?? Array.Empty<string>();
-            if (shown.Length == 0)
-            {
-                AddPanelLabel("None", "tech-tree-panel__row");
-                return;
-            }
-
-            foreach (string item in shown)
-            {
-                AddPanelLabel(item, "tech-tree-panel__row");
-            }
-        }
-
-        private void AddPanelLabel(string text, string className)
-        {
-            var label = new Label(text);
-            label.AddToClassList(className);
-            _sidePanel.Add(label);
-        }
+        private IEnumerable<string> FindSuggestions() =>
+            _tree == null
+                ? Enumerable.Empty<string>()
+                : _tree.Nodes
+                    .Where(node => !string.IsNullOrEmpty(node.Data?.ID))
+                    .SelectMany(node => string.IsNullOrEmpty(node.EnglishName)
+                        ? new[] { node.Data.ID }
+                        : new[] { node.EnglishName, node.Data.ID })
+                    .Distinct();
 
         private void BindToggle(string elementName, Action<bool> onChanged)
         {
