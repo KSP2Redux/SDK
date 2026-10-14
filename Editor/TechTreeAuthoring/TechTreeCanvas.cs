@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using KSP.Game.Science;
 using Ksp2UnityTools.Editor.Validation;
 using Redux.TechTree;
 using UnityEditor;
@@ -176,6 +177,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Raised after the canvas redraws its nodes.
         /// </summary>
         public event Action OnRebuilt;
+
+        /// <summary>
+        /// Raised with the tech tree position under the pointer whenever it moves over the canvas.
+        /// </summary>
+        public event Action<Vector2> OnCursorMoved;
 
         /// <summary>
         /// Gets the selected node's ID, or null when nothing is selected.
@@ -397,6 +403,22 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         /// <summary>
+        /// Fits the band the R&amp;D Center shows, and any of the tree below it, to the canvas's height, from the first
+        /// tier page, as the R&amp;D Center opens.
+        /// </summary>
+        public void FrameBand()
+        {
+            Vector2 viewSize = layout.size;
+            if (float.IsNaN(viewSize.x) || viewSize.x <= 0f || viewSize.y <= 0f)
+                return;
+
+            float height = TechTreeCanvasGeometry.BAND_HEIGHT + _overflow;
+            _zoom = Mathf.Clamp((viewSize.y - 2f * FRAME_MARGIN) / height, MIN_ZOOM, MAX_ZOOM);
+            _pan = new Vector2(FRAME_MARGIN, (viewSize.y - height * _zoom) / 2f);
+            ApplyTransform();
+        }
+
+        /// <summary>
         /// Centres the view on a node.
         /// </summary>
         /// <param name="nodeId">The node's ID.</param>
@@ -492,7 +514,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
-            FrameAll();
+            FrameBand();
         }
 
         private void ApplyTransform()
@@ -587,6 +609,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
+            OnCursorMoved?.Invoke(ToTechTree(ToContentLocal(evt.position)));
             if (!this.HasPointerCapture(evt.pointerId))
                 return;
 
@@ -622,7 +645,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 // The whole drag is one undo step, so one Ctrl+Z puts a node dragged by accident back
                 Undo.IncrementCurrentGroup();
                 _dragUndoGroup = Undo.GetCurrentGroup();
-                Undo.RecordObject(_tree, "Move Tech Node");
                 _isDragging = true;
             }
 
@@ -633,7 +655,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 position = TechTreeCanvasGeometry.Snap(position);
             }
 
-            TechTreeEditing.Find(_tree, _pressedNodeId).Data.TechTreePosition = position;
+            TechNodeData data = TechTreeEditing.Find(_tree, _pressedNodeId).Data;
+            if (data.TechTreePosition == position)
+                return;
+
+            // Recorded before every move, since a record only covers the change made in the frame it was taken in
+            Undo.RecordObject(_tree, "Move Tech Node");
+            data.TechTreePosition = position;
             _positions[_pressedNodeId] = position;
             if (_nodeElements.TryGetValue(_pressedNodeId, out TechTreeNodeElement element))
             {

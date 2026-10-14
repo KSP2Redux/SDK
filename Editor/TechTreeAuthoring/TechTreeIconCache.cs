@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Ksp2UnityTools.Editor.PlanetAuthoring;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -12,9 +13,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// Loads tech node icons by their Addressables address for the tech tree editor, once per address.
     /// </summary>
     /// <remarks>
-    /// Stock icons resolve when the editor has the game's catalog loaded, and the project's own through its
-    /// Addressables settings. An address neither knows is remembered as missing and the node is drawn without an
-    /// icon, as the editor never draws a placeholder.
+    /// Stock icons resolve through the game's catalog, which the cache registers in the editor first, and the
+    /// project's own through its Addressables settings. An address neither knows is remembered as missing and the node
+    /// is drawn without an icon, as the editor never draws a placeholder.
     /// </remarks>
     public static class TechTreeIconCache
     {
@@ -33,6 +34,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (Icons.TryGetValue(address, out Sprite cached))
                 return cached;
 
+            // Stock icons are in the game's catalog, which the editor only has once it is registered
+            bool hasStockCatalog = EditorPqsBootstrap.EnsureStockCatalog();
             Sprite icon = null;
             if (Addressables.ResourceLocators.Any(locator => locator.Locate(address, typeof(Sprite), out _)))
             {
@@ -44,7 +47,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 icon = LoadProjectIcon(address);
             }
 
-            Icons[address] = icon;
+            // A miss is only remembered once the game's catalog could be asked, so a later registration finds it
+            if (icon != null || hasStockCatalog)
+            {
+                Icons[address] = icon;
+            }
+
             return icon;
         }
 

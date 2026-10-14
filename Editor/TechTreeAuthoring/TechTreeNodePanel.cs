@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using KSP.Game.Science;
+using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.Modding;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -95,8 +99,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
-            Label title = AddLabel(this, DisplayName(node), "tech-tree-panel__title");
-            AddLabel(this, node.Data.ID, "tech-tree-panel__id");
+            Label title = AddHeader(DisplayName(node), node.Data.ID);
             AddIdentity(node, title);
             AddCost(node);
             AddPrerequisites(node);
@@ -104,21 +107,93 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             AddGates(node);
             AddVisibility(node);
             AddPosition(node);
+            AlignFields();
         }
 
         private void ShowTreeSettings()
         {
-            AddLabel(this, _tree.name, "tech-tree-panel__title");
-            Add(new AutocompleteField(
+            AddHeader(_tree.name, $"{_tree.Nodes.Count} nodes");
+
+            // The baked files are what the game loads, so their labels carry the tree's features
+            Foldout features = AddSection("Features");
+            features.Add(AssetFeaturesSection.Build(() => _tree.BakedFiles, KSP2UnityTools.FindParentMod(_tree)));
+
+            Foldout start = AddSection("Start Node");
+            start.Add(new AutocompleteField(
                 _serializedTree.FindProperty(nameof(TechTreeAsset.StartNodeId)),
                 "Start node",
                 () => _tree.Nodes.Select(node => node.Data?.ID).Where(id => !string.IsNullOrEmpty(id))
             ));
 
-            var tiers = new PropertyField(_serializedTree.FindProperty(nameof(TechTreeAsset.Tiers)));
-            tiers.Bind(_serializedTree);
-            Add(tiers);
+            Foldout tiers = AddSection("Tiers");
+            tiers.Add(BuildTierList());
+            AlignFields();
         }
+
+        // One name per tier page, the first page first. A tier without a name shows by its number in game.
+        private VisualElement BuildTierList()
+        {
+            CardListSection.ListHandle handle = null;
+            handle = CardListSection.BuildFromList(() => _tree.Tiers, new CardListSection.ListConfig<TechTreeTier>
+            {
+                Title = "Names",
+                AddButtonText = "+ Add",
+                OnAddClicked = () =>
+                {
+                    Edit("Add Tech Tree Tier", () => _tree.Tiers.Add(new TechTreeTier { EnglishName = string.Empty }));
+                    handle.Rebuild();
+                },
+                BuildCard = (tier, index) =>
+                {
+                    var row = new VisualElement();
+                    row.AddToClassList("data-editor-inline-row");
+
+                    var number = new Label((index + 1).ToString());
+                    number.AddToClassList("tech-tree-panel__tier-number");
+                    row.Add(number);
+
+                    var name = new TextField { isDelayed = true, value = tier.EnglishName ?? string.Empty };
+                    name.AddToClassList("data-editor-inline-row__grow");
+                    name.RegisterValueChangedCallback(evt => Edit("Rename Tech Tree Tier", () => tier.EnglishName = evt.newValue));
+                    row.Add(name);
+
+                    var remove = new Button(() =>
+                    {
+                        Edit("Remove Tech Tree Tier", () => _tree.Tiers.RemoveAt(index));
+                        handle.Rebuild();
+                    }) { text = "X" };
+                    remove.AddToClassList("data-editor-card-remove-btn");
+                    row.Add(remove);
+                    return row;
+                },
+            });
+            return handle.Root;
+        }
+
+        // The part and planet inspectors' header: the name, and a meta chip under it
+        private Label AddHeader(string name, string meta)
+        {
+            var header = new VisualElement();
+            header.AddToClassList("sdk-inspector-header");
+            var identity = new VisualElement();
+            identity.AddToClassList("sdk-inspector-identity-row");
+            var text = new VisualElement();
+            text.AddToClassList("sdk-inspector-identity-text");
+            Label title = AddLabel(text, name, "sdk-inspector-name");
+            var chips = new VisualElement();
+            chips.AddToClassList("sdk-inspector-chip-row");
+            AddLabel(chips, meta, "sdk-inspector-meta-chip");
+            text.Add(chips);
+            identity.Add(text);
+            header.Add(identity);
+            Add(header);
+            return title;
+        }
+
+        // Labels line up as in an inspector
+        private void AlignFields() =>
+            this.Query<VisualElement>(className: BaseField<string>.ussClassName)
+                .ForEach(field => field.AddToClassList(BaseField<string>.alignedFieldUssClassName));
 
         private void AddIdentity(TechTreeNode node, Label title)
         {
@@ -184,61 +259,100 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 Title = "Required",
                 AddButtonText = "+ Add",
-                OnAddClicked = () => ShowPrerequisitePicker(node, handle.Root),
-                BuildCard = (prerequisiteId, index) => BuildNodeRow(prerequisiteId, () =>
+                OnAddClicked = () =>
                 {
-                    EditIf("Remove Tech Node Prerequisite", () =>
-                        TechTreeEditing.RemovePrerequisite(_tree, node.Data.ID, prerequisiteId));
+                    Edit("Add Tech Node Prerequisite", () =>
+                        node.Data.RequiredTechNodeIDs = (node.Data.RequiredTechNodeIDs ?? Array.Empty<string>())
+                            .Append(string.Empty)
+                            .ToArray());
+                    handle.Rebuild();
+                },
+                BuildCard = (prerequisiteId, index) => BuildPrerequisiteRow(node, index, prerequisiteId, () =>
+                {
+                    Edit("Remove Tech Node Prerequisite", () =>
+                        node.Data.RequiredTechNodeIDs = node.Data.RequiredTechNodeIDs.Where((_, i) => i != index).ToArray());
                     handle.Rebuild();
                 }),
             });
             section.Add(handle.Root);
 
             List<string> dependents = TechTreeEditing.GetDependents(_tree, node.Data.ID, _reference);
-            AddLabel(section, $"Required by ({dependents.Count})", "tech-tree-panel__subheading");
+            AddLabel(section, $"Required by ({dependents.Count})", "sdk-card-list__title");
             foreach (string dependent in dependents)
             {
                 section.Add(BuildNodeRow(dependent, null));
             }
         }
 
-        // Every other node, with those that would close a loop shown but disabled
-        private void ShowPrerequisitePicker(TechTreeNode node, VisualElement anchor)
+        // A prerequisite typed or picked, with a button that goes to it
+        private VisualElement BuildPrerequisiteRow(TechTreeNode node, int index, string value, Action remove)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("data-editor-inline-row");
+
+            Button jump = null;
+            var field = new AutocompleteField(
+                value ?? string.Empty,
+                null,
+                () => GetPrerequisiteCandidates(node, index),
+                newValue =>
+                {
+                    Edit("Change Tech Node Prerequisite", () =>
+                    {
+                        string[] required = node.Data.RequiredTechNodeIDs;
+                        if (index < required.Length)
+                        {
+                            required[index] = newValue;
+                        }
+                    });
+                    jump.SetEnabled(TechTreeEditing.FindAny(_tree, _reference, newValue) != null);
+                },
+                detailSource: candidateId => NameOf(candidateId)
+            );
+            field.AddToClassList("data-editor-inline-row__grow");
+            row.Add(field);
+
+            jump = new Button(() =>
+            {
+                string[] required = node.Data.RequiredTechNodeIDs;
+                if (index < required.Length)
+                {
+                    OnNodeRequested?.Invoke(required[index]);
+                }
+            })
+            {
+                text = "●",
+                tooltip = "Go to the node",
+            };
+            jump.AddToClassList("data-editor-card-remove-btn");
+            jump.AddToClassList("tech-tree-panel__jump");
+            jump.SetEnabled(TechTreeEditing.FindAny(_tree, _reference, value) != null);
+            row.Add(jump);
+
+            var removeButton = new Button(remove) { text = "X" };
+            removeButton.AddToClassList("data-editor-card-remove-btn");
+            row.Add(removeButton);
+            return row;
+        }
+
+        // Every node this one could require: not itself, not one it requires already, and none that would close a loop
+        private IEnumerable<string> GetPrerequisiteCandidates(TechTreeNode node, int index)
         {
             string[] required = node.Data.RequiredTechNodeIDs ?? Array.Empty<string>();
-            var menu = new GenericDropdownMenu();
-            int offered = 0;
-            foreach (TechTreeNode candidate in _tree.Nodes
-                         .Concat(_reference)
-                         .Where(candidate => !string.IsNullOrEmpty(candidate.Data?.ID))
-                         .GroupBy(candidate => candidate.Data.ID)
-                         .Select(group => group.First())
-                         .Where(candidate => candidate != node && !required.Contains(candidate.Data.ID))
-                         .OrderBy(DisplayName, StringComparer.OrdinalIgnoreCase))
-            {
-                string candidateId = candidate.Data.ID;
-                string label = $"{DisplayName(candidate)} ({candidateId})";
-                offered++;
-                if (TechTreeEditing.WouldCreateLoop(_tree, node.Data.ID, candidateId, _reference))
-                {
-                    menu.AddDisabledItem(label, false);
-                    continue;
-                }
+            return _tree.Nodes
+                .Concat(_reference)
+                .Select(candidate => candidate.Data?.ID)
+                .Where(candidateId => !string.IsNullOrEmpty(candidateId) && candidateId != node.Data.ID)
+                .Distinct()
+                .Where(candidateId => required.Where((_, i) => i != index).All(other => other != candidateId))
+                .Where(candidateId => !TechTreeEditing.WouldCreateLoop(_tree, node.Data.ID, candidateId, _reference))
+                .OrderBy(NameOf, StringComparer.OrdinalIgnoreCase);
+        }
 
-                menu.AddItem(label, false, () =>
-                {
-                    EditIf("Add Tech Node Prerequisite", () =>
-                        TechTreeEditing.TryAddPrerequisite(_tree, node.Data.ID, candidateId, _reference));
-                    Show(_tree, _serializedTree, node.Data.ID, _reference);
-                });
-            }
-
-            if (offered == 0)
-            {
-                menu.AddDisabledItem("No other nodes", false);
-            }
-
-            menu.DropDown(anchor.worldBound, anchor, DropdownMenuSizeMode.Auto);
+        private string NameOf(string nodeId)
+        {
+            TechTreeNode node = TechTreeEditing.FindAny(_tree, _reference, nodeId);
+            return node != null ? DisplayName(node) : string.Empty;
         }
 
         private void AddParts(TechTreeNode node)
@@ -264,16 +378,88 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 "Mission"
             ));
 
-            int index = _tree.Nodes.IndexOf(node);
-            SerializedProperty research = _serializedTree.FindProperty(
-                $"{nameof(TechTreeAsset.Nodes)}.Array.data[{index}].{nameof(TechTreeNode.Data)}.{nameof(node.Data.RequiredResearchData)}"
-            );
-            if (research == null)
-                return;
+            section.Add(BuildResearchList(node));
+        }
 
-            var researchField = new PropertyField(research, "Research");
-            researchField.Bind(_serializedTree);
-            section.Add(researchField);
+        // One card per research gate, with its experiment, location and the coordinates the R&D Center shows instead
+        // of the location's name
+        private VisualElement BuildResearchList(TechTreeNode node)
+        {
+            CardListSection.ListHandle handle = null;
+            handle = CardListSection.BuildFromList(() => node.Data.RequiredResearchData, new CardListSection.ListConfig<TechRequiredResearchData>
+            {
+                Title = "Research",
+                AddButtonText = "+ Add",
+                OnAddClicked = () =>
+                {
+                    Edit("Add Tech Node Research", () =>
+                        node.Data.RequiredResearchData = (node.Data.RequiredResearchData ?? Array.Empty<TechRequiredResearchData>())
+                            .Append(new TechRequiredResearchData())
+                            .ToArray());
+                    handle.Rebuild();
+                },
+                BuildCard = (research, index) => BuildResearchCard(research, () =>
+                {
+                    Edit("Remove Tech Node Research", () =>
+                        node.Data.RequiredResearchData = node.Data.RequiredResearchData.Where((_, i) => i != index).ToArray());
+                    handle.Rebuild();
+                }),
+            });
+            return handle.Root;
+        }
+
+        private VisualElement BuildResearchCard(TechRequiredResearchData research, Action remove)
+        {
+            VisualElement card = CardShell.Build(out CardShell.Slots slots);
+            var title = new Label(string.IsNullOrEmpty(research.ExperimentID) ? "Experiment" : research.ExperimentID);
+            title.AddToClassList("data-editor-card-name-field");
+            slots.Header.Add(title);
+            var removeButton = new Button(remove) { text = "X" };
+            removeButton.AddToClassList("data-editor-card-remove-btn");
+            slots.Header.Add(removeButton);
+
+            slots.Body.Add(new AutocompleteField(
+                research.ExperimentID ?? string.Empty,
+                "Experiment",
+                ExperimentNameCatalog.GetKnownExperiments,
+                value =>
+                {
+                    Edit("Change Tech Node Research Experiment", () => research.ExperimentID = value);
+                    title.text = string.IsNullOrEmpty(value) ? "Experiment" : value;
+                }
+            ));
+
+            var location = new TextField("Location") { isDelayed = true, value = research.ResearchLocationID ?? string.Empty };
+            location.RegisterValueChangedCallback(evt => Edit("Change Tech Node Research Location",
+                () => research.ResearchLocationID = string.IsNullOrEmpty(evt.newValue) ? null : evt.newValue));
+            slots.Body.Add(location);
+
+            // Coordinates only change how the gate reads in the R&D Center, so they are off until asked for
+            bool hasCoordinates = research.Coordinates is { Length: >= 2 };
+            var coordinates = new Toggle("Coordinates") { value = hasCoordinates };
+            var latitude = new DoubleField("Latitude") { isDelayed = true, value = hasCoordinates ? research.Coordinates[0] : 0d };
+            var longitude = new DoubleField("Longitude") { isDelayed = true, value = hasCoordinates ? research.Coordinates[1] : 0d };
+            void ShowCoordinates(bool shown)
+            {
+                latitude.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+                longitude.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+
+            void WriteCoordinates() => Edit("Change Tech Node Research Coordinates", () =>
+                research.Coordinates = coordinates.value ? new[] { latitude.value, longitude.value } : Array.Empty<double>());
+
+            coordinates.RegisterValueChangedCallback(evt =>
+            {
+                ShowCoordinates(evt.newValue);
+                WriteCoordinates();
+            });
+            latitude.RegisterValueChangedCallback(_ => WriteCoordinates());
+            longitude.RegisterValueChangedCallback(_ => WriteCoordinates());
+            ShowCoordinates(hasCoordinates);
+            slots.Body.Add(coordinates);
+            slots.Body.Add(latitude);
+            slots.Body.Add(longitude);
+            return card;
         }
 
         private void AddVisibility(TechTreeNode node)
@@ -429,7 +615,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private Foldout AddSection(string title)
         {
             var section = new Foldout { text = title, value = !CollapsedSections.Contains(title) };
-            section.AddToClassList("tech-tree-panel__section");
+            section.AddToClassList("sdk-section");
             section.RegisterValueChangedCallback(evt =>
             {
                 if (evt.target != section)

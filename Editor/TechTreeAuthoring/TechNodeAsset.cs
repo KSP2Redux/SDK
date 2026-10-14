@@ -34,7 +34,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     public enum TechNodeReferenceSource
     {
         /// <summary>
-        /// Every tech node the game's catalogs and the project's own Addressables hold, before any patch.
+        /// Every tech node the project's own Addressables and the loaded catalogs hold, Redux's in place of the stock ones.
         /// </summary>
         GameNodes,
 

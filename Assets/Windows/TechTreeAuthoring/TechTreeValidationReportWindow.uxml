@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root validation-report-root">
+
+        <engine:Foldout text="Tree" value="true" class="sdk-section">
+            <editor:ObjectField name="tree-field" label="Tree" tooltip="Tech tree or tech node asset to validate." class="sdk-field unity-base-field__aligned" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Run" value="true" class="sdk-section">
+            <engine:VisualElement class="sdk-button-row">
+                <engine:Button name="run-button" text="Run" />
+                <engine:Button name="apply-all-fixes-button" text="Apply all auto-fixes" tooltip="Apply the first fix on every issue that ships one. Wrapped in a single Undo group." />
+                <engine:Button name="export-button" text="Export report" tooltip="Save the current report to a markdown file." />
+            </engine:VisualElement>
+            <engine:Label name="summary-label" class="validation-report-summary-label" />
+            <engine:Label name="last-run-label" class="validation-report-last-run-label" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Filters" value="true" class="sdk-section">
+            <engine:VisualElement class="validation-report-filters">
+                <engine:Toggle name="show-errors-toggle" label="Errors" value="true" />
+                <engine:Toggle name="show-warnings-toggle" label="Warnings" value="true" />
+                <engine:Toggle name="show-info-toggle" label="Info" value="true" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="Issues" value="true" class="sdk-section">
+            <engine:VisualElement name="empty-state" class="validation-report-empty">
+                <engine:Label text="No issues found." class="validation-report-empty-label" />
+            </engine:VisualElement>
+            <engine:VisualElement name="issues-container" class="validation-report-issues" />
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

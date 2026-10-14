@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using KSP.Game.Science;
+using Ksp2UnityTools.Editor.PlanetAuthoring;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -23,6 +24,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     {
         private const string NODE_LABEL = "techNodeData";
 
+        // Redux's own nodes, the stock tree as Redux patches it
+        private const string REDUX_NODES_LABEL = "feature:Ksp2Redux:Nodes";
+
         /// <summary>
         /// Loads a node asset's reference tree.
         /// </summary>
@@ -42,22 +46,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 : new List<TechTreeNode>();
         }
 
-        // The asset's own baked file is in the project's entries too, so it is left out
+        // The first copy of an ID wins, so the project's own nodes come first, then Redux's, which replace the game's
+        // own under the same IDs, then the rest. The asset's own baked file is left out.
         private static List<TechTreeNode> LoadGameNodes(ICollection<string> excludedPaths)
         {
+            EditorPqsBootstrap.EnsureStockCatalog();
             var json = new List<string>();
-            try
-            {
-                var handle = Addressables.LoadAssetsAsync<TextAsset>(NODE_LABEL, null);
-                IList<TextAsset> assets = handle.WaitForCompletion();
-                json.AddRange((assets ?? Array.Empty<TextAsset>()).Where(asset => asset != null).Select(asset => asset.text));
-                Addressables.Release(handle);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[TechTreeReference] Could not load {NODE_LABEL} from Addressables. {ex.Message}");
-            }
-
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
             if (settings != null)
             {
@@ -69,7 +63,29 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     .Where(text => text != null));
             }
 
+            json.AddRange(LoadCatalogText(REDUX_NODES_LABEL));
+            json.AddRange(LoadCatalogText(NODE_LABEL));
             return FromJson(json);
+        }
+
+        private static List<string> LoadCatalogText(string label)
+        {
+            if (!Addressables.ResourceLocators.Any(locator => locator.Locate(label, typeof(TextAsset), out _)))
+                return new List<string>();
+
+            try
+            {
+                var handle = Addressables.LoadAssetsAsync<TextAsset>(label, null);
+                IList<TextAsset> assets = handle.WaitForCompletion();
+                List<string> text = (assets ?? Array.Empty<TextAsset>()).Where(asset => asset != null).Select(asset => asset.text).ToList();
+                Addressables.Release(handle);
+                return text;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[TechTreeReference] Could not load {label} from Addressables. {ex.Message}");
+                return new List<string>();
+            }
         }
 
         // Of two nodes with one ID the first is kept, as the game keeps it

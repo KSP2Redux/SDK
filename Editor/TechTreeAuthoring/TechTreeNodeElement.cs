@@ -24,7 +24,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private const string BADGE_ERROR_CLASS = "tech-tree-node__badge--error";
 
-        private VisualElement _badge;
+        private Label _badge;
 
         // The prefab lays children out in the 164 by 102 rect, and the frame is inset from it by this much
         private const float RECT_INSET = 6f;
@@ -119,12 +119,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             if (_badge == null)
             {
-                _badge = new VisualElement { pickingMode = PickingMode.Ignore };
+                _badge = new Label { pickingMode = PickingMode.Ignore };
                 _badge.AddToClassList("tech-tree-node__badge");
                 Add(_badge);
             }
 
-            _badge.EnableInClassList(BADGE_ERROR_CLASS, severity == ValidationSeverity.Error);
+            bool isError = severity == ValidationSeverity.Error;
+            _badge.text = isError ? "✕" : "⚠";
+            _badge.EnableInClassList(BADGE_ERROR_CLASS, isError);
         }
 
         /// <summary>

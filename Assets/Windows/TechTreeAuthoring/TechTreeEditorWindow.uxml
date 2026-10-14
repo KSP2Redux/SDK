@@ -1,22 +1,32 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:VisualElement name="toolbar" class="tech-tree-toolbar">
-        <ui:VisualElement name="find-host" class="tech-tree-toolbar__find" />
-        <ui:Button name="readiness-chip" class="sdk-readiness-chip tech-tree-toolbar__chip" />
+        <ui:Button name="features-chip" class="sdk-tool-chip tech-tree-toolbar__features" tooltip="The features the tree loads under. Edit them in the tree's settings." />
         <ui:VisualElement class="tech-tree-toolbar__spacer" />
-        <ui:Toggle name="preview-toggle" text="Preview unlocks" value="false" class="tech-tree-toolbar__toggle" />
-        <ui:Toggle name="snap-toggle" text="Snap" value="true" class="tech-tree-toolbar__toggle" />
-        <ui:Toggle name="grid-toggle" text="Grid" value="true" class="tech-tree-toolbar__toggle" />
-        <ui:Toggle name="pages-toggle" text="Tier pages" value="true" class="tech-tree-toolbar__toggle" />
-        <ui:Toggle name="band-toggle" text="Visible band" value="true" class="tech-tree-toolbar__toggle" />
-        <ui:Button name="zoom-out" text="-" class="tech-tree-toolbar__zoom" />
-        <ui:Label name="zoom-label" text="70%" class="tech-tree-toolbar__zoom-label" />
-        <ui:Button name="zoom-in" text="+" class="tech-tree-toolbar__zoom" />
-        <ui:Button name="frame-all" text="Frame all" />
-        <ui:Button name="export-localizations" text="Export Localizations" class="sdk-tool-chip" />
-        <ui:Button name="bake-json" text="Bake JSON" class="sdk-tool-chip sdk-tool-chip--primary" />
+        <ui:VisualElement name="find-host" class="tech-tree-toolbar__find" />
+        <ui:Button name="readiness-chip-valid" class="sdk-readiness-chip tech-tree-toolbar__chip" />
+        <ui:Button name="chip-export-localizations" text="Export Localizations" class="sdk-tool-chip tech-tree-toolbar__chip" />
+        <ui:Button name="chip-bake-json" text="Bake JSON" class="sdk-tool-chip tech-tree-toolbar__chip" />
     </ui:VisualElement>
     <ui:VisualElement name="body" class="tech-tree-body">
         <ui:ScrollView name="side-panel" class="tech-tree-panel" />
-        <ui:VisualElement name="canvas-host" class="tech-tree-canvas-host" />
+        <ui:VisualElement name="canvas-host" class="tech-tree-canvas-host">
+            <ui:VisualElement class="tech-tree-overlay tech-tree-overlay--top" picking-mode="Ignore">
+                <ui:VisualElement class="sdk-tab-bar tech-tree-overlay__modes">
+                    <ui:Button name="tab-authoring" text="Authoring" class="sdk-tab" />
+                    <ui:Button name="tab-preview" text="Preview unlocks" class="sdk-tab" />
+                </ui:VisualElement>
+                <ui:Button name="pill-snap" text="Snap 180 × 110" class="sdk-pill" />
+                <ui:Button name="pill-grid" text="Grid" class="sdk-pill" />
+                <ui:Button name="pill-pages" text="Tier pages" class="sdk-pill" />
+                <ui:Button name="pill-band" text="Visible band" class="sdk-pill" />
+            </ui:VisualElement>
+            <ui:Label name="cursor-label" class="tech-tree-overlay tech-tree-overlay--bottom-left tech-tree-overlay__cursor" picking-mode="Ignore" />
+            <ui:VisualElement class="tech-tree-overlay tech-tree-overlay--bottom-right" picking-mode="Ignore">
+                <ui:Button name="chip-zoom-out" text="-" class="sdk-tool-chip" tooltip="Zoom out" />
+                <ui:Label name="zoom-label" text="100%" class="sdk-tool-chip tech-tree-overlay__zoom" />
+                <ui:Button name="chip-zoom-in" text="+" class="sdk-tool-chip" tooltip="Zoom in" />
+                <ui:Button name="chip-frame-all" text="Frame all" class="sdk-tool-chip" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

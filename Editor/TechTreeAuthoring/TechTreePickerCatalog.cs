@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Ksp2UnityTools.Editor.PlanetAuthoring;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -14,8 +15,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// The part names, mission IDs and icon addresses the tech tree editor's pickers suggest.
     /// </summary>
     /// <remarks>
-    /// Each list joins what the loaded runtime catalogs hold, where the game's own content shows in the editor, with
-    /// the project's own Addressables entries. Trees use other mods' parts, so the pickers suggest and never restrict.
+    /// Each list joins the game's own catalog, registered in the editor for the lookup, with the project's own
+    /// Addressables entries. Trees use other mods' parts, so the pickers suggest and never restrict.
     /// Each list is built on first use and kept until the domain reloads.
     /// </remarks>
     public static class TechTreePickerCatalog
@@ -57,6 +58,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (_iconAddresses != null)
                 return _iconAddresses;
 
+            // The game's icons are only in the editor once its catalog is registered
+            bool hasStockCatalog = EditorPqsBootstrap.EnsureStockCatalog();
             var addresses = new HashSet<string>(StringComparer.Ordinal);
             foreach (var locator in Addressables.ResourceLocators)
             {
@@ -74,13 +77,19 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 addresses.Add(entry.address);
             }
 
-            _iconAddresses = Sorted(addresses);
-            return _iconAddresses;
+            List<string> sorted = Sorted(addresses);
+            if (hasStockCatalog)
+            {
+                _iconAddresses = sorted;
+            }
+
+            return sorted;
         }
 
         // The runtime catalogs hold the game's assets, the project's own are read off its Addressables settings
         private static List<string> ReadIds(string label, Regex idPattern)
         {
+            EditorPqsBootstrap.EnsureStockCatalog();
             var ids = new HashSet<string>(StringComparer.Ordinal);
             void AddFrom(string json)
             {

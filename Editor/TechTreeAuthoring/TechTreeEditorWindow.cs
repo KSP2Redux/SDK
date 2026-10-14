@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Ksp2UnityTools.Editor.Localization.Export;
+using Ksp2UnityTools.Editor.Modding;
 using Ksp2UnityTools.Editor.TechTreeAuthoring.Validation;
-using Ksp2UnityTools.Editor.Validation;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -38,12 +38,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private TechTreeNodePanel _panel;
 
-        private TechTreeIssueList _issueList;
-
         private Button _readinessChip;
 
-        // The side panel lists the tree's issues instead of the selected node's options while this is on
-        private bool _showsIssues;
+        private Button _featuresChip;
 
         private Label _zoomLabel;
 
@@ -76,22 +73,43 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         /// <summary>
-        /// Focuses the editor window showing a tree, or opens a new one for it.
+        /// Focuses the editor window showing a tree, or opens a new one for it as a tab beside the Scene view.
         /// </summary>
         /// <param name="tree">The tree to edit.</param>
-        public static void OpenFor(TechTreeAsset tree)
+        /// <returns>The window.</returns>
+        public static TechTreeEditorWindow OpenFor(TechTreeAsset tree)
         {
             TechTreeEditorWindow existing = Resources.FindObjectsOfTypeAll<TechTreeEditorWindow>()
                 .FirstOrDefault(window => window._tree == tree);
             if (existing != null)
             {
                 existing.Focus();
-                return;
+                return existing;
             }
 
-            var window = CreateInstance<TechTreeEditorWindow>();
-            window._tree = tree;
-            window.Show();
+            var created = CreateWindow<TechTreeEditorWindow>(tree.name, typeof(SceneView));
+            created._tree = tree;
+
+            // The window may have built its UI before it knew its tree
+            if (created._canvas != null)
+            {
+                created.Bind();
+            }
+
+            return created;
+        }
+
+        /// <summary>
+        /// Selects a node and centres the view on it.
+        /// </summary>
+        /// <param name="nodeId">The node's ID.</param>
+        public void FocusNode(string nodeId)
+        {
+            if (_canvas == null)
+                return;
+
+            _canvas.Select(nodeId);
+            _canvas.CentreOn(nodeId);
         }
 
         private void CreateGUI()
@@ -115,7 +133,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _canvas.OnTreeEdited += RefreshSidePanel;
             _canvas.OnRefused += message => ShowNotification(new GUIContent(message));
             _canvas.OnRebuilt += Revalidate;
-            rootVisualElement.Q("canvas-host").Add(_canvas);
+
+            var cursorLabel = rootVisualElement.Q<Label>("cursor-label");
+            _canvas.OnCursorMoved += position =>
+                cursorLabel.text = $"x {Mathf.RoundToInt(position.x)}  y {Mathf.RoundToInt(position.y)}";
+
+            // First, so the controls in the corners draw over it
+            rootVisualElement.Q("canvas-host").Insert(0, _canvas);
 
             _panel = new TechTreeNodePanel();
             _panel.OnNodeRequested += nodeId =>
@@ -134,46 +158,31 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             };
             _sidePanel.Add(_panel);
 
-            _issueList = new TechTreeIssueList();
-            _issueList.OnNodeRequested += nodeId =>
-            {
-                _showsIssues = false;
-                _canvas.Select(nodeId);
-                _canvas.CentreOn(nodeId);
-                RefreshSidePanel();
-            };
-            _issueList.OnFixApplied += () =>
-            {
-                _serializedTree?.Update();
-                _canvas.Rebuild();
-                RefreshSidePanel();
-            };
-            _sidePanel.Add(_issueList);
+            _readinessChip = rootVisualElement.Q<Button>("readiness-chip-valid");
+            _readinessChip.tooltip = "Open the Tech Tree Validation Report.";
+            _readinessChip.clicked += () => TechTreeValidationReportWindow.Open(_tree, _canvas.SnapsToGrid);
 
-            _readinessChip = rootVisualElement.Q<Button>("readiness-chip");
-            _readinessChip.clicked += () =>
-            {
-                _showsIssues = !_showsIssues;
-                RefreshSidePanel();
-            };
-
-            var find = new AutocompleteField(string.Empty, null, FindSuggestions, FindNode) { tooltip = "Find node" };
+            var find = new AutocompleteField(string.Empty, null, FindSuggestions, FindNode);
+            find.Q<TextField>().textEdition.placeholder = "Find node";
             rootVisualElement.Q("find-host").Add(find);
 
-            BindToggle("snap-toggle", value =>
+            _featuresChip = rootVisualElement.Q<Button>("features-chip");
+            _featuresChip.clicked += ShowTreeSettings;
+
+            BindPill("pill-snap", () => _canvas.SnapsToGrid, value =>
             {
                 _canvas.SnapsToGrid = value;
                 Revalidate();
             });
-            BindToggle("preview-toggle", value => _canvas.PreviewsUnlocks = value);
-            BindToggle("grid-toggle", value => _canvas.ShowsGrid = value);
-            BindToggle("pages-toggle", value => _canvas.ShowsPages = value);
-            BindToggle("band-toggle", value => _canvas.ShowsBand = value);
-            BindButton("zoom-in", () => _canvas.ZoomBy(1.2f));
-            BindButton("zoom-out", () => _canvas.ZoomBy(1f / 1.2f));
-            BindButton("frame-all", () => _canvas.FrameAll());
-            BindButton("bake-json", () => TechTreeBaker.Bake(_tree));
-            BindButton("export-localizations", () => LocExportFlow.RunForAsset(_tree));
+            BindPill("pill-grid", () => _canvas.ShowsGrid, value => _canvas.ShowsGrid = value);
+            BindPill("pill-pages", () => _canvas.ShowsPages, value => _canvas.ShowsPages = value);
+            BindPill("pill-band", () => _canvas.ShowsBand, value => _canvas.ShowsBand = value);
+            BindModeTabs();
+            BindButton("chip-zoom-in", () => _canvas.ZoomBy(1.2f));
+            BindButton("chip-zoom-out", () => _canvas.ZoomBy(1f / 1.2f));
+            BindButton("chip-frame-all", () => _canvas.FrameAll());
+            BindButton("chip-bake-json", () => TechTreeBaker.Bake(_tree));
+            BindButton("chip-export-localizations", () => LocExportFlow.RunForAsset(_tree));
 
             Undo.undoRedoPerformed += OnUndoRedo;
             Bind();
@@ -215,49 +224,16 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             RefreshSidePanel();
         }
 
-        // The selected node's options, the tree's settings when nothing is selected, or the issue list
-        private void RefreshSidePanel()
-        {
-            _panel.style.display = _showsIssues ? DisplayStyle.None : DisplayStyle.Flex;
-            _issueList.style.display = _showsIssues ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!_showsIssues)
-            {
-                _panel.Show(_tree, _serializedTree, _canvas.SelectedId);
-                return;
-            }
-
-            // The list runs the expensive validators too, which check parts and missions against the project
-            _issueList.Show(TechTreeValidationReport.Run(
-                new TechTreeValidationContext(
-                    _tree,
-                    null,
-                    _canvas.SnapsToGrid,
-                    TechTreePickerCatalog.GetPartNames(),
-                    TechTreePickerCatalog.GetMissionIds(),
-                    TechTreePickerCatalog.GetIconAddresses()
-                ),
-                null
-            ));
-        }
+        // The selected node's options, or the tree's settings when nothing is selected
+        private void RefreshSidePanel() => _panel.Show(_tree, _serializedTree, _canvas.SelectedId);
 
         // The chip and the node badges follow every redraw
         private void Revalidate()
         {
-            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(
-                _tree,
-                null,
-                _canvas.SnapsToGrid,
-                knownIcons: TechTreePickerCatalog.GetIconAddresses()
-            ));
-            ValidationSeverity? worst = TechTreeIssueList.GetWorst(issues);
-            _readinessChip.text = TechTreeIssueList.GetSummary(issues);
-            _readinessChip.EnableInClassList("is-ok", worst is null or ValidationSeverity.Info);
-            _readinessChip.EnableInClassList("is-warn", worst == ValidationSeverity.Warning);
-            _readinessChip.EnableInClassList("is-error", worst == ValidationSeverity.Error);
-            _canvas.SetBadges(issues
-                .Where(issue => issue.NodeId != null)
-                .GroupBy(issue => issue.NodeId)
-                .ToDictionary(group => group.Key, group => group.Max(issue => issue.Issue.Severity)));
+            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(_tree, null, _canvas.SnapsToGrid));
+            TechTreeValidationReportWindow.ShowOnChip(_readinessChip, issues);
+            _canvas.SetBadges(TechTreeValidationReportWindow.WorstByNode(issues));
+            RefreshFeaturesChip();
         }
 
         // An edit typed into the panel must not rebuild the field being typed in
@@ -289,10 +265,62 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                         : new[] { node.EnglishName, node.Data.ID })
                     .Distinct();
 
-        private void BindToggle(string elementName, Action<bool> onChanged)
+        // The features a mod's tree needs no label for are its mod's own, so a tree with none names the mod
+        private void RefreshFeaturesChip()
         {
-            var toggle = rootVisualElement.Q<Toggle>(elementName);
-            toggle?.RegisterValueChangedCallback(evt => onChanged(evt.newValue));
+            if (_tree == null)
+            {
+                _featuresChip.text = "Features";
+                return;
+            }
+
+            string ownerId = TechTreeBake.GetOwnerId(_tree);
+            (List<string> features, List<string> noFeatures) = AssetFeatureLabels.ReadAll(
+                _tree.BakedFiles.Select(AssetFeatureLabels.EntryOf).Where(entry => entry != null).Select(entry => entry.labels),
+                ownerId
+            );
+            IEnumerable<string> shown = features.Concat(noFeatures.Select(feature => "not " + feature));
+            _featuresChip.text = $"Features  {(features.Count + noFeatures.Count == 0 ? ownerId : string.Join(", ", shown))}";
+        }
+
+        // The tree's settings, where its features are edited, show while nothing is selected
+        private void ShowTreeSettings()
+        {
+            _canvas.Select(null);
+            RefreshSidePanel();
+        }
+
+        // Authoring and Preview unlocks are one choice, shown as the SDK's tab bar
+        private void BindModeTabs()
+        {
+            var authoring = rootVisualElement.Q<Button>("tab-authoring");
+            var preview = rootVisualElement.Q<Button>("tab-preview");
+            void Show(bool previews)
+            {
+                _canvas.PreviewsUnlocks = previews;
+                authoring.EnableInClassList("sdk-tab--active", !previews);
+                preview.EnableInClassList("sdk-tab--active", previews);
+            }
+
+            authoring.clicked += () => Show(false);
+            preview.clicked += () => Show(true);
+            Show(false);
+        }
+
+        // A pill shows its setting as is-active and flips it on click, as the part editor's gizmo pills do
+        private void BindPill(string elementName, Func<bool> getter, Action<bool> setter)
+        {
+            var pill = rootVisualElement.Q<Button>(elementName);
+            if (pill == null)
+                return;
+
+            pill.EnableInClassList("is-active", getter());
+            pill.clicked += () =>
+            {
+                bool newValue = !getter();
+                setter(newValue);
+                pill.EnableInClassList("is-active", newValue);
+            };
         }
 
         private void BindButton(string elementName, Action onClicked)

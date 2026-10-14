@@ -12,8 +12,8 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
     /// <summary>
-    /// The inspector of a <see cref="TechNodeAsset" />: bake and export actions, its features and reference tree, the
-    /// reference tree drawn with the node in it, the node's problems, and the node's options.
+    /// The inspector of a <see cref="TechNodeAsset" />: readiness and quick tools, its features and reference tree, the
+    /// reference tree drawn with the node in it, and the node's options.
     /// </summary>
     /// <remarks>
     /// The canvas moves and links the node as the tech tree editor does, and draws the reference tree read only. The
@@ -32,7 +32,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private TechTreeNodePanel _panel;
 
-        private TechTreeIssueList _issueList;
+        private Button _readinessChip;
 
         private List<TechTreeNode> _reference = new();
 
@@ -45,11 +45,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             var root = new VisualElement();
             Ksp2UnityToolsStyles.Apply(root, "/Assets/Windows/DataEditors.uss", WINDOW_USS_PATH);
 
-            var actions = new VisualElement();
-            actions.AddToClassList("sdk-button-row");
-            actions.Add(new Button(() => TechTreeBaker.Bake(_asset)) { text = "Bake JSON" });
-            actions.Add(new Button(() => LocExportFlow.RunForAsset(_asset)) { text = "Export Localizations" });
-            root.Add(actions);
+            root.Add(BuildHeader());
 
             root.Add(BuildFeatures());
             root.Add(BuildReference());
@@ -61,16 +57,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _canvas.OnTreeEdited += RefreshPanel;
             _canvas.OnRebuilt += Revalidate;
             root.Add(_canvas);
-
-            _issueList = new TechTreeIssueList();
-            _issueList.OnNodeRequested += nodeId => _canvas.CentreOn(nodeId);
-            _issueList.OnFixApplied += () =>
-            {
-                serializedObject.Update();
-                _canvas.Rebuild();
-                RefreshPanel();
-            };
-            root.Add(_issueList);
 
             _panel = new TechTreeNodePanel();
             _panel.OnNodeRequested += nodeId =>
@@ -102,6 +88,45 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             Undo.undoRedoPerformed += OnUndoRedo;
             root.RegisterCallback<DetachFromPanelEvent>(_ => Undo.undoRedoPerformed -= OnUndoRedo);
             return root;
+        }
+
+        // The part inspector's header rows: readiness, then quick tools
+        private VisualElement BuildHeader()
+        {
+            var header = new VisualElement();
+            header.AddToClassList("sdk-inspector-header");
+
+            _readinessChip = new Button(() => TechTreeValidationReportWindow.Open(_asset, _canvas.SnapsToGrid))
+            {
+                tooltip = "Open the Tech Tree Validation Report.",
+            };
+            _readinessChip.AddToClassList("sdk-readiness-chip");
+            header.Add(BuildHeaderRow("Readiness", _readinessChip));
+
+            var bake = new Button(() => TechTreeBaker.Bake(_asset)) { text = "Bake JSON" };
+            bake.AddToClassList("sdk-tool-chip");
+            var export = new Button(() => LocExportFlow.RunForAsset(_asset)) { text = "Export Localizations" };
+            export.AddToClassList("sdk-tool-chip");
+            header.Add(BuildHeaderRow("Quick Tools", bake, export));
+            return header;
+        }
+
+        private static VisualElement BuildHeaderRow(string label, params VisualElement[] chips)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("sdk-inspector-row");
+            var rowLabel = new Label(label);
+            rowLabel.AddToClassList("sdk-inspector-row-label");
+            row.Add(rowLabel);
+            var chipRow = new VisualElement();
+            chipRow.AddToClassList("sdk-inspector-chip-row");
+            foreach (VisualElement chip in chips)
+            {
+                chipRow.Add(chip);
+            }
+
+            row.Add(chipRow);
+            return row;
         }
 
         private VisualElement BuildFeatures()
@@ -163,17 +188,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         // The node is checked against the reference tree, and only the node is ever reported
         private void Revalidate()
         {
-            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(
-                _asset,
-                _reference,
-                _canvas.SnapsToGrid,
-                knownIcons: TechTreePickerCatalog.GetIconAddresses()
-            ));
-            _issueList.Show(issues);
-            _canvas.SetBadges(issues
-                .Where(issue => issue.NodeId != null)
-                .GroupBy(issue => issue.NodeId)
-                .ToDictionary(group => group.Key, group => group.Max(issue => issue.Issue.Severity)));
+            List<TechTreeIssue> issues = TechTreeValidationReport.Run(
+                new TechTreeValidationContext(_asset, _reference, _canvas.SnapsToGrid),
+                null
+            );
+            TechTreeValidationReportWindow.ShowOnChip(_readinessChip, issues);
+            _canvas.SetBadges(TechTreeValidationReportWindow.WorstByNode(issues));
         }
 
         private void RefreshPanel() => _panel.Show(_asset, serializedObject, _asset.Node?.Data.ID, _reference);

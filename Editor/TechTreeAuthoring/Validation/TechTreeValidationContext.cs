@@ -6,8 +6,7 @@ using UnityEditor;
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation
 {
     /// <summary>
-    /// What the tech tree validators check: a tree, the reference nodes it is placed against, and what the project
-    /// knows of the content it names.
+    /// What the tech tree validators check: a tree and the reference nodes it is placed against.
     /// </summary>
     public class TechTreeValidationContext
     {
@@ -19,24 +18,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation
         /// <param name="tree">The tree to check.</param>
         /// <param name="reference">The nodes of the tree it is placed against, or null for none.</param>
         /// <param name="snapsToGrid">Whether the editor snaps to the stock grid.</param>
-        /// <param name="knownParts">The part names the project knows, or null to skip checks against them.</param>
-        /// <param name="knownMissions">The mission IDs the project knows, or null to skip checks against them.</param>
-        /// <param name="knownIcons">The icon addresses the project knows, or null to skip checks against them.</param>
         public TechTreeValidationContext(
             TechTreeAsset tree,
             IReadOnlyList<TechTreeNode> reference = null,
-            bool snapsToGrid = false,
-            IReadOnlyCollection<string> knownParts = null,
-            IReadOnlyCollection<string> knownMissions = null,
-            IReadOnlyCollection<string> knownIcons = null
+            bool snapsToGrid = false
         )
         {
             Tree = tree;
             Reference = reference ?? Array.Empty<TechTreeNode>();
             SnapsToGrid = snapsToGrid;
-            KnownParts = knownParts != null ? new HashSet<string>(knownParts) : null;
-            KnownMissions = knownMissions != null ? new HashSet<string>(knownMissions) : null;
-            KnownIcons = knownIcons != null ? new HashSet<string>(knownIcons) : null;
         }
 
         /// <summary>
@@ -53,21 +43,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation
         /// Gets whether the editor snaps to the stock grid, so a node off it is worth noting.
         /// </summary>
         public bool SnapsToGrid { get; }
-
-        /// <summary>
-        /// Gets the part names the project knows, or null when they were not looked up.
-        /// </summary>
-        public HashSet<string> KnownParts { get; }
-
-        /// <summary>
-        /// Gets the mission IDs the project knows, or null when they were not looked up.
-        /// </summary>
-        public HashSet<string> KnownMissions { get; }
-
-        /// <summary>
-        /// Gets the icon addresses the project knows, or null when they were not looked up.
-        /// </summary>
-        public HashSet<string> KnownIcons { get; }
 
         /// <summary>
         /// Gets the IDs of the reference nodes.
