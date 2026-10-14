@@ -41,6 +41,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         // The tree a patch changes, drawn read only beside the patch's own nodes, or empty for a tree
         private List<TechTreeNode> _reference = new();
 
+        // The tiers and start node of the tree a patch changes, or null for a tree or a reference without any
+        private ReferenceTreeData _referenceTreeData;
+
         private Button _readinessChip;
 
         private Button _featuresChip;
@@ -125,7 +128,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             visualTree.CloneTree(rootVisualElement);
-            rootVisualElement.style.flexGrow = 1f;
+            rootVisualElement.AddToClassList("tech-tree-window");
             Ksp2UnityToolsStyles.Apply(rootVisualElement, "/Assets/Windows/DataEditors.uss", USS_PATH);
 
             _sidePanel = rootVisualElement.Q<ScrollView>("side-panel");
@@ -234,12 +237,16 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         // The selected node's options, or the tree's settings when nothing is selected
-        private void RefreshSidePanel() => _panel.Show(_tree, _serializedTree, _canvas.SelectedId, _reference);
+        private void RefreshSidePanel() =>
+            _panel.Show(_tree, _serializedTree, _canvas.SelectedId, _reference, _referenceTreeData);
 
         // A patch is drawn over the tree it changes, a tree on its own
         private void LoadReference()
         {
-            _reference = _tree is TechTreePatchAsset patch ? TechTreeReference.Load(patch) : new List<TechTreeNode>();
+            _reference = _tree is BaseReferencedTechTreeAsset referenced
+                ? TechTreeReference.Load(referenced)
+                : new List<TechTreeNode>();
+            _referenceTreeData = _tree is TechTreePatchAsset patch ? TechTreeReference.LoadTreeData(patch) : null;
             _canvas.SetTree(_tree, _reference);
             if (_serializedTree != null)
             {
@@ -250,7 +257,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         // The chip and the node badges follow every redraw
         private void Revalidate()
         {
-            List<TechTreeIssue> issues = TechTreeValidationReport.Run(new TechTreeValidationContext(_tree, _reference, _canvas.SnapsToGrid));
+            List<TechTreeIssue> issues = TechTreeValidationReport.Run(
+                new TechTreeValidationContext(_tree, _reference, _canvas.SnapsToGrid, _referenceTreeData)
+            );
             TechTreeValidationReportWindow.ShowOnChip(_readinessChip, issues);
             _canvas.SetBadges(TechTreeValidationReportWindow.WorstByNode(issues));
             RefreshFeaturesChip();
@@ -260,13 +269,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private bool IsEditingInPanel() =>
             rootVisualElement.focusController?.focusedElement is VisualElement focused && _sidePanel.Contains(focused);
 
-        // Finds by exact ID first, then by name
+        // Finds by exact ID first, then by name, among the tree's nodes and the reference's drawn beside them
         private void FindNode(string query)
         {
             if (_tree == null || string.IsNullOrWhiteSpace(query))
                 return;
 
-            TechTreeNode node = TechTreeEditing.Find(_tree, query) ?? _tree.Nodes.FirstOrDefault(candidate =>
+            TechTreeNode node = TechTreeEditing.FindAny(_tree, _reference, query) ?? SearchableNodes().FirstOrDefault(candidate =>
                 string.Equals(candidate.EnglishName, query, StringComparison.OrdinalIgnoreCase));
             if (node == null)
                 return;
@@ -275,10 +284,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _canvas.CentreOn(node.Data.ID);
         }
 
+        private IEnumerable<TechTreeNode> SearchableNodes() => _tree.Nodes.Concat(_reference);
+
         private IEnumerable<string> FindSuggestions() =>
             _tree == null
                 ? Enumerable.Empty<string>()
-                : _tree.Nodes
+                : SearchableNodes()
                     .Where(node => !string.IsNullOrEmpty(node.Data?.ID))
                     .SelectMany(node => string.IsNullOrEmpty(node.EnglishName)
                         ? new[] { node.Data.ID }
@@ -294,11 +305,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
+            // A patch keeps its features itself, since its Lua has no labels to carry them
             string ownerId = TechTreeBake.GetOwnerId(_tree);
-            (List<string> features, List<string> noFeatures) = AssetFeatureLabels.ReadAll(
-                _tree.BakedFiles.Select(AssetFeatureLabels.EntryOf).Where(entry => entry != null).Select(entry => entry.labels),
-                ownerId
-            );
+            (List<string> features, List<string> noFeatures) = _tree is TechTreePatchAsset patch
+                ? (patch.Features.Where(id => !string.IsNullOrWhiteSpace(id)).ToList(),
+                    patch.ExcludedFeatures.Where(id => !string.IsNullOrWhiteSpace(id)).ToList())
+                : AssetFeatureLabels.ReadAll(
+                    _tree.BakedFiles.Select(AssetFeatureLabels.EntryOf).Where(entry => entry != null).Select(entry => entry.labels),
+                    ownerId
+                );
             IEnumerable<string> shown = features.Concat(noFeatures.Select(feature => "not " + feature));
             _featuresChip.text = $"Features  {(features.Count + noFeatures.Count == 0 ? ownerId : string.Join(", ", shown))}";
         }

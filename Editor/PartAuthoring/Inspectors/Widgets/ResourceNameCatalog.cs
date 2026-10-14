@@ -22,7 +22,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
         /// <returns>The cached, alphabetically-sorted resource-name list.</returns>
         public static IReadOnlyList<string> GetKnownResources()
         {
-            return _cached ??= AddressablesJsonCatalog.Build(RESOURCES_LABEL, nameof(ResourceNameCatalog), TryExtractName);
+            return _cached ??= AddressablesJsonCatalog.Build(RESOURCES_LABEL, TryExtractName);
         }
 
         private static string TryExtractName(string json)

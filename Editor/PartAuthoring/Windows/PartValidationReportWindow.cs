@@ -411,6 +411,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Windows
             {
                 return;
             }
+
+            // A group of its own, so one undo takes back the fixes and nothing done before them
+            Undo.IncrementCurrentGroup();
             int undoGroup = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName("Apply all auto-fixes");
             int applied = 0;

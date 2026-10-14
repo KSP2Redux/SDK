@@ -7,6 +7,9 @@ namespace Ksp2UnityTools.Editor.Localization.Export
     /// <summary>
     /// Emits localization keys for a tech tree: each node's name and description, and the name of every named tier.
     /// </summary>
+    /// <remarks>
+    /// A patch exports only the text it changes from the reference, since the rest keeps the reference's keys.
+    /// </remarks>
     public static class TechTreeLocalizationExtractor
     {
         /// <summary>
@@ -52,10 +55,12 @@ namespace Ksp2UnityTools.Editor.Localization.Export
                 }
             }
 
-            // An unnamed tier is shown by its number, so it has no key to export
+            // An unnamed tier is shown by its number, so it has no key to export. A patch keeps the reference's keys
+            // for the tiers it leaves alone.
+            HashSet<int> changedTiers = patch != null ? new HashSet<int>(TechTreePatchBake.GetChangedTiers(patch)) : null;
             for (int i = 0; i < tree.Tiers.Count; i++)
             {
-                if (string.IsNullOrEmpty(tree.Tiers[i].EnglishName))
+                if (string.IsNullOrEmpty(tree.Tiers[i].EnglishName) || (changedTiers != null && !changedTiers.Contains(i + 1)))
                     continue;
 
                 entries.Add(new LocalizationKeyEntry(

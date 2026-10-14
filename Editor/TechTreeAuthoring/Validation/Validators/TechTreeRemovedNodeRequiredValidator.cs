@@ -5,7 +5,7 @@ using Ksp2UnityTools.Editor.Validation;
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
 {
     /// <summary>
-    /// Warns on each node a patch removes that a node left in the tree still requires.
+    /// Reports each node a patch removes that a node left in the tree still requires, as an error.
     /// </summary>
     /// <remarks>
     /// A node that requires a removed node can never be unlocked. The patch's own nodes count, and so do the
@@ -39,7 +39,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
 
                 yield return new ValidationIssue(
                     Code,
-                    ValidationSeverity.Warning,
+                    ValidationSeverity.Error,
                     $"The patch removes {removedId}, which {string.Join(", ", dependents)} still require, so they can never be unlocked.",
                     new[]
                     {

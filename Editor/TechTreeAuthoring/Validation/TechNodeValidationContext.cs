@@ -52,9 +52,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation
         public IEnumerable<TechTreeNode> EarlierNodes => Tree.Tree.Nodes.Take(Index);
 
         /// <summary>
-        /// Gets the reference nodes the tree does not redefine.
+        /// Gets the reference nodes that still load beside the tree as they are: those it neither redefines nor, as a
+        /// patch, removes.
         /// </summary>
         public IEnumerable<TechTreeNode> ReferenceOnlyNodes =>
-            Tree.Reference.Where(node => node.Data?.ID != null && TechTreeEditing.Find(Tree.Tree, node.Data.ID) == null);
+            Tree.Reference.Where(node => node.Data?.ID != null
+                && TechTreeEditing.Find(Tree.Tree, node.Data.ID) == null
+                && !(Tree.Tree is TechTreePatchAsset patch && patch.RemovedNodeIds.Contains(node.Data.ID)));
     }
 }

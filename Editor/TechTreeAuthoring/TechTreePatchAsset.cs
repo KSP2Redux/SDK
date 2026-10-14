@@ -6,7 +6,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
     /// <summary>
     /// Changes to a tree the asset does not own, such as Redux's or another mod's: nodes it adds, reference nodes it
-    /// changes, and reference nodes it removes.
+    /// changes, reference nodes it removes, and the reference's tier names and start node.
     /// </summary>
     /// <remarks>
     /// Its nodes are the new nodes and the overrides. An override is a reference node taken into the asset to change,
@@ -14,23 +14,21 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// patch with only the fields each override changed from its baseline, so a field the author never touched is
     /// never written, even if the reference changes it later.
     /// </remarks>
-    public class TechTreePatchAsset : TechTreeAsset
+    public class TechTreePatchAsset : BaseReferencedTechTreeAsset
     {
-        /// <summary>
-        /// Where the tree the patch changes comes from.
-        /// </summary>
-        public TechNodeReferenceSource ReferenceSource;
-
-        /// <summary>
-        /// The tech tree asset, or the folder of tech node JSON, the patch changes when <see cref="ReferenceSource" />
-        /// is <see cref="TechNodeReferenceSource.Asset" />.
-        /// </summary>
-        public Object Reference;
-
         /// <summary>
         /// Each override's node as it was in the reference when it was taken.
         /// </summary>
         [HideInInspector] public List<TechTreeNode> Baselines = new();
+
+        /// <summary>
+        /// The reference's tiers and start node as they were when the patch first saw them, or null before it has.
+        /// </summary>
+        /// <remarks>
+        /// The patch's own <see cref="TechTreeAsset.Tiers" /> and <see cref="TechTreeAsset.StartNodeId" /> are compared
+        /// with it, so only a tier or start node the author changed is written.
+        /// </remarks>
+        [SerializeReference, HideInInspector] public ReferenceTreeData TreeDataBaseline;
 
         /// <summary>
         /// The IDs of the reference nodes the patch removes.
@@ -62,5 +60,26 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="nodeId">The node's ID.</param>
         /// <returns>True if the node is an override.</returns>
         public bool IsOverride(string nodeId) => FindBaseline(nodeId) != null;
+
+        /// <summary>
+        /// Takes the reference's tree data as the baseline the first time the patch sees it, and starts the patch's
+        /// tiers and start node from it when the patch has none of its own.
+        /// </summary>
+        /// <param name="reference">The reference's tree data, or null when the reference has none.</param>
+        /// <returns>True if the patch took the baseline, false when it already has one or there is none to take.</returns>
+        public bool TakeReferenceTreeData(ReferenceTreeData reference)
+        {
+            if (TreeDataBaseline != null || reference == null)
+                return false;
+
+            TreeDataBaseline = reference.Copy();
+            if (Tiers.Count == 0 && string.IsNullOrEmpty(StartNodeId))
+            {
+                Tiers = ReferenceTreeData.CopyTiers(reference.Tiers);
+                StartNodeId = reference.StartNodeId;
+            }
+
+            return true;
+        }
     }
 }

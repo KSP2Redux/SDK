@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PatchManager.Core.Cache;
 using PatchManager.Core.Cache.Json;
+using Redux.TechTree;
 using ThunderKit.Core.Data;
 using UnityEngine;
 
@@ -110,8 +111,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private const string SUMMARY_FILENAME = "summary.log";
 
         private const string FEATURES_PREFIX = "Features: ";
-
-        private const string NODE_LABEL = "techNodeData";
 
         private const string SAVE_METADATA_PATTERN = "*.meta";
 
@@ -255,7 +254,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 return JObject.Parse(File.ReadAllText(metaPath))[FEATURE_SET_ID_FIELD]?.Value<string>();
             }
-            catch (JsonException ex)
+            catch (Exception ex) when (ex is JsonException or IOException)
             {
                 Debug.LogWarning($"[TechTreeCacheImport] Skipping {metaPath}, which could not be read. {ex.Message}");
                 return null;
@@ -279,6 +278,45 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             return nodes;
         }
 
+        /// <summary>
+        /// Reads a set's patched tree data.
+        /// </summary>
+        /// <remarks>
+        /// The cache only holds the labels a patch in the set changed, so a set whose tree data no patch touched has
+        /// none here, though the game still loads one.
+        /// </remarks>
+        /// <param name="set">The set.</param>
+        /// <returns>The tree data's JSON, or null when the cache holds none for the set.</returns>
+        public static string ReadTreeData(TechTreeCacheSet set)
+        {
+            string inventoryPath = Path.Combine(set.Root, SETS_FOLDER, set.SetId, INVENTORY_FILENAME);
+            Inventory inventory;
+            try
+            {
+                inventory = JsonConvert.DeserializeObject<Inventory>(File.ReadAllText(inventoryPath));
+            }
+            catch (Exception ex) when (ex is JsonException or IOException)
+            {
+                Debug.LogWarning($"[TechTreeCacheImport] Could not read {inventoryPath}. {ex.Message}");
+                return null;
+            }
+
+            if (inventory?.CacheEntries == null
+                || !inventory.CacheEntries.TryGetValue(TechTreeData.LABEL, out CacheEntry entry)
+                || entry.Assets == null
+                || entry.Assets.Count == 0)
+            {
+                return null;
+            }
+
+            string archivePath = Path.Combine(set.Root, ARCHIVES_FOLDER, entry.ArchiveFilename);
+            if (!File.Exists(archivePath))
+                return null;
+
+            using var archive = new Archive(archivePath);
+            return archive.ReadFile(entry.Assets[0]);
+        }
+
         private static bool TryReadSet(string root, string setFolder, out TechTreeCacheSet set)
         {
             set = default;
@@ -291,13 +329,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 inventory = JsonConvert.DeserializeObject<Inventory>(File.ReadAllText(inventoryPath));
             }
-            catch (JsonException ex)
+            catch (Exception ex) when (ex is JsonException or IOException)
             {
                 Debug.LogWarning($"[TechTreeCacheImport] Skipping {inventoryPath}, which could not be read. {ex.Message}");
                 return false;
             }
 
-            if (inventory?.CacheEntries == null || !inventory.CacheEntries.TryGetValue(NODE_LABEL, out CacheEntry entry))
+            if (inventory?.CacheEntries == null || !inventory.CacheEntries.TryGetValue(TechTreeBake.NODE_LABEL, out CacheEntry entry))
                 return false;
 
             string archivePath = Path.Combine(root, ARCHIVES_FOLDER, entry.ArchiveFilename);

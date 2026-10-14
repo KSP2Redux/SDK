@@ -20,7 +20,7 @@ namespace Ksp2UnityTools.Editor.Localization.Export
         private const string PartsFilename = "parts_loc.csv";
         private const string CelestialBodyFilename = "celestialbody_loc.csv";
         private const string MissionsFilename = "missions_loc.csv";
-        private const string TechTreeFilename = "techtree_loc.csv";
+        private const string TechTreeFilename = "technodes_loc.csv";
         private const string ModSubpath = "Copied/localizations";
         private const string ProjectLocFolder = "Assets/ReduxAssets/Localizations";
 

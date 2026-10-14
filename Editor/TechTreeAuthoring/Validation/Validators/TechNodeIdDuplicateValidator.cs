@@ -30,7 +30,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
                 new[]
                 {
                     new ValidationFix("Rename", () => context.Tree.Change("Rename Tech Node",
-                        () => node.Data.ID = TechTreeEditing.MakeUniqueId(tree, node.Data.ID))),
+                        () => node.Data.ID = TechTreeEditing.MakeUniqueId(tree, node.Data.ID, context.Tree.Reference))),
                 }
             );
         }

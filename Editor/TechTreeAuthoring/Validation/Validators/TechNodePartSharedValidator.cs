@@ -21,7 +21,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
         {
             TechTreeNode node = context.Node;
             var owners = new Dictionary<string, string>();
-            foreach (TechTreeNode other in context.Tree.Reference.Concat(context.EarlierNodes).Where(other => other.Data?.ID != null))
+            // An override replaces its reference node, so only the reference nodes still loading as they are count
+            foreach (TechTreeNode other in context.ReferenceOnlyNodes.Concat(context.EarlierNodes).Where(other => other.Data?.ID != null))
             {
                 foreach (string part in other.Data.UnlockedPartsIDs ?? Array.Empty<string>())
                 {

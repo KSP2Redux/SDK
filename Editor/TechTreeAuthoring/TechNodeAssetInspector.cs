@@ -24,8 +24,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     {
         private const string WINDOW_USS_PATH = "/Assets/Windows/TechTreeAuthoring/TechTreeEditorWindow.uss";
 
-        private const float CANVAS_HEIGHT = 420f;
-
         private TechNodeAsset _asset;
 
         private TechTreeCanvas _canvas;
@@ -51,8 +49,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             root.Add(BuildReference());
 
             _canvas = new TechTreeCanvas { CanAddAndRemoveNodes = false, FrameTarget = _asset.Node.Data.ID };
-            _canvas.style.height = CANVAS_HEIGHT;
-            _canvas.style.flexGrow = 0f;
+            _canvas.AddToClassList("tech-tree-canvas--inspector");
             _canvas.OnRefused += Notify;
             _canvas.OnTreeEdited += RefreshPanel;
             _canvas.OnRebuilt += Revalidate;
@@ -103,7 +100,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _readinessChip.AddToClassList("sdk-readiness-chip");
             header.Add(BuildHeaderRow("Readiness", _readinessChip));
 
-            var bake = new Button(() => TechTreeBaker.Bake(_asset)) { text = "Bake JSON" };
+            var bake = new Button(() => TechTreeBaker.Bake(_asset)) { text = TechTreeBaker.GetBakeLabel(_asset) };
             bake.AddToClassList("sdk-tool-chip");
             var export = new Button(() => LocExportFlow.RunForAsset(_asset)) { text = "Export Localizations" };
             export.AddToClassList("sdk-tool-chip");
@@ -215,10 +212,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
 
             Undo.RecordObject(_asset, "Add Tech Node");
-            TechTreeEditing.AddNode(_asset, Vector2.zero);
+            TechTreeEditing.AddNode(_asset, Vector2.zero, _reference);
             EditorUtility.SetDirty(_asset);
         }
 
-        private static void Notify(string message) => EditorWindow.focusedWindow?.ShowNotification(new GUIContent(message));
+        private static void Notify(string message)
+        {
+            EditorWindow window = EditorWindow.focusedWindow;
+            if (window != null)
+            {
+                window.ShowNotification(new GUIContent(message));
+            }
+        }
     }
 }

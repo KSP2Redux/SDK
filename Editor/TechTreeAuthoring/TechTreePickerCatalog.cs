@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Ksp2UnityTools.Editor.API;
+using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets;
 using Ksp2UnityTools.Editor.PlanetAuthoring;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -17,7 +18,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// <remarks>
     /// Each list joins the game's own catalog, registered in the editor for the lookup, with the project's own
     /// Addressables entries. Trees use other mods' parts, so the pickers suggest and never restrict.
-    /// Each list is built on first use and kept until the domain reloads.
+    /// Each list is built on first use and rebuilt after any change to the project's Addressables.
     /// </remarks>
     public static class TechTreePickerCatalog
     {
@@ -72,12 +73,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 }
             }
 
-            foreach (AddressableAssetEntry entry in ProjectEntries(ICON_LABEL))
+            foreach (AddressableAssetEntry entry in AddressablesTools.GetProjectEntries(ICON_LABEL))
             {
                 addresses.Add(entry.address);
             }
 
-            List<string> sorted = Sorted(addresses);
+            List<string> sorted = addresses
+                .Where(address => !string.IsNullOrEmpty(address))
+                .OrderBy(address => address, StringComparer.OrdinalIgnoreCase)
+                .ToList();
             if (hasStockCatalog)
             {
                 _iconAddresses = sorted;
@@ -86,57 +90,24 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             return sorted;
         }
 
-        // The runtime catalogs hold the game's assets, the project's own are read off its Addressables settings
+        // A part, mission or icon added to the project shows in the pickers without waiting for a domain reload
+        [InitializeOnLoadMethod]
+        private static void ClearOnAddressablesChange() =>
+            AddressableAssetSettings.OnModificationGlobal += (_, _, _) =>
+            {
+                _partNames = null;
+                _missionIds = null;
+                _iconAddresses = null;
+            };
+
         private static List<string> ReadIds(string label, Regex idPattern)
         {
             EditorPqsBootstrap.EnsureStockCatalog();
-            var ids = new HashSet<string>(StringComparer.Ordinal);
-            void AddFrom(string json)
+            return AddressablesJsonCatalog.Build(label, json =>
             {
                 Match match = json != null ? idPattern.Match(json) : Match.Empty;
-                if (match.Success)
-                {
-                    ids.Add(match.Groups[1].Value);
-                }
-            }
-
-            try
-            {
-                var handle = Addressables.LoadAssetsAsync<TextAsset>(label, null);
-                IList<TextAsset> assets = handle.WaitForCompletion();
-                foreach (TextAsset asset in assets ?? Array.Empty<TextAsset>())
-                {
-                    AddFrom(asset != null ? asset.text : null);
-                }
-
-                Addressables.Release(handle);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[TechTreePickerCatalog] Could not load {label} from Addressables. {ex.Message}");
-            }
-
-            foreach (AddressableAssetEntry entry in ProjectEntries(label))
-            {
-                AddFrom(AssetDatabase.LoadAssetAtPath<TextAsset>(entry.AssetPath)?.text);
-            }
-
-            return Sorted(ids);
+                return match.Success ? match.Groups[1].Value : null;
+            });
         }
-
-        private static IEnumerable<AddressableAssetEntry> ProjectEntries(string label)
-        {
-            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
-            if (settings == null)
-                return Enumerable.Empty<AddressableAssetEntry>();
-
-            return settings.groups
-                .Where(group => group != null)
-                .SelectMany(group => group.entries)
-                .Where(entry => entry.labels.Contains(label));
-        }
-
-        private static List<string> Sorted(IEnumerable<string> values) =>
-            values.Where(value => !string.IsNullOrEmpty(value)).OrderBy(value => value, StringComparer.OrdinalIgnoreCase).ToList();
     }
 }

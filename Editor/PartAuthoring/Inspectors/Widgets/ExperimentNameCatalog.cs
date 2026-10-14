@@ -19,7 +19,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
         /// <returns>The cached, alphabetically-sorted experiment-ID list.</returns>
         public static IReadOnlyList<string> GetKnownExperiments()
         {
-            return _cached ??= AddressablesJsonCatalog.Build(SCIENCE_EXPERIMENT_LABEL, nameof(ExperimentNameCatalog), TryExtractId);
+            return _cached ??= AddressablesJsonCatalog.Build(SCIENCE_EXPERIMENT_LABEL, TryExtractId);
         }
 
         private static string TryExtractId(string json)

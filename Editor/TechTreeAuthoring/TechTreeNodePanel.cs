@@ -39,6 +39,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private IReadOnlyList<TechTreeNode> _reference = Array.Empty<TechTreeNode>();
 
+        private ReferenceTreeData _referenceTreeData;
+
         /// <summary>
         /// Raised with a node's ID when the author asks to go to that node.
         /// </summary>
@@ -80,19 +82,30 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="nodeId">The selected node's ID, or null for the tree's settings.</param>
         /// <param name="reference">The nodes of the tree this one is placed against, which can be required but never
         /// change, or null for none.</param>
+        /// <param name="referenceTreeData">The tiers and start node of the tree this one is placed against, which a
+        /// patch starts from, or null for none.</param>
         public void Show(
             TechTreeAsset tree,
             SerializedObject serializedTree,
             string nodeId,
-            IReadOnlyList<TechTreeNode> reference = null
+            IReadOnlyList<TechTreeNode> reference = null,
+            ReferenceTreeData referenceTreeData = null
         )
         {
             _tree = tree;
             _serializedTree = serializedTree;
             _reference = reference ?? Array.Empty<TechTreeNode>();
+            _referenceTreeData = referenceTreeData;
             Clear();
             if (_tree == null)
                 return;
+
+            // Bookkeeping rather than an author's edit, so it records no undo step. Undoing one would only take it again.
+            if (_tree is TechTreePatchAsset taking && taking.TakeReferenceTreeData(_referenceTreeData))
+            {
+                EditorUtility.SetDirty(taking);
+                OnTreeEdited?.Invoke();
+            }
 
             // Nodes added since the last update would otherwise have no serialized property to bind
             _serializedTree.Update();
@@ -135,7 +148,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         {
             string nodeId = node.Data.ID;
             bool isRemoved = patch.RemovedNodeIds.Contains(nodeId);
-            Label title = AddHeader(DisplayName(node), isRemoved ? $"{nodeId}, removed by this patch" : $"{nodeId}, in the reference tree");
+            Label title = AddHeader(
+                DisplayName(node),
+                isRemoved ? $"{nodeId}, removed by this patch" : $"{nodeId}, in the reference tree"
+            );
             if (isRemoved)
             {
                 AddPatchActions(BuildChip("Restore", () =>
@@ -197,7 +213,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private void EditAndShow(string undoName, Func<bool> change, string nodeId)
         {
             EditIf(undoName, change);
-            Show(_tree, _serializedTree, nodeId, _reference);
+            Show(_tree, _serializedTree, nodeId, _reference, _referenceTreeData);
         }
 
         private void ShowTreeSettings()
@@ -213,20 +229,25 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             Foldout features = AddSection("Features");
             features.Add(AssetFeaturesSection.Build(() => _tree.BakedFiles, KSP2UnityTools.FindParentMod(_tree)));
 
+            AddStartNodeAndTiers(_tree.Nodes.Select(node => node.Data?.ID));
+            AlignFields();
+        }
+
+        private void AddStartNodeAndTiers(IEnumerable<string> startNodeCandidates)
+        {
             Foldout start = AddSection("Start Node");
             start.Add(new AutocompleteField(
                 _serializedTree.FindProperty(nameof(TechTreeAsset.StartNodeId)),
                 "Start node",
-                () => _tree.Nodes.Select(node => node.Data?.ID).Where(id => !string.IsNullOrEmpty(id))
+                () => startNodeCandidates.Where(id => !string.IsNullOrEmpty(id)).Distinct()
             ));
 
             Foldout tiers = AddSection("Tiers");
             tiers.Add(BuildTierList());
-            AlignFields();
         }
 
-        // A patch names the tree it changes and the features it loads under. Tier names and the start node belong to
-        // the tree it changes.
+        // A patch names the tree it changes and the features it loads under. Its tiers and start node start as the
+        // reference's, and only what the author changes is patched.
         private void ShowPatchSettings(TechTreePatchAsset patch)
         {
             Foldout reference = AddSection("Reference Tree");
@@ -239,12 +260,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 allowSceneObjects = false,
                 bindingPath = nameof(TechTreePatchAsset.Reference),
             };
-            asset.style.display = patch.ReferenceSource == TechNodeReferenceSource.Asset ? DisplayStyle.Flex : DisplayStyle.None;
+            void ShowAssetField() =>
+                asset.style.display = patch.ReferenceSource == TechNodeReferenceSource.Asset ? DisplayStyle.Flex : DisplayStyle.None;
+
+            ShowAssetField();
             reference.Add(source);
             reference.Add(asset);
             reference.TrackPropertyValue(sourceProperty, _ =>
             {
-                asset.style.display = patch.ReferenceSource == TechNodeReferenceSource.Asset ? DisplayStyle.Flex : DisplayStyle.None;
+                ShowAssetField();
                 OnReferenceChanged?.Invoke();
             });
             reference.TrackPropertyValue(referenceProperty, _ => OnReferenceChanged?.Invoke());
@@ -255,6 +279,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             Mod owner = KSP2UnityTools.FindParentMod(patch);
             features.Add(BuildFeatureList("Features", () => patch.Features, owner));
             features.Add(BuildFeatureList("Excluded Features", () => patch.ExcludedFeatures, owner));
+
+            // A removed reference node cannot be where the R&D Center opens
+            AddStartNodeAndTiers(patch.Nodes
+                .Concat(_reference)
+                .Select(node => node.Data?.ID)
+                .Where(id => !patch.RemovedNodeIds.Contains(id)));
             AlignFields();
         }
 
@@ -507,14 +537,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             return row;
         }
 
-        // Every node this one could require: not itself, not one it requires already, and none that would close a loop
+        // Every node this one could require: not itself, not one it requires already, not one a patch removes, and none
+        // that would close a loop
         private IEnumerable<string> GetPrerequisiteCandidates(TechTreeNode node, int index)
         {
             string[] required = node.Data.RequiredTechNodeIDs ?? Array.Empty<string>();
+            var patch = _tree as TechTreePatchAsset;
             return _tree.Nodes
                 .Concat(_reference)
                 .Select(candidate => candidate.Data?.ID)
                 .Where(candidateId => !string.IsNullOrEmpty(candidateId) && candidateId != node.Data.ID)
+                .Where(candidateId => patch == null || !patch.RemovedNodeIds.Contains(candidateId))
                 .Distinct()
                 .Where(candidateId => required.Where((_, i) => i != index).All(other => other != candidateId))
                 .Where(candidateId => !TechTreeEditing.WouldCreateLoop(_tree, node.Data.ID, candidateId, _reference))
@@ -558,7 +591,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private VisualElement BuildResearchList(TechTreeNode node)
         {
             CardListSection.ListHandle handle = null;
-            handle = CardListSection.BuildFromList(() => node.Data.RequiredResearchData, new CardListSection.ListConfig<TechRequiredResearchData>
+            var config = new CardListSection.ListConfig<TechRequiredResearchData>
             {
                 Title = "Research",
                 AddButtonText = "+ Add",
@@ -576,7 +609,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                         node.Data.RequiredResearchData = node.Data.RequiredResearchData.Where((_, i) => i != index).ToArray());
                     handle.Rebuild();
                 }),
-            });
+            };
+            handle = CardListSection.BuildFromList(() => node.Data.RequiredResearchData, config);
             return handle.Root;
         }
 
@@ -749,7 +783,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
-            EditIf("Rename Tech Node", () => TechTreeEditing.TryRenameNode(_tree, oldId, newId));
+            EditIf("Rename Tech Node", () => TechTreeEditing.TryRenameNode(_tree, oldId, newId, _reference));
             OnNodeRenamed?.Invoke(oldId, newId);
         }
 

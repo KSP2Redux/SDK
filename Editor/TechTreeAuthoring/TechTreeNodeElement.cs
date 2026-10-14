@@ -9,8 +9,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// science cost.
     /// </summary>
     /// <remarks>
-    /// The element covers the frame's opaque 152 by 90, so its children sit 6 units in from where the prefab places
-    /// them inside the full 164 by 102 node rect.
+    /// The element covers the frame's opaque 152 by 90, with its size and its children's places in the editor's
+    /// stylesheet.
     /// </remarks>
     public class TechTreeNodeElement : VisualElement
     {
@@ -28,9 +28,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private Label _badge;
 
-        // The prefab lays children out in the 164 by 102 rect, and the frame is inset from it by this much
-        private const float RECT_INSET = 6f;
-
         /// <summary>
         /// Gets the ID of the node this element shows.
         /// </summary>
@@ -46,8 +43,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             NodeId = node.Data.ID;
             AddToClassList("tech-tree-node");
             MoveTo(contentTop);
-            style.width = TechTreeCanvasGeometry.FRAME_WIDTH;
-            style.height = TechTreeCanvasGeometry.FRAME_HEIGHT;
 
             var header = new VisualElement();
             header.AddToClassList("tech-tree-node__header");
@@ -58,15 +53,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 var iconElement = new Image { sprite = icon };
                 iconElement.AddToClassList("tech-tree-node__icon");
-                iconElement.style.left = 15f - RECT_INSET;
-                iconElement.style.top = 10f - RECT_INSET;
                 Add(iconElement);
             }
 
             var cost = new VisualElement();
             cost.AddToClassList("tech-tree-node__cost");
-            cost.style.right = 11f - RECT_INSET;
-            cost.style.top = 12f - RECT_INSET;
             var dot = new VisualElement();
             dot.AddToClassList("tech-tree-node__science");
             cost.Add(dot);
@@ -75,8 +66,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             var name = new Label(string.IsNullOrEmpty(node.EnglishName) ? node.Data.ID : node.EnglishName);
             name.AddToClassList("tech-tree-node__name");
-            name.style.left = 15f - RECT_INSET;
-            name.style.top = 40f - RECT_INSET;
             Add(name);
         }
 

@@ -58,14 +58,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 .ToList();
 
         /// <summary>
-        /// Gets an ID no node in a tree has yet.
+        /// Gets an ID no node in a tree, or in the reference nodes it is placed against, has yet.
         /// </summary>
         /// <param name="tree">The tree.</param>
         /// <param name="baseId">The ID wanted.</param>
+        /// <param name="reference">The reference nodes, or null for none.</param>
         /// <returns>The ID itself when it is free, otherwise the ID with the lowest free number after it.</returns>
-        public static string MakeUniqueId(TechTreeAsset tree, string baseId)
+        public static string MakeUniqueId(TechTreeAsset tree, string baseId, IReadOnlyList<TechTreeNode> reference = null)
         {
-            var taken = new HashSet<string>(tree.Nodes.Select(node => node.Data?.ID).Where(id => id != null));
+            var taken = new HashSet<string>(
+                tree.Nodes.Concat(reference ?? Array.Empty<TechTreeNode>()).Select(node => node.Data?.ID).Where(id => id != null)
+            );
             if (!taken.Contains(baseId))
                 return baseId;
 
@@ -172,12 +175,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="tree">The tree.</param>
         /// <param name="position">The node's tech tree position.</param>
+        /// <param name="reference">The reference nodes the tree is placed against, whose IDs the node avoids, or null
+        /// for none.</param>
         /// <returns>The new node.</returns>
-        public static TechTreeNode AddNode(TechTreeAsset tree, Vector2 position)
+        public static TechTreeNode AddNode(TechTreeAsset tree, Vector2 position, IReadOnlyList<TechTreeNode> reference = null)
         {
             var node = new TechTreeNode
             {
-                Data = new TechNodeData { ID = MakeUniqueId(tree, NEW_NODE_ID), TechTreePosition = position },
+                Data = new TechNodeData { ID = MakeUniqueId(tree, NEW_NODE_ID, reference), TechTreePosition = position },
                 EnglishName = string.Empty,
                 EnglishDescription = string.Empty,
             };
@@ -194,14 +199,22 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="tree">The tree.</param>
         /// <param name="nodeId">The node to copy.</param>
         /// <param name="offset">How far from the original the copy is placed, in tech tree units.</param>
+        /// <param name="reference">The reference nodes the tree is placed against, whose IDs the copy avoids, or null
+        /// for none.</param>
         /// <returns>The copy, or null when the node is missing.</returns>
-        public static TechTreeNode DuplicateNode(TechTreeAsset tree, string nodeId, Vector2 offset)
+        public static TechTreeNode DuplicateNode(
+            TechTreeAsset tree,
+            string nodeId,
+            Vector2 offset,
+            IReadOnlyList<TechTreeNode> reference = null
+        )
         {
             TechTreeNode original = Find(tree, nodeId);
-            if (original == null || !TechTreeJson.TryFromJson(TechTreeJson.ToJson(original.Data), out TechNodeData data))
+            if (original == null)
                 return null;
 
-            data.ID = MakeUniqueId(tree, $"{nodeId}_copy");
+            TechNodeData data = TechTreeJson.Copy(original.Data);
+            data.ID = MakeUniqueId(tree, $"{nodeId}_copy", reference);
             data.TechTreePosition += offset;
             data.UnlockedPartsIDs = Array.Empty<string>();
             var copy = new TechTreeNode
@@ -306,12 +319,19 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="tree">The tree.</param>
         /// <param name="oldId">The node's ID.</param>
         /// <param name="newId">The ID to give it.</param>
+        /// <param name="reference">The reference nodes the tree is placed against, whose IDs are taken too, or null for
+        /// none.</param>
         /// <returns>True if the node was renamed, false if it is missing, the new ID is empty, or another node has
         /// it.</returns>
-        public static bool TryRenameNode(TechTreeAsset tree, string oldId, string newId)
+        public static bool TryRenameNode(
+            TechTreeAsset tree,
+            string oldId,
+            string newId,
+            IReadOnlyList<TechTreeNode> reference = null
+        )
         {
             TechTreeNode node = Find(tree, oldId);
-            if (node == null || string.IsNullOrWhiteSpace(newId) || Find(tree, newId) != null)
+            if (node == null || string.IsNullOrWhiteSpace(newId) || FindAny(tree, reference, newId) != null)
                 return false;
 
             // An override patches the reference node by its ID, so it keeps the ID
@@ -337,7 +357,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public static TechTreeNode CopyNode(TechTreeNode node) =>
             new()
             {
-                Data = TechTreePatchBake.Copy(node.Data),
+                Data = TechTreeJson.Copy(node.Data),
                 EnglishName = node.EnglishName,
                 EnglishDescription = node.EnglishDescription,
             };

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,16 +9,26 @@ using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
     /// <summary>
     /// Writes a tech tree's baked files into the project and registers them with Addressables.
     /// </summary>
-    public static class TechTreeBaker
+    /// <remarks>
+    /// Also the mod build's baker for tech trees, so every tree in a mod bakes before the mod is staged.
+    /// </remarks>
+    public class TechTreeBaker : IModAssetBaker
     {
         // The group Redux's own Lua patches are in
         private const string PATCHES_GROUP_NAME = "PM Patches";
+
+        /// <inheritdoc />
+        public Type AssetType => typeof(TechTreeAsset);
+
+        /// <inheritdoc />
+        List<string> IModAssetBaker.Bake(Object asset) => BakeQuietly((TechTreeAsset)asset);
 
         /// <summary>
         /// Gets what baking a tree is called: a patch bakes to a patch, with JSON only for the nodes it adds.
@@ -28,25 +39,34 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         /// <summary>
         /// Bakes a tree beside its asset, registers every file it writes, and removes the files of the last bake that
-        /// this one no longer writes.
+        /// this one no longer writes. A problem that stops the bake is shown in a dialog.
         /// </summary>
         /// <param name="tree">The tree to bake.</param>
         /// <returns>True if the tree baked, false if a problem stopped it.</returns>
         public static bool Bake(TechTreeAsset tree)
         {
+            List<string> problems = BakeQuietly(tree);
+            if (problems.Count == 0)
+                return true;
+
+            EditorUtility.DisplayDialog(GetBakeLabel(tree), $"Fix these first:\n\n{string.Join("\n", problems)}", "OK");
+            return false;
+        }
+
+        /// <summary>
+        /// Bakes a tree as <see cref="Bake(TechTreeAsset)" /> does, but returns what stopped it rather than showing it.
+        /// </summary>
+        /// <param name="tree">The tree to bake.</param>
+        /// <returns>One message per problem that stopped the bake, empty when the tree baked.</returns>
+        internal static List<string> BakeQuietly(TechTreeAsset tree)
+        {
             string assetPath = AssetDatabase.GetAssetPath(tree);
             if (string.IsNullOrEmpty(assetPath))
-            {
-                EditorUtility.DisplayDialog(GetBakeLabel(tree), "Save the tech tree as an asset before baking it.", "OK");
-                return false;
-            }
+                return new List<string> { "Save the tech tree as an asset before baking it." };
 
             List<string> problems = TechTreeBake.FindBlockingProblems(tree);
             if (problems.Count > 0)
-            {
-                EditorUtility.DisplayDialog(GetBakeLabel(tree), "Fix these first:\n\n" + string.Join("\n", problems), "OK");
-                return false;
-            }
+                return problems;
 
             string folder = TechTreeBake.GetOutputFolder(assetPath);
             Directory.CreateDirectory(folder);
@@ -62,6 +82,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             // patch keeps its own, since its Lua has no labels to carry them.
             string ownerId = TechTreeBake.GetOwnerId(tree);
             var patch = tree as TechTreePatchAsset;
+
+            // A reference that has gained tree data since the patch created its own is patched instead, as the editor
+            // would on opening the patch, so the set never ends up with two
+            if (patch != null && patch.TreeDataBaseline == null)
+            {
+                patch.TakeReferenceTreeData(TechTreeReference.LoadTreeData(patch));
+            }
+
             (List<string> features, List<string> noFeatures) = patch != null
                 ? (patch.Features.ToList(), patch.ExcludedFeatures.ToList())
                 : AssetFeatureLabels.ReadAll(
@@ -110,9 +138,48 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             Undo.RecordObject(tree, "Bake Tech Tree");
             tree.BakedFiles = written;
             EditorUtility.SetDirty(tree);
-            AssetDatabase.SaveAssets();
+            SaveBakedAssets(tree, written, assetPath, group);
             Debug.Log($"[TechTreeBaker] Baked {written.Count} file(s) for {assetPath} into {folder}.");
-            return true;
+            return new List<string>();
+        }
+
+        // Saves only what the bake changed: the tree, a patch's sidecar, and the Addressables groups and settings its
+        // files are registered in, the tree's own group too since removing stale files changes it. Other dirty assets
+        // stay unsaved, as the author left them, since builds bake too.
+        private static void SaveBakedAssets(
+            TechTreeAsset tree,
+            List<string> written,
+            string assetPath,
+            AddressableAssetGroup treeGroup
+        )
+        {
+            if (treeGroup != null)
+            {
+                AssetDatabase.SaveAssetIfDirty(treeGroup);
+            }
+
+            AssetDatabase.SaveAssetIfDirty(tree);
+            string folder = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
+            var script = AssetDatabase.LoadAssetAtPath<TechTreePatchScript>($"{folder}/{tree.name}_Patch.asset");
+            if (script != null)
+            {
+                AssetDatabase.SaveAssetIfDirty(script);
+            }
+
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+                return;
+
+            foreach (AddressableAssetGroup group in written
+                         .Select(path => settings.FindAssetEntry(AssetDatabase.AssetPathToGUID(path)))
+                         .Where(entry => entry != null && entry.parentGroup != null)
+                         .Select(entry => entry.parentGroup)
+                         .Distinct())
+            {
+                AssetDatabase.SaveAssetIfDirty(group);
+            }
+
+            AssetDatabase.SaveAssetIfDirty(settings);
         }
 
         // In a mod the patch is a sidecar the mod's build writes, as a body's orbit is. Anywhere else it is a Lua file

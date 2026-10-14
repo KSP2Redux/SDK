@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -83,8 +84,7 @@ namespace Ksp2UnityTools.Editor
             foreach (Mod mod in mods)
             {
                 string testPipeline = mod.Folder + "/Pipelines/Build for Editor.asset";
-                var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(testPipeline);
-                await pipeline.Execute();
+                await ExecuteOrThrow(AssetDatabase.LoadAssetAtPath<Pipeline>(testPipeline), testPipeline);
             }
 
             // ReSharper disable once AccessToStaticMemberViaDerivedType
@@ -96,6 +96,18 @@ namespace Ksp2UnityTools.Editor
 
             EditorSceneManager.OpenScene(bootScenePath);
             EditorApplication.EnterPlaymode();
+        }
+
+        // ThunderKit logs a failed job and returns as if it ran, leaving JobIndex on that job. A finished run resets it
+        // to -1, so anything that needs the build stops here instead of launching a partly staged mod.
+        private static async Task ExecuteOrThrow(Pipeline pipeline, string path)
+        {
+            if (pipeline == null)
+                throw new FileNotFoundException($"Could not find the pipeline {path}. Refresh ThunderKit on the mod.");
+
+            await pipeline.Execute();
+            if (pipeline.JobIndex != -1)
+                throw new InvalidOperationException($"{path} failed. See the pipeline log for why.");
         }
 
         private static string ResolveBootKspScenePath()
@@ -125,8 +137,7 @@ namespace Ksp2UnityTools.Editor
             foreach (Mod mod in mods)
             {
                 string buildPipeline = mod.Folder + "/Pipelines/Build for Player.asset";
-                var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(buildPipeline);
-                await pipeline.Execute();
+                await ExecuteOrThrow(AssetDatabase.LoadAssetAtPath<Pipeline>(buildPipeline), buildPipeline);
             }
 
             var info = new ProcessStartInfo
@@ -145,8 +156,7 @@ namespace Ksp2UnityTools.Editor
             {
                 mod.CreateVersionCheckSwinfo();
                 string deployPipeline = mod.Folder + "/Pipelines/Deploy To Zip File.asset";
-                var pipeline = AssetDatabase.LoadAssetAtPath<Pipeline>(deployPipeline);
-                await pipeline.Execute();
+                await ExecuteOrThrow(AssetDatabase.LoadAssetAtPath<Pipeline>(deployPipeline), deployPipeline);
             }
         }
     }

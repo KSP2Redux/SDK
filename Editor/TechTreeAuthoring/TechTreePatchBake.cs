@@ -6,6 +6,7 @@ using System.Text;
 using KSP.Game.Science;
 using Ksp2UnityTools.Editor.Modding;
 using Newtonsoft.Json.Linq;
+using Redux.TechTree;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
@@ -127,14 +128,90 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 current.EnglishDescription = reference.EnglishDescription;
             }
 
-            baseline.Data = Copy(reference.Data);
+            baseline.Data = TechTreeJson.Copy(reference.Data);
             baseline.EnglishName = reference.EnglishName;
             baseline.EnglishDescription = reference.EnglishDescription;
         }
 
         /// <summary>
-        /// Builds the patch's Lua: one Patch Manager patch per changed override, and one per removed node.
+        /// Gets the tiers one list of tiers names differently from another.
         /// </summary>
+        /// <param name="baseline">The tiers as they were.</param>
+        /// <param name="current">The tiers as they are.</param>
+        /// <returns>The numbers of the changed tiers, counted from 1. A tier one list lacks counts as unnamed.</returns>
+        public static List<int> GetChangedTiers(IReadOnlyList<TechTreeTier> baseline, IReadOnlyList<TechTreeTier> current)
+        {
+            var changed = new List<int>();
+            int count = Math.Max(baseline.Count, current.Count);
+            for (int i = 0; i < count; i++)
+            {
+                if (TierName(baseline, i) != TierName(current, i))
+                {
+                    changed.Add(i + 1);
+                }
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// Gets the tiers a patch names differently from the reference as the patch took it.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <returns>The numbers of the changed tiers, counted from 1.</returns>
+        public static List<int> GetChangedTiers(TechTreePatchAsset patch) =>
+            GetChangedTiers(patch.TreeDataBaseline?.Tiers ?? new List<TechTreeTier>(), patch.Tiers);
+
+        /// <summary>
+        /// Checks whether two start nodes are the same, an empty one and a missing one alike.
+        /// </summary>
+        /// <param name="first">One start node ID.</param>
+        /// <param name="second">The other start node ID.</param>
+        /// <returns>True if they are the same, false otherwise.</returns>
+        public static bool IsSameStartNode(string first, string second) =>
+            string.Equals(first ?? string.Empty, second ?? string.Empty, StringComparison.Ordinal);
+
+        /// <summary>
+        /// Checks whether a patch changes the start node from the reference's as the patch took it.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <returns>True if the patch changes the start node, false otherwise.</returns>
+        public static bool ChangesStartNode(TechTreePatchAsset patch) =>
+            !IsSameStartNode(patch.TreeDataBaseline?.StartNodeId, patch.StartNodeId);
+
+        /// <summary>
+        /// Brings a patch's tiers and start node up to date with the reference: what the author left alone takes the
+        /// reference's value, what the author changed keeps it, and the baseline becomes the reference's tree data.
+        /// </summary>
+        /// <param name="patch">The patch, updated in place.</param>
+        /// <param name="reference">The reference's tree data as it is now.</param>
+        public static void RebaseTreeData(TechTreePatchAsset patch, ReferenceTreeData reference)
+        {
+            HashSet<int> changed = new(GetChangedTiers(patch));
+            int count = Math.Max(reference.Tiers.Count, changed.Count > 0 ? changed.Max() : 0);
+            var tiers = new List<TechTreeTier>();
+            for (int i = 0; i < count; i++)
+            {
+                IReadOnlyList<TechTreeTier> source = changed.Contains(i + 1) ? patch.Tiers : reference.Tiers;
+                tiers.Add(new TechTreeTier { EnglishName = TierName(source, i) });
+            }
+
+            patch.Tiers = tiers;
+            if (!ChangesStartNode(patch))
+            {
+                patch.StartNodeId = reference.StartNodeId;
+            }
+
+            patch.TreeDataBaseline = reference.Copy();
+        }
+
+        /// <summary>
+        /// Builds the patch's Lua: one Patch Manager patch for the changed tiers and start node, one per changed
+        /// override, and one per removed node.
+        /// </summary>
+        /// <remarks>
+        /// A patch whose reference has no tree data creates its tiers and start node as new tree data instead.
+        /// </remarks>
         /// <param name="patch">The patch.</param>
         /// <param name="ownerId">The id of the mod the patch belongs to, which scopes changed text's keys.</param>
         /// <returns>The Lua, which patches nothing when the patch changes nothing.</returns>
@@ -143,30 +220,44 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             var lua = new StringBuilder();
             lua.AppendLine($"-- Generated from the tech tree patch {patch.name}. Edit the patch asset and bake again.");
             string gates = BuildGates(patch, ownerId);
+            if (patch.TreeDataBaseline == null)
+            {
+                // A reference without tree data has nothing to patch, so the patch's own is created whole
+                AppendTreeDataCreation(lua, patch, ownerId, gates);
+            }
+            else
+            {
+                List<string> treeData = BuildTreeDataChanges(patch, ownerId);
+                if (treeData.Count > 0)
+                {
+                    // A feature set loads one tree data, so every name matches the one that loads
+                    AppendPatch(
+                        lua,
+                        $"PM.JSON:Patch({Quote(TechTreeData.LABEL)}, {Quote($"{patch.name}_TreeData")})",
+                        "*",
+                        gates,
+                        "json",
+                        treeData
+                    );
+                }
+            }
+
             foreach (TechTreeNode node in patch.Nodes.Where(node => patch.IsOverride(node.Data?.ID)))
             {
                 List<string> body = BuildChanges(patch.FindBaseline(node.Data.ID), node, ownerId);
                 if (body.Count == 0)
                     continue;
 
-                AppendPatch(lua, $"{patch.name}_{node.Data.ID}", node.Data.ID, gates, body);
+                AppendNodePatch(lua, $"{patch.name}_{node.Data.ID}", node.Data.ID, gates, body);
             }
 
             foreach (string removed in patch.RemovedNodeIds.Where(id => !string.IsNullOrEmpty(id)).Distinct())
             {
-                AppendPatch(lua, $"{patch.name}_remove_{removed}", removed, gates, new List<string> { "return \"remove\"" });
+                AppendNodePatch(lua, $"{patch.name}_remove_{removed}", removed, gates, new List<string> { "return \"remove\"" });
             }
 
             return lua.ToString();
         }
-
-        /// <summary>
-        /// Copies a node's data, so the copy shares nothing with the original.
-        /// </summary>
-        /// <param name="data">The data to copy.</param>
-        /// <returns>The copy.</returns>
-        public static TechNodeData Copy(TechNodeData data) =>
-            TechTreeJson.TryFromJson(TechTreeJson.ToJson(data), out TechNodeData copy) ? copy : new TechNodeData();
 
         // Ksp2Redux's own patches belong to its tech tree category, the gate every Redux patch file states
         private static string BuildGates(TechTreePatchAsset patch, string ownerId)
@@ -192,13 +283,23 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             return gates.ToString();
         }
 
-        private static void AppendPatch(StringBuilder lua, string patchName, string nodeId, string gates, List<string> body)
+        private static void AppendNodePatch(StringBuilder lua, string patchName, string nodeId, string gates, List<string> body) =>
+            AppendPatch(lua, $"PM.Science:PatchTechNodes({Quote(patchName)})", nodeId, gates, "node", body);
+
+        private static void AppendPatch(
+            StringBuilder lua,
+            string registration,
+            string assetName,
+            string gates,
+            string parameter,
+            List<string> body
+        )
         {
             lua.AppendLine();
-            lua.AppendLine($"PM.Science:PatchTechNodes({Quote(patchName)})");
-            lua.AppendLine($"    :Named({Quote(nodeId)})");
+            lua.AppendLine(registration);
+            lua.AppendLine($"    :Named({Quote(assetName)})");
             lua.Append(gates);
-            lua.AppendLine("    :Do(function(node)");
+            lua.AppendLine($"    :Do(function({parameter})");
             foreach (string line in body)
             {
                 lua.AppendLine($"        {line}");
@@ -206,6 +307,59 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             lua.AppendLine("    end)");
         }
+
+        // Each tier is set by its place rather than the list replaced, so tiers another patch names stay named. A
+        // tier past the end of the list grows it, the slots between left unnamed.
+        private static List<string> BuildTreeDataChanges(TechTreePatchAsset patch, string ownerId)
+        {
+            var lines = new List<string>();
+            if (ChangesStartNode(patch))
+            {
+                lines.Add($"json.{nameof(TechTreeData.StartNodeId)} = {Quote(patch.StartNodeId)}");
+            }
+
+            List<int> tiers = GetChangedTiers(patch);
+            if (tiers.Count == 0)
+                return lines;
+
+            string keys = $"json.{nameof(TechTreeData.TierNameKeys)}";
+            lines.Add($"if {keys} == nil then {keys} = J.Empty() end");
+            lines.Add($"while {keys}.Count < {tiers.Max()} do {keys}:Append(\"\") end");
+            foreach (int tier in tiers)
+            {
+                string key = string.IsNullOrEmpty(TierName(patch.Tiers, tier - 1))
+                    ? string.Empty
+                    : TechTreeKeys.GetTierNameKey(ownerId, tier);
+                lines.Add($"{keys}[{tier}] = {Quote(key)}");
+            }
+
+            return lines;
+        }
+
+        private static void AppendTreeDataCreation(StringBuilder lua, TechTreePatchAsset patch, string ownerId, string gates)
+        {
+            if (patch.Tiers.Count == 0 && string.IsNullOrEmpty(patch.StartNodeId))
+                return;
+
+            // An unnamed tier keeps an empty key, which the game shows by the tier's number
+            IEnumerable<string> tierKeys = patch.Tiers.Select((tier, index) => Quote(
+                string.IsNullOrEmpty(tier?.EnglishName) ? string.Empty : TechTreeKeys.GetTierNameKey(ownerId, index + 1)
+            ));
+            string keys = patch.Tiers.Count == 0 ? "J.Empty()" : $"{{ {string.Join(", ", tierKeys)} }}";
+            lua.AppendLine();
+            lua.AppendLine($"PM.JSON:New({Quote(TechTreeData.LABEL)}, {Quote($"{patch.name}_TreeData")}, J({{");
+            if (!string.IsNullOrEmpty(patch.StartNodeId))
+            {
+                lua.AppendLine($"    {nameof(TechTreeData.StartNodeId)} = {Quote(patch.StartNodeId)},");
+            }
+
+            lua.AppendLine($"    {nameof(TechTreeData.TierNameKeys)} = {keys},");
+            lua.AppendLine("}))");
+            lua.Append(gates);
+        }
+
+        private static string TierName(IReadOnlyList<TechTreeTier> tiers, int index) =>
+            index < tiers.Count ? tiers[index]?.EnglishName ?? string.Empty : string.Empty;
 
         private static List<string> BuildChanges(TechTreeNode baseline, TechTreeNode current, string ownerId)
         {

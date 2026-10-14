@@ -18,15 +18,19 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation
         /// <param name="tree">The tree to check.</param>
         /// <param name="reference">The nodes of the tree it is placed against, or null for none.</param>
         /// <param name="snapsToGrid">Whether the editor snaps to the stock grid.</param>
+        /// <param name="referenceTreeData">The tiers and start node of the tree it is placed against, or null for
+        /// none.</param>
         public TechTreeValidationContext(
             TechTreeAsset tree,
             IReadOnlyList<TechTreeNode> reference = null,
-            bool snapsToGrid = false
+            bool snapsToGrid = false,
+            ReferenceTreeData referenceTreeData = null
         )
         {
             Tree = tree;
             Reference = reference ?? Array.Empty<TechTreeNode>();
             SnapsToGrid = snapsToGrid;
+            ReferenceTreeData = referenceTreeData;
         }
 
         /// <summary>
@@ -43,6 +47,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation
         /// Gets whether the editor snaps to the stock grid, so a node off it is worth noting.
         /// </summary>
         public bool SnapsToGrid { get; }
+
+        /// <summary>
+        /// Gets the tiers and start node of the reference tree, or null when it has none.
+        /// </summary>
+        public ReferenceTreeData ReferenceTreeData { get; }
 
         /// <summary>
         /// Gets the IDs of the reference nodes.

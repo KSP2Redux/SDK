@@ -63,6 +63,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private List<TechTreeIssue> _issues = new();
 
+        private IReadOnlyList<TechTreeNode> _reference;
+
+        private ReferenceTreeData _referenceTreeData;
+
         private DateTime _lastRunUtc;
 
         private bool _hasRun;
@@ -178,13 +182,24 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             // A node asset is checked against the tree it is placed in, a patch against the tree it changes
-            IReadOnlyList<TechTreeNode> reference = _tree switch
+            _reference = _tree is BaseReferencedTechTreeAsset referenced ? TechTreeReference.Load(referenced) : null;
+            _referenceTreeData = _tree is TechTreePatchAsset patch ? TechTreeReference.LoadTreeData(patch) : null;
+            Recheck();
+        }
+
+        // After a fix only the asset has changed, so the reference already loaded still holds
+        private void Recheck()
+        {
+            if (_tree == null || _issuesContainer == null)
             {
-                TechNodeAsset node => TechTreeReference.Load(node),
-                TechTreePatchAsset patch => TechTreeReference.Load(patch),
-                _ => null,
-            };
-            _issues = TechTreeValidationReport.Run(new TechTreeValidationContext(_tree, reference, _snapsToGrid), null);
+                Render();
+                return;
+            }
+
+            _issues = TechTreeValidationReport.Run(
+                new TechTreeValidationContext(_tree, _reference, _snapsToGrid, _referenceTreeData),
+                null
+            );
             _hasRun = true;
             _lastRunUtc = DateTime.UtcNow;
             Render();
@@ -313,7 +328,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 var button = new Button(() =>
                 {
                     fix.Apply?.Invoke();
-                    Run();
+                    Recheck();
                 }) { text = fix.Label };
                 button.AddToClassList("validation-issue-fix");
 
@@ -343,6 +358,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (_tree == null || !_hasRun)
                 return;
 
+            // A group of its own, so one undo takes back the fixes and nothing done before them
+            Undo.IncrementCurrentGroup();
             int undoGroup = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName("Apply all auto-fixes");
             int applied = 0;
@@ -362,8 +379,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             Undo.CollapseUndoOperations(undoGroup);
-            Run();
-            Debug.Log($"[TechTreeValidationReportWindow] Applied {applied} fix{(applied == 1 ? string.Empty : "es")}{(skipped > 0 ? $", {skipped} skipped" : string.Empty)}.");
+            Recheck();
+            string skippedText = skipped > 0 ? $", {skipped} skipped" : string.Empty;
+            Debug.Log($"[TechTreeValidationReportWindow] Applied {applied} fix{(applied == 1 ? string.Empty : "es")}{skippedText}.");
         }
 
         private void ExportReport()

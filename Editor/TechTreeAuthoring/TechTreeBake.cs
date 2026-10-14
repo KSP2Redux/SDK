@@ -59,6 +59,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public const string NODE_LABEL = "techNodeData";
 
         /// <summary>
+        /// The end of the name a bake gives a tree's tree data file, after the tree's name.
+        /// </summary>
+        public const string TREE_DATA_FILE_SUFFIX = "_TechTree.json";
+
+        /// <summary>
         /// Gets the folder a tree bakes into, beside the tree asset.
         /// </summary>
         /// <param name="assetPath">The tree asset's path.</param>
@@ -120,7 +125,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     continue;
 
                 // A copy, so the bake never changes the asset
-                if (!TechTreeJson.TryFromJson(TechTreeJson.ToJson(node.Data), out TechNodeData data))
+                TechNodeData data = TechTreeJson.Copy(node.Data);
+                if (string.IsNullOrEmpty(data.ID))
                     continue;
 
                 data.NameLocKey = TechTreeKeys.GetNameKey(ownerId, data.ID);
@@ -128,7 +134,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 outputs.Add(new TechTreeBakeOutput($"{data.ID}.json", TechTreeJson.ToJson(data), NODE_LABEL));
             }
 
-            if (tree.Tiers.Count == 0 && string.IsNullOrEmpty(tree.StartNodeId))
+            // A set keeps one tree data, so only a tree of its own writes any. A node or a patch extends a tree that has
+            // its own already.
+            if (tree is BaseReferencedTechTreeAsset || (tree.Tiers.Count == 0 && string.IsNullOrEmpty(tree.StartNodeId)))
                 return outputs;
 
             // A tier without a name gets an empty key, which the game shows by the tier's number
@@ -142,7 +150,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     .ToList(),
             };
             outputs.Add(
-                new TechTreeBakeOutput($"{tree.name}_TechTree.json", JsonUtility.ToJson(treeData, true), TechTreeData.LABEL)
+                new TechTreeBakeOutput($"{tree.name}{TREE_DATA_FILE_SUFFIX}", JsonUtility.ToJson(treeData, true), TechTreeData.LABEL)
             );
             return outputs;
         }

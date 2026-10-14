@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ksp2UnityTools.Editor.API;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -10,7 +11,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
     /// Shared loader for catalogs that enumerate string identifiers from addressable <see cref="TextAsset" /> entries with a given label.
     /// </summary>
     /// <remarks>
-    /// Loads each TextAsset, runs the caller-supplied extractor against its JSON, deduplicates, and returns the alphabetically-sorted list. Uses the runtime <see cref="Addressables" /> API rather than <c>AddressableAssetSettingsDefaultObject.Settings</c> because the SDK runs in contexts where KSP2 is imported via ThunderKit. Stock entries only appear in the runtime catalog, not in the editor-side asset settings.
+    /// Loads each TextAsset, runs the caller-supplied extractor against its JSON, deduplicates, and returns the alphabetically-sorted list. Stock entries only appear in the runtime <see cref="Addressables" /> catalogs, since KSP2 is imported via ThunderKit, and the project's own only in its Addressables settings until they are built, so both are read.
     /// </remarks>
     internal static class AddressablesJsonCatalog
     {
@@ -18,31 +19,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Widgets
         /// Loads every addressable TextAsset with the given label and returns the deduplicated, alphabetically-sorted list of non-empty extractor results.
         /// </summary>
         /// <param name="label">The Addressables label to query.</param>
-        /// <param name="logPrefix">Prefix used when logging load failures.</param>
         /// <param name="tryExtract">Callback that extracts the identifier string from a TextAsset's JSON, returning null or empty to skip the entry.</param>
         /// <returns>The deduplicated, alphabetically-sorted list of extracted identifiers.</returns>
-        public static List<string> Build(string label, string logPrefix, Func<string, string> tryExtract)
+        public static List<string> Build(string label, Func<string, string> tryExtract)
         {
             var names = new HashSet<string>(StringComparer.Ordinal);
-
-            try
+            void Add(string json)
             {
-                var handle = Addressables.LoadAssetsAsync<TextAsset>(label, null);
-                var assets = handle.WaitForCompletion();
-                if (assets != null)
+                string name = tryExtract(json);
+                if (!string.IsNullOrEmpty(name))
                 {
-                    foreach (var asset in assets)
-                    {
-                        if (asset == null) continue;
-                        var name = tryExtract(asset.text);
-                        if (!string.IsNullOrEmpty(name)) names.Add(name);
-                    }
+                    names.Add(name);
                 }
-                Addressables.Release(handle);
             }
-            catch (Exception ex)
+
+            // The project's own entries are not in any catalog until its Addressables are built
+            foreach (string json in AddressablesTools.GetCatalogText(label).Concat(AddressablesTools.GetProjectText(label)))
             {
-                Debug.LogWarning($"[{logPrefix}] Failed to load via addressables. {ex.Message}");
+                Add(json);
             }
 
             return names.OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();

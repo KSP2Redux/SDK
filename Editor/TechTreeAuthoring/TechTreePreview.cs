@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using KSP.Game.Science;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
@@ -21,11 +22,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <returns>The IDs of the nodes unlocked at the start.</returns>
         public static HashSet<string> GetStartingUnlocked(IEnumerable<TechTreeNode> nodes) =>
             new(nodes
-                .Where(node => node.Data?.ID != null
-                    && node.Data.RequiredSciencePoints == 0
-                    && (node.Data.RequiredTechNodeIDs?.Length ?? 0) == 0
-                    && (node.Data.RequiredMissionIDs?.Length ?? 0) == 0
-                    && (node.Data.RequiredResearchData?.Length ?? 0) == 0)
+                .Where(node => node.Data?.ID != null && TechNodeDataStore.IsAlwaysUnlockedTechNode(node.Data))
                 .Select(node => node.Data.ID));
 
         /// <summary>

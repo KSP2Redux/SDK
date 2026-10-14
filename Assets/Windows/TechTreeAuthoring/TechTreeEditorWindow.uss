@@ -1,6 +1,10 @@
 /* Layout: a toolbar across the top, the side panel on the left, the canvas filling the rest with its controls over it. */
 /* Canvas colours are the R&D Center's own, read from its prefab, frame sprites and tier art. */
 
+.tech-tree-window {
+    flex-grow: 1;
+}
+
 .tech-tree-toolbar {
     flex-direction: row;
     align-items: center;
@@ -98,10 +102,18 @@
     background-color: rgb(8, 8, 20);
 }
 
+/* An inspector has no height of its own to fill */
+.tech-tree-canvas--inspector {
+    flex-grow: 0;
+    height: 420px;
+}
+
+/* Scaled about its top-left, so pan and zoom are a translate and a scale with no offset */
 .tech-tree-canvas__content {
     position: absolute;
     left: 0;
     top: 0;
+    transform-origin: 0 0;
 }
 
 .tech-tree-canvas__layer {
@@ -114,14 +126,19 @@
 
 .tech-tree-page-label {
     position: absolute;
+    top: 6px;
     color: rgb(144, 151, 175);
     font-size: 11px;
     -unity-font-style: bold;
 }
 
 /* The locked frame: 1 unit border on top and sides, a 4 unit lip at the bottom, a darker header band */
+/* The frame's opaque 152 by 90. The prefab lays children out in the full 164 by 102 rect, 6 units further out,
+   so each child's offset below is the prefab's less 6. */
 .tech-tree-node {
     position: absolute;
+    width: 152px;
+    height: 90px;
     background-color: rgb(38, 42, 51);
     border-width: 1px 1px 4px 1px;
     border-color: rgb(82, 89, 99);
@@ -190,12 +207,16 @@
 
 .tech-tree-node__icon {
     position: absolute;
+    left: 9px;
+    top: 4px;
     width: 24px;
     height: 24px;
 }
 
 .tech-tree-node__name {
     position: absolute;
+    left: 9px;
+    top: 34px;
     width: 134px;
     color: rgb(255, 255, 255);
     font-size: 12px;
@@ -206,6 +227,8 @@
 
 .tech-tree-node__cost {
     position: absolute;
+    right: 5px;
+    top: 6px;
     width: 65px;
     height: 16px;
     flex-direction: row;

@@ -5,21 +5,18 @@ using Ksp2UnityTools.Editor.Validation;
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
 {
     /// <summary>
-    /// Checks a patch's override against the reference node it changes: warns when the node has left the reference,
-    /// and when the reference has changed since the override was taken.
+    /// Checks a patch's override against the reference node it changes, for changes the reference made since the
+    /// override was taken.
     /// </summary>
     /// <remarks>
     /// A field the patch changed and the reference changed too is a warning, since the patch overwrites the
     /// reference's change. A field only the reference changed is a note, since the patch leaves it alone. Either way
     /// the fix rebases the override onto the reference as it is now, keeping the patch's own changes.
     /// </remarks>
-    public class TechNodeOverrideReferenceValidator : ITechNodeValidator
+    public class TechNodeOverrideReferenceChangedValidator : ITechNodeValidator
     {
-        /// <summary>Stable code emitted for an override whose node the reference no longer has.</summary>
-        public const string TARGET_MISSING_CODE = "TECHNODE_OVERRIDE_TARGET_MISSING";
-
         /// <summary>Stable code emitted for an override the reference has changed under.</summary>
-        public const string REFERENCE_CHANGED_CODE = "TECHNODE_OVERRIDE_REFERENCE_CHANGED";
+        public const string Code = "TECHNODE_OVERRIDE_REFERENCE_CHANGED";
 
         /// <inheritdoc />
         public IEnumerable<ValidationIssue> Validate(TechNodeValidationContext context)
@@ -28,24 +25,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
                 yield break;
 
             TechTreeNode baseline = patch.FindBaseline(context.Id);
-            if (baseline == null)
-                yield break;
-
             TechTreeNode reference = context.Tree.Reference.FirstOrDefault(node => node.Data?.ID == context.Id);
-            if (reference == null)
-            {
-                yield return new ValidationIssue(
-                    TARGET_MISSING_CODE,
-                    ValidationSeverity.Warning,
-                    $"The reference tree no longer has {context.Id}, so the patch's change to it does nothing.",
-                    new[]
-                    {
-                        new ValidationFix("Revert", () => context.Tree.Change("Revert Tech Node",
-                            () => TechTreeEditing.RevertOverride(patch, context.Id))),
-                    }
-                );
+            if (baseline == null || reference == null)
                 yield break;
-            }
 
             List<string> moved = TechTreePatchBake.GetChangedFields(baseline, reference);
             if (moved.Count == 0)
@@ -57,13 +39,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring.Validation.Validators
                 () => TechTreePatchBake.Rebase(baseline, node, reference)));
             yield return conflicts.Count > 0
                 ? new ValidationIssue(
-                    REFERENCE_CHANGED_CODE,
+                    Code,
                     ValidationSeverity.Warning,
                     $"The reference tree has changed {string.Join(", ", conflicts)} of {context.Name}, which this patch changes too and overwrites.",
                     new[] { rebase }
                 )
                 : new ValidationIssue(
-                    REFERENCE_CHANGED_CODE,
+                    Code,
                     ValidationSeverity.Info,
                     $"The reference tree has changed {string.Join(", ", moved)} of {context.Name} since the patch took it, which the patch leaves alone.",
                     new[] { rebase }

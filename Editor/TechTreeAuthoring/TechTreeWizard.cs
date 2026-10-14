@@ -75,17 +75,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Builds a duplicate of a tree from its nodes, sharing nothing with them.
         /// </summary>
         /// <param name="nodes">The nodes to copy.</param>
-        /// <param name="source">The tree they come from, whose tier names and start node the duplicate takes, or null
-        /// when they come from elsewhere.</param>
+        /// <param name="treeData">The tier names and start node of the tree they come from, which the duplicate takes,
+        /// or null when it has none.</param>
         /// <returns>The duplicate, not yet saved as an asset.</returns>
-        public static TechTreeAsset BuildDuplicate(IEnumerable<TechTreeNode> nodes, TechTreeAsset source)
+        public static TechTreeAsset BuildDuplicate(IEnumerable<TechTreeNode> nodes, ReferenceTreeData treeData)
         {
             var tree = CreateInstance<TechTreeAsset>();
             tree.Nodes = nodes.Select(TechTreeEditing.CopyNode).ToList();
-            if (source != null)
+            if (treeData != null)
             {
-                tree.Tiers = source.Tiers.Select(tier => new TechTreeTier { EnglishName = tier.EnglishName }).ToList();
-                tree.StartNodeId = source.StartNodeId;
+                tree.Tiers = ReferenceTreeData.CopyTiers(treeData.Tiers);
+                tree.StartNodeId = treeData.StartNodeId;
             }
 
             return tree;
@@ -256,7 +256,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private TechTreeAsset CreateTree()
         {
             List<TechTreeNode> nodes;
-            TechTreeAsset source = null;
+            ReferenceTreeData treeData = null;
             switch (_sourceField.value)
             {
                 case EMPTY:
@@ -264,16 +264,22 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     break;
                 case GAME_NODES:
                     nodes = TechTreeReference.LoadGameNodes(Array.Empty<string>());
+                    treeData = TechTreeReference.LoadGameTreeData(Array.Empty<string>());
                     break;
                 case ASSET when _assetField.value is TechTreeAsset tree:
                     nodes = tree.Nodes;
-                    source = tree;
+                    treeData = ReferenceTreeData.FromTree(tree);
                     break;
                 case ASSET:
-                    nodes = TechTreeReference.LoadFolder(AssetDatabase.GetAssetPath(_assetField.value));
+                    string folder = AssetDatabase.GetAssetPath(_assetField.value);
+                    nodes = TechTreeReference.LoadFolder(folder);
+                    treeData = TechTreeReference.LoadTreeDataFolder(folder);
                     break;
                 default:
-                    nodes = TechTreeReference.FromJson(TechTreeCacheImport.ReadNodes(SelectedSet().Value).Values);
+                    TechTreeCacheSet set = SelectedSet().Value;
+                    nodes = TechTreeReference.FromJson(TechTreeCacheImport.ReadNodes(set).Values);
+                    string json = SetTreeDataJson(set);
+                    treeData = json != null ? TechTreeReference.TreeDataFromJson(new[] { json }) : null;
                     break;
             }
 
@@ -283,13 +289,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return null;
             }
 
-            TechTreeAsset created = nodes == null ? CreateInstance<TechTreeAsset>() : BuildDuplicate(nodes, source);
+            TechTreeAsset created = nodes == null ? CreateInstance<TechTreeAsset>() : BuildDuplicate(nodes, treeData);
             AssetDatabase.CreateAsset(created, AssetPath());
             AssetDatabase.SaveAssets();
             return created;
         }
 
-        // The set's nodes as a JSON folder of the project, which the patch keeps as its reference
+        // The set's nodes and tree data as a JSON folder of the project, which the patch keeps as its reference. Without
+        // the tree data the patch would take the reference for one that has none, and give the set a second.
         private UnityEngine.Object WriteReferenceFolder(TechTreeCacheSet set)
         {
             string folder = ReferenceFolder();
@@ -299,9 +306,20 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 File.WriteAllText($"{folder}/{node.Key}.json", node.Value);
             }
 
+            string treeData = SetTreeDataJson(set);
+            if (treeData != null)
+            {
+                File.WriteAllText($"{folder}/{_nameField.value?.Trim()}{TechTreeBake.TREE_DATA_FILE_SUFFIX}", treeData);
+            }
+
             AssetDatabase.ImportAsset(folder, ImportAssetOptions.ImportRecursive);
             return AssetDatabase.LoadMainAssetAtPath(folder);
         }
+
+        // The tree data a set loads: the cache's own when a patch in the set changed it, otherwise the game's
+        private static string SetTreeDataJson(TechTreeCacheSet set) =>
+            TechTreeCacheImport.ReadTreeData(set)
+            ?? TechTreeReference.LoadGameTreeDataJson(Array.Empty<string>()).FirstOrDefault();
 
         private TechTreeCacheSet? SelectedSet()
         {

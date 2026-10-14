@@ -35,21 +35,21 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         private const float GRID_DOT_SIZE = 3f;
 
         // Colours read from the R&D Center's prefab and tier art
-        private static readonly Color BandColor = new(0.059f, 0.063f, 0.114f);
+        private static readonly Color BAND_COLOR = new(0.059f, 0.063f, 0.114f);
 
-        private static readonly Color OverflowColor = new(0.32f, 0.35f, 0.39f, 0.08f);
+        private static readonly Color OVERFLOW_COLOR = new(0.32f, 0.35f, 0.39f, 0.08f);
 
-        private static readonly Color RuleColor = new(0.322f, 0.349f, 0.388f);
+        private static readonly Color RULE_COLOR = new(0.322f, 0.349f, 0.388f);
 
-        private static readonly Color GridColor = new(0.565f, 0.592f, 0.686f, 0.22f);
+        private static readonly Color GRID_COLOR = new(0.565f, 0.592f, 0.686f, 0.22f);
 
-        private static readonly Color LockedLineColor = new(0.329f, 0.353f, 0.4f, 0.902f);
+        private static readonly Color LOCKED_LINE_COLOR = new(0.329f, 0.353f, 0.4f, 0.902f);
 
-        private static readonly Color PrerequisiteLineColor = new(0.71f, 0.745f, 0.839f);
+        private static readonly Color PREREQUISITE_LINE_COLOR = new(0.71f, 0.745f, 0.839f);
 
-        private static readonly Color DependentLineColor = new(0.357f, 0.373f, 0.859f);
+        private static readonly Color DEPENDENT_LINE_COLOR = new(0.357f, 0.373f, 0.859f);
 
-        private static readonly Color UnlockableLineColor = new(0f, 1f, 0.4f);
+        private static readonly Color UNLOCKABLE_LINE_COLOR = new(0f, 1f, 0.4f);
 
         private readonly VisualElement _content;
 
@@ -238,7 +238,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             _content = new VisualElement { name = "tech-tree-content" };
             _content.AddToClassList("tech-tree-canvas__content");
-            _content.style.transformOrigin = new TransformOrigin(0f, 0f);
             Add(_content);
 
             _backdrop = MakeLayer("tech-tree-backdrop");
@@ -252,6 +251,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<PointerMoveEvent>(OnPointerMove);
             RegisterCallback<PointerUpEvent>(OnPointerUp);
+            RegisterCallback<PointerCaptureOutEvent>(_ => EndPointerGesture());
             RegisterCallback<KeyDownEvent>(OnKeyDown);
             RegisterCallback<GeometryChangedEvent>(_ => FrameOnce());
         }
@@ -461,7 +461,6 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 };
                 label.AddToClassList("tech-tree-page-label");
                 label.style.left = page * TechTreeCanvasGeometry.PAGE_WIDTH + 8f;
-                label.style.top = 6f;
                 _pageLabels.Add(label);
             }
         }
@@ -677,10 +676,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         // A click on empty space, rather than a drag, clears the selection
         private void OnPointerUp(PointerUpEvent evt)
         {
+            // The gesture ends before the pointer is released, so the capture loss that follows finds nothing to end
             if (_pressedNodeId != null)
             {
-                this.ReleasePointer(evt.pointerId);
                 DropNode(evt.position);
+                this.ReleasePointer(evt.pointerId);
                 return;
             }
 
@@ -712,6 +712,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
             }
 
+            FinishDrag();
+        }
+
+        private void FinishDrag()
+        {
             if (!_isDragging)
                 return;
 
@@ -720,6 +725,24 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             EditorUtility.SetDirty(_tree);
             Rebuild();
             OnTreeEdited?.Invoke();
+        }
+
+        // Losing the pointer before its release, as when it is let go outside the window, keeps a move where it got to
+        // and drops a link or pan, so the canvas never stays mid-gesture
+        private void EndPointerGesture()
+        {
+            if (_pressedNodeId == null && !_isPanning)
+                return;
+
+            _pressedNodeId = null;
+            _isPanning = false;
+            if (_isLinking)
+            {
+                _isLinking = false;
+                _lines.MarkDirtyRepaint();
+            }
+
+            FinishDrag();
         }
 
         private void OnKeyDown(KeyDownEvent evt)
@@ -788,13 +811,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         {
             if (IsRemoved(nodeId))
             {
-                menu.AddItem("Restore", false, () => Edit("Restore Tech Node", () => TechTreeEditing.RestoreReferenceNode(Patch, nodeId)));
+                menu.AddItem("Restore", false, () =>
+                    Edit("Restore Tech Node", () => TechTreeEditing.RestoreReferenceNode(Patch, nodeId)));
                 return;
             }
 
             if (Patch.IsOverride(nodeId))
             {
-                menu.AddItem("Revert to Reference", false, () => Edit("Revert Tech Node", () => TechTreeEditing.RevertOverride(Patch, nodeId)));
+                menu.AddItem("Revert to Reference", false, () =>
+                    Edit("Revert Tech Node", () => TechTreeEditing.RevertOverride(Patch, nodeId)));
             }
             else
             {
@@ -862,7 +887,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId, _reference))
             {
-                OnRefused?.Invoke($"{DisplayName(prerequisiteId)} already requires {DisplayName(nodeId)}, so the link would make a loop.");
+                OnRefused?.Invoke(
+                    $"{DisplayName(prerequisiteId)} already requires {DisplayName(nodeId)}, so the link would make a loop."
+                );
                 return;
             }
 
@@ -927,7 +954,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             string addedId = null;
             Edit("Add Tech Node", () =>
             {
-                addedId = TechTreeEditing.AddNode(_tree, position).Data.ID;
+                addedId = TechTreeEditing.AddNode(_tree, position, _reference).Data.ID;
                 return true;
             });
             Select(addedId);
@@ -939,7 +966,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             string copyId = null;
             Edit("Duplicate Tech Node", () =>
             {
-                copyId = TechTreeEditing.DuplicateNode(_tree, nodeId, new Vector2(0f, -TechTreeCanvasGeometry.GRID_Y))?.Data.ID;
+                copyId = TechTreeEditing.DuplicateNode(
+                    _tree,
+                    nodeId,
+                    new Vector2(0f, -TechTreeCanvasGeometry.GRID_Y),
+                    _reference
+                )?.Data.ID;
                 return copyId != null;
             });
             if (copyId != null)
@@ -1003,10 +1035,10 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             float width = _pageCount * TechTreeCanvasGeometry.PAGE_WIDTH;
             float height = TechTreeCanvasGeometry.BAND_HEIGHT + _overflow;
 
-            FillRect(painter, new Rect(0f, 0f, width, TechTreeCanvasGeometry.BAND_HEIGHT), BandColor);
+            FillRect(painter, new Rect(0f, 0f, width, TechTreeCanvasGeometry.BAND_HEIGHT), BAND_COLOR);
             if (_overflow > 0f)
             {
-                FillRect(painter, new Rect(0f, TechTreeCanvasGeometry.BAND_HEIGHT, width, _overflow), OverflowColor);
+                FillRect(painter, new Rect(0f, TechTreeCanvasGeometry.BAND_HEIGHT, width, _overflow), OVERFLOW_COLOR);
             }
 
             if (_showsGrid)
@@ -1015,7 +1047,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             painter.lineWidth = 1f;
-            painter.strokeColor = RuleColor;
+            painter.strokeColor = RULE_COLOR;
             if (_showsPages)
             {
                 for (int page = 1; page < _pageCount; page++)
@@ -1049,7 +1081,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             int lastRow = Mathf.FloorToInt((highestY - TechTreeCanvasGeometry.GRID_Y_ORIGIN) / TechTreeCanvasGeometry.GRID_Y);
             float half = GRID_DOT_SIZE / 2f;
 
-            painter.fillColor = GridColor;
+            painter.fillColor = GRID_COLOR;
             painter.BeginPath();
             for (float x = 0f; x + TechTreeCanvasGeometry.PLACEMENT_OFFSET <= width; x += TechTreeCanvasGeometry.GRID_X)
             {
@@ -1094,18 +1126,18 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     {
                         // The game colours a line by the state of the node it leads to
                         bool isOpen = TechTreePreview.GetState(node, _unlocked) != TechTreePreviewState.Locked;
-                        StrokeConnector(painter, prerequisite, position, isOpen ? UnlockableLineColor : LockedLineColor);
+                        StrokeConnector(painter, prerequisite, position, isOpen ? UNLOCKABLE_LINE_COLOR : LOCKED_LINE_COLOR);
                         continue;
                     }
 
-                    StrokeConnector(painter, prerequisite, position, LockedLineColor);
+                    StrokeConnector(painter, prerequisite, position, LOCKED_LINE_COLOR);
                     if (id == _selectedId)
                     {
-                        highlighted.Add((prerequisite, position, PrerequisiteLineColor));
+                        highlighted.Add((prerequisite, position, PREREQUISITE_LINE_COLOR));
                     }
                     else if (prerequisiteId == _selectedId)
                     {
-                        highlighted.Add((prerequisite, position, DependentLineColor));
+                        highlighted.Add((prerequisite, position, DEPENDENT_LINE_COLOR));
                     }
                 }
             }
@@ -1118,7 +1150,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             // A link being dragged runs straight from its node to the pointer
             if (_isLinking && _pressedNodeId != null && _positions.TryGetValue(_pressedNodeId, out Vector2 source))
             {
-                painter.strokeColor = DependentLineColor;
+                painter.strokeColor = DEPENDENT_LINE_COLOR;
                 painter.BeginPath();
                 painter.MoveTo(ToLocal(source));
                 painter.LineTo(_linkEnd);

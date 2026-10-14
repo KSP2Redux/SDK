@@ -1,7 +1,12 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Ksp2UnityTools.Editor.API
 {
@@ -77,10 +82,91 @@ namespace Ksp2UnityTools.Editor.API
         public static void RemoveAddressable(string assetPath)
         {
             var settings = AddressableAssetSettingsDefaultObject.Settings;
-            if (settings == null) return;
-            var guid = AssetDatabase.AssetPathToGUID(assetPath);
-            if (string.IsNullOrEmpty(guid)) return;
+            if (settings == null)
+                return;
+
+            string guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+                return;
+
             settings.RemoveAssetEntry(guid);
+        }
+
+        /// <summary>
+        /// Lists the project's own Addressables entries that carry a label.
+        /// </summary>
+        /// <remarks>
+        /// These are the entries of the project's Addressables settings. A built catalog, such as the game's, is not
+        /// searched.
+        /// </remarks>
+        /// <param name="label">The label.</param>
+        /// <returns>The entries, empty when the project has no Addressables settings.</returns>
+        public static IEnumerable<AddressableAssetEntry> GetProjectEntries(string label)
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+                return Enumerable.Empty<AddressableAssetEntry>();
+
+            return settings.groups
+                .Where(group => group != null)
+                .SelectMany(group => group.entries)
+                .Where(entry => entry.labels.Contains(label));
+        }
+
+        /// <summary>
+        /// Reads the text of the text assets that carry a label in the loaded runtime catalogs, such as the game's.
+        /// </summary>
+        /// <remarks>
+        /// The project's own entries are not in a catalog until its Addressables are built, so they are read with
+        /// <see cref="GetProjectText" /> instead. A label no catalog knows gives nothing rather than a failed load.
+        /// </remarks>
+        /// <param name="label">The label.</param>
+        /// <returns>Each asset's text, empty when no catalog has the label or the load fails.</returns>
+        public static List<string> GetCatalogText(string label)
+        {
+            if (!Addressables.ResourceLocators.Any(locator => locator.Locate(label, typeof(TextAsset), out _)))
+                return new List<string>();
+
+            try
+            {
+                var handle = Addressables.LoadAssetsAsync<TextAsset>(label, null);
+                IList<TextAsset> assets = handle.WaitForCompletion();
+                List<string> text = (assets ?? Array.Empty<TextAsset>())
+                    .Where(asset => asset != null)
+                    .Select(asset => asset.text)
+                    .ToList();
+                Addressables.Release(handle);
+                return text;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[AddressablesTools] Could not load {label} from Addressables. {ex.Message}");
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Reads the text of the project's own Addressables text assets that carry a label.
+        /// </summary>
+        /// <param name="label">The label.</param>
+        /// <param name="excludedPaths">Asset paths to leave out, or null for none.</param>
+        /// <returns>Each asset's text, in entry order.</returns>
+        public static List<string> GetProjectText(string label, ICollection<string> excludedPaths = null)
+        {
+            var text = new List<string>();
+            foreach (AddressableAssetEntry entry in GetProjectEntries(label))
+            {
+                if (excludedPaths != null && excludedPaths.Contains(entry.AssetPath))
+                    continue;
+
+                var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(entry.AssetPath);
+                if (asset != null)
+                {
+                    text.Add(asset.text);
+                }
+            }
+
+            return text;
         }
     }
 }

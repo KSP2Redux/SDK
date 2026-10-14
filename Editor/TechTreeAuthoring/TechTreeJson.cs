@@ -1,3 +1,4 @@
+using System;
 using KSP.Game.Science;
 using UnityEngine;
 
@@ -20,6 +21,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public static string ToJson(TechNodeData node) => JsonUtility.ToJson(node, true);
 
         /// <summary>
+        /// Copies a node through its JSON, so the copy shares no arrays or objects with the original.
+        /// </summary>
+        /// <param name="node">The node to copy.</param>
+        /// <returns>The copy, which keeps an empty ID if the original has one.</returns>
+        public static TechNodeData Copy(TechNodeData node) => JsonUtility.FromJson<TechNodeData>(ToJson(node));
+
+        /// <summary>
         /// Reads a node from JSON.
         /// </summary>
         /// <param name="json">The JSON to read.</param>
@@ -31,7 +39,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 node = JsonUtility.FromJson<TechNodeData>(json);
             }
-            catch (System.ArgumentException)
+            catch (ArgumentException)
             {
                 node = null;
                 return false;

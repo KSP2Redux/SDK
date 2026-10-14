@@ -330,6 +330,8 @@ namespace Ksp2UnityTools.Editor.Modding
             var pipeline = CreateInstance<Pipeline>();
             pipeline.Data = new ComposableElement[] { };
             AssetDatabase.CreateAsset(pipeline, pipelinePath);
+            // Bakes first, since its files are what the staging jobs below pick up
+            pipeline.InsertElement(CreateInstance<BakeModAssets>(), pipeline.Data.Length);
             pipeline.InsertElement(CreateInstance<StageFolder>(), pipeline.Data.Length);
             pipeline.InsertElement(CreateInstance<StageGeneratedTextAssets>(), pipeline.Data.Length);
             if (includeBuiltObjects)

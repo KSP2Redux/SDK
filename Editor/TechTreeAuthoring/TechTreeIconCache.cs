@@ -15,7 +15,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// <remarks>
     /// Stock icons resolve through the game's catalog, which the cache registers in the editor first, and the
     /// project's own through its Addressables settings. An address neither knows is remembered as missing and the node
-    /// is drawn without an icon, as the editor never draws a placeholder.
+    /// is drawn without an icon, as the editor never draws a placeholder. Any change to the project's Addressables
+    /// forgets every lookup.
     /// </remarks>
     public static class TechTreeIconCache
     {
@@ -55,6 +56,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             return icon;
         }
+
+        // An icon registered after its address was looked up shows without waiting for a domain reload
+        [InitializeOnLoadMethod]
+        private static void ClearOnAddressablesChange() =>
+            AddressableAssetSettings.OnModificationGlobal += (_, _, _) => Icons.Clear();
 
         // The project's own icons are not in any runtime catalog until its Addressables are built
         private static Sprite LoadProjectIcon(string address)
