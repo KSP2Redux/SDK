@@ -71,7 +71,19 @@ namespace Ksp2UnityTools.Editor.Extensions
                     SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
                     return;
                 case PlayModeStateChange.EnteredEditMode:
-                    UnloadLeakedAssetBundles();
+                    // playModeStateChanged is one multicast delegate, so an exception here would keep
+                    // every later subscriber from hearing that the editor is back in edit mode (the
+                    // runtime CLI integration then reports ExitingPlayMode forever). The sweep is a
+                    // cleanup, so a failure is logged and the transition carries on.
+                    try
+                    {
+                        UnloadLeakedAssetBundles();
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogException(exception);
+                    }
+
                     // Deferred so it runs after Addressables' own EnteredEditMode handler, whose flag
                     // it clears.
                     EditorApplication.delayCall -= ResetAddressablesForEditMode;
@@ -119,7 +131,16 @@ namespace Ksp2UnityTools.Editor.Extensions
             {
                 if (bundle == null || bundle.name == "ksp2")
                     continue;
-                bundle.Unload(true);
+
+                // A bundle the play session already unloaded can still be listed here, and Unity then
+                // refuses to unload it again. It is gone either way, so it is skipped.
+                try
+                {
+                    bundle.Unload(true);
+                }
+                catch (InvalidOperationException)
+                {
+                }
             }
         }
 
