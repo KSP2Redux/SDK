@@ -51,14 +51,27 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return tree.Nodes.Where(node => !string.IsNullOrEmpty(node.Data?.ID)).ToList();
 
             string folder = reference != null ? AssetDatabase.GetAssetPath(reference) : null;
-            return !string.IsNullOrEmpty(folder) && AssetDatabase.IsValidFolder(folder)
-                ? FromJson(Directory.GetFiles(folder, "*.json", SearchOption.AllDirectories).Select(File.ReadAllText))
-                : new List<TechTreeNode>();
+            return !string.IsNullOrEmpty(folder) && AssetDatabase.IsValidFolder(folder) ? LoadFolder(folder) : new List<TechTreeNode>();
         }
 
-        // The first copy of an ID wins, so the project's own nodes come first, then Redux's, which replace the game's
-        // own under the same IDs, then the rest. The asset's own baked file is left out.
-        private static List<TechTreeNode> LoadGameNodes(ICollection<string> excludedPaths)
+        /// <summary>
+        /// Loads the nodes of a folder of tech node JSON, such as another mod's baked tree.
+        /// </summary>
+        /// <param name="folder">The folder, searched with its subfolders.</param>
+        /// <returns>The nodes, the first of two with one ID kept.</returns>
+        public static List<TechTreeNode> LoadFolder(string folder) =>
+            FromJson(Directory.GetFiles(folder, "*.json", SearchOption.AllDirectories).Select(File.ReadAllText));
+
+        /// <summary>
+        /// Loads every tech node the project's own Addressables and the loaded catalogs hold.
+        /// </summary>
+        /// <remarks>
+        /// The first copy of an ID wins, so the project's own nodes come first, then Redux's, which replace the game's
+        /// own under the same IDs, then the rest.
+        /// </remarks>
+        /// <param name="excludedPaths">Project assets to leave out, such as an asset's own baked files.</param>
+        /// <returns>The nodes.</returns>
+        public static List<TechTreeNode> LoadGameNodes(ICollection<string> excludedPaths)
         {
             EditorPqsBootstrap.EnsureStockCatalog();
             var json = new List<string>();
@@ -98,8 +111,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
         }
 
-        // Of two nodes with one ID the first is kept, as the game keeps it
-        private static List<TechTreeNode> FromJson(IEnumerable<string> json)
+        /// <summary>
+        /// Reads tech nodes from their JSON, with English from the project's localization CSVs.
+        /// </summary>
+        /// <param name="json">Each node's JSON. Text that is not a tech node is skipped.</param>
+        /// <returns>The nodes, the first of two with one ID kept, as the game keeps it.</returns>
+        public static List<TechTreeNode> FromJson(IEnumerable<string> json)
         {
             Dictionary<string, string> english = TechTreeImport.ReadProjectEnglish();
             var nodes = new Dictionary<string, TechTreeNode>(StringComparer.Ordinal);
