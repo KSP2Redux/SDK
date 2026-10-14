@@ -30,15 +30,31 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             string.IsNullOrEmpty(nodeId) ? null : tree.Nodes.FirstOrDefault(node => node.Data?.ID == nodeId);
 
         /// <summary>
+        /// Finds a node by its ID in a tree, then in the reference nodes it is placed against.
+        /// </summary>
+        /// <param name="tree">The tree to search first.</param>
+        /// <param name="reference">The reference nodes, or null for none.</param>
+        /// <param name="nodeId">The node's ID.</param>
+        /// <returns>The node, or null when neither has it.</returns>
+        public static TechTreeNode FindAny(TechTreeAsset tree, IReadOnlyList<TechTreeNode> reference, string nodeId) =>
+            Find(tree, nodeId) ?? reference?.FirstOrDefault(node => node.Data?.ID == nodeId);
+
+        /// <summary>
         /// Gets the IDs of the nodes that require a node.
         /// </summary>
         /// <param name="tree">The tree.</param>
         /// <param name="nodeId">The required node's ID.</param>
-        /// <returns>The requiring nodes' IDs, in tree order.</returns>
-        public static List<string> GetDependents(TechTreeAsset tree, string nodeId) =>
-            tree.Nodes
+        /// <param name="reference">The reference nodes to search too, or null for none.</param>
+        /// <returns>The requiring nodes' IDs, the tree's first, in order.</returns>
+        public static List<string> GetDependents(
+            TechTreeAsset tree,
+            string nodeId,
+            IReadOnlyList<TechTreeNode> reference = null
+        ) =>
+            tree.Nodes.Concat(reference ?? Array.Empty<TechTreeNode>())
                 .Where(node => node.Data?.RequiredTechNodeIDs != null && node.Data.RequiredTechNodeIDs.Contains(nodeId))
                 .Select(node => node.Data.ID)
+                .Distinct()
                 .ToList();
 
         /// <summary>
@@ -68,9 +84,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="tree">The tree.</param>
         /// <param name="nodeId">The node that would require the other.</param>
         /// <param name="prerequisiteId">The node it would require.</param>
+        /// <param name="reference">The reference nodes the tree is placed against, or null for none.</param>
         /// <returns>True if the two are the same node or the prerequisite already requires the node, directly or
         /// through others.</returns>
-        public static bool WouldCreateLoop(TechTreeAsset tree, string nodeId, string prerequisiteId)
+        public static bool WouldCreateLoop(
+            TechTreeAsset tree,
+            string nodeId,
+            string prerequisiteId,
+            IReadOnlyList<TechTreeNode> reference = null
+        )
         {
             if (nodeId == prerequisiteId)
                 return true;
@@ -84,7 +106,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 if (!visited.Add(current))
                     continue;
 
-                foreach (string required in Find(tree, current)?.Data.RequiredTechNodeIDs ?? Array.Empty<string>())
+                foreach (string required in FindAny(tree, reference, current)?.Data.RequiredTechNodeIDs ?? Array.Empty<string>())
                 {
                     if (required == nodeId)
                         return true;
@@ -101,14 +123,24 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         /// <param name="tree">The tree.</param>
         /// <param name="nodeId">The node that will require the other.</param>
-        /// <param name="prerequisiteId">The node it will require.</param>
+        /// <param name="prerequisiteId">The node it will require, in the tree or the reference nodes.</param>
+        /// <param name="reference">The reference nodes the tree is placed against, or null for none.</param>
         /// <returns>True if the link was added, false if either node is missing, the link exists, or it would close a
-        /// loop.</returns>
-        public static bool TryAddPrerequisite(TechTreeAsset tree, string nodeId, string prerequisiteId)
+        /// loop. A reference node never gains a prerequisite.</returns>
+        public static bool TryAddPrerequisite(
+            TechTreeAsset tree,
+            string nodeId,
+            string prerequisiteId,
+            IReadOnlyList<TechTreeNode> reference = null
+        )
         {
             TechTreeNode node = Find(tree, nodeId);
-            if (node == null || Find(tree, prerequisiteId) == null || WouldCreateLoop(tree, nodeId, prerequisiteId))
+            if (node == null
+                || FindAny(tree, reference, prerequisiteId) == null
+                || WouldCreateLoop(tree, nodeId, prerequisiteId, reference))
+            {
                 return false;
+            }
 
             string[] required = node.Data.RequiredTechNodeIDs ?? Array.Empty<string>();
             if (required.Contains(prerequisiteId))

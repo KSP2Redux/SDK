@@ -18,6 +18,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             ProjectWindowUtil.CreateAsset(tree, "NewTechTree.asset");
         }
 
+        [MenuItem("Assets/Redux SDK/New Tech Node", priority = KSP2UnityTools.MenuPriority)]
+        private static void NewTechNode()
+        {
+            var node = ScriptableObject.CreateInstance<TechNodeAsset>();
+            TechTreeEditing.AddNode(node, Vector2.zero);
+            ProjectWindowUtil.CreateAsset(node, "NewTechNode.asset");
+        }
+
         // Brings an existing tree of node JSON under the editor once. The tree asset is the source from then on.
         [MenuItem("Assets/Redux SDK/Import Tech Tree JSON...", priority = KSP2UnityTools.MenuPriority)]
         private static void ImportTechTreeJson()

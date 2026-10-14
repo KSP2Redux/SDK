@@ -112,6 +112,10 @@
     border-radius: 5px;
 }
 
+.tech-tree-node--reference {
+    opacity: 0.55;
+}
+
 .tech-tree-node--selected {
     border-color: rgb(91, 95, 219);
     border-width: 2px 2px 5px 2px;

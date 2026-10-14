@@ -63,6 +63,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private TechTreeAsset _tree;
 
+        private IReadOnlyList<TechTreeNode> _reference = Array.Empty<TechTreeNode>();
+
+        // The reference nodes drawn, and every node drawn, the reference ones first
+        private readonly HashSet<string> _referenceIds = new();
+
+        private List<TechTreeNode> _drawnNodes = new();
+
         private string _selectedId;
 
         private int _pageCount = 1;
@@ -129,6 +136,16 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Gets or sets whether moved and added nodes snap to the stock grid.
         /// </summary>
         public bool SnapsToGrid { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets whether nodes can be added, duplicated and deleted, rather than only moved and linked.
+        /// </summary>
+        public bool CanAddAndRemoveNodes { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the ID of the node the first view centres on, or null to fit every node.
+        /// </summary>
+        public string FrameTarget { get; set; }
 
         /// <summary>
         /// Gets the selected node's ID, or null when nothing is selected.
@@ -207,9 +224,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Shows a tree, or clears the canvas.
         /// </summary>
         /// <param name="tree">The tree to show, or null for none.</param>
-        public void SetTree(TechTreeAsset tree)
+        /// <param name="reference">Nodes of another tree to show beside it, which can be linked to but never change,
+        /// or null for none.</param>
+        public void SetTree(TechTreeAsset tree, IReadOnlyList<TechTreeNode> reference = null)
         {
             _tree = tree;
+            _reference = reference ?? Array.Empty<TechTreeNode>();
             _hasFramed = false;
             Rebuild();
             FrameOnce();
@@ -236,21 +256,32 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             List<TechTreeNode> nodes = _tree.Nodes.Where(node => !string.IsNullOrEmpty(node.Data?.ID)).ToList();
+
+            // A reference node the tree redefines is drawn as the tree's
+            var editableIds = new HashSet<string>(nodes.Select(node => node.Data.ID));
+            List<TechTreeNode> referenceNodes = _reference
+                .Where(node => !string.IsNullOrEmpty(node.Data?.ID) && !editableIds.Contains(node.Data.ID))
+                .ToList();
+            _referenceIds.Clear();
+            _referenceIds.UnionWith(referenceNodes.Select(node => node.Data.ID));
+            List<TechTreeNode> drawn = referenceNodes.Concat(nodes).ToList();
+            _drawnNodes = drawn;
+
             _pageCount = TechTreeLayout.GetTierCount(
-                nodes.Select(node => node.Data.TechTreePosition.x),
+                drawn.Select(node => node.Data.TechTreePosition.x),
                 TechTreeCanvasGeometry.PLACEMENT_OFFSET,
                 TechTreeCanvasGeometry.PAGE_WIDTH,
                 Mathf.Max(1, _tree.Tiers.Count)
             );
             _overflow = TechTreeLayout.GetVerticalOverflow(
-                nodes.Select(node => node.Data.TechTreePosition.y),
+                drawn.Select(node => node.Data.TechTreePosition.y),
                 TechTreeCanvasGeometry.PLACEMENT_OFFSET,
                 TechTreeCanvasGeometry.NODE_HEIGHT / 2f
             );
             _content.style.width = _pageCount * TechTreeCanvasGeometry.PAGE_WIDTH;
             _content.style.height = TechTreeCanvasGeometry.BAND_HEIGHT + _overflow;
 
-            foreach (TechTreeNode node in nodes)
+            foreach (TechTreeNode node in drawn)
             {
                 Vector2 position = node.Data.TechTreePosition;
 
@@ -259,6 +290,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     continue;
 
                 var element = new TechTreeNodeElement(node, ToLocal(position) - FrameHalfSize);
+                element.SetReference(_referenceIds.Contains(node.Data.ID));
                 _nodeLayer.Add(element);
                 _nodeElements[node.Data.ID] = element;
             }
@@ -397,6 +429,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
 
             _hasFramed = true;
+            if (FrameTarget != null && _positions.ContainsKey(FrameTarget))
+            {
+                CentreOn(FrameTarget);
+                return;
+            }
+
             FrameAll();
         }
 
@@ -444,7 +482,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     return;
                 }
 
-                if (evt.clickCount == 2)
+                if (evt.clickCount == 2 && CanAddAndRemoveNodes)
                 {
                     AddNodeAt(evt.position);
                     evt.StopPropagation();
@@ -468,7 +506,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             _pressStart = evt.position;
             _isLinking = evt.shiftKey;
             _linkEnd = ToContentLocal(evt.position);
-            _dragStartPosition = TechTreeEditing.Find(_tree, nodeId).Data.TechTreePosition;
+            _dragStartPosition = TechTreeEditing.FindAny(_tree, _reference, nodeId).Data.TechTreePosition;
             this.CapturePointer(evt.pointerId);
             evt.StopPropagation();
         }
@@ -504,7 +542,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
             if (!_isDragging)
             {
-                if (delta.magnitude <= CLICK_SLOP)
+                if (delta.magnitude <= CLICK_SLOP || _referenceIds.Contains(_pressedNodeId))
                     return;
 
                 // The whole drag is one undo step, so one Ctrl+Z puts a node dragged by accident back
@@ -587,6 +625,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (evt.keyCode != KeyCode.Delete && evt.keyCode != KeyCode.Backspace)
                 return;
 
+            if (!CanAddAndRemoveNodes || _referenceIds.Contains(_selectedId))
+                return;
+
             DeleteNode(_selectedId);
             evt.StopPropagation();
         }
@@ -597,36 +638,67 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 return;
 
             var menu = new GenericDropdownMenu();
+            bool hasItems = false;
             if (nodeId == null)
             {
-                menu.AddItem("Add Node Here", false, () => AddNodeAt(pointer));
+                if (CanAddAndRemoveNodes)
+                {
+                    menu.AddItem("Add Node Here", false, () => AddNodeAt(pointer));
+                    hasItems = true;
+                }
             }
             else
             {
+                bool isEditable = !_referenceIds.Contains(nodeId);
                 if (_selectedId != null && _selectedId != nodeId && _positions.ContainsKey(_selectedId))
                 {
-                    AddLinkItems(menu, _selectedId, nodeId);
-                    menu.AddSeparator(string.Empty);
+                    hasItems = AddLinkItems(menu, _selectedId, nodeId);
+                    if (hasItems && isEditable && CanAddAndRemoveNodes)
+                    {
+                        menu.AddSeparator(string.Empty);
+                    }
                 }
 
-                menu.AddItem("Duplicate", false, () => DuplicateNode(nodeId));
-                menu.AddItem("Delete", false, () => DeleteNode(nodeId));
+                if (isEditable && CanAddAndRemoveNodes)
+                {
+                    menu.AddItem("Duplicate", false, () => DuplicateNode(nodeId));
+                    menu.AddItem("Delete", false, () => DeleteNode(nodeId));
+                    hasItems = true;
+                }
             }
 
-            menu.DropDown(new Rect(pointer, Vector2.zero), this, DropdownMenuSizeMode.Auto);
+            if (hasItems)
+            {
+                menu.DropDown(new Rect(pointer, Vector2.zero), this, DropdownMenuSizeMode.Auto);
+            }
         }
 
-        // Links the selected node and the clicked one either way, or removes a link between them
-        private void AddLinkItems(GenericDropdownMenu menu, string selectedId, string clickedId)
+        // Links the selected node and the clicked one either way, or removes a link between them. Only a node of
+        // the tree can gain or lose a prerequisite, never a reference node.
+        private bool AddLinkItems(GenericDropdownMenu menu, string selectedId, string clickedId)
         {
-            AddLinkItem(menu, clickedId, selectedId);
-            AddLinkItem(menu, selectedId, clickedId);
-            if (IsLinked(selectedId, clickedId) || IsLinked(clickedId, selectedId))
+            bool isClickedEditable = !_referenceIds.Contains(clickedId);
+            bool isSelectedEditable = !_referenceIds.Contains(selectedId);
+            if (isClickedEditable)
+            {
+                AddLinkItem(menu, clickedId, selectedId);
+            }
+
+            if (isSelectedEditable)
+            {
+                AddLinkItem(menu, selectedId, clickedId);
+            }
+
+            bool canUnlink = (isSelectedEditable && IsLinked(selectedId, clickedId))
+                || (isClickedEditable && IsLinked(clickedId, selectedId));
+            if (canUnlink)
             {
                 menu.AddItem("Remove Link", false, () => Edit("Unlink Tech Nodes", () =>
                     TechTreeEditing.RemovePrerequisite(_tree, selectedId, clickedId)
                     | TechTreeEditing.RemovePrerequisite(_tree, clickedId, selectedId)));
             }
+
+            return isClickedEditable || isSelectedEditable;
         }
 
         private void AddLinkItem(GenericDropdownMenu menu, string nodeId, string prerequisiteId)
@@ -636,7 +708,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 menu.AddDisabledItem(label, true);
             }
-            else if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId))
+            else if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId, _reference))
             {
                 menu.AddDisabledItem(label, false);
             }
@@ -648,13 +720,19 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private void Link(string nodeId, string prerequisiteId)
         {
-            if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId))
+            if (_referenceIds.Contains(nodeId))
+            {
+                OnRefused?.Invoke($"{DisplayName(nodeId)} belongs to the reference tree, so it cannot gain a prerequisite.");
+                return;
+            }
+
+            if (TechTreeEditing.WouldCreateLoop(_tree, nodeId, prerequisiteId, _reference))
             {
                 OnRefused?.Invoke($"{DisplayName(prerequisiteId)} already requires {DisplayName(nodeId)}, so the link would make a loop.");
                 return;
             }
 
-            Edit("Link Tech Nodes", () => TechTreeEditing.TryAddPrerequisite(_tree, nodeId, prerequisiteId));
+            Edit("Link Tech Nodes", () => TechTreeEditing.TryAddPrerequisite(_tree, nodeId, prerequisiteId, _reference));
         }
 
         private void AddNodeAt(Vector2 pointer)
@@ -711,11 +789,11 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         private bool IsLinked(string nodeId, string prerequisiteId) =>
-            TechTreeEditing.Find(_tree, nodeId)?.Data.RequiredTechNodeIDs?.Contains(prerequisiteId) == true;
+            TechTreeEditing.FindAny(_tree, _reference, nodeId)?.Data.RequiredTechNodeIDs?.Contains(prerequisiteId) == true;
 
         private string DisplayName(string nodeId)
         {
-            TechTreeNode node = TechTreeEditing.Find(_tree, nodeId);
+            TechTreeNode node = TechTreeEditing.FindAny(_tree, _reference, nodeId);
             return node == null || string.IsNullOrEmpty(node.EnglishName) ? nodeId : node.EnglishName;
         }
 
@@ -813,7 +891,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             painter.lineCap = LineCap.Butt;
 
             var highlighted = new List<(Vector2 from, Vector2 to, Color color)>();
-            foreach (TechTreeNode node in _tree.Nodes)
+            foreach (TechTreeNode node in _drawnNodes)
             {
                 string id = node.Data?.ID;
                 if (string.IsNullOrEmpty(id) || !_positions.TryGetValue(id, out Vector2 position))

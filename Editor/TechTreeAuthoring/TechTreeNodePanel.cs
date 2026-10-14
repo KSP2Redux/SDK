@@ -33,6 +33,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 
         private SerializedObject _serializedTree;
 
+        private IReadOnlyList<TechTreeNode> _reference = Array.Empty<TechTreeNode>();
+
         /// <summary>
         /// Raised with a node's ID when the author asks to go to that node.
         /// </summary>
@@ -67,10 +69,18 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <param name="tree">The tree, or null to show nothing.</param>
         /// <param name="serializedTree">The tree's serialized object, which the bound fields use.</param>
         /// <param name="nodeId">The selected node's ID, or null for the tree's settings.</param>
-        public void Show(TechTreeAsset tree, SerializedObject serializedTree, string nodeId)
+        /// <param name="reference">The nodes of the tree this one is placed against, which can be required but never
+        /// change, or null for none.</param>
+        public void Show(
+            TechTreeAsset tree,
+            SerializedObject serializedTree,
+            string nodeId,
+            IReadOnlyList<TechTreeNode> reference = null
+        )
         {
             _tree = tree;
             _serializedTree = serializedTree;
+            _reference = reference ?? Array.Empty<TechTreeNode>();
             Clear();
             if (_tree == null)
                 return;
@@ -178,7 +188,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             });
             section.Add(handle.Root);
 
-            List<string> dependents = TechTreeEditing.GetDependents(_tree, node.Data.ID);
+            List<string> dependents = TechTreeEditing.GetDependents(_tree, node.Data.ID, _reference);
             AddLabel(section, $"Required by ({dependents.Count})", "tech-tree-panel__subheading");
             foreach (string dependent in dependents)
             {
@@ -193,14 +203,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             var menu = new GenericDropdownMenu();
             int offered = 0;
             foreach (TechTreeNode candidate in _tree.Nodes
+                         .Concat(_reference)
                          .Where(candidate => !string.IsNullOrEmpty(candidate.Data?.ID))
+                         .GroupBy(candidate => candidate.Data.ID)
+                         .Select(group => group.First())
                          .Where(candidate => candidate != node && !required.Contains(candidate.Data.ID))
                          .OrderBy(DisplayName, StringComparer.OrdinalIgnoreCase))
             {
                 string candidateId = candidate.Data.ID;
                 string label = $"{DisplayName(candidate)} ({candidateId})";
                 offered++;
-                if (TechTreeEditing.WouldCreateLoop(_tree, node.Data.ID, candidateId))
+                if (TechTreeEditing.WouldCreateLoop(_tree, node.Data.ID, candidateId, _reference))
                 {
                     menu.AddDisabledItem(label, false);
                     continue;
@@ -209,8 +222,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 menu.AddItem(label, false, () =>
                 {
                     EditIf("Add Tech Node Prerequisite", () =>
-                        TechTreeEditing.TryAddPrerequisite(_tree, node.Data.ID, candidateId));
-                    Show(_tree, _serializedTree, node.Data.ID);
+                        TechTreeEditing.TryAddPrerequisite(_tree, node.Data.ID, candidateId, _reference));
+                    Show(_tree, _serializedTree, node.Data.ID, _reference);
                 });
             }
 
@@ -336,7 +349,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             var row = new VisualElement();
             row.AddToClassList("data-editor-inline-row");
 
-            TechTreeNode node = TechTreeEditing.Find(_tree, nodeId);
+            TechTreeNode node = TechTreeEditing.FindAny(_tree, _reference, nodeId);
             var go = new Button(() => OnNodeRequested?.Invoke(nodeId))
             {
                 text = node != null ? DisplayName(node) : nodeId,
@@ -364,15 +377,29 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (newId == oldId)
                 return;
 
-            if (newId.Length == 0 || TechTreeEditing.Find(_tree, newId) != null)
+            string refusal = GetRenameRefusal(newId);
+            if (refusal != null)
             {
                 field.SetValueWithoutNotify(oldId);
-                OnRefused?.Invoke(newId.Length == 0 ? "A node needs an ID." : $"{newId} is already a node in this tree.");
+                OnRefused?.Invoke(refusal);
                 return;
             }
 
             EditIf("Rename Tech Node", () => TechTreeEditing.TryRenameNode(_tree, oldId, newId));
             OnNodeRenamed?.Invoke(oldId, newId);
+        }
+
+        private string GetRenameRefusal(string newId)
+        {
+            if (newId.Length == 0)
+                return "A node needs an ID.";
+
+            if (TechTreeEditing.Find(_tree, newId) != null)
+                return $"{newId} is already a node in this tree.";
+
+            return TechTreeEditing.FindAny(_tree, _reference, newId) != null
+                ? $"{newId} is already a node in the reference tree."
+                : null;
         }
 
         private void Edit(string undoName, Action change) =>

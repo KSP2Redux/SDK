@@ -15,6 +15,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     {
         private const string SELECTED_CLASS = "tech-tree-node--selected";
 
+        private const string REFERENCE_CLASS = "tech-tree-node--reference";
+
         // The prefab lays children out in the 164 by 102 rect, and the frame is inset from it by this much
         private const float RECT_INSET = 6f;
 
@@ -76,6 +78,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             style.left = contentTop.x;
             style.top = contentTop.y;
         }
+
+        /// <summary>
+        /// Shows the node as one of a reference tree, which the editor never changes, or as one of the tree edited.
+        /// </summary>
+        /// <param name="isReference">True for a reference node, false otherwise.</param>
+        public void SetReference(bool isReference) => EnableInClassList(REFERENCE_CLASS, isReference);
 
         /// <summary>
         /// Shows or clears the selection outline.

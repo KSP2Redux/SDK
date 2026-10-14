@@ -45,8 +45,9 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             if (string.IsNullOrEmpty(path))
                 return false;
 
+            // A node asset is edited in its inspector
             var tree = AssetDatabase.LoadAssetAtPath<TechTreeAsset>(path);
-            if (tree == null)
+            if (tree == null || tree is TechNodeAsset)
                 return false;
 
             OpenFor(tree);
@@ -56,7 +57,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         [MenuItem("Modding/Tech Tree Authoring/Tech Tree Editor")]
         private static void OpenFromMenu()
         {
-            if (Selection.activeObject is TechTreeAsset tree)
+            if (Selection.activeObject is TechTreeAsset tree and not TechNodeAsset)
             {
                 OpenFor(tree);
                 return;
