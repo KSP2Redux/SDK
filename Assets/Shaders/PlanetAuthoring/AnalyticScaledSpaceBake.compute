@@ -1,4 +1,5 @@
 #pragma kernel CSMain
+#pragma multi_compile_local _ REDUX_GRADIENCE
 
 // ============================================================================
 // AnalyticScaledSpaceBake
@@ -147,9 +148,11 @@ uint  _OutHeight;
 uint  _SubsampleN;       // N x N supersamples per output pixel (default 4)
 uint  _AORingCount;      // rays per AO horizon march (default 8)
 float _HeightScale;
-// Distance one output pixel spans, same on both axes and with no latitude term, so the
-// equirect map is treated as a flat plane. Set by the C# driver.
-float _ArcPerPixelMeters;
+// Distance in meters one output pixel spans along U and V, at the equator and with no
+// latitude term, so the equirect map is treated as a flat plane. The output covers 360
+// degrees of longitude but 180 of latitude, so on a square output V is half of U. Set by
+// the C# driver.
+float2 _ArcPerPixel;
 
 // 0.21763764 is the gamma-corrected mid-gray used by the local shader's color grade
 // (matches DeferredBiome.cginc gradedNear formula).
@@ -204,15 +207,19 @@ HeightSample ComposedHeightAt(float2 uv, float4 biomeNorm)
     HeightSample h;
     h.global = _GlobalHeightMap.SampleLevel(sampler_LinearRepeat, uv, 0).x * _HeightScale;
 
-    float lr = _LargeHeightR.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.x, 0).x * _LargeHeightScales.x;
-    float lg = _LargeHeightG.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.y, 0).x * _LargeHeightScales.y;
-    float lb = _LargeHeightB.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.z, 0).x * _LargeHeightScales.z;
-    float la = _LargeHeightA.SampleLevel(sampler_LinearRepeat, uv * _LargeHeightMapUVScales.w, 0).x * _LargeHeightScales.w;
+    // The terrain reads tiled maps through its side projection at (2u, v), so a tile spans
+    // the same angle of longitude as of latitude.
+    float2 sideUv = float2(2.0 * uv.x, uv.y);
 
-    float mr = _MidHeightR.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.x, 0).x * _MidHeightScales.x;
-    float mg = _MidHeightG.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.y, 0).x * _MidHeightScales.y;
-    float mb = _MidHeightB.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.z, 0).x * _MidHeightScales.z;
-    float ma = _MidHeightA.SampleLevel(sampler_LinearRepeat, uv * _MediumHeightMapUVScales.w, 0).x * _MidHeightScales.w;
+    float lr = _LargeHeightR.SampleLevel(sampler_LinearRepeat, sideUv * _LargeHeightMapUVScales.x, 0).x * _LargeHeightScales.x;
+    float lg = _LargeHeightG.SampleLevel(sampler_LinearRepeat, sideUv * _LargeHeightMapUVScales.y, 0).x * _LargeHeightScales.y;
+    float lb = _LargeHeightB.SampleLevel(sampler_LinearRepeat, sideUv * _LargeHeightMapUVScales.z, 0).x * _LargeHeightScales.z;
+    float la = _LargeHeightA.SampleLevel(sampler_LinearRepeat, sideUv * _LargeHeightMapUVScales.w, 0).x * _LargeHeightScales.w;
+
+    float mr = _MidHeightR.SampleLevel(sampler_LinearRepeat, sideUv * _MediumHeightMapUVScales.x, 0).x * _MidHeightScales.x;
+    float mg = _MidHeightG.SampleLevel(sampler_LinearRepeat, sideUv * _MediumHeightMapUVScales.y, 0).x * _MidHeightScales.y;
+    float mb = _MidHeightB.SampleLevel(sampler_LinearRepeat, sideUv * _MediumHeightMapUVScales.z, 0).x * _MidHeightScales.z;
+    float ma = _MidHeightA.SampleLevel(sampler_LinearRepeat, sideUv * _MediumHeightMapUVScales.w, 0).x * _MidHeightScales.w;
 
     float gradienceContrib = biomeNorm.x * (lr + mr)
                            + biomeNorm.y * (lg + mg)
@@ -222,17 +229,23 @@ HeightSample ComposedHeightAt(float2 uv, float4 biomeNorm)
     return h;
 }
 
-// Slope value fed to the trapezoid windows. Matches the runtime fragment shader
-// (Prepass.cginc): slopeDeg = min(length(grad), 1) * 90, evaluated here from the
-// normal's z component via tan(angle) = sqrt(1 - nz^2) / nz. Not a true degree
-// measure - the relationship saturates at length(grad) >= 1, so a 45 deg true slope
-// reads as 90 here. Authors tune trapezoid params against what they see at runtime,
-// so the bake mirrors the same stretched scale rather than acos.
+// Slope value fed to the trapezoid windows, evaluated from the normal's z component via
+// tan(angle) = sqrt(1 - nz^2) / nz. Matches the runtime fragment shader (Prepass.cginc)
+// in both of its variants:
+//   REDUX_GRADIENCE: slopeAng = degrees(atan(length(grad))), the true slope angle.
+//   stock:           slopeDeg = min(length(grad), 1) * 90. Not a true degree measure -
+//                    it saturates at length(grad) >= 1, so a 45 deg true slope reads
+//                    as 90. Authors tune trapezoid params against what they see at
+//                    runtime, so the bake mirrors the same stretched scale.
 float RuntimeSlopeDegFromNormalZ(float nz)
 {
     float c = saturate(nz);
     float s = sqrt(saturate(1.0 - c * c));
+#ifdef REDUX_GRADIENCE
+    return degrees(atan2(s, c));
+#else
     return min(s / max(c, 1e-5), 1.0) * 90.0;
+#endif
 }
 
 // 3D value-noise hash (Inigo Quilez style). Sampling at the sphere position rather than
@@ -318,8 +331,8 @@ void CSMain(uint3 id : SV_DispatchThreadID)
 
     // Per-pixel distance per cardinal step at the output pixel scale - used by the macro AO.
     // A cos(lat) term here would collapse the U arc to zero at the poles and blow those rows out.
-    float arcUMacro = _ArcPerPixelMeters;
-    float arcVMacro = _ArcPerPixelMeters;
+    float arcUMacro = _ArcPerPixel.x;
+    float arcVMacro = _ArcPerPixel.y;
 
     // Per-subsample arc-length per cardinal step at the subsample scale - used by the macro normal.
     float arcUSub = arcUMacro / N;

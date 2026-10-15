@@ -62,10 +62,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Authoring
         public string LastSmallTilesPackFingerprint = string.Empty;
 
         /// <summary>
-        /// Surface distance in meters that one scaled-space bake pixel is treated as spanning, on both axes.
+        /// Surface distance in meters that one scaled-space bake pixel is treated as spanning east to west.
         /// </summary>
         /// <remarks>
-        /// Zero selects <see cref="Tools.AnalyticScaledSpaceSampler.DefaultArcPerPixelMeters" />. A gradient
+        /// Zero selects <see cref="Tools.AnalyticScaledSpaceSampler.DefaultArcPerPixelMeters" />. North to south a
+        /// pixel spans half this, as the square bake covers 180 degrees of latitude against 360 of longitude. A gradient
         /// gain rather than a measured arc length, per body because the useful value varies hugely with radius.
         /// Lower reads as steeper terrain.
         /// </remarks>

@@ -3,6 +3,7 @@ using System.IO;
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 {
@@ -63,11 +64,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             /// </remarks>
             public float VariationFrequency;
             /// <summary>
-            /// Surface distance in meters that one output pixel is treated as spanning, on both axes.
+            /// Surface distance in meters that one output pixel is treated as spanning east to west.
             /// </summary>
             /// <remarks>
-            /// Zero or negative selects <see cref="DefaultArcPerPixelMeters" />. Smaller values read as
-            /// steeper terrain.
+            /// Zero or negative selects <see cref="DefaultArcPerPixelMeters" />. North to south a pixel spans half
+            /// this, since the square output covers 180 degrees of latitude against 360 of longitude. Smaller
+            /// values read as steeper terrain.
             /// </remarks>
             public float ArcPerPixelMeters;
         }
@@ -78,9 +80,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         /// <param name="radius">Body radius in meters.</param>
         /// <param name="resolution">Output side length in pixels.</param>
         /// <returns>The equatorial circumference divided by the output width, or 1 when either input is non-positive.</returns>
-        /// <remarks>
-        /// Same convention <c>GradienceBake.compute</c> uses, so the two bakes agree on what one pixel spans.
-        /// </remarks>
         public static float DefaultArcPerPixelMeters(float radius, int resolution)
         {
             if (radius <= 0f || resolution <= 0)
@@ -269,7 +268,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 compute.SetInt("_OutHeight", side);
                 compute.SetInt("_SubsampleN", settings.SubsampleN);
                 compute.SetInt("_AORingCount", settings.AORingCount);
-                compute.SetFloat("_ArcPerPixelMeters", ResolveArcPerPixelMeters(settings, radius));
+                // The square output covers 360 degrees of longitude but only 180 of latitude, so a
+                // pixel spans half as much ground north to south as east to west.
+                float arcPerPixelU = ResolveArcPerPixelMeters(settings, radius);
+                compute.SetVector("_ArcPerPixel", new Vector4(arcPerPixelU, arcPerPixelU * 0.5f));
+                // Slope windows read the same slope scale as the surface shader variant the body draws with.
+                compute.SetKeyword(new LocalKeyword(compute, "REDUX_GRADIENCE"),
+                    surfaceMaterial.IsKeywordEnabled("REDUX_GRADIENCE"));
                 compute.SetFloat("_HeightScale", heightMapInfo.heightMapScale);
                 compute.SetFloat("_VariationStrength", settings.VariationStrength);
                 compute.SetFloat("_VariationFrequency", settings.VariationFrequency);
