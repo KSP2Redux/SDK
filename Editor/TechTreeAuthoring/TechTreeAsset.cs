@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KSP.Game.Science;
+using Ksp2UnityTools.Editor.Modding;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
@@ -12,7 +13,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// The asset is the source of truth. The node JSON the game loads, the tree data and the localization rows are
     /// all baked from it. The features that gate the tree are the feature labels of its baked files.
     /// </remarks>
-    public class TechTreeAsset : ScriptableObject
+    public class TechTreeAsset : ScriptableObject, IBakeableAsset
     {
         /// <summary>
         /// The node the R&amp;D Center focuses on when it first opens, unless a tree names another.
@@ -40,6 +41,12 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// renamed.
         /// </summary>
         [HideInInspector] public List<string> BakedFiles = new();
+
+        /// <inheritdoc />
+        public virtual bool ShouldBake => true;
+
+        /// <inheritdoc />
+        public List<string> Bake() => TechTreeBaker.BakeQuietly(this);
     }
 
     /// <summary>

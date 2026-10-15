@@ -1,4 +1,5 @@
 using Ksp2UnityTools.Editor.Modding;
+using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
@@ -16,8 +17,14 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// </summary>
         public TechTreePatchAsset Patch;
 
+        /// <summary>
+        /// The hash of the Lua last exported for the patch, which tells an author's edits to the file apart from what
+        /// the bake wrote, or null when the patch is not exported.
+        /// </summary>
+        [HideInInspector] public string ExportedHash;
+
         /// <inheritdoc />
-        public override bool ShouldGenerate => Patch != null;
+        public override bool ShouldGenerate => Patch != null && Patch.ShouldBake;
 
         /// <inheritdoc />
         public override string PathInMod => $"patches/{TechTreePatchBake.GetPatchFileName(Patch)}";

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +8,6 @@ using Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.TechTreeAuthoring
 {
@@ -17,18 +15,13 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
     /// Writes a tech tree's baked files into the project and registers them with Addressables.
     /// </summary>
     /// <remarks>
-    /// Also the mod build's baker for tech trees, so every tree in a mod bakes before the mod is staged.
+    /// A patch in a mod can be exported: its Lua is written into the mod's copied files for the author to edit by
+    /// hand, and the mod build stops baking it.
     /// </remarks>
-    public class TechTreeBaker : IModAssetBaker
+    public static class TechTreeBaker
     {
         // The group Redux's own Lua patches are in
         private const string PATCHES_GROUP_NAME = "PM Patches";
-
-        /// <inheritdoc />
-        public Type AssetType => typeof(TechTreeAsset);
-
-        /// <inheritdoc />
-        List<string> IModAssetBaker.Bake(Object asset) => BakeQuietly((TechTreeAsset)asset);
 
         /// <summary>
         /// Gets what baking a tree is called: a patch bakes to a patch, with JSON only for the nodes it adds.
@@ -45,6 +38,98 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// <returns>True if the tree baked, false if a problem stopped it.</returns>
         public static bool Bake(TechTreeAsset tree)
         {
+            if (tree is TechTreePatchAsset { BakeOnBuild: false } patch && !ConfirmExportOverwrite(patch, GetBakeLabel(tree)))
+                return false;
+
+            return BakeAndShowProblems(tree);
+        }
+
+        /// <summary>
+        /// Exports a patch in a mod for hand editing, or takes it back to being baked by the mod build.
+        /// </summary>
+        /// <remarks>
+        /// Exporting bakes the patch and writes its Lua into the mod's copied files. Taking it back deletes that file.
+        /// Either asks first when the file was edited since the patch last wrote it.
+        /// </remarks>
+        /// <param name="patch">The patch.</param>
+        /// <param name="bakeOnBuild">True to have the mod build bake the patch, false to export it.</param>
+        /// <returns>True if the patch now bakes as asked, false if the author cancelled or the export bake failed.</returns>
+        public static bool SetBakeOnBuild(TechTreePatchAsset patch, bool bakeOnBuild)
+        {
+            if (patch.BakeOnBuild == bakeOnBuild)
+                return true;
+
+            string exportPath = GetExportPath(patch);
+            if (exportPath == null || !ConfirmExportOverwrite(patch, bakeOnBuild ? "Bake on Build" : "Export Patch"))
+                return false;
+
+            patch.BakeOnBuild = bakeOnBuild;
+            EditorUtility.SetDirty(patch);
+            if (!bakeOnBuild && !BakeAndShowProblems(patch))
+            {
+                patch.BakeOnBuild = true;
+                EditorUtility.SetDirty(patch);
+                AssetDatabase.SaveAssetIfDirty(patch);
+                return false;
+            }
+
+            if (bakeOnBuild)
+            {
+                AssetDatabase.DeleteAsset(exportPath);
+                TechTreePatchScript script = FindPatchScript(patch);
+                if (script != null)
+                {
+                    script.ExportedHash = null;
+                    EditorUtility.SetDirty(script);
+                    AssetDatabase.SaveAssetIfDirty(script);
+                }
+            }
+
+            AssetDatabase.SaveAssetIfDirty(patch);
+            return true;
+        }
+
+        /// <summary>
+        /// Gets where a patch's exported Lua goes: the mod's copied patches, which the mod build copies to the same
+        /// path in the mod that the patch's sidecar generates.
+        /// </summary>
+        /// <param name="patch">The patch.</param>
+        /// <returns>The asset path, or null when the patch is not in a mod.</returns>
+        public static string GetExportPath(TechTreePatchAsset patch)
+        {
+            Mod mod = KSP2UnityTools.FindParentMod(patch);
+            return mod != null ? $"{mod.Folder}/Copied/Patches/{TechTreePatchBake.GetPatchFileName(patch)}" : null;
+        }
+
+        /// <summary>
+        /// Checks whether a file was changed since it was written with the hash.
+        /// </summary>
+        /// <param name="path">The file.</param>
+        /// <param name="writtenHash">The hash of what was written, or null when nothing was.</param>
+        /// <returns>True if the file exists and differs from what was written, false otherwise.</returns>
+        internal static bool IsEditedSince(string path, string writtenHash) =>
+            File.Exists(path) && HashText(File.ReadAllText(path)) != writtenHash;
+
+        // Line endings are left out, so a checkout that converts them is not taken for an edit
+        internal static string HashText(string text) => Hash128.Compute(text.Replace("\r\n", "\n")).ToString();
+
+        // True unless the exported Lua was edited since the patch wrote it and the author keeps the edits
+        private static bool ConfirmExportOverwrite(TechTreePatchAsset patch, string title)
+        {
+            string path = GetExportPath(patch);
+            if (path == null || !IsEditedSince(path, FindPatchScript(patch)?.ExportedHash))
+                return true;
+
+            return EditorUtility.DisplayDialog(
+                title,
+                $"{path} was edited since the patch last wrote it. Your edits will be lost.",
+                "Discard Edits",
+                "Cancel"
+            );
+        }
+
+        private static bool BakeAndShowProblems(TechTreeAsset tree)
+        {
             List<string> problems = BakeQuietly(tree);
             if (problems.Count == 0)
                 return true;
@@ -52,6 +137,16 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             EditorUtility.DisplayDialog(GetBakeLabel(tree), $"Fix these first:\n\n{string.Join("\n", problems)}", "OK");
             return false;
         }
+
+        // The sidecar sits beside its patch
+        private static string GetPatchScriptPath(TechTreeAsset tree)
+        {
+            string folder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(tree))?.Replace('\\', '/');
+            return $"{folder}/{tree.name}_Patch.asset";
+        }
+
+        private static TechTreePatchScript FindPatchScript(TechTreeAsset tree) =>
+            AssetDatabase.LoadAssetAtPath<TechTreePatchScript>(GetPatchScriptPath(tree));
 
         /// <summary>
         /// Bakes a tree as <see cref="Bake(TechTreeAsset)" /> does, but returns what stopped it rather than showing it.
@@ -159,8 +254,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             }
 
             AssetDatabase.SaveAssetIfDirty(tree);
-            string folder = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
-            var script = AssetDatabase.LoadAssetAtPath<TechTreePatchScript>($"{folder}/{tree.name}_Patch.asset");
+            TechTreePatchScript script = FindPatchScript(tree);
             if (script != null)
             {
                 AssetDatabase.SaveAssetIfDirty(script);
@@ -182,14 +276,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             AssetDatabase.SaveAssetIfDirty(settings);
         }
 
-        // In a mod the patch is a sidecar the mod's build writes, as a body's orbit is. Anywhere else it is a Lua file
-        // beside the asset under the project's patch label. Returns the path of a Lua file written, or null.
+        // In a mod the patch is a sidecar the mod's build writes, as a body's orbit is, or once exported a Lua file in
+        // the mod's copied files. Anywhere else it is a Lua file beside the asset under the project's patch label.
+        // Returns the path of a Lua file the bake owns, or null.
         private static string WritePatch(TechTreePatchAsset patch, string assetPath, string ownerId)
         {
-            string folder = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
-            if (KSP2UnityTools.FindParentMod(patch) != null)
+            string exportPath = GetExportPath(patch);
+            if (exportPath != null)
             {
-                string scriptPath = $"{folder}/{patch.name}_Patch.asset";
+                string scriptPath = GetPatchScriptPath(patch);
                 var script = AssetDatabase.LoadAssetAtPath<TechTreePatchScript>(scriptPath);
                 if (script == null)
                 {
@@ -203,9 +298,21 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                     EditorUtility.SetDirty(script);
                 }
 
+                // The exported file is the author's from here, so a later bake never sweeps it away as stale
+                if (!patch.BakeOnBuild)
+                {
+                    string lua = TechTreePatchBake.BuildLua(patch, ownerId);
+                    Directory.CreateDirectory(Path.GetDirectoryName(exportPath)!);
+                    File.WriteAllText(exportPath, lua);
+                    AssetDatabase.ImportAsset(exportPath, ImportAssetOptions.ForceUpdate);
+                    script.ExportedHash = HashText(lua);
+                    EditorUtility.SetDirty(script);
+                }
+
                 return null;
             }
 
+            string folder = Path.GetDirectoryName(assetPath)?.Replace('\\', '/');
             string luaPath = $"{folder}/{TechTreePatchBake.GetPatchFileName(patch)}";
             File.WriteAllText(luaPath, TechTreePatchBake.BuildLua(patch, ownerId));
             AssetDatabase.ImportAsset(luaPath, ImportAssetOptions.ForceUpdate);

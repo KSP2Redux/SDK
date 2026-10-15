@@ -45,8 +45,25 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         {
             nameof(TechNodeData.RequiredTechNodeIDs),
             nameof(TechNodeData.UnlockedPartsIDs),
+            nameof(TechNodeData.UnlockedVariants),
             nameof(TechNodeData.RequiredMissionIDs),
             nameof(TechNodeData.RequiredResearchData),
+        };
+
+        // What a removed list entry is matched on in the patched list, for the lists of entries rather than IDs
+        private static readonly Dictionary<string, string[]> MatchedProperties = new()
+        {
+            [nameof(TechNodeData.UnlockedVariants)] = new[]
+            {
+                nameof(TechUnlockedVariant.PartName),
+                nameof(TechUnlockedVariant.VariantSetId),
+                nameof(TechUnlockedVariant.VariantId),
+            },
+            [nameof(TechNodeData.RequiredResearchData)] = new[]
+            {
+                nameof(TechRequiredResearchData.ExperimentID),
+                nameof(TechRequiredResearchData.ResearchLocationID),
+            },
         };
 
         /// <summary>
@@ -376,14 +393,22 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             {
                 List<JToken> was = Items(before[field]);
                 List<JToken> now = Items(after[field]);
-                foreach (JToken added in Without(now, was))
+                List<JToken> additions = Without(now, was).ToList();
+
+                // Node JSON baked before a list existed has no slot for it, and Append needs one
+                if (additions.Count > 0)
+                {
+                    lines.Add($"if node.{field} == nil then node.{field} = J.Empty() end");
+                }
+
+                foreach (JToken added in additions)
                 {
                     lines.Add($"node.{field}:Append({ToLua(added)})");
                 }
 
                 foreach (JToken removed in Without(was, now))
                 {
-                    lines.Add($"node.{field}:RemoveWhere(function(value) return {MatchOf(removed)} end)");
+                    lines.Add($"node.{field}:RemoveWhere(function(value) return {MatchOf(field, removed)} end)");
                 }
             }
 
@@ -402,15 +427,15 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         // A research gate matches by what it gates on. Its coordinates only change how it reads.
-        private static string MatchOf(JToken item)
+        private static string MatchOf(string field, JToken item)
         {
-            if (item is not JObject gate)
+            if (item is not JObject entry || !MatchedProperties.TryGetValue(field, out string[] properties))
                 return $"value == {ToLua(item)}";
 
-            string experiment = gate[nameof(TechRequiredResearchData.ExperimentID)]?.ToString();
-            string location = gate[nameof(TechRequiredResearchData.ResearchLocationID)]?.ToString();
-            return $"value.{nameof(TechRequiredResearchData.ExperimentID)} == {QuoteOrNil(experiment)}"
-                + $" and value.{nameof(TechRequiredResearchData.ResearchLocationID)} == {QuoteOrNil(location)}";
+            return string.Join(
+                " and ",
+                properties.Select(property => $"value.{property} == {QuoteOrNil(entry[property]?.ToString())}")
+            );
         }
 
         // Each item of a list that the other lacks, a repeated item counted once per repeat

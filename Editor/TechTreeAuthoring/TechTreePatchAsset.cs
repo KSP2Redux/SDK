@@ -47,6 +47,17 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         public List<string> ExcludedFeatures = new();
 
         /// <summary>
+        /// Whether the mod build bakes the patch. False once the patch is exported for its Lua to be edited by hand.
+        /// </summary>
+        /// <remarks>
+        /// Set through <see cref="TechTreeBaker.SetBakeOnBuild" />, which writes or deletes the exported Lua with it.
+        /// </remarks>
+        [HideInInspector] public bool BakeOnBuild = true;
+
+        /// <inheritdoc />
+        public override bool ShouldBake => BakeOnBuild;
+
+        /// <summary>
         /// Gets the baseline of an override.
         /// </summary>
         /// <param name="nodeId">The node's ID.</param>

@@ -2,18 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Ksp2UnityTools.Editor.Reflection;
 using ThunderKit.Core.Attributes;
 using ThunderKit.Core.Pipelines;
 using UnityEditor;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace Ksp2UnityTools.Editor.Modding.Thunderkit
 {
     /// <summary>
-    /// Bakes every bakeable asset in a mod's folders through its <see cref="IModAssetBaker" />, and fails the build if
-    /// any asset cannot bake.
+    /// Bakes every <see cref="IBakeableAsset" /> in a mod's folders that should bake, and fails the build if any asset
+    /// cannot bake.
     /// </summary>
     /// <remarks>
     /// Runs before every staging job, since a bake writes files that <see cref="StageGeneratedTextAssets" /> and
@@ -43,7 +41,7 @@ namespace Ksp2UnityTools.Editor.Modding.Thunderkit
         }
 
         /// <summary>
-        /// Bakes every asset that an <see cref="IModAssetBaker" /> handles under the folders.
+        /// Bakes every <see cref="IBakeableAsset" /> under the folders that should bake.
         /// </summary>
         /// <param name="folders">The asset folders to search.</param>
         /// <returns>One message per problem, each naming its asset, empty when every asset baked.</returns>
@@ -55,26 +53,12 @@ namespace Ksp2UnityTools.Editor.Modding.Thunderkit
             if (folders.Length == 0)
                 return problems;
 
-            foreach (Type bakerType in ReduxTypeCache.GetTypesDerivedFrom<IModAssetBaker>())
+            foreach (string guid in AssetDatabase.FindAssets("t:ScriptableObject", folders).Distinct())
             {
-                // A baker that cannot be made would leave its assets unbaked, so it fails the build rather than skipping
-                if (bakerType.IsAbstract || bakerType.GetConstructor(Type.EmptyTypes) == null)
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (AssetDatabase.LoadAssetAtPath<ScriptableObject>(path) is IBakeableAsset { ShouldBake: true } asset)
                 {
-                    problems.Add(
-                        $"{bakerType.FullName} implements {nameof(IModAssetBaker)} but cannot be created: it is abstract or has no public parameterless constructor."
-                    );
-                    continue;
-                }
-
-                var baker = (IModAssetBaker)Activator.CreateInstance(bakerType);
-                foreach (string guid in AssetDatabase.FindAssets($"t:{baker.AssetType.Name}", folders).Distinct())
-                {
-                    string path = AssetDatabase.GUIDToAssetPath(guid);
-                    Object asset = AssetDatabase.LoadAssetAtPath(path, baker.AssetType);
-                    if (asset == null)
-                        continue;
-
-                    problems.AddRange(baker.Bake(asset).Select(problem => $"{path}: {problem}"));
+                    problems.AddRange(asset.Bake().Select(problem => $"{path}: {problem}"));
                 }
             }
 

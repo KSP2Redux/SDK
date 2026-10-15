@@ -4,6 +4,7 @@ using KSP;
 using KSP.Game;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections;
 using Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs.Variants;
+using Ksp2UnityTools.Editor.TechTreeAuthoring;
 using Ksp2UnityTools.Editor.Widgets;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -29,6 +30,9 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
         private const string PartSwitchComponentModuleName = "PartComponentModule_PartSwitch";
         private const string PartSwitchPamDisplayName = "VSwift/PartSwitch";
 
+        // Read once per build of the tab, since every variant card looks itself up in it
+        private static Dictionary<(string PartName, string VariantSetId, string VariantId), List<string>> _variantUnlocks;
+
         /// <summary>
         /// Builds the Variants tab content for the given part.
         /// </summary>
@@ -45,6 +49,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
 
             void Rebuild()
             {
+                _variantUnlocks = null;
                 root.Clear();
                 var module =target.gameObject.GetComponent<Module_PartSwitch>();
                 if (module == null)
@@ -164,11 +169,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                         {
                             locProp.stringValue = string.Empty;
                         }
-                        var techsProp = variantEntry.FindPropertyRelative("VariantTechs");
-                        if (techsProp != null)
-                        {
-                            techsProp.arraySize = 0;
-                        }
                         // The new variant is a copy of the last one, and its [SerializeReference]
                         // transformers would be the same instances rather than duplicates.
                         var transformersProp = variantEntry.FindPropertyRelative("Transformers");
@@ -267,13 +267,29 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Tabs
                 body.Add(new PropertyField(locKeyProp, "Localization Key"));
             }
 
-            var techsProp = entry.FindPropertyRelative("VariantTechs");
-            if (techsProp != null)
-            {
-                body.Add(InlineStringListBlock.Build(techsProp, "Required Techs"));
-            }
-
+            body.Add(BuildUnlockedBy(entry));
             body.Add(BuildVariantTransformerSection(entry));
+        }
+
+        // Tech trees name the variants they unlock, so this only shows which nodes do. A variant none names is always
+        // selectable.
+        private static VisualElement BuildUnlockedBy(SerializedProperty variantEntry)
+        {
+            var module = variantEntry.serializedObject.targetObject as Module_PartSwitch;
+            var setEntry = variantEntry.serializedObject.FindProperty(GetParentArrayPath(variantEntry.propertyPath, "Variants"));
+            string partName = module != null ? module.gameObject.GetComponent<CorePartData>()?.Data?.partName : null;
+            string setId = setEntry?.FindPropertyRelative("VariantSetId")?.stringValue;
+            string variantId = variantEntry.FindPropertyRelative("VariantId")?.stringValue;
+            _variantUnlocks ??= TechTreeReference.LoadVariantUnlocks();
+            List<string> nodes = null;
+            bool isNamed = !string.IsNullOrEmpty(partName) && _variantUnlocks.TryGetValue((partName, setId, variantId), out nodes);
+
+            var unlockedBy = new TextField("Unlocked by")
+            {
+                value = isNamed ? string.Join(", ", nodes) : "Always",
+                isReadOnly = true,
+            };
+            return unlockedBy;
         }
 
         private static VisualElement BuildVariantTransformerSection(SerializedProperty variantEntry)

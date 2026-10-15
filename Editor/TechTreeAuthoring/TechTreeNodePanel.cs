@@ -280,12 +280,48 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             features.Add(BuildFeatureList("Features", () => patch.Features, owner));
             features.Add(BuildFeatureList("Excluded Features", () => patch.ExcludedFeatures, owner));
 
+            if (owner != null)
+            {
+                AddPatchBuild(patch);
+            }
+
             // A removed reference node cannot be where the R&D Center opens
             AddStartNodeAndTiers(patch.Nodes
                 .Concat(_reference)
                 .Select(node => node.Data?.ID)
                 .Where(id => !patch.RemovedNodeIds.Contains(id)));
             AlignFields();
+        }
+
+        // Exporting writes or deletes the patch's Lua, which undo cannot take back, so the toggle records no undo step
+        private void AddPatchBuild(TechTreePatchAsset patch)
+        {
+            Foldout section = AddSection("Build");
+            var bakeOnBuild = new Toggle("Bake on build") { value = patch.BakeOnBuild };
+            var exported = new ObjectField("Exported Lua") { objectType = typeof(UnityEngine.Object), allowSceneObjects = false };
+
+            // Left enabled so a click pings the file, but the bake decides where it is
+            exported.RegisterValueChangedCallback(evt => exported.SetValueWithoutNotify(evt.previousValue));
+            void ShowExported()
+            {
+                exported.SetValueWithoutNotify(
+                    patch.BakeOnBuild ? null : AssetDatabase.LoadMainAssetAtPath(TechTreeBaker.GetExportPath(patch))
+                );
+                exported.style.display = patch.BakeOnBuild ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+
+            bakeOnBuild.RegisterValueChangedCallback(evt =>
+            {
+                if (!TechTreeBaker.SetBakeOnBuild(patch, evt.newValue))
+                {
+                    bakeOnBuild.SetValueWithoutNotify(patch.BakeOnBuild);
+                }
+
+                ShowExported();
+            });
+            ShowExported();
+            section.Add(bakeOnBuild);
+            section.Add(exported);
         }
 
         private VisualElement BuildFeatureList(string title, Func<List<string>> read, Mod owner)
@@ -570,7 +606,85 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
                 TechTreePickerCatalog.GetPartNames,
                 "Part"
             ));
+            section.Add(BuildVariantList(node));
         }
+
+        // One card per variant, picked part first, then its set, then the variant. Like the part list it suggests and
+        // never restricts, since a tree may unlock another mod's variants.
+        private VisualElement BuildVariantList(TechTreeNode node)
+        {
+            CardListSection.ListHandle handle = null;
+            var config = new CardListSection.ListConfig<TechUnlockedVariant>
+            {
+                Title = "Variants",
+                AddButtonText = "+ Add",
+                OnAddClicked = () =>
+                {
+                    Edit("Add Tech Node Variant", () =>
+                        node.Data.UnlockedVariants = (node.Data.UnlockedVariants ?? Array.Empty<TechUnlockedVariant>())
+                            .Append(new TechUnlockedVariant())
+                            .ToArray());
+                    handle.Rebuild();
+                },
+                BuildCard = (variant, index) => BuildVariantCard(variant, () =>
+                {
+                    Edit("Remove Tech Node Variant", () =>
+                        node.Data.UnlockedVariants = node.Data.UnlockedVariants.Where((_, i) => i != index).ToArray());
+                    handle.Rebuild();
+                }),
+            };
+            handle = CardListSection.BuildFromList(() => node.Data.UnlockedVariants, config);
+            return handle.Root;
+        }
+
+        private VisualElement BuildVariantCard(TechUnlockedVariant variant, Action remove)
+        {
+            VisualElement card = CardShell.Build(out CardShell.Slots slots);
+            var title = new Label(VariantTitle(variant));
+            title.AddToClassList("data-editor-card-name-field");
+            slots.Header.Add(title);
+            var removeButton = new Button(remove) { text = "X" };
+            removeButton.AddToClassList("data-editor-card-remove-btn");
+            slots.Header.Add(removeButton);
+
+            IEnumerable<TechUnlockedVariant> Known() => TechTreePickerCatalog.GetVariants();
+            slots.Body.Add(new AutocompleteField(
+                variant.PartName ?? string.Empty,
+                "Part",
+                () => Known().Select(known => known.PartName).Distinct(),
+                value =>
+                {
+                    Edit("Change Tech Node Variant Part", () => variant.PartName = value);
+                    title.text = VariantTitle(variant);
+                }
+            ));
+            slots.Body.Add(new AutocompleteField(
+                variant.VariantSetId ?? string.Empty,
+                "Variant set",
+                () => Known().Where(known => known.PartName == variant.PartName).Select(known => known.VariantSetId).Distinct(),
+                value =>
+                {
+                    Edit("Change Tech Node Variant Set", () => variant.VariantSetId = value);
+                    title.text = VariantTitle(variant);
+                }
+            ));
+            slots.Body.Add(new AutocompleteField(
+                variant.VariantId ?? string.Empty,
+                "Variant",
+                () => Known()
+                    .Where(known => known.PartName == variant.PartName && known.VariantSetId == variant.VariantSetId)
+                    .Select(known => known.VariantId),
+                value =>
+                {
+                    Edit("Change Tech Node Variant", () => variant.VariantId = value);
+                    title.text = VariantTitle(variant);
+                }
+            ));
+            return card;
+        }
+
+        private static string VariantTitle(TechUnlockedVariant variant) =>
+            string.IsNullOrEmpty(variant.PartName) ? "Variant" : $"{variant.PartName} - {variant.VariantId}";
 
         private void AddGates(TechTreeNode node)
         {

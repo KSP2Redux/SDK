@@ -194,7 +194,8 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         /// Copies a node, with its prerequisites, to a new ID beside it.
         /// </summary>
         /// <remarks>
-        /// Nothing requires the copy, and its parts are left off, since a part can only be unlocked by one node.
+        /// Nothing requires the copy, and its parts and variants are left off, since each can only be unlocked by one
+        /// node.
         /// </remarks>
         /// <param name="tree">The tree.</param>
         /// <param name="nodeId">The node to copy.</param>
@@ -217,6 +218,7 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
             data.ID = MakeUniqueId(tree, $"{nodeId}_copy", reference);
             data.TechTreePosition += offset;
             data.UnlockedPartsIDs = Array.Empty<string>();
+            data.UnlockedVariants = Array.Empty<TechUnlockedVariant>();
             var copy = new TechTreeNode
             {
                 Data = data,

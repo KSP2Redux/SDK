@@ -82,6 +82,60 @@ namespace Ksp2UnityTools.Editor.TechTreeAuthoring
         }
 
         /// <summary>
+        /// Loads which nodes unlock each part variant any node names.
+        /// </summary>
+        /// <remarks>
+        /// The project's tech tree assets are read as authored, so an edit shows before it is baked, then the game's
+        /// nodes for every ID the assets lack. A variant missing from the result is always selectable.
+        /// </remarks>
+        /// <returns>The IDs of the nodes that unlock each variant, sorted, keyed by part name, variant set ID and
+        /// variant ID.</returns>
+        public static Dictionary<(string PartName, string VariantSetId, string VariantId), List<string>> LoadVariantUnlocks()
+        {
+            var nodes = new Dictionary<string, TechNodeData>();
+            foreach (string guid in AssetDatabase.FindAssets($"t:{nameof(TechTreeAsset)}"))
+            {
+                var tree = AssetDatabase.LoadAssetAtPath<TechTreeAsset>(AssetDatabase.GUIDToAssetPath(guid));
+                foreach (TechTreeNode node in tree != null ? tree.Nodes : new List<TechTreeNode>())
+                {
+                    if (!string.IsNullOrEmpty(node.Data?.ID))
+                    {
+                        nodes.TryAdd(node.Data.ID, node.Data);
+                    }
+                }
+            }
+
+            foreach (TechTreeNode node in LoadGameNodes(Array.Empty<string>()))
+            {
+                nodes.TryAdd(node.Data.ID, node.Data);
+            }
+
+            var unlocks = new Dictionary<(string PartName, string VariantSetId, string VariantId), List<string>>();
+            foreach (TechNodeData data in nodes.Values.OrderBy(data => data.ID, StringComparer.Ordinal))
+            {
+                foreach (TechUnlockedVariant variant in data.UnlockedVariants ?? Array.Empty<TechUnlockedVariant>())
+                {
+                    if (variant == null)
+                        continue;
+
+                    (string, string, string) key = (variant.PartName, variant.VariantSetId, variant.VariantId);
+                    if (!unlocks.TryGetValue(key, out List<string> ids))
+                    {
+                        ids = new List<string>();
+                        unlocks.Add(key, ids);
+                    }
+
+                    if (!ids.Contains(data.ID))
+                    {
+                        ids.Add(data.ID);
+                    }
+                }
+            }
+
+            return unlocks;
+        }
+
+        /// <summary>
         /// Loads the tree data of the tree an asset is authored against: its tiers and its start node.
         /// </summary>
         /// <remarks>
