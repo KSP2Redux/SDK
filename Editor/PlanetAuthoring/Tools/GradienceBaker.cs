@@ -119,14 +119,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                     if (largeRegion?.heightMap != null)
                     {
                         largeResults[b] = BakeOne(compute, kernel, largeRegion.heightMap,
-                            largeRegion.heightScale, largeRegion.uvScale, radius);
+                            largeRegion.heightScale, TileSpan(largeRegion.uvScale), radius);
                     }
 
                     var midRegion = GetMidRegion(hmi, b);
                     if (midRegion?.heightMap != null)
                     {
                         midResults[b] = BakeOne(compute, kernel, midRegion.heightMap,
-                            midRegion.heightScale, midRegion.uvScale, radius);
+                            midRegion.heightScale, TileSpan(midRegion.uvScale), radius);
                     }
                 }
 
@@ -135,8 +135,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 // stock-mode planets would be wasted work.
                 if (reduxGradience && hmi.globalHeightMap != null)
                 {
+                    // The global map covers the whole sphere: 360 degrees of longitude by 180 of latitude.
                     globalResult = BakeOne(compute, kernel, hmi.globalHeightMap,
-                        hmi.heightMapScale, uvScale: 1, radius);
+                        hmi.heightMapScale, new Vector2(2f * Mathf.PI, Mathf.PI), radius);
                 }
             }
             catch (Exception ex)
@@ -186,9 +187,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             _ => hmi.mediumA,
         };
 
-        // Bakes one biome's raw heightmap into a half-res gradience Texture2D.
+        // The angle one tile of a tiled height map spans along U and V, in radians. The surface
+        // shader reads tiled maps at (2u, v) * uvScale, so a tile covers pi / uvScale radians of
+        // longitude and the same of latitude.
+        private static Vector2 TileSpan(int uvScale) => Vector2.one * (Mathf.PI / Mathf.Max(1, uvScale));
+
+        // Bakes one raw heightmap into a half-res gradience Texture2D. spanRadians is the angle
+        // the whole map covers along U and V.
         private static Texture2D BakeOne(ComputeShader compute, int kernel,
-            Texture2D raw, float heightScale, int uvScale, float radius)
+            Texture2D raw, float heightScale, Vector2 spanRadians, float radius)
         {
             int srcW = raw.width;
             int srcH = raw.height;
@@ -204,12 +211,12 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 
             compute.SetTexture(kernel, "_RawHeightmap", raw);
             compute.SetFloat("_HeightScaleMeters", heightScale);
-            compute.SetFloat("_BodyRadius", radius);
+            compute.SetVector("_ArcPerOutPixel",
+                new Vector4(radius * spanRadians.x / outW, radius * spanRadians.y / outH));
             compute.SetInt("_SrcWidth", srcW);
             compute.SetInt("_SrcHeight", srcH);
             compute.SetInt("_OutWidth", outW);
             compute.SetInt("_OutHeight", outH);
-            compute.SetInt("_UVScale", Mathf.Max(1, uvScale));
 
             var rt = AnalyticScaledSpaceSampler.CreateRwRT(outW, outH, RenderTextureFormat.ARGB32);
             try

@@ -26,13 +26,12 @@
 Texture2D<float4>   _RawHeightmap;       // Source heightmap (.x channel holds the height; R16 import gives full precision).
 RWTexture2D<float4> _OutGradience;       // Half-res output: signed-split with flip-U, magnitude = slope_deg / 90.
 
-float _HeightScaleMeters;                // HeightRegion.heightScale, vertical scale applied to the [0,1] heightmap value.
-float _BodyRadius;                       // Planet body radius in meters.
-int   _SrcWidth;                         // Source heightmap width in pixels.
-int   _SrcHeight;                        // Source heightmap height in pixels.
-int   _OutWidth;                         // Gradience output width in pixels (half of source by convention).
-int   _OutHeight;                        // Gradience output height in pixels.
-int   _UVScale;                          // HeightRegion.uvScale, number of times the heightmap tiles across the planet.
+float  _HeightScaleMeters;               // HeightRegion.heightScale, vertical scale applied to the [0,1] heightmap value.
+float2 _ArcPerOutPixel;                  // Surface distance in meters one output pixel spans along U and V, at the equator.
+int    _SrcWidth;                        // Source heightmap width in pixels.
+int    _SrcHeight;                       // Source heightmap height in pixels.
+int    _OutWidth;                        // Gradience output width in pixels (half of source by convention).
+int    _OutHeight;                       // Gradience output height in pixels.
 
 // Equirect wrap in U (longitude), clamp in V (poles). Matches the runtime's heightmap
 // sampling expectations.
@@ -76,16 +75,14 @@ void CSBakeGradience(uint3 id : SV_DispatchThreadID)
 
     // Convert to meters per meter of surface distance (gradient magnitude as a true tangent):
     //   meters of vertical = height_unit_value * _HeightScaleMeters
-    //   arc per output pixel at the equator = 2*pi*R / (outW * uvScale)
-    // The uvScale factor reflects that the heightmap tiles uvScale times across the planet,
-    // so each output pixel covers 1/uvScale of the arc it would cover at unit tiling.
-    // Underestimates arc length near the poles, matching the runtime's flat-UV gradient
+    //   meters of surface  = _ArcPerOutPixel, per axis, at the equator
+    // The axes differ wherever a pixel is not square on the ground, such as a square global
+    // map stretched over 360 degrees of longitude and 180 of latitude. Overestimates the
+    // east-west arc away from the equator, matching the runtime's flat-UV gradient
     // evaluation which has the same equirect distortion.
-    const float TwoPi = 6.28318530717958647692;
-    float uvScale = max((float)_UVScale, 1.0);
-    float arcPerOutPixel = max(TwoPi * _BodyRadius / ((float)_OutWidth * uvScale), 1e-6);
-    float du = du_hu * _HeightScaleMeters / arcPerOutPixel;
-    float dv = dv_hu * _HeightScaleMeters / arcPerOutPixel;
+    float2 arcPerOutPixel = max(_ArcPerOutPixel, 1e-6);
+    float du = du_hu * _HeightScaleMeters / arcPerOutPixel.x;
+    float dv = dv_hu * _HeightScaleMeters / arcPerOutPixel.y;
 
 #ifdef REDUX_GRADIENCE
     // Redux 2-channel encoding: signed gradient remapped to [0,1] with the canonical
