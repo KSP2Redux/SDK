@@ -12,7 +12,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
     /// </summary>
     /// <remarks>
     /// The SceneView clears its camera to the Scene Background preference, so the camera's own clear color never
-    /// shows. A render hook clears the SceneView camera color to black before the opaques instead.
+    /// shows. A render hook clears the SceneView camera color to black before the G-buffer instead. Any later, the
+    /// clear would wipe the deferred lighting, and with it the terrain and every other deferred surface.
     ///
     /// No other prior state is preserved. Session end always lands the SceneView in a known-good default (skybox on,
     /// dynamicClip on) so the user never gets stuck with our tight body-bracketed clip planes after preview.
@@ -97,14 +98,14 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
 
         private static void RemoveBlackClear() => CameraRenderHooks.Unregister(_blackClear);
 
-        // Clears each SceneView camera's color to black before its opaques while a session is active.
-        private sealed class BlackClearHook : CommandCameraRenderHook
+        // Clears each SceneView camera's color to black before anything draws into it while a session is active.
+        private class BlackClearHook : CommandCameraRenderHook
         {
             public BlackClearHook() : base("Redux preview black clear")
             {
             }
 
-            public override RenderPassEvent Event => RenderPassEvent.BeforeRenderingOpaques;
+            public override RenderPassEvent Event => RenderPassEvent.BeforeRenderingGbuffer;
 
             public override bool ShouldRender(Camera camera) =>
                 camera.cameraType == CameraType.SceneView && PlanetAuthoringSession.Active != null;
