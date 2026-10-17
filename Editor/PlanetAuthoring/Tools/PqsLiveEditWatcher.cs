@@ -1,6 +1,7 @@
 using KSP.Rendering.Planets;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
 {
@@ -43,7 +44,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             try
             {
                 PQS pqs = session.Pqs;
-                PQSData data = pqs.data;
+                PQSData data = PlanetAuthoringSession.AuthoredData(pqs);
                 Material surfaceMaterial = data != null && data.materialSettings != null
                     ? data.materialSettings.surfaceMaterial
                     : null;
@@ -58,8 +59,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                         // Defer to the next editor tick so the SerializedProperty write completes
                         // before the renderer re-reads. Coalesces multiple modifications in the same
                         // frame into one refresh.
-                        EditorApplication.delayCall -= RefreshPreview;
-                        EditorApplication.delayCall += RefreshPreview;
+                        QueueRefresh();
                         break;
                     }
                 }
@@ -72,6 +72,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             return modifications;
         }
 
+        /// <summary>
+        /// Queues a refresh of the active preview on the next editor tick.
+        /// </summary>
+        /// <remarks>
+        /// For edits that do not pass through <see cref="Undo.postprocessModifications" />, such as a direct
+        /// <c>Material.SetFloat</c>. Repeated calls in one tick coalesce into one refresh.
+        /// </remarks>
+        internal static void QueueRefresh()
+        {
+            EditorApplication.delayCall -= RefreshPreview;
+            EditorApplication.delayCall += RefreshPreview;
+        }
+
         private static void RefreshPreview()
         {
             PlanetAuthoringSession session = PlanetAuthoringSession.Active;
@@ -79,6 +92,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
                 return;
             try
             {
+                SyncPreviewCopy(session.Pqs.data, PlanetAuthoringSession.AuthoredData(session.Pqs));
                 session.Pqs.UpdateSurfaceMaterial();
                 // Re-push per-tier height-scale uniforms so live edits update the sphere displacement.
                 session.Pqs.PQSRenderer?.RefreshHeightScalesForEditor();
@@ -89,6 +103,64 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             {
                 // Don't spam the console - one log line per failed refresh.
                 Debug.LogWarning($"[PqsLiveEditWatcher] Refresh failed: {ex.GetType().Name} {ex.Message}");
+            }
+        }
+
+        // The preview renders a copy of the PQSData and its surface material when the material was authored on a
+        // stand-in shader. Edits land on the assets, so they are carried onto the copy before the renderer re-reads.
+        internal static void SyncPreviewCopy(PQSData preview, PQSData authored)
+        {
+            if (authored == null || preview == null || preview == authored)
+                return;
+
+            Material previewMaterial = preview.materialSettings.surfaceMaterial;
+            EditorUtility.CopySerialized(authored, preview);
+            preview.materialSettings.surfaceMaterial = previewMaterial;
+            CopyShaderProperties(authored.materialSettings.surfaceMaterial, previewMaterial);
+        }
+
+        // Copies only what the authored material's shader declares. The renderer sets undeclared properties and
+        // buffers on the copy at boot, and copying the whole material would wipe them.
+        private static void CopyShaderProperties(Material source, Material target)
+        {
+            if (source == null || target == null || source.shader == null)
+                return;
+
+            Shader shader = source.shader;
+            int count = shader.GetPropertyCount();
+            for (int i = 0; i < count; i++)
+            {
+                int id = shader.GetPropertyNameId(i);
+                if (!target.HasProperty(id))
+                    continue;
+
+                switch (shader.GetPropertyType(i))
+                {
+                    case ShaderPropertyType.Color:
+                        target.SetColor(id, source.GetColor(id));
+                        break;
+                    case ShaderPropertyType.Vector:
+                        target.SetVector(id, source.GetVector(id));
+                        break;
+                    case ShaderPropertyType.Float or ShaderPropertyType.Range:
+                        target.SetFloat(id, source.GetFloat(id));
+                        break;
+                    case ShaderPropertyType.Int:
+                        target.SetInteger(id, source.GetInteger(id));
+                        break;
+                    case ShaderPropertyType.Texture:
+                        target.SetTexture(id, source.GetTexture(id));
+                        target.SetTextureScale(id, source.GetTextureScale(id));
+                        target.SetTextureOffset(id, source.GetTextureOffset(id));
+                        break;
+                }
+            }
+
+            foreach (LocalKeyword keyword in shader.keywordSpace.keywords)
+            {
+                var targetKeyword = new LocalKeyword(target.shader, keyword.name);
+                if (targetKeyword.isValid)
+                    target.SetKeyword(targetKeyword, source.IsKeywordEnabled(keyword));
             }
         }
     }

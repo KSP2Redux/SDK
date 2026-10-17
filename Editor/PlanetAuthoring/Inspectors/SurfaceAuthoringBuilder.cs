@@ -92,7 +92,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             if (pqs == null)
                 return new HelpBox("This body has no PQS.", HelpBoxMessageType.Warning);
 
-            PQSData data = pqs.data;
+            PQSData data = PlanetAuthoringSession.AuthoredData(pqs);
             if (data == null)
                 return new HelpBox("Bind a PQSData asset to the PQS's Data field to begin authoring the surface.", HelpBoxMessageType.Info);
 

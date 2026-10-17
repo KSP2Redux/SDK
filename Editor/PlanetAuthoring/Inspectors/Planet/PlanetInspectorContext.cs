@@ -110,7 +110,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors.Planet
         /// <summary>
         /// Gets the PQS's surface data, or null.
         /// </summary>
-        public PQSData PqsData => Pqs != null ? Pqs.data : null;
+        public PQSData PqsData => PlanetAuthoringSession.AuthoredData(Pqs);
 
         /// <summary>
         /// Creates the context for an inspector on a body's Scaled prefab.

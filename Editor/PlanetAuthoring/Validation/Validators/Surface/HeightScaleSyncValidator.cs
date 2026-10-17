@@ -28,20 +28,19 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
             if (body == null)
                 yield break;
 
-            var pqs = BodyResolver.FindPqsIncludingAsset(body);
-            if (pqs == null || pqs.data == null || pqs.data.heightMapInfo == null)
+            PQSData pqsData = PlanetAuthoringSession.AuthoredData(BodyResolver.FindPqsIncludingAsset(body));
+            if (pqsData == null || pqsData.heightMapInfo == null)
                 yield break;
             if (body.Core?.data == null)
                 yield break;
 
-            float pqsScale = pqs.data.heightMapInfo.heightMapScale;
+            float pqsScale = pqsData.heightMapInfo.heightMapScale;
             double bodyScale = body.Core.data.TerrainHeightScale;
             if (Math.Abs((double)pqsScale - bodyScale) <= Threshold)
                 yield break;
 
             string message = $"Terrain Height Scale on CelestialBodyData ({bodyScale:0.####}) does not match heightMapScale on PQSData ({pqsScale:0.####}). The renderer reads heightMapScale. CelestialBodyData.TerrainHeightScale is a data copy only.";
 
-            PQSData pqsData = pqs.data;
             var fixes = new[]
             {
                 new ValidationFix("Copy PQSData â†’ body", () => SyncBodyToPqsData(body, pqsData)),

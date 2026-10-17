@@ -69,16 +69,16 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation
 
             if ((cls & BodyClassFlags.SolidSurface) != 0)
             {
-                PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-                if (pqs?.data != null)
+                PQSData pqsData = PlanetAuthoringSession.AuthoredData(BodyResolver.FindPqsIncludingAsset(body));
+                if (pqsData != null)
                 {
-                    calc.AddHeightmapStack(pqs.data.heightMapInfo);
+                    calc.AddHeightmapStack(pqsData.heightMapInfo);
                     // Redirect packed Texture2DArray subassets to their authored source textures BEFORE
                     // walking the surface material, so the array is marked seen and the source slots
                     // get the bytes attributed to them.
-                    calc.AddPackedArraySources(pqs.data);
-                    calc.AddMaterialTextures(pqs.data.materialSettings?.surfaceMaterial, "Surface material");
-                    calc.AddMaterialTextures(pqs.data.materialSettings?.scaledSpaceMaterial, "Scaled-space material");
+                    calc.AddPackedArraySources(pqsData);
+                    calc.AddMaterialTextures(pqsData.materialSettings?.surfaceMaterial, "Surface material");
+                    calc.AddMaterialTextures(pqsData.materialSettings?.scaledSpaceMaterial, "Scaled-space material");
                     calc.AddDecals(body);
                 }
             }

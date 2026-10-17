@@ -120,7 +120,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
                     continue;
 
                 PQS pqs = system.GetComponentInParent<PQS>(true);
-                if (pqs == null || pqs.data != data)
+                if (pqs == null || PlanetAuthoringSession.AuthoredData(pqs) != data)
                     continue;
 
                 foreach (VegetationPackagePro package in system.VegetationPackageProList)

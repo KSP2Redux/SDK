@@ -34,8 +34,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Biome
         {
             if (body?.Core?.data == null) yield break;
             PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-            var info = pqs?.data?.heightMapInfo;
-            Material mat = pqs?.data?.materialSettings?.surfaceMaterial;
+            var info = PlanetAuthoringSession.AuthoredData(pqs)?.heightMapInfo;
+            Material mat = PlanetAuthoringSession.AuthoredData(pqs)?.materialSettings?.surfaceMaterial;
             if (info == null || mat == null) yield break;
 
             bool keywordOn = mat.IsKeywordEnabled(Keyword);

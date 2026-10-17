@@ -184,7 +184,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Ocean
         private static PQSData FindPqsData(CoreCelestialBodyData body)
         {
             PQS pqs = body != null ? BodyResolver.FindPqsIncludingAsset(body) : null;
-            return pqs != null ? pqs.data : null;
+            return PlanetAuthoringSession.AuthoredData(pqs);
         }
 
         // Wraps across the date line and clamps at the poles, as an equirectangular map does.

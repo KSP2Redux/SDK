@@ -30,7 +30,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
         {
             if (body?.Core?.data == null) yield break;
             PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-            Material mat = pqs?.data?.materialSettings?.surfaceMaterial;
+            Material mat = PlanetAuthoringSession.AuthoredData(pqs)?.materialSettings?.surfaceMaterial;
             if (mat == null || mat.shader == null) yield break;
             if (mat.shader.name == PlanetAuthoringShaders.Local) yield break;
 

@@ -275,7 +275,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
         /// </remarks>
         /// <param name="pqs">The body's PQS. May be null.</param>
         /// <returns>The lookup, or <see cref="Unavailable" /> when the body has no resolvable mapping.</returns>
-        public static ScatterStratumLookup FromPqs(PQS pqs) => FromPqsData(pqs == null ? null : pqs.data);
+        public static ScatterStratumLookup FromPqs(PQS pqs) => FromPqsData(PlanetAuthoringSession.AuthoredData(pqs));
 
         /// <summary>
         /// Builds a lookup from a body's PQS data asset.

@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using KSP;
 using KSP.Rendering.Planets;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere;
@@ -12,6 +14,7 @@ using Redux;
 using Redux.Rendering;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Ksp2UnityTools.Editor.PlanetAuthoring
 {
@@ -181,6 +184,29 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         private double _lastTickTime;
         private bool _hasSnapshot;
         private Quaternion _initialBodyRotation;
+
+        // PQSRenderer.BootForEditor moves a surface material authored on a stand-in shader onto the URP port by
+        // handing the PQS an unsaved copy of its PQSData. This is the asset the copy was made from.
+        private PQSData _authoredData;
+        private int _authoredDirtyCount;
+
+        /// <summary>
+        /// Returns the PQSData asset <paramref name="pqs" /> was authored with.
+        /// </summary>
+        /// <remarks>
+        /// While a preview runs, <see cref="PQS.data" /> can be an unsaved copy whose surface material is on the URP
+        /// port shader. Edits, sidecar lookups, bakes and validation belong on the asset, so they read it from here.
+        /// </remarks>
+        /// <param name="pqs">The PQS, or null.</param>
+        /// <returns>The authored PQSData, or null when <paramref name="pqs" /> is null or has none.</returns>
+        public static PQSData AuthoredData(PQS pqs)
+        {
+            if (pqs == null)
+                return null;
+
+            PlanetAuthoringSession session = Active;
+            return session != null && session.Pqs == pqs && session._authoredData != null ? session._authoredData : pqs.data;
+        }
 
         // Whitelist of PQS fields the boot harness writes. RevertPropertyOverride at End clears
         // the resulting prefab-instance modifications, leaving user edits to other fields alone.
@@ -389,6 +415,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // Install Redux's Resources override and load ksp2.catalog so base-game Resources.Load
             // resolves outside of play mode. Idempotent.
             ReduxAssets.ConfigureEditorAssets();
+            LoadReduxComputeShaders();
 
             var report = CheckReadiness(body);
             if (!report.IsReady)
@@ -426,6 +453,26 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             return session;
         }
 
+        // ReduxAssets loads Redux's builds of the stock compute shaders only from its play-mode startup coroutine. The
+        // stock ones carry D3D11 bytecode only, so under D3D12 an edit-mode renderer left with them finds no kernels.
+        // Runs that loader here and blocks on each handle it yields, which is safe from a UI event.
+        internal static void LoadReduxComputeShaders()
+        {
+            MethodInfo loader = typeof(ReduxAssets).GetMethod("LoadComputeShaders", BindingFlags.NonPublic | BindingFlags.Static);
+            if (loader == null)
+            {
+                Debug.LogWarning("[PlanetAuthoringSession] ReduxAssets.LoadComputeShaders is gone, so the preview runs on the stock compute shaders.");
+                return;
+            }
+
+            var steps = (IEnumerator)loader.Invoke(null, null);
+            while (steps.MoveNext())
+            {
+                if (steps.Current is AsyncOperationHandle<ComputeShader> handle)
+                    handle.WaitForCompletion();
+            }
+        }
+
         private bool TryBootPqs()
         {
             // Clear stale overrides from any previous run that crashed before End.
@@ -442,6 +489,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 Pqs.settings = EditorPqsBootstrap.PQSGlobalSettings;
             Pqs.SetCoreCelestialBodyData(Body);
 
+            _authoredData = Pqs.data;
             PrepareRendererForBoot(Pqs);
             BindInitialSceneView();
             // Initialize the decal controller's NativeArray so the first PQS subdivision job does not NRE on it.
@@ -451,11 +499,40 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             {
                 // Renderer already booted - tear it down so its NativeLists don't leak.
                 Pqs.PQSRenderer?.ShutdownForEditor();
+                RestoreAuthoredData();
                 RevertBootHarnessOverrides(Pqs);
                 return false;
             }
 
+            _authoredDirtyCount = AuthoredDirtyCount();
             return true;
+        }
+
+        // Rises on every write to the authored PQSData or its surface material, including writes that bypass Undo.
+        private int AuthoredDirtyCount()
+        {
+            if (_authoredData == null)
+                return 0;
+
+            Material material = _authoredData.materialSettings?.surfaceMaterial;
+            return EditorUtility.GetDirtyCount(_authoredData) + (material != null ? EditorUtility.GetDirtyCount(material) : 0);
+        }
+
+        // Puts the authored PQSData back on the PQS and destroys the preview copy, so the scene never saves a
+        // reference to an object that only existed in memory.
+        private void RestoreAuthoredData()
+        {
+            PQSData preview = Pqs != null ? Pqs.data : null;
+            PQSData authored = _authoredData;
+            _authoredData = null;
+            if (authored == null || preview == null || preview == authored || EditorUtility.IsPersistent(preview))
+                return;
+
+            Pqs.data = authored;
+            Material previewMaterial = preview.materialSettings?.surfaceMaterial;
+            if (previewMaterial != null && !EditorUtility.IsPersistent(previewMaterial))
+                UnityEngine.Object.DestroyImmediate(previewMaterial);
+            UnityEngine.Object.DestroyImmediate(preview);
         }
 
         private static void PrepareRendererForBoot(PQS pqs)
@@ -539,6 +616,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             // Without this, GlobalMapScale and per-layer scales stay pinned to first-boot values
             // and PQSData edits never reach the GPU until Unity restarts.
             Pqs?.PQSRenderer?.ShutdownForEditor();
+            RestoreAuthoredData();
             if (Pqs != null && _hasSnapshot)
             {
                 RevertBootHarnessOverrides(Pqs);
@@ -635,6 +713,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
             if (now - _lastTickTime < TICK_INTERVAL_SECONDS)
                 return;
             _lastTickTime = now;
+
+            int dirtyCount = AuthoredDirtyCount();
+            if (dirtyCount != _authoredDirtyCount)
+            {
+                _authoredDirtyCount = dirtyCount;
+                PqsLiveEditWatcher.QueueRefresh();
+            }
 
             var sv = SceneView.lastActiveSceneView;
             if (sv == null)

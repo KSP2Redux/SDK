@@ -29,7 +29,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
         {
             if (body?.Core?.data == null) yield break;
             PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-            var info = pqs?.data?.heightMapInfo;
+            var info = PlanetAuthoringSession.AuthoredData(pqs)?.heightMapInfo;
             if (info == null) yield break;
 
             if (info.largeR?.heightMap == null) yield return Build("largeR");

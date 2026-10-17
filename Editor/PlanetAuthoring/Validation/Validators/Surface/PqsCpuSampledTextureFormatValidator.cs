@@ -63,7 +63,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
             if (pqs == null)
                 yield break;
 
-            PQSData.HeightMapInfo info = pqs.data?.heightMapInfo;
+            PQSData.HeightMapInfo info = PlanetAuthoringSession.AuthoredData(pqs)?.heightMapInfo;
             if (info == null)
                 yield break;
 

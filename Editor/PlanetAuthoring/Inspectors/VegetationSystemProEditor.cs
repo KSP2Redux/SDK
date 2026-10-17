@@ -240,7 +240,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             // Explicit comparisons rather than a null-conditional chain, which bypasses Unity's
             // overloaded equality and so treats a destroyed PQS as live.
             PQS pqs = system.GetComponentInParent<PQS>(true);
-            PQSData data = pqs == null ? null : pqs.data;
+            PQSData data = PlanetAuthoringSession.AuthoredData(pqs);
             Texture2D mask = data == null || data.heightMapInfo == null ? null : data.heightMapInfo.mask;
             if (mask == null)
             {

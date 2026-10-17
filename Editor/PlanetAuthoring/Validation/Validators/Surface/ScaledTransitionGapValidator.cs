@@ -23,14 +23,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
         {
             if (body?.Core?.data == null || !body.Core.data.hasSolidSurface)
                 yield break;
-            var pqs = BodyResolver.FindPqsIncludingAsset(body);
-            if (pqs == null || pqs.data == null || pqs.data.heightMapInfo == null)
+            PQSData pqsData = PlanetAuthoringSession.AuthoredData(BodyResolver.FindPqsIncludingAsset(body));
+            if (pqsData == null || pqsData.heightMapInfo == null)
                 yield break;
-            var info = pqs.data.heightMapInfo;
+            var info = pqsData.heightMapInfo;
             if (info.scaledToLocalTransition >= info.scaledToLocalBlend)
                 yield break;
 
-            PQSData pqsData = pqs.data;
             var fixes = new[]
             {
                 new ValidationFix("Swap values", () => SwapValues(pqsData)),

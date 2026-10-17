@@ -23,11 +23,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Biome
         {
             if (body?.Core?.data == null || !body.Core.data.hasSolidSurface)
                 yield break;
-            var pqs = BodyResolver.FindPqsIncludingAsset(body);
-            if (pqs == null || pqs.data == null || pqs.data.heightMapInfo == null)
+            PQSData pqsData = PlanetAuthoringSession.AuthoredData(BodyResolver.FindPqsIncludingAsset(body));
+            if (pqsData == null || pqsData.heightMapInfo == null)
                 yield break;
-            Texture2D height = pqs.data.heightMapInfo.globalHeightMap;
-            Texture2D mask = pqs.data.heightMapInfo.mask;
+            Texture2D height = pqsData.heightMapInfo.globalHeightMap;
+            Texture2D mask = pqsData.heightMapInfo.mask;
             if (height == null || mask == null)
                 yield break;
             if (height.width == mask.width && height.height == mask.height)

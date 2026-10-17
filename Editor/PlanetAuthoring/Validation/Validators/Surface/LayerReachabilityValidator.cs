@@ -33,7 +33,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
         {
             if (body?.Core?.data == null) yield break;
             PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-            Material mat = pqs?.data?.materialSettings?.surfaceMaterial;
+            Material mat = PlanetAuthoringSession.AuthoredData(pqs)?.materialSettings?.surfaceMaterial;
             if (mat == null) yield break;
 
             double minTerrain = body.Core.data.MinTerrainHeight;

@@ -226,7 +226,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         public static string ResolveScaledFolder(CoreCelestialBodyData body)
         {
             PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-            string bodyFolder = pqs != null && pqs.data != null ? ResolveBodyFolder(body, pqs.data) : null;
+            PQSData pqsData = PlanetAuthoringSession.AuthoredData(pqs);
+            string bodyFolder = pqsData != null ? ResolveBodyFolder(body, pqsData) : null;
             return bodyFolder != null ? bodyFolder + "/Scaled" : null;
         }
 
@@ -259,7 +260,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
             var pqs = BodyResolver.FindPqsIncludingAsset(body);
             if (pqs == null) { error = "Could not resolve a PQS for the body. Ensure the Local prefab exists and has a PQS, or that the authoring scene contains the body."; return false; }
 
-            var pqsData = pqs.data;
+            var pqsData = PlanetAuthoringSession.AuthoredData(pqs);
             if (pqsData == null) { error = "PQS has no PQSData asset assigned."; return false; }
 
             var bodyFolder = ResolveBodyFolder(body, pqsData);

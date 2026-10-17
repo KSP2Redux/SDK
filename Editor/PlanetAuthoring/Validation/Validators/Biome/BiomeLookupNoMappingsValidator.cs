@@ -26,7 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Biome
         {
             if (body == null) yield break;
             var pqs = BodyResolver.FindPqsIncludingAsset(body);
-            PQSData pqsData = pqs?.data;
+            PQSData pqsData = PlanetAuthoringSession.AuthoredData(pqs);
             if (pqsData?.heightMapInfo?.mask == null) yield break;
 
             PQSDataAuthoring sidecar = AuthoringSidecars.GetOrCreate(pqsData);

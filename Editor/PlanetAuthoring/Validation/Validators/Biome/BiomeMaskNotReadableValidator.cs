@@ -26,7 +26,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Biome
         {
             if (body == null) yield break;
             var pqs = BodyResolver.FindPqsIncludingAsset(body);
-            Texture2D mask = pqs?.data?.heightMapInfo?.mask;
+            Texture2D mask = PlanetAuthoringSession.AuthoredData(pqs)?.heightMapInfo?.mask;
             if (mask == null || mask.isReadable) yield break;
 
             Texture2D captured = mask;

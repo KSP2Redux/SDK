@@ -27,9 +27,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Surface
         public IEnumerable<ValidationIssue> Validate(CoreCelestialBodyData body)
         {
             if (body?.Core?.data == null) yield break;
-            PQS pqs = BodyResolver.FindPqsIncludingAsset(body);
-            if (pqs?.data == null) yield break;
-            if (pqs.data.materialSettings != null && pqs.data.materialSettings.surfaceMaterial != null) yield break;
+            PQSData pqsData = PlanetAuthoringSession.AuthoredData(BodyResolver.FindPqsIncludingAsset(body));
+            if (pqsData == null) yield break;
+            if (pqsData.materialSettings != null && pqsData.materialSettings.surfaceMaterial != null) yield break;
 
             yield return new ValidationIssue(
                 Code,
