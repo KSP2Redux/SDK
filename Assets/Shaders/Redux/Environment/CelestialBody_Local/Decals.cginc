@@ -76,10 +76,8 @@ void ApplyOneDecal(
     // local-space x and z components, so the dual dot produces those directly.
     float4 lp4        = float4(localPos, 1.0);
     float2 decalLocal = float2(
-        dot(float4(decal.worldToLocal[0][0], decal.worldToLocal[1][0],
-                   decal.worldToLocal[2][0], decal.worldToLocal[3][0]), lp4),
-        dot(float4(decal.worldToLocal[0][2], decal.worldToLocal[1][2],
-                   decal.worldToLocal[2][2], decal.worldToLocal[3][2]), lp4));
+        dot(decal.worldToLocal[0], lp4),
+        dot(decal.worldToLocal[2], lp4));
 
     if (!(distance(localPos, decal.position) < SphereRadius
           && all(abs(decalLocal) < 0.5)))
