@@ -482,16 +482,13 @@ namespace Ksp2UnityTools.LinkedAddressables
                 return;
             }
 
-            if (
-                !Application.isEditor
-                && !manifest.UseTranslatedSceneBootstrap
-            )
+            // Editor scenes use persistent linked objects. Only translated bootstrap needs eager root loads.
+            if (!manifest.UseTranslatedSceneBootstrap)
             {
                 IsReady = true;
                 Debug.Log(
                     $"{LogPrefix} External Addressables are configured for "
-                        + "on-demand loading. The player continues in its normal "
-                        + "build scene."
+                        + "on-demand loading. The current scene continues normally."
                 );
                 return;
             }
