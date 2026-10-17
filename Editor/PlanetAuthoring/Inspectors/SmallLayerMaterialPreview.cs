@@ -143,11 +143,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             _previewMaterial.SetColor("_EmissionColor", so.EmissionColor);
         }
 
-        private static Texture2D CopyToTexture2D(RenderTexture rt, int width, int height)
+        // BeginPreview sizes its target by the display scaling, 384 pixels for a 256 point preview at 150%, so the whole
+        // target is scaled to the cache size. Reading the cache size straight out of it would keep only one corner.
+        internal static Texture2D CopyToTexture2D(RenderTexture rt, int width, int height)
         {
             if (rt == null) return null;
+            RenderTexture scaled = RenderTexture.GetTemporary(width, height, 0, rt.graphicsFormat);
+            Graphics.Blit(rt, scaled);
             var prev = RenderTexture.active;
-            RenderTexture.active = rt;
+            RenderTexture.active = scaled;
             var tex = new Texture2D(width, height, TextureFormat.RGBA32, mipChain: false, linear: false)
             {
                 hideFlags = HideFlags.HideAndDontSave,
@@ -155,6 +159,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Inspectors
             tex.ReadPixels(new Rect(0, 0, width, height), 0, 0, recalculateMipMaps: false);
             tex.Apply(updateMipmaps: false, makeNoLongerReadable: false);
             RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(scaled);
             return tex;
         }
 
