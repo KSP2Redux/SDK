@@ -7,6 +7,8 @@ using Ksp2UnityTools.Editor.Modding;
 using ThunderKit.Core.Data;
 using ThunderKit.Core.Pipelines;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using Directory = System.IO.Directory;
@@ -49,6 +51,8 @@ namespace Ksp2UnityTools.Editor
                 Settings = AssetDatabase.LoadAssetAtPath<KSP2UnityToolsSettings>(SettingsAssetPath);
             }
 
+            EditorApplication.delayCall += RelinkAddressablesSettings;
+
 #if !REDUX
 
             if (ResolveBootKspScenePath() == null)
@@ -83,6 +87,51 @@ namespace Ksp2UnityTools.Editor
             {
                 UnityEngine.Debug.LogError($"Redux SDK could not rename '{legacyPath}' to '{currentPath}': {error}");
             }
+        }
+
+        // Addressables finds the project's settings only through an EditorBuildSettings entry naming its DefaultObject.
+        // Re-applying the template replaces that file and drops the entry, so restore it from the project's own assets.
+        private static void RelinkAddressablesSettings()
+        {
+            if (AddressableAssetSettingsDefaultObject.Settings != null)
+                return;
+
+            var defaultObject = FindProjectAsset<AddressableAssetSettingsDefaultObject>(
+                $"{AddressableAssetSettingsDefaultObject.kDefaultConfigFolder}/DefaultObject.asset"
+            );
+            if (defaultObject != null)
+            {
+                EditorBuildSettings.AddConfigObject(
+                    AddressableAssetSettingsDefaultObject.kDefaultConfigObjectName,
+                    defaultObject,
+                    true
+                );
+                if (AddressableAssetSettingsDefaultObject.Settings != null)
+                {
+                    UnityEngine.Debug.Log($"Redux SDK relinked the Addressables settings through {AssetDatabase.GetAssetPath(defaultObject)}.");
+                    return;
+                }
+            }
+
+            var settings = FindProjectAsset<AddressableAssetSettings>(
+                $"{AddressableAssetSettingsDefaultObject.kDefaultConfigFolder}/{AddressableAssetSettingsDefaultObject.kDefaultConfigAssetName}.asset"
+            );
+            if (settings == null)
+                return;
+
+            // The setter points the registered DefaultObject at these settings, or creates one when none is registered
+            AddressableAssetSettingsDefaultObject.Settings = settings;
+            UnityEngine.Debug.Log($"Redux SDK relinked the Addressables settings to {AssetDatabase.GetAssetPath(settings)}.");
+        }
+
+        private static T FindProjectAsset<T>(string preferredPath) where T : UnityEngine.Object
+        {
+            var preferred = AssetDatabase.LoadAssetAtPath<T>(preferredPath);
+            if (preferred != null)
+                return preferred;
+
+            string guid = AssetDatabase.FindAssets($"t:{typeof(T).Name}", new[] { "Assets" }).FirstOrDefault();
+            return guid == null ? null : AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid));
         }
 
         /// <summary>
