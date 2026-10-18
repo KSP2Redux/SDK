@@ -39,7 +39,15 @@ namespace Ksp2UnityTools.Editor.API
             params string[] labels
         )
         {
-            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            // The group's own settings, so a project whose DefaultObject lost track of its settings still registers
+            AddressableAssetSettings settings = group.Settings;
+            if (settings == null)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot make '{assetPath}' addressable: group '{group.Name}' has no Addressables settings and the project has none. Create them in Window > Asset Management > Addressables > Groups."
+                );
+            }
+
             string guid = AssetDatabase.AssetPathToGUID(assetPath);
             AddressableAssetEntry entry = settings.CreateOrMoveEntry(guid, group);
             foreach (string label in labels)
