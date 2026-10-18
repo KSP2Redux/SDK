@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -128,6 +129,11 @@ namespace Ksp2UnityTools.Editor.Modding
         /// Gets the path of the mod's assembly definition.
         /// </summary>
         public string AssemblyPath => Folder + $"/Code/{id}.asmdef";
+
+        /// <summary>
+        /// Gets the folder holding the mod's integrations, one subfolder per integrated mod, named by its id.
+        /// </summary>
+        public string IntegrationsFolder => Folder + "/Code/Integrations";
 
         /// <summary>
         /// Gets the path of the mod's plugin class.
@@ -309,6 +315,12 @@ namespace Ksp2UnityTools.Editor.Modding
                 jObject["main_assembly"] = $"{id}.dll";
             }
 
+            JArray integrationsArray = IntegrationsJson();
+            if (integrationsArray.Count > 0)
+            {
+                jObject["integrations"] = integrationsArray;
+            }
+
             JObject featuresObj = FeaturesJson();
             if (featuresObj.Count > 0)
             {
@@ -434,12 +446,24 @@ namespace Ksp2UnityTools.Editor.Modding
                     {
                         string relative = Path.GetRelativePath(Folder + "/Code/Lib", file);
                         definitions.Add(
-                            AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(Folder + "/Lib/" + relative)
+                            AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>(Folder + "/Code/Lib/" + relative)
                         );
                     }
 
                     assembly2.definitions = definitions.ToArray();
                     manifest.InsertElement(assembly2, manifest.Data.Length);
+                }
+
+                // Integrations stay out of lib, whose assemblies the game always loads
+                string[] integrationPaths = IntegrationAssemblyPaths();
+                if (integrationPaths.Length > 0)
+                {
+                    var integrations = CreateInstance<AssemblyDefinitions>();
+                    integrations.StagingPaths = new[] { targetLocation + "/" + INTEGRATIONS_FOLDER };
+                    integrations.definitions = integrationPaths
+                        .Select(AssetDatabase.LoadAssetAtPath<AssemblyDefinitionAsset>)
+                        .ToArray();
+                    manifest.InsertElement(integrations, manifest.Data.Length);
                 }
             }
 
@@ -556,6 +580,110 @@ namespace %MOD%
         public override void OnPostInitialized() {
             /*
                 Code that runs after all mods have been initialized goes here
+            */
+        }
+    }
+}
+";
+
+        /// <summary>
+        /// Builds swinfo's integrations block from the integration assemblies under <see cref="IntegrationsFolder" />.
+        /// </summary>
+        /// <returns>One entry per integration, naming the integrated mod and the built assembly.</returns>
+        public JArray IntegrationsJson()
+        {
+            var integrations = new JArray();
+            foreach (string path in IntegrationAssemblyPaths())
+            {
+                integrations.Add(new JObject
+                {
+                    ["mod_id"] = Path.GetFileName(Path.GetDirectoryName(path)),
+                    ["assembly"] = $"{INTEGRATIONS_FOLDER}/{Path.GetFileNameWithoutExtension(path)}.dll"
+                });
+            }
+
+            return integrations;
+        }
+
+        // One assembly definition directly inside each integrated mod's folder
+        private string[] IntegrationAssemblyPaths() =>
+            !Directory.Exists(IntegrationsFolder)
+                ? Array.Empty<string>()
+                : Directory.GetDirectories(IntegrationsFolder)
+                    .SelectMany(folder => Directory.GetFiles(folder, "*.asmdef", SearchOption.TopDirectoryOnly))
+                    .Select(path => path.Replace(Path.DirectorySeparatorChar, '/'))
+                    .OrderBy(path => path, StringComparer.Ordinal)
+                    .ToArray();
+
+        /// <summary>
+        /// Creates an integration assembly for another mod and an integration class to start from, unless one exists.
+        /// </summary>
+        /// <remarks>
+        /// The assembly references the mod's own assembly. Compiling against the integrated mod is left to the author,
+        /// since how its assembly reaches this project depends on that mod.
+        /// </remarks>
+        /// <param name="integratedModId">The id of the mod to integrate with.</param>
+        public void CreateIntegrationAssembly(string integratedModId)
+        {
+            integratedModId = integratedModId?.Trim();
+            if (string.IsNullOrEmpty(integratedModId) || integratedModId.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                EditorUtility.DisplayDialog("Error", "Enter the id of the mod to integrate with.", "OK");
+                return;
+            }
+
+            if (!File.Exists(AssemblyPath))
+            {
+                EditorUtility.DisplayDialog("Error", "Create the mod's assembly definition first.", "OK");
+                return;
+            }
+
+            string folder = $"{IntegrationsFolder}/{integratedModId}";
+            if (Directory.Exists(folder))
+            {
+                EditorUtility.DisplayDialog("Error", $"An integration with {integratedModId} already exists.", "OK");
+                return;
+            }
+
+            string identifier = new string(integratedModId.Select(c => char.IsLetterOrDigit(c) ? c : '_').ToArray());
+            if (char.IsDigit(identifier[0]))
+            {
+                identifier = "_" + identifier;
+            }
+
+            string assemblyName = $"{id}.Integrations.{identifier}";
+            Directory.CreateDirectory(folder);
+            var assemblyDefinitionJObject = new JObject
+            {
+                ["name"] = assemblyName,
+                ["rootNamespace"] = assemblyName,
+                ["references"] = new JArray(id),
+                ["allowUnsafeCode"] = true,
+                ["overrideReferences"] = true,
+                ["precompiledReferences"] = new JArray(GetPrecompiledReferences()),
+                ["autoReferenced"] = false,
+                ["defineConstants"] = new JArray(),
+                ["versionDefines"] = new JArray(),
+                ["noEngineReferences"] = false
+            };
+            File.WriteAllText($"{folder}/{assemblyName}.asmdef", assemblyDefinitionJObject.ToString());
+            File.WriteAllText($"{folder}/{identifier}Integration.cs",
+                IntegrationTemplate.Replace("%NAMESPACE%", assemblyName).Replace("%CLASS%", identifier).Trim());
+            AssetDatabase.Refresh();
+        }
+
+        private const string INTEGRATIONS_FOLDER = "integrations";
+
+        private const string IntegrationTemplate = @"
+using SpaceWarp2.API.Mods;
+namespace %NAMESPACE%
+{
+    /* Runs only when the integrated mod is loaded too. Derive from ModIntegration<TCurrent, TIntegrated> instead for typed access to both plugins */
+    public class %CLASS%Integration : ModIntegration
+    {
+        public override void OnInitialized() {
+            /*
+                Code that runs once both mods are initialized goes here
             */
         }
     }

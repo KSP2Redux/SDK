@@ -25,6 +25,13 @@ namespace Ksp2UnityTools.Editor.Modding
                 (target as Mod)?.CreateAssembly();
                 (target as Mod)?.RefreshPipelines();
             };
+            var integratedModId = root.Q<TextField>("IntegratedModIdField");
+            var addIntegration = root.Q<Button>("AddIntegrationButton");
+            addIntegration.clicked += () =>
+            {
+                (target as Mod)?.CreateIntegrationAssembly(integratedModId.value);
+                (target as Mod)?.RefreshPipelines();
+            };
             var refreshAddressables = root.Q<Button>("RefreshAddressablesButton");
             refreshAddressables.clicked += () => { (target as Mod)?.CreateAddressablesGroups(); };
             var refreshThunderkit = root.Q<Button>("RefreshThunderkitButton");
