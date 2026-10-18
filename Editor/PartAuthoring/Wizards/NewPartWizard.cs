@@ -1515,14 +1515,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
             container.Add(filesHeader);
             container.Add(new Label($"  + {PartName}.prefab"));
             container.Add(new Label($"  + {PartName}.json"));
-            container.Add(new Label("  + model/ + model/col/ + model/lod_reentry/"));
+            container.Add(new Label("  + model/ + model/col/"));
 
             // Pending bakes hint.
             var bakesHeader = new Label("Run after creation");
             bakesHeader.AddToClassList("wizard-review-section-header");
             container.Add(bakesHeader);
             container.Add(new Label("  - Drag cubes (Module_Drag inspector)"));
-            container.Add(new Label("  - Reentry mesh (Quick Tools)"));
             container.Add(new Label("  - Icon (Quick Tools)"));
 
             return container;

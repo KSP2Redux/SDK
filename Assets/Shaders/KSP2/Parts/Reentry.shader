@@ -1,8 +1,8 @@
-// URP version of the SDK stand-in for KSP2/Parts/Reentry, the material part prefabs give their reentry
-// meshes (ReentryMat). At runtime ReentryMesh swaps those renderers to the stock Reentry/Shockwave
-// material, so this shader only draws in the editor. The Built-in stand-in was a Standard surface shader
-// with a white albedo: this keeps that look on the KSP2 lighting model and adds the part reentry glow
-// when ReentryMesh enables _REENTRYEMISSION_ON. Name and properties are unchanged.
+// URP version of the SDK stand-in for KSP2/Parts/Reentry, the material stock part prefabs give their
+// reentry shell meshes. Redux hides those shells at runtime, but stock bundles still reference this
+// shader by name and the bundle converter swaps in this port, so it stays. The Built-in stand-in was a
+// Standard surface shader with a white albedo: this keeps that look on the KSP2 lighting model and adds
+// the part reentry glow when ReentryMesh enables _REENTRYEMISSION_ON. Name and properties are unchanged.
 Shader "KSP2/Parts/Reentry"
 {
     Properties

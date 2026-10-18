@@ -23,7 +23,6 @@
                 <engine:VisualElement class="sdk-inspector-chip-row">
                     <engine:Label name="readiness-chip-json"    class="sdk-readiness-chip" />
                     <engine:Label name="readiness-chip-icon"    class="sdk-readiness-chip" />
-                    <engine:Label name="readiness-chip-reentry" class="sdk-readiness-chip" />
                     <engine:Label name="readiness-chip-drag-cubes" class="sdk-readiness-chip" />
                     <engine:Button name="readiness-chip-valid"  class="sdk-readiness-chip" />
                 </engine:VisualElement>
@@ -33,7 +32,6 @@
                 <engine:Label text="Quick Tools" class="sdk-inspector-row-label" />
                 <engine:VisualElement class="sdk-inspector-chip-row">
                     <engine:Button name="chip-bake-icon"            text="Bake Icon"         class="sdk-tool-chip" />
-                    <engine:Button name="chip-bake-reentry"         text="Bake Reentry Mesh" class="sdk-tool-chip" />
                     <engine:Button name="chip-reexport-json"        text="Re-export JSON"    class="sdk-tool-chip" />
                     <engine:Button name="chip-open-prefab"          text="Open Prefab"       class="sdk-tool-chip" />
                     <engine:Button name="chip-open-reference-parts" text="Reference Parts"   class="sdk-tool-chip" tooltip="Open the Reference Parts window, scoped to this part's bucket." />

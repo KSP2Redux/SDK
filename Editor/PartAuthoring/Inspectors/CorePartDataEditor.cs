@@ -18,7 +18,6 @@ using Ksp2UnityTools.Editor.PartAuthoring.Validation;
 using Ksp2UnityTools.Editor.PartAuthoring.Windows;
 using Ksp2UnityTools.Editor.Validation;
 using Ksp2UnityTools.Editor.Widgets;
-using Redux.VFX.ReentryMeshGeneration;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
@@ -303,14 +302,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 SetReadinessState(iconChip, exists ? "is-ok" : "is-warn");
             }
 
-            var reentryChip = _root.Q<Label>("readiness-chip-reentry");
-            if (reentryChip != null)
-            {
-                bool baked = ReentryMeshBaked(cpd);
-                reentryChip.text = baked ? "Reentry baked" : "Reentry missing";
-                SetReadinessState(reentryChip, baked ? "is-ok" : "is-warn");
-            }
-
             var dragCubeChip = _root.Q<Label>("readiness-chip-drag-cubes");
             if (dragCubeChip != null)
             {
@@ -431,11 +422,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
             return File.Exists(iconPath) ? iconPath : null;
         }
 
-        private static bool ReentryMeshBaked(CorePartData cpd)
-        {
-            return cpd.gameObject.GetComponentsInChildren<GeneratedReentryMeshRoot>(true).Length > 0;
-        }
-
         private static int CountDragCubes(CorePartData cpd)
         {
             var module = cpd.GetComponent<Module_Drag>();
@@ -467,7 +453,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         private void WireQuickToolsChips()
         {
             WireChip("chip-bake-icon", () => PartIconBaker.Bake((CorePartData)target));
-            WireChip("chip-bake-reentry", () => ReentryMeshBaker.Bake((CorePartData)target));
             WireChip("chip-reexport-json", () => PartJsonSaver.Save((CorePartData)target));
             WireChip("chip-open-prefab", OpenPrefab);
             WireChip("chip-open-reference-parts", Ksp2UnityTools.Editor.PartAuthoring.StockStats.Windows.ReferencePartsWindow.ShowWindow);
@@ -637,7 +622,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                     _tabContent.Add(CoreDataSections.BuildCentersBuoyancy(serializedObject, cpd));
                     _tabContent.Add(CoreDataSections.BuildResources(serializedObject));
                     _tabContent.Add(CoreDataSections.BuildOabEditor(serializedObject));
-                    _tabContent.Add(new ReentryMeshSection(cpd));
                     break;
                 case "modules":
                     _tabContent.Add(ModulesTab.Build((CorePartData)target));
