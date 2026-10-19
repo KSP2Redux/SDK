@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using KSP.Game.Missions;
 using Ksp2UnityTools.Editor.MissionAuthoring.Actions.Rows;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.MissionAuthoring.Actions
 {
@@ -54,7 +54,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Actions
         {
             if (_rowByActionType != null) return;
             _rowByActionType = new Dictionary<Type, Type>();
-            foreach (var rowType in ReduxTypeCache.GetTypesDerivedFrom<ActionRowBase>())
+            foreach (var rowType in TypeCache.GetTypesDerivedFrom<ActionRowBase>())
             {
                 if (rowType.IsAbstract) continue;
                 var attr = rowType.GetCustomAttribute<CustomActionRowAttribute>();

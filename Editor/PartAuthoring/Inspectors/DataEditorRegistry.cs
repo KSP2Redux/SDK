@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
@@ -10,11 +10,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
     /// Discovers and creates custom <see cref="IDataEditor" /> implementations registered via
     /// <see cref="DataEditorAttribute" />.
     /// </summary>
-    /// <remarks>
-    /// Uses <see cref="ReduxTypeCache" /> for assembly-spanning type discovery rather than
-    /// Unity's <c>UnityEditor.TypeCache</c>, since the SDK runs in ThunderKit-imported contexts
-    /// where the latter is unreliable.
-    /// </remarks>
     public static class DataEditorRegistry
     {
         private static Dictionary<Type, Type> _editorTypeByDataType;
@@ -47,8 +42,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         {
             if (_editorTypeByDataType != null) return;
             _editorTypeByDataType = new Dictionary<Type, Type>();
-            foreach (var editorType in ReduxTypeCache.GetTypesWithAttribute<DataEditorAttribute>())
+            foreach (var editorType in TypeCache.GetTypesWithAttribute<DataEditorAttribute>())
             {
+                if (editorType.IsAbstract)
+                {
+                    continue;
+                }
                 if (!typeof(IDataEditor).IsAssignableFrom(editorType))
                 {
                     Debug.LogWarning(

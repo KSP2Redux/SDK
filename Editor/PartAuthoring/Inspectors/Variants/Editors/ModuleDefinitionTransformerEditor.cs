@@ -5,7 +5,6 @@ using System.Reflection;
 using KSP;
 using KSP.Sim;
 using KSP.Sim.Definitions;
-using Ksp2UnityTools.Editor.Reflection;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
@@ -96,7 +95,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
 
         private static List<string> GetTypeNames<TBase>()
         {
-            var list = ReduxTypeCache.GetTypesDerivedFrom<TBase>()
+            var list = TypeCache.GetTypesDerivedFrom<TBase>()
+                .Where(t => !t.IsAbstract)
                 .Select(t => t.Name)
                 .OrderBy(n => n, StringComparer.Ordinal)
                 .ToList();
@@ -110,8 +110,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
             {
                 return result;
             }
-            Type behaviour = ReduxTypeCache.GetTypesDerivedFrom<PartBehaviourModule>()
-                .FirstOrDefault(t => t.Name == behaviourTypeName);
+            Type behaviour = TypeCache.GetTypesDerivedFrom<PartBehaviourModule>()
+                .FirstOrDefault(t => !t.IsAbstract && t.Name == behaviourTypeName);
             if (behaviour == null)
             {
                 return result;
@@ -169,8 +169,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants.Editors
             {
                 return new List<string>();
             }
-            Type resolved = ReduxTypeCache.GetTypesDerivedFrom<ModuleData>()
-                .FirstOrDefault(t => t.Name == dataTypeName);
+            Type resolved = TypeCache.GetTypesDerivedFrom<ModuleData>()
+                .FirstOrDefault(t => !t.IsAbstract && t.Name == dataTypeName);
             if (resolved == null)
             {
                 return new List<string>();

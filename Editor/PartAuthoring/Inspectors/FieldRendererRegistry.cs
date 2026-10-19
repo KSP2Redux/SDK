@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
@@ -62,8 +62,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         {
             if (_rendererTypeByKey != null) return;
             _rendererTypeByKey = new Dictionary<Key, Type>();
-            foreach (var rendererType in ReduxTypeCache.GetTypesWithAttribute<FieldRendererAttribute>())
+            foreach (var rendererType in TypeCache.GetTypesWithAttribute<FieldRendererAttribute>())
             {
+                if (rendererType.IsAbstract)
+                {
+                    continue;
+                }
                 if (!typeof(IFieldRenderer).IsAssignableFrom(rendererType))
                 {
                     Debug.LogWarning(
