@@ -359,7 +359,10 @@ namespace KSP.Editor
                     continue;
 
                 effect.ToggleVisibility(ShouldSelectedPreviewEffectsBeVisible());
-                effect.TriggerUpdateVisuals?.Invoke(_previewThrottle, _previewAtmosphere, 0f, Vector3.zero);
+                float emission = effect is ThrottleBlendshapeData { UseEngineThrottle: true }
+                    ? ThrottleVFXManager.GetPlumeEmission(_previewThrottle)
+                    : _previewThrottle;
+                effect.TriggerUpdateVisuals?.Invoke(emission, _previewAtmosphere, 0f, Vector3.zero);
                 if (effect is ThrottleParticleSystemData particles && particles.VFX != null &&
                     !PreviewParticles.Contains(particles.VFX))
                     PreviewParticles.Add(particles.VFX);
