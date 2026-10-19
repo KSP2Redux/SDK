@@ -1,9 +1,9 @@
 #if REDUX
 using System;
 using System.Collections.Generic;
-using Ksp2UnityTools.Editor.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
 {
@@ -59,8 +59,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.StockStats
         private static Dictionary<string, Type> BuildRegistry()
         {
             var dict = new Dictionary<string, Type>(StringComparer.Ordinal);
-            foreach (Type type in ReduxTypeCache.GetTypesWithAttribute<DataObjectMirrorAttribute>())
+            foreach (Type type in TypeCache.GetTypesWithAttribute<DataObjectMirrorAttribute>())
             {
+                if (type.IsAbstract)
+                {
+                    continue;
+                }
                 if (!typeof(DataObjectMirror).IsAssignableFrom(type))
                 {
                     continue;

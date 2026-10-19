@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
@@ -10,9 +10,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
     /// one instance per type. The wizard's archetype picker reads from <see cref="GetAll" />.
     /// </summary>
     /// <remarks>
-    /// Discovery is backed by <see cref="ReduxTypeCache" /> so the registry stays correct across
-    /// SDK-mode and plugin-side assemblies that <c>UnityEditor.TypeCache</c> mishandles under
-    /// ThunderKit. The static cache zeros on domain reload, so the next call rebuilds.
+    /// The static cache zeros on domain reload, so the next call rebuilds.
     /// </remarks>
     public static class ArchetypeRegistry
     {
@@ -36,7 +34,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
         private static List<IPartArchetype> Build()
         {
             var list = new List<IPartArchetype>();
-            foreach (var t in ReduxTypeCache.GetTypesDerivedFrom<IPartArchetype>())
+            foreach (var t in TypeCache.GetTypesDerivedFrom<IPartArchetype>())
             {
                 if (t.IsAbstract || t.IsInterface) continue;
                 if (t.GetConstructor(Type.EmptyTypes) == null)

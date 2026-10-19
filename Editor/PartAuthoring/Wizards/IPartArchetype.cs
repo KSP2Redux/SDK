@@ -12,7 +12,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
     /// <remarks>
     /// Implementations are pure data declarations. The wizard reads them to populate
     /// its picker and pre-fill steps. The scaffold reads them to lay down a prefab,
-    /// JSON, and addressables entry. Discovered via <see cref="API.ReduxTypeCache" />
+    /// JSON, and addressables entry. Discovered via <see cref="UnityEditor.TypeCache" />
     /// so a new archetype is one new file under <c>ArchetypeTemplates/</c>.
     /// </remarks>
     public interface IPartArchetype

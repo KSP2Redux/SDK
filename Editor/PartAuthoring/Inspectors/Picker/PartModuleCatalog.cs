@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using KSP.Sim.Definitions;
-using Ksp2UnityTools.Editor.Reflection;
 using Redux.Modules.Attributes;
+using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
 {
@@ -35,11 +35,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
     /// Builds the catalog of pickable <c>Module_*</c> types for the "Add Module" picker. Excludes
     /// modules tagged <see cref="ModuleHiddenAttribute" />.
     /// </summary>
-    /// <remarks>
-    /// Uses <see cref="ReduxTypeCache" /> for type discovery rather than Unity's
-    /// <c>UnityEditor.TypeCache</c> because the SDK ships into ThunderKit-imported KSP2 contexts where
-    /// the latter is unreliable.
-    /// </remarks>
     public static class PartModuleCatalog
     {
         private const string MODULE_TYPE_PREFIX = "Module_";
@@ -74,8 +69,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
 
         private static IReadOnlyList<ModuleCatalogEntry> Build()
         {
-            return ReduxTypeCache.GetTypesDerivedFrom<PartBehaviourModule>()
-                .Where(t => t.GetCustomAttribute<ModuleHiddenAttribute>() == null)
+            return TypeCache.GetTypesDerivedFrom<PartBehaviourModule>()
+                .Where(t => !t.IsAbstract && t.GetCustomAttribute<ModuleHiddenAttribute>() == null)
                 .Select(t => new ModuleCatalogEntry(
                     moduleType: t,
                     displayName: GetDisplayName(t),

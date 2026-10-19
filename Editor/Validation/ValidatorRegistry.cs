@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.Validation
@@ -10,10 +10,9 @@ namespace Ksp2UnityTools.Editor.Validation
     /// editor-side assemblies for the given context type <typeparamref name="T" />.
     /// </summary>
     /// <remarks>
-    /// Discovery is backed by <see cref="ReduxTypeCache" /> so SDK-mode and plugin-side assemblies
+    /// Discovery is backed by <see cref="TypeCache" />, so SDK-mode and plugin-side assemblies
     /// participate without explicit registration. The per-T static cache resets on domain reload
-    /// automatically (static state is lost), and <see cref="ReduxTypeCache" /> rebuilds on the
-    /// same event, so the next access produces a fresh validator list.
+    /// automatically (static state is lost), so the next access produces a fresh validator list.
     /// </remarks>
     /// <typeparam name="T">The validation context type whose validators to discover.</typeparam>
     public static class ValidatorRegistry<T>
@@ -26,8 +25,12 @@ namespace Ksp2UnityTools.Editor.Validation
         private static IReadOnlyList<IValidator<T>> Build()
         {
             var found = new List<IValidator<T>>();
-            foreach (Type type in ReduxTypeCache.GetTypesDerivedFrom<IValidator<T>>())
+            foreach (Type type in TypeCache.GetTypesDerivedFrom<IValidator<T>>())
             {
+                if (type.IsAbstract)
+                {
+                    continue;
+                }
                 if (type.GetConstructor(Type.EmptyTypes) == null)
                 {
                     Debug.LogWarning($"[ValidatorRegistry<{typeof(T).Name}>] '{type.FullName}' implements IValidator<{typeof(T).Name}> but has no public parameterless constructor; skipping.");

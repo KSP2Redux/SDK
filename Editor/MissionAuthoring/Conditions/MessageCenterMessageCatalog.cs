@@ -5,6 +5,7 @@ using System.Reflection;
 using KSP.Messages;
 using Ksp2UnityTools.Editor.Reflection;
 using Redux.Missions;
+using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions
 {
@@ -92,7 +93,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions
         private static IReadOnlyList<MessageCenterMessageCatalogEntry> Build()
         {
             var entries = new List<MessageCenterMessageCatalogEntry>();
-            foreach (var type in ReduxTypeCache.GetTypesDerivedFrom<MessageCenterMessage>())
+            foreach (var type in TypeCache.GetTypesDerivedFrom<MessageCenterMessage>())
             {
                 if (type.IsAbstract) continue;
 

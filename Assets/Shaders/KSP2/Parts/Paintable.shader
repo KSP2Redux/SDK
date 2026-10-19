@@ -74,7 +74,7 @@ Shader "KSP2/Parts/Paintable"
         Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" "UniversalMaterialType" = "Lit" }
 
         HLSLINCLUDE
-        #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+        #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Pipeline.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
         CBUFFER_START(UnityPerMaterial)
@@ -136,7 +136,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma dynamic_branch _ FOG_EXP FOG_EXP2
 
-            #include "Assets/ReduxAssets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
             ENDHLSL
         }
 
@@ -162,7 +162,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
 
             #define KSP2_GBUFFER_PASS
-            #include "Assets/ReduxAssets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Scenery/KSP2SceneryStandardOpaqueForward.hlsl"
             ENDHLSL
         }
 
@@ -181,7 +181,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma fragment KSP2_ShadowFragment
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
 
@@ -199,7 +199,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma vertex KSP2_DepthVertex
             #pragma fragment KSP2_DepthFragment
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
 
@@ -216,7 +216,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma vertex KSP2_DepthVertex
             #pragma fragment KSP2_DepthNormalsFragment
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
 
@@ -242,7 +242,7 @@ Shader "KSP2/Parts/Paintable"
             #pragma vertex KSP2_MotionVectorVertex
             #pragma fragment KSP2_MotionVectorFragment
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
     }

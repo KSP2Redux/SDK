@@ -21,8 +21,8 @@
 #ifndef REDUX_SCATTER_IMPOSTOR_CAPTURE_INCLUDED
 #define REDUX_SCATTER_IMPOSTOR_CAPTURE_INCLUDED
 
-#include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
-#include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Lighting.hlsl"
+#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
 
 struct ScatterImpostorCaptureOutput
 {

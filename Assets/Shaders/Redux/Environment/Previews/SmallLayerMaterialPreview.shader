@@ -1,7 +1,7 @@
 // Editor-only preview shader for SmallLayerMaterial. Renders a single sphere with the SO's
 // composition fields, mirroring the per-sample math of the terrain's biome layers
-// (CBL_GradeColor and CBL_LayerStrengths in Ksp2Redux
-// Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl:
+// (CBL_GradeColor and CBL_LayerStrengths in
+// Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl in this package:
 // albedo grading -> normal -> PBR threshold-overrides -> emission). No triplanar, no cascade,
 // no biome blend - the preview is single-layer over a sphere UV. URP, lit by
 // SmallLayerMaterialPreview's preview lights through the URP renderer.

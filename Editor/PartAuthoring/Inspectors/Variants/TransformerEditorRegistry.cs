@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 using UnityEngine;
 using VSwift.Modules.Transformers;
 
@@ -10,9 +10,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants
     /// <summary>
     /// Discovers and creates custom <see cref="ITransformerEditor" /> implementations registered via <see cref="TransformerEditorAttribute" />.
     /// </summary>
-    /// <remarks>
-    /// Uses <see cref="ReduxTypeCache" /> for assembly-spanning type discovery rather than Unity's <c>UnityEditor.TypeCache</c>, since the SDK runs in ThunderKit-imported contexts where the latter is unreliable.
-    /// </remarks>
     public static class TransformerEditorRegistry
     {
         private static Dictionary<Type, Type> _editorTypeByTransformerType;
@@ -45,8 +42,12 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Variants
         {
             if (_editorTypeByTransformerType != null) return;
             _editorTypeByTransformerType = new Dictionary<Type, Type>();
-            foreach (var editorType in ReduxTypeCache.GetTypesWithAttribute<TransformerEditorAttribute>())
+            foreach (var editorType in TypeCache.GetTypesWithAttribute<TransformerEditorAttribute>())
             {
+                if (editorType.IsAbstract)
+                {
+                    continue;
+                }
                 if (!typeof(ITransformerEditor).IsAssignableFrom(editorType))
                 {
                     Debug.LogWarning(

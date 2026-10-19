@@ -48,7 +48,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
         Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" "UniversalMaterialType" = "Lit" }
 
         HLSLINCLUDE
-        #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+        #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Pipeline.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
         #define KSP2_SCATTER_SPECULAR 1
@@ -102,8 +102,8 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Lighting.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }
 
@@ -128,8 +128,8 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
 
             #define KSP2_SPECULAR_SETUP
             #define KSP2_GBUFFER_PASS
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Lighting.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }
 
@@ -149,7 +149,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
             #pragma instancing_options procedural:setup
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }
 
@@ -167,7 +167,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }
 
@@ -184,7 +184,7 @@ Shader "Redux/Environment/Scatter/Scatter_Instanced_Indirect_Opaque_Specular"
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2ScatterOpaque.hlsl"
             ENDHLSL
         }
 

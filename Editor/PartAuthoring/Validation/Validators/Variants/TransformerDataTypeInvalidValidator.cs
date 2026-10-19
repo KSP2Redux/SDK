@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using KSP.Sim.Definitions;
-using Ksp2UnityTools.Editor.Reflection;
 using Ksp2UnityTools.Editor.Validation;
+using UnityEditor;
 using VSwift.Modules.Data;
 using VSwift.Modules.Transformers;
 
@@ -25,7 +25,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Variants
                 yield break;
             }
             var known = new HashSet<string>(
-                ReduxTypeCache.GetTypesDerivedFrom<ModuleData>().Select(t => t.Name));
+                TypeCache.GetTypesDerivedFrom<ModuleData>().Where(t => !t.IsAbstract).Select(t => t.Name));
 
             foreach (var set in data.VariantSets)
             {
