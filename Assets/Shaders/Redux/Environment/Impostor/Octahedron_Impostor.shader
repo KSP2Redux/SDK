@@ -48,7 +48,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
         Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" "DisableBatching" = "True" "UniversalMaterialType" = "Lit" }
 
         HLSLINCLUDE
-        #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+        #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Pipeline.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
         CBUFFER_START(UnityPerMaterial)
@@ -93,8 +93,8 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
 
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Lighting.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
 
@@ -118,8 +118,8 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
 
             #define KSP2_SPECULAR_SETUP
             #define KSP2_GBUFFER_PASS
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Lighting.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
 
@@ -139,7 +139,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma instancing_options procedural:setup
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
 
@@ -157,7 +157,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
 
@@ -174,7 +174,7 @@ Shader "Redux/Environment/Impostor/Octahedron_Impostor"
             #pragma multi_compile_instancing
             #pragma instancing_options procedural:setup
             #pragma multi_compile_fragment _ LOD_FADE_CROSSFADE
-            #include "Assets/ReduxAssets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Environment/KSP2OctahedronImpostor.hlsl"
             ENDHLSL
         }
     }

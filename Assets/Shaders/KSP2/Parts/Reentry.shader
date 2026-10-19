@@ -20,7 +20,7 @@ Shader "KSP2/Parts/Reentry"
         LOD 200
 
         HLSLINCLUDE
-        #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+        #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Pipeline.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
         CBUFFER_START(UnityPerMaterial)
@@ -57,8 +57,8 @@ Shader "KSP2/Parts/Reentry"
             #pragma multi_compile_fragment _ _LIGHT_COOKIES
             #pragma multi_compile _ FOG_LINEAR
 
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Lighting.hlsl"
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Reentry.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Lighting.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Reentry.hlsl"
 
             struct Attributes
             {
@@ -116,7 +116,7 @@ Shader "KSP2/Parts/Reentry"
             #pragma target 4.5
             #pragma vertex KSP2_DepthVertex
             #pragma fragment KSP2_DepthFragment
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
 
@@ -130,7 +130,7 @@ Shader "KSP2/Parts/Reentry"
             #pragma target 4.5
             #pragma vertex KSP2_DepthVertex
             #pragma fragment KSP2_DepthNormalsFragment
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
     }

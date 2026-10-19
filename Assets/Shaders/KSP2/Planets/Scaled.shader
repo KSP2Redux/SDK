@@ -49,7 +49,7 @@ Shader "KSP2/Planets/Scaled"
         Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" }
 
         HLSLINCLUDE
-        #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+        #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Pipeline.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
         CBUFFER_START(UnityPerMaterial)
@@ -81,7 +81,7 @@ Shader "KSP2/Planets/Scaled"
             float  _SouthPoleScale;
         CBUFFER_END
 
-        #include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledCommon.hlsl"
+        #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledCommon.hlsl"
         ENDHLSL
 
         // Scaled-space Lambert, drawn only by explicit pass index (observer cubemap).
@@ -94,7 +94,7 @@ Shader "KSP2/Planets/Scaled"
             #pragma target 4.5
             #pragma vertex CelestialBodyScaled_ScaledSpaceVertex
             #pragma fragment CelestialBodyScaled_ScaledSpaceFragment
-            #include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledSpace.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledSpace.hlsl"
             ENDHLSL
         }
 
@@ -110,7 +110,7 @@ Shader "KSP2/Planets/Scaled"
 
             #pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
 
-            #include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledForward.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyScaledForward.hlsl"
             ENDHLSL
         }
 
@@ -127,7 +127,7 @@ Shader "KSP2/Planets/Scaled"
             #pragma vertex KSP2_ShadowVertex
             #pragma fragment KSP2_ShadowFragment
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-            #include "Assets/ReduxAssets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
+            #include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2DepthPasses.hlsl"
             ENDHLSL
         }
 

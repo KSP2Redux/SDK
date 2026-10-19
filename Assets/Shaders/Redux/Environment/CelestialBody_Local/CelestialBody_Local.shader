@@ -584,10 +584,10 @@ Shader "Redux/Environment/CelestialBody_Local"
 		Tags { "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" "RenderType" = "Opaque" "UniversalMaterialType" = "Lit" }
 
 		HLSLINCLUDE
-		#include "Assets/ReduxAssets/Shaders/URP/Include/KSP2Pipeline.hlsl"
+		#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/Include/KSP2Pipeline.hlsl"
 		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-		#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalInput.hlsl"
-		#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalCommon.hlsl"
+		#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalInput.hlsl"
+		#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalCommon.hlsl"
 		ENDHLSL
 
 		// 0: forward lit terrain
@@ -610,7 +610,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
 
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
 			ENDHLSL
 		}
 
@@ -628,7 +628,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma vertex CBL_ShadowVertex
 			#pragma fragment CBL_ShadowFragment
 			#pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
@@ -644,7 +644,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma target 5.0
 			#pragma vertex CBL_DepthVertex
 			#pragma fragment CBL_DepthFragment
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
@@ -659,7 +659,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma target 5.0
 			#pragma vertex CBL_DepthVertex
 			#pragma fragment CBL_DepthNormalsFragment
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
@@ -673,7 +673,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma target 5.0
 			#pragma vertex CBL_PositionOnlyVertex
 			#pragma fragment CBL_PQSDepthFragment
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
@@ -691,7 +691,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#define CBL_PREPASS_ZONE CBL_ZONE_NO_DECALS
 			#define CBL_DECALS_NONE
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 
@@ -710,7 +710,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile_local _ DECALS_ENABLED
 			#define CBL_PREPASS_ZONE CBL_ZONE_4_DECALS
 			#define CBL_DECALS_PACKED4
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 
@@ -729,7 +729,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile_local _ DECALS_ENABLED
 			#define CBL_PREPASS_ZONE CBL_ZONE_INF_DECALS
 			#define CBL_DECALS_INFINITE
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 
@@ -743,7 +743,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma target 5.0
 			#pragma vertex CBL_PositionOnlyVertex
 			#pragma fragment CBL_DecalMaskFragment
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalDepth.hlsl"
 			ENDHLSL
 		}
 
@@ -768,7 +768,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 
 			#define KSP2_SPECULAR_SETUP
 			#define KSP2_GBUFFER_PASS
-			#include "Assets/ReduxAssets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
 			ENDHLSL
 		}
 	}
