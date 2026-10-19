@@ -92,15 +92,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
                 PartIconBaker.Bake(savedCore, false);
                 manifest.MarkGenerated(iconPath);
             }
-
-            string reentryStatus = BakeReentryMeshesInPrefabContents(prefabPath);
-            if (string.IsNullOrWhiteSpace(reentryStatus))
-            {
-                return;
-            }
-
-            report.Info($"Part '{core.data.partName}' reentry mesh bake: {reentryStatus}");
-            MarkGeneratedReentryMeshes(partFolder, core.data.partName, manifest);
         }
 
         public static void ImportResources(
@@ -207,65 +198,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring
             {
                 return fallbackJson;
             }
-        }
-
-        private static void MarkGeneratedReentryMeshes(string partFolder, string partName, Ksp1EditorImportManifest manifest)
-        {
-            string directory = $"{partFolder}/ReentryMeshes";
-            if (!Directory.Exists(directory))
-            {
-                return;
-            }
-
-            string safeName = SanitizeAssetName(partName);
-            foreach (string file in Directory.GetFiles(directory, $"{safeName}_*_lod*.asset"))
-            {
-                manifest.MarkGenerated(file.Replace('\\', '/'));
-            }
-        }
-
-        private static string BakeReentryMeshesInPrefabContents(string prefabPath)
-        {
-            GameObject contents = null;
-            try
-            {
-                contents = PrefabUtility.LoadPrefabContents(prefabPath);
-                var core = contents.GetComponent<CorePartData>();
-                if (core == null)
-                {
-                    return string.Empty;
-                }
-
-                string status = ReentryMeshBaker.Bake(core, prefabPath, false);
-                PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
-                return status;
-            }
-            finally
-            {
-                if (contents != null)
-                {
-                    PrefabUtility.UnloadPrefabContents(contents);
-                }
-            }
-        }
-
-        private static string SanitizeAssetName(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return "part";
-            }
-
-            char[] chars = value.ToCharArray();
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (Path.GetInvalidFileNameChars().Contains(chars[i]) || chars[i] == ' ')
-                {
-                    chars[i] = '_';
-                }
-            }
-
-            return new string(chars);
         }
 
         private static void PersistMaterialTextures(Material material, string textureFolder, HashSet<Object> persisted)
