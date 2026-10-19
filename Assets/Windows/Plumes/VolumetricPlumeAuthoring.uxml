@@ -1,0 +1,23 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:HelpBox name="profile-origin" message-type="Info" />
+    <ui:Button name="fill-preset" text="Customize from engine preset" tooltip="Replaces the shared appearance with the engine preset and enables it. Operating-mode profiles are preserved." />
+    <uie:PropertyField binding-path="_useAuthoredProfile" label="Use custom appearance" />
+    <ui:VisualElement name="authored-profile">
+        <uie:PropertyField binding-path="_authoredProfile" label="Shared appearance" />
+        <uie:PropertyField binding-path="_authoredModeProfiles" label="Operating-mode profiles" />
+    </ui:VisualElement>
+    <uie:PropertyField binding-path="_followAuthoredJetLayers" label="Follow authored jet layers" tooltip="Use the native flame layers on Panther, Whiplash and Rapier when customizing their volumetric profile." />
+    <uie:PropertyField binding-path="_visualNozzles" label="Visual nozzle exits" />
+    <ui:VisualElement style="flex-direction: row; flex-wrap: wrap;">
+        <ui:Button name="copy-profile" text="Copy shared JSON" tooltip="Copies the shared appearance as a part override. Operating-mode profiles and nozzle assignments are not copied." />
+        <ui:Button name="paste-profile" text="Paste shared JSON" tooltip="Updates the shared appearance. Operating-mode profiles and nozzle assignments are unchanged." />
+    </ui:VisualElement>
+    <ui:Foldout text="Engine preview setup" value="false">
+        <uie:PropertyField binding-path="_previewEngineType" label="Fallback technology" />
+        <uie:PropertyField binding-path="_previewMaximumThrust" label="Rated thrust (kN)" />
+        <uie:PropertyField binding-path="_previewNozzles" label="Preview nozzle exits" />
+        <uie:PropertyField binding-path="_previewAirflow" label="Airflow (local m/s)" />
+        <uie:PropertyField binding-path="_hideMeshPlumesInPreview" label="Hide replaced mesh layers" />
+        <uie:PropertyField binding-path="_engineFXModeHint" label="Engine event binding" />
+    </ui:Foldout>
+</ui:UXML>
