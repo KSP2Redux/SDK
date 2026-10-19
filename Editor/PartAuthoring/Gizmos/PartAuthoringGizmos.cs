@@ -356,14 +356,15 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Gizmos
             foreach (var t in module.ThrusterTransforms)
             {
                 if (t == null) continue;
+                // Module_RCS takes a thruster's nozzle direction from its up axis, not its forward one.
                 var origin = t.position;
-                var forward = t.forward;
-                var tip = origin + forward * 0.2f;
+                var nozzle = t.up;
+                var tip = origin + nozzle * 0.2f;
                 Handles.DrawLine(origin, tip);
-                Handles.DrawLine(tip, tip - forward * 0.05f + t.right * 0.03f);
-                Handles.DrawLine(tip, tip - forward * 0.05f - t.right * 0.03f);
-                Handles.DrawLine(tip, tip - forward * 0.05f + t.up * 0.03f);
-                Handles.DrawLine(tip, tip - forward * 0.05f - t.up * 0.03f);
+                Handles.DrawLine(tip, tip - nozzle * 0.05f + t.right * 0.03f);
+                Handles.DrawLine(tip, tip - nozzle * 0.05f - t.right * 0.03f);
+                Handles.DrawLine(tip, tip - nozzle * 0.05f + t.forward * 0.03f);
+                Handles.DrawLine(tip, tip - nozzle * 0.05f - t.forward * 0.03f);
             }
         }
 
