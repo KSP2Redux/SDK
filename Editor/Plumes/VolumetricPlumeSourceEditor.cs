@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using KSP.VFX;
 using KSP.Modules;
 using Newtonsoft.Json;
@@ -125,8 +126,9 @@ namespace KSP.Editor
             VolumetricPlumeProfile profile = source.AuthoredProfile.Clone();
             try
             {
-                JsonConvert.PopulateObject(EditorGUIUtility.systemCopyBuffer, profile,
-                    VolumetricPlumeJson.SerializerSettings);
+                using var reader = new JsonTextReader(new StringReader(EditorGUIUtility.systemCopyBuffer));
+                // Global game settings handle errors that must instead reject an invalid paste.
+                JsonSerializer.Create(VolumetricPlumeJson.SerializerSettings).Populate(reader, profile);
             }
             catch (Exception exception) when (exception is JsonException or ArgumentException)
             {
