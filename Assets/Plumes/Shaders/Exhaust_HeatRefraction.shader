@@ -57,6 +57,8 @@ Shader "Redux/VFX/Exhaust_HeatRefraction"
             LOD 100
             Tags { "LightMode" = "KSP2HeatRefraction" "QUEUE" = "Overlay" "RenderType" = "Transparent" }
             Cull Off
+            // Refracted background pixels retain their scene depth for temporal reconstruction.
+            ZWrite Off
 
             HLSLPROGRAM
 
