@@ -8,7 +8,7 @@ namespace Ksp2UnityTools.Editor.Validation
     /// </summary>
     /// <remarks>
     /// Implementations are auto-discovered by <see cref="ValidatorRegistry{T}" /> via
-    /// <see cref="Reflection.ReduxTypeCache" />. Concrete types must have a public parameterless
+    /// <see cref="UnityEditor.TypeCache" />. Concrete types must have a public parameterless
     /// constructor. Domain-specific sub-interfaces (e.g. IPlanetValidator, IPartValidator) extend
     /// this with their own filtering metadata.
     /// </remarks>

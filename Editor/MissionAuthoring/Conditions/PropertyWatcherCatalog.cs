@@ -7,6 +7,7 @@ using KSP.Messages;
 using KSP.Messages.PropertyWatchers;
 using Ksp2UnityTools.Editor.Reflection;
 using Redux.Missions;
+using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions
 {
@@ -103,7 +104,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Conditions
         private static IReadOnlyList<PropertyWatcherCatalogEntry> Build()
         {
             var entries = new List<PropertyWatcherCatalogEntry>();
-            foreach (var type in ReduxTypeCache.GetTypesDerivedFrom<PropertyWatcher>())
+            foreach (var type in TypeCache.GetTypesDerivedFrom<PropertyWatcher>())
             {
                 if (type.IsAbstract) continue;
                 if (type.GetCustomAttribute<DiscoverableProperty>() == null) continue;

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Ksp2UnityTools.Editor.Reflection;
+using UnityEditor;
 using VSwift.Modules.Transformers;
 
 namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
@@ -34,7 +34,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
     /// Builds the catalog of pickable <see cref="ITransformer" /> concrete types for the "Add Transformer" picker.
     /// </summary>
     /// <remarks>
-    /// Uses <see cref="ReduxTypeCache" /> for type discovery rather than Unity's <c>UnityEditor.TypeCache</c> because the SDK ships into ThunderKit-imported KSP2 contexts where the latter is unreliable. Mirrors the shape of <see cref="PartModuleCatalog" />.
+    /// Mirrors the shape of <see cref="PartModuleCatalog" />.
     /// </remarks>
     public static class TransformerCatalog
     {
@@ -66,7 +66,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Picker
 
         private static IReadOnlyList<TransformerCatalogEntry> Build()
         {
-            return ReduxTypeCache.GetTypesWithAttribute<Transformer>()
+            return TypeCache.GetTypesWithAttribute<Transformer>()
                 .Where(t => typeof(ITransformer).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
                 .Select(t => new TransformerCatalogEntry(
                     transformerType: t,

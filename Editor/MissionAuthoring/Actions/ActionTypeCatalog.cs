@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using KSP.Game.Missions;
-using Ksp2UnityTools.Editor.Reflection;
 using Redux.Missions;
+using UnityEditor;
 
 namespace Ksp2UnityTools.Editor.MissionAuthoring.Actions
 {
@@ -105,7 +105,7 @@ namespace Ksp2UnityTools.Editor.MissionAuthoring.Actions
         private static IReadOnlyList<ActionTypeCatalogEntry> Build()
         {
             var entries = new List<ActionTypeCatalogEntry>();
-            foreach (var type in ReduxTypeCache.GetTypesDerivedFrom<MissionActionBase>())
+            foreach (var type in TypeCache.GetTypesDerivedFrom<MissionActionBase>())
             {
                 if (type.IsAbstract) continue;
                 if (!typeof(IMissionAction).IsAssignableFrom(type)) continue;
