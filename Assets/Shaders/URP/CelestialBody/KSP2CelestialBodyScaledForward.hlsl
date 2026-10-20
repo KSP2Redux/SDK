@@ -3,15 +3,14 @@
 // ForwardLit pass of KSP2/Environment/CelestialBody/CelestialBody_Scaled. Material math from
 // ksp2-shaders/CelestialBody_Scaled/final. Stock cameras rendered deferred, so this does what the
 // stock Deferred pass and Unity's deferred lighting did together: the galaxy-cube IBL and emission
-// the G-buffer carried, plus the URP main light and Forward+ lights through the KSP2 Standard BRDF.
+// the G-buffer carried, plus the receiver's sun through the KSP2 Standard BRDF. Views without a simulation
+// receiver keep their URP main light and Forward+ lights.
 // Include after KSP2CelestialBodyScaledCommon.hlsl.
 
 #ifndef KSP2_CELESTIALBODY_SCALED_FORWARD_INCLUDED
 #define KSP2_CELESTIALBODY_SCALED_FORWARD_INCLUDED
 
-// Scaled-space positions are not in the local scene's space the terrain shadow cascades cover.
-#define KSP2_NO_TERRAIN_SHADOW
-#include "../Include/KSP2Lighting.hlsl"
+#include "KSP2CelestialBodyScaledLighting.hlsl"
 
 TEXTURE2D(_MainTex);            SAMPLER(sampler_MainTex);
 TEXTURE2D(_NormalMap);          SAMPLER(sampler_NormalMap);
@@ -110,46 +109,9 @@ float4 CelestialBodyScaled_ForwardFragment(CelestialBodyScaledVaryings input) : 
 
     KSP2Surface surface = KSP2_MakeMetallicSurface(albedo, metallic, smoothness, occlusion, saturate(emission), 1.0);
 
-    // Galaxy-cube IBL as the stock G-buffer emission held it: diffuse along the normal at
-    // _DiffuseCubemapMip, specular along the reflection at mip 8, both occluded.
-    float3 diffuseIBL = DecodeHDREnvironment(
-        SAMPLE_TEXTURECUBE_LOD(_GalaxyCubemapTexture, sampler_GalaxyCubemapTexture, normalWS, _DiffuseCubemapMip),
-        _GalaxyCubemapTexture_HDR) * occlusion;
-    float3 reflectDirWS = reflect(-viewDirWS, normalWS);
-    float3 specularIBL = DecodeHDREnvironment(
-        SAMPLE_TEXTURECUBE_LOD(_GalaxyCubemapTexture, sampler_GalaxyCubemapTexture, reflectDirWS, 8.0),
-        _GalaxyCubemapTexture_HDR) * _ReflectionIntensityMultiplier * occlusion;
-
-    // The split-sum environment BRDF (KSP2Lighting.hlsl) in place of stock's grazing fresnel, which made the
-    // planets look wet at low viewing angles.
-    float3 specular = KSP2_EnvironmentReflectionWeight(normalWS, viewDirWS, smoothness, 0.96 - metallic * 0.96, surface.F0, 1.0)
-        * specularIBL;
-
-    float3 color = surface.diffuseAlbedo * diffuseIBL + specular + surface.emission;
-
-    // What Unity's deferred light passes added: the sun and any other lights, shadowed. Inside the flight
-    // camera's scaled-space pass the scaled sun is the only light, shadowed by the eclipses of the body's
-    // neighbours (KSP2Eclipse.hlsl), which stock did not have in scaled space.
-    [branch] if (_KSP2ScaledViewActive > 0.5)
-    {
-        Light sun = (Light)0;
-        sun.direction = _KSP2ScaledSunDirection.xyz;
-        sun.color = _KSP2ScaledSunColor.rgb;
-        sun.distanceAttenuation = 1.0;
-        sun.shadowAttenuation = KSP2_EclipseVisibility(input.positionWS, _KSP2EclipseOccluderIndices0,
-            _KSP2EclipseOccluderIndices1);
-        color += KSP2_ShadeLight(sun, normalWS, viewDirWS, surface);
-    }
-    else
-    {
-        float2 normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
-        float3 direct = KSP2_DirectLighting(input.positionWS, input.positionCS, normalWS, viewDirWS, surface, normalizedScreenSpaceUV);
-        // The map's only light is the star's map light, so the map table's eclipse takes all of it. The flag is set
-        // for the map camera alone.
-        [branch] if (_KSP2EclipseMapActive > 0.5)
-            direct *= KSP2_EclipseVisibility(input.positionWS, _KSP2EclipseOccluderIndices0, _KSP2EclipseOccluderIndices1);
-        color += direct;
-    }
+    float3 color = KSP2_CelestialBodyGalaxyLighting(normalWS, viewDirWS, surface) + surface.emission;
+    color += KSP2_CelestialBodyDirectLighting(input.positionWS, input.positionCS, normalWS, viewDirWS, surface,
+        GetNormalizedScreenSpaceUV(input.positionCS));
     return float4(color, 1.0);
 }
 

@@ -1,12 +1,14 @@
 // KSP2CelestialBodyScaledSpace.hlsl
 //
-// Pass 0 of KSP2/Environment/CelestialBody/CelestialBody_Scaled: the stock scaled-space Lambert term
-// from the _ScaledSpaceLightPos / _ScaledSpaceLightColor globals. CubemapViewBase draws opaque scaled
+// Pass 0 of KSP2/Environment/CelestialBody/CelestialBody_Scaled: the scaled-space Lambert term using the
+// receiver's sun, with legacy globals for previews without a simulation receiver. CubemapViewBase draws opaque
 // bodies into the observer cubemap with DrawRenderer(..., pass 0). Include after
 // KSP2CelestialBodyScaledCommon.hlsl.
 
 #ifndef KSP2_CELESTIALBODY_SCALED_SPACE_INCLUDED
 #define KSP2_CELESTIALBODY_SCALED_SPACE_INCLUDED
+
+#include "KSP2CelestialBodyScaledLighting.hlsl"
 
 TEXTURE2D(_MainTex);    SAMPLER(sampler_MainTex);
 
@@ -33,7 +35,10 @@ CelestialBodyScaledSpaceVaryings CelestialBodyScaled_ScaledSpaceVertex(Celestial
     // Darkened where the body's neighbours hide the star (KSP2Eclipse.hlsl), per vertex like the Lambert term.
     float eclipse = KSP2_EclipseVisibility(TransformObjectToWorld(input.positionOS.xyz), _KSP2EclipseOccluderIndices0,
         _KSP2EclipseOccluderIndices1);
-    output.diffuse = max(dot(normalWS, _ScaledSpaceLightPos.xyz), 0.0) * _ScaledSpaceLightColor * eclipse;
+    bool hasReceiver = _KSP2BodySunDirection.w > 0.5;
+    float3 sunDirection = hasReceiver ? _KSP2BodySunDirection.xyz : _ScaledSpaceLightPos.xyz;
+    float4 sunColor = hasReceiver ? float4(_KSP2BodySunColor.rgb, 1.0) : _ScaledSpaceLightColor;
+    output.diffuse = max(dot(normalWS, sunDirection), 0.0) * sunColor * eclipse;
     return output;
 }
 
