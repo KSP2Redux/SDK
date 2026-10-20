@@ -331,7 +331,7 @@ float3 KSP2_ShadeSun(Light light, float3 N, float3 V, KSP2Surface s, float cloud
     return KSP2_ShadeLight(light, N, V, s, cloudShadow, 0.5 * KSP2_EclipseLocalStarAngularRadius());
 }
 
-// The local sun's own corrections at a pixel: the eclipse beyond the observer's, the terrain's shadow and the
+// The local sun's own corrections at a pixel: its eclipse (KSP2_EclipseLocalSunFactor), the terrain's shadow and the
 // atmosphere's colour (KSP2LocalSunTint.hlsl).
 void KSP2_ApplyLocalSun(inout Light mainLight, float3 positionWS, float3 N)
 {
@@ -368,8 +368,8 @@ float3 KSP2_DirectLighting(float3 positionWS, float4 positionCS, float3 N, float
 
     float3 color = 0;
     Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
-    // The local sun carries the eclipse and the atmosphere's colour at the observer. A pixel more eclipsed than that,
-    // past the terminator or in a moon's shadow, goes darker, and takes its own colour of the light.
+    // The local sun carries the night and the atmosphere's colour at the observer. A pixel past the terminator or in a
+    // moon's shadow goes darker, and takes its own colour of the light.
     KSP2_ApplyLocalSun(mainLight, positionWS, N);
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))

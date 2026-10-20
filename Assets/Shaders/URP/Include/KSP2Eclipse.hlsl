@@ -132,13 +132,13 @@ float KSP2_EclipseVisibility(float3 positionWS, float4 occluderIndices0, float4 
 }
 
 // The local scene (physics space, the URP world space of the flight camera): the star and the bodies around the
-// observer, the observer's own body included, set by EclipseOccluderTable.UploadLocal. The local sun already carries
-// the eclipse at the observer (CelestialBodyStarManager dims it), so a pixel only takes the part of its own eclipse
-// that goes beyond the observer's.
+// observer, the observer's own body first, set by EclipseOccluderTable.UploadLocal. The local sun carries the observer's
+// night on its own body (CelestialBodyStarManager dims it), and nothing of the other bodies' eclipses.
 #define KSP2_ECLIPSE_MAX_LOCAL_OCCLUDERS 8
 
 float4 _KSP2EclipseLocalStar;
-float4 _KSP2EclipseLocalObserver;   // xyz observer, w its visibility of the star
+float4 _KSP2EclipseLocalObserver;   // xyz observer, w its visibility of the star past its own body
+float _KSP2EclipseLocalOwnBodyFirst;   // 1 when the first local occluder is the observer's own body
 float4 _KSP2EclipseLocalOccluders[KSP2_ECLIPSE_MAX_LOCAL_OCCLUDERS];
 float _KSP2EclipseLocalCount;
 // The same count for the local camera whichever light is the main one. A total eclipse switches the sun off, and the
@@ -189,20 +189,40 @@ float KSP2_EclipseLocalVisibilityExcluding(float3 positionWS, float3 excludedCen
         _KSP2EclipseLocalRingNormal.xyz, _KSP2EclipseLocalRingRadii.xy);
 }
 
-// The factor for the local main light at a pixel: its eclipse relative to the observer's, never brighter. Terrain past
-// the terminator seen from altitude, a vessel across it, or the edge of a moon's shadow on the ground go dark, while
-// pixels less eclipsed than the observer keep the observer's light. 1 when there is no table.
+// The factor for the local main light at a pixel, never above 1, in two parts. The observer's own body: the light
+// carries the observer's night as stock does, and switches off in it, so a pixel takes the part of its night beyond the
+// observer's. Terrain past the terminator seen from altitude, or a vessel across it, goes dark. The other bodies: the
+// light carries none of their eclipses, so a pixel takes its own in full, the ground and the vessel inside a moon's
+// shadow dark and everything around it lit. Dimming the whole light by the observer's eclipse darkened all of Dres while
+// only the vessel was in Drast's shadow (#2149). 1 when there is no table.
 float KSP2_EclipseLocalSunFactor(float3 positionWS)
 {
-    // The observer's visibility is computed once on the CPU with the same formula
-    // (EclipseOccluderTable.SmoothLocalVisibility).
-    float observerVisibility = _KSP2EclipseLocalObserver.w;
     float factor = 1.0;
     [branch]
     if (_KSP2EclipseLocalCount >= 0.5 && _KSP2EclipseLocalStar.w > 0.0)
     {
-        if (observerVisibility > 1e-4)
-            factor = saturate(KSP2_EclipseLocalVisibility(positionWS) / observerVisibility);
+        float3 toStar = _KSP2EclipseLocalStar.xyz - positionWS;
+        float starDistance = length(toStar);
+        float starAngularRadius = KSP2_EclipseAngularRadius(_KSP2EclipseLocalStar.w, starDistance);
+        float ownBody = 1.0;
+        float otherBodies = 1.0;
+        int count = (int)_KSP2EclipseLocalCount;
+        [loop]
+        for (int i = 0; i < count; i++)
+        {
+            float visible = 1.0 - KSP2_EclipseOccluderFraction(positionWS, toStar, starDistance, starAngularRadius,
+                _KSP2EclipseLocalOccluders[i]);
+            if (i == 0 && _KSP2EclipseLocalOwnBodyFirst > 0.5)
+                ownBody = visible;
+            else
+                otherBodies *= visible;
+        }
+
+        // The observer's own visibility is computed once on the CPU with the same formula
+        // (EclipseOccluderTable.SmoothLocalVisibility).
+        if (_KSP2EclipseLocalObserver.w > 1e-4)
+            factor = min(ownBody / _KSP2EclipseLocalObserver.w, 1.0);
+        factor *= otherBodies;
         // Stock's sun at the observer knows nothing of rings, so the ring's shadow applies as it is.
         factor *= KSP2_EclipseRingTransmittance(positionWS, normalize(_KSP2EclipseLocalStar.xyz - positionWS),
             _KSP2EclipseLocalRingCenter, _KSP2EclipseLocalRingNormal.xyz, _KSP2EclipseLocalRingRadii.xy);
