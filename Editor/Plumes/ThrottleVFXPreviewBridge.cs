@@ -14,8 +14,11 @@ using Object = UnityEngine.Object;
 
 namespace KSP.Editor
 {
+    /// <summary>
+    /// Shared editor controls and lifecycle for engine effect previews.
+    /// </summary>
     [InitializeOnLoad]
-    internal static class ThrottleVFXPreviewBridge
+    public static class ThrottleVFXPreviewBridge
     {
         private const BindingFlags INSTANCE = BindingFlags.Instance | BindingFlags.NonPublic;
         private static readonly List<string> QUALITY_NAMES = new() { "Low - Mesh", "Medium - Volumetric", "High - Volumetric" };
@@ -32,18 +35,27 @@ namespace KSP.Editor
         private static int _previewQuality = Mathf.Clamp(SessionState.GetInt("Redux.PlumePreview.Quality", 2), 0, 2);
         private static ThrottleVFXManager.FXmodeEvent _previewModeEvent = ThrottleVFXManager.FXmodeEvent.FXModeRunning;
         private static ThrottleVFXManager _activePreviewManager;
+        private static bool _stopOnSelectionChange = true;
         private static PersistentSettings _previousSettings;
         private static int _previousQuality;
         private static bool _previousVolumetricsEnabled;
         private static double _lastParticleUpdateTime;
         private static ThrottleVFXManager _resumeAfterSave;
+        /// <summary>
+        /// Gets whether an engine effect preview is active.
+        /// </summary>
         public static bool IsPreviewActive => _activePreviewManager != null;
         internal static int PreviewQuality => _previewQuality;
         internal static int PreviewEngineMode => _previewEngineMode;
         internal static bool ComparingPreset => _comparePreset;
         internal static ThrottleVFXManager ActiveManager => _activePreviewManager;
 
-        internal static bool IsPreviewing(ThrottleVFXManager manager) =>
+        /// <summary>
+        /// Check whether the supplied engine owns the active preview.
+        /// </summary>
+        /// <param name="manager">The engine effect manager.</param>
+        /// <returns>True if the engine owns the active preview, false otherwise.</returns>
+        public static bool IsPreviewing(ThrottleVFXManager manager) =>
             manager != null && _activePreviewManager == manager;
 
         static ThrottleVFXPreviewBridge()
@@ -74,6 +86,8 @@ namespace KSP.Editor
             };
             Selection.selectionChanged += () =>
             {
+                if (!_stopOnSelectionChange)
+                    return;
                 ThrottleVFXManager manager = _activePreviewManager != null ? _activePreviewManager : _resumeAfterSave;
                 if (manager == null)
                     return;
@@ -85,7 +99,15 @@ namespace KSP.Editor
             };
         }
 
-        internal static VisualElement CreatePreviewControls(ThrottleVFXManager manager, bool showWindowButton = true)
+        /// <summary>
+        /// Create controls using the shared engine authoring preview.
+        /// </summary>
+        /// <param name="manager">The scene or prefab-stage engine to preview.</param>
+        /// <param name="showWindowButton">Whether to offer the standalone preview window.</param>
+        /// <param name="stopOnSelectionChange">Whether sessions started here follow editor selection.</param>
+        /// <returns>The preview controls.</returns>
+        public static VisualElement CreatePreviewControls(ThrottleVFXManager manager, bool showWindowButton = true,
+            bool stopOnSelectionChange = true)
         {
             var root = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 SDKConfiguration.BasePath + "/Assets/Windows/Plumes/PlumePreview.uxml").CloneTree();
@@ -151,14 +173,14 @@ namespace KSP.Editor
             void Refresh()
             {
                 if (IsPreviewing(manager))
-                    ActivateAndRefresh(manager);
+                    ActivateAndRefresh(manager, stopOnSelectionChange);
                 RefreshControls();
             }
 
             enabled.RegisterValueChangedCallback(change =>
             {
                 if (change.newValue)
-                    ActivateAndRefresh(manager);
+                    ActivateAndRefresh(manager, stopOnSelectionChange);
                 else
                     StopPreview();
                 RefreshControls();
@@ -230,11 +252,18 @@ namespace KSP.Editor
                 UpdatePreview();
         }
 
-        public static void ActivateAndRefresh(ThrottleVFXManager manager)
+        /// <summary>
+        /// Start or refresh the temporary preview for an engine.
+        /// </summary>
+        /// <param name="manager">The scene or prefab-stage engine to preview.</param>
+        /// <param name="stopOnSelectionChange">Whether a new session ends when selection leaves its engine. Existing sessions retain their policy.</param>
+        public static void ActivateAndRefresh(ThrottleVFXManager manager, bool stopOnSelectionChange = true)
         {
             if (manager == null || EditorUtility.IsPersistent(manager) || EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
 
+            // Rebind after script reloads or renderer resets before replacing the engine's meshes.
+            VolumetricPlumeEditorAssets.Load();
             if (_activePreviewManager != manager)
             {
                 StopPreview();
@@ -259,6 +288,7 @@ namespace KSP.Editor
                 _previousQuality = _previousSettings.PlumeQuality;
                 _previousVolumetricsEnabled = _previousSettings.VolumetricPlumesEnabled;
                 _activePreviewManager = manager;
+                _stopOnSelectionChange = stopOnSelectionChange;
                 EditorApplication.update += OnEditorPreviewUpdate;
                 if (_neutralView)
                     ApplyNeutralView();
@@ -396,12 +426,16 @@ namespace KSP.Editor
             SceneView.RepaintAll();
         }
 
-        internal static void StopPreview()
+        /// <summary>
+        /// End the active preview and restore its temporary settings and outputs.
+        /// </summary>
+        public static void StopPreview()
         {
             EditorApplication.delayCall -= ResumeAfterSave;
             _resumeAfterSave = null;
             ThrottleVFXManager manager = _activePreviewManager;
             _activePreviewManager = null;
+            _stopOnSelectionChange = true;
             EditorApplication.update -= OnEditorPreviewUpdate;
             PreviewParticles.Clear();
 
@@ -463,8 +497,10 @@ namespace KSP.Editor
             if (!IsPreviewActive)
                 return;
             ThrottleVFXManager manager = _activePreviewManager;
+            bool stopOnSelectionChange = _stopOnSelectionChange;
             StopPreview();
             _resumeAfterSave = manager;
+            _stopOnSelectionChange = stopOnSelectionChange;
             EditorApplication.delayCall += ResumeAfterSave;
         }
 
@@ -472,7 +508,7 @@ namespace KSP.Editor
         {
             ThrottleVFXManager manager = _resumeAfterSave;
             _resumeAfterSave = null;
-            ActivateAndRefresh(manager);
+            ActivateAndRefresh(manager, _stopOnSelectionChange);
         }
 
         private static List<SerializedObject> CapturePreviewProperties(ThrottleVFXManager manager)
