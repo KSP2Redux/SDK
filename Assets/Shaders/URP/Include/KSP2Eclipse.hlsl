@@ -68,28 +68,30 @@ float4 _KSP2EclipseLocalRingRadii;
 TEXTURE2D(_KSP2EclipseRingTexture);
 
 // What a ring lets through toward the star: 1 minus its opacity where the ray from the point toward the star crosses
-// the ring plane, 1 when it misses the ring or there is none. A point on the ring itself is not shadowed by it.
+// the ring plane, 1 when it misses the ring or there is none. A point in the ring plane, the ring's own surface above
+// all, is not shadowed by it. That is decided by its height above the plane, which is float noise there. The distance
+// to the crossing is that height over the sine of the star's elevation, so with the star near the plane a test on the
+// distance let the ring shadow itself in random patches that changed with every jitter and frame (#2150).
 float KSP2_EclipseRingTransmittance(float3 positionWS, float3 toStarDirection, float4 center, float3 normal, float2 radii)
 {
     float transmittance = 1.0;
     float facing = dot(toStarDirection, normal);
-    [branch] if (center.w > 0.0 && abs(facing) > 1e-5)
+    float width = max(radii.y - radii.x, 1e-6);
+    float height = dot(positionWS - center.xyz, normal);
+    [branch] if (center.w > 0.0 && abs(facing) > 1e-5 && abs(height) > width * 1e-3)
     {
-        float t = dot(center.xyz - positionWS, normal) / facing;
+        float t = -height / facing;
         float radius = length(positionWS + toStarDirection * t - center.xyz);
-        float width = max(radii.y - radii.x, 1e-6);
         float u = (radius - radii.x) / width;
-        // The plane must lie ahead by more than float noise, so the ring does not shadow its own surface.
-        if (t > width * 1e-3 && u > 0.0 && u < 1.0)
+        if (t > 0.0 && u > 0.0 && u < 1.0)
             transmittance = 1.0 - SAMPLE_TEXTURE2D_LOD(_KSP2EclipseRingTexture, sampler_LinearClamp, float2(u, 0.5), 0).a;
     }
 
     return transmittance;
 }
 
-// The visible fraction of the star from a point: the product of what each listed occluder leaves, and what the ring
-// lets through.
-float KSP2_EclipseVisibility(float3 positionWS, float4 occluderIndices0, float4 occluderIndices1)
+// The visible fraction of the star from a point past the listed bodies alone: the product of what each one leaves.
+float KSP2_EclipseBodyVisibility(float3 positionWS, float4 occluderIndices0, float4 occluderIndices1)
 {
     float3 toStar = _KSP2EclipseStar.xyz - positionWS;
     float starDistance = length(toStar);
@@ -113,8 +115,20 @@ float KSP2_EclipseVisibility(float3 positionWS, float4 occluderIndices0, float4 
         }
     }
 
-    return visibility * KSP2_EclipseRingTransmittance(positionWS, toStar / starDistance, _KSP2EclipseRingCenter,
-        _KSP2EclipseRingNormal.xyz, _KSP2EclipseRingRadii.xy);
+    return visibility;
+}
+
+// The visible fraction of the star from a point: what the listed bodies leave, and what the ring lets through.
+float KSP2_EclipseVisibility(float3 positionWS, float4 occluderIndices0, float4 occluderIndices1)
+{
+    float3 toStar = _KSP2EclipseStar.xyz - positionWS;
+    float starDistance = length(toStar);
+    if (_KSP2EclipseStar.w <= 0.0 || starDistance <= _KSP2EclipseStar.w)
+        return 1.0;
+
+    return KSP2_EclipseBodyVisibility(positionWS, occluderIndices0, occluderIndices1) *
+        KSP2_EclipseRingTransmittance(positionWS, toStar / starDistance, _KSP2EclipseRingCenter,
+            _KSP2EclipseRingNormal.xyz, _KSP2EclipseRingRadii.xy);
 }
 
 // The local scene (physics space, the URP world space of the flight camera): the star and the bodies around the
