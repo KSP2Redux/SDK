@@ -72,7 +72,7 @@ namespace KSP.Editor
                     return;
                 }
 
-                int mode = ThrottleVFXPreviewBridge.PreviewEngineMode;
+                int mode = ThrottleVFXPreviewBridge.GetPreviewEngineMode(manager);
                 bool comparing = ThrottleVFXPreviewBridge.ComparingPreset;
                 string basis = $"{source.EngineType} preset";
                 if (source.UseAuthoredProfile && !comparing)
