@@ -53,21 +53,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Ocean
         /// <inheritdoc />
         public string Status { get; private set; } = "not attached";
 
-        /// <summary>
-        /// Gets the water depth the active preview's ocean renders, which the atmosphere and clouds read to sit behind the
-        /// water rather than over it, or null when no ocean is drawing.
-        /// </summary>
-        public static RenderTexture ActiveWaterDepth
-        {
-            get
-            {
-                OceanPreviewDriver driver = PlanetAuthoringSession.Active?.OceanDriver;
-                WaterManager manager = WaterManager.Instance();
-                return driver is { Booted: true, Enabled: true } && manager is { IsEditorHosted: true }
-                    ? manager.WaterDepthTexture
-                    : null;
-            }
-        }
+
 
         /// <inheritdoc />
         public bool Attach()
