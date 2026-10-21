@@ -2,15 +2,17 @@ using KSP.VFX;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
+using KSP.Modules;
+using Redux.VFX.Plume.Volumetric;
 
 namespace KSP.Editor
 {
     [CustomEditor(typeof(ThrottleVFXManager))]
     public class ThrottleVFXManagerEditor : UnityEditor.Editor
     {
-        private ThrottleVFXManager _target;
-
         private readonly struct EffectAssignment
         {
             public readonly int EngineModeIndex;
@@ -23,32 +25,110 @@ namespace KSP.Editor
             }
         }
 
-        private void OnEnable()
+        /// <inheritdoc />
+        public override VisualElement CreateInspectorGUI()
         {
-            _target = (ThrottleVFXManager)target;
-        }
+            var manager = (ThrottleVFXManager)target;
+            var root = new VisualElement();
+            root.Add(ThrottleVFXPreviewBridge.CreatePreviewControls(manager));
+            root.Add(CreateMeshControls(manager));
+            root.Add(CreateVolumeControls(manager));
 
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
-            EditorGUILayout.Space();
-            DrawGatherEffectsTools();
-            EditorGUILayout.Space();
-            ThrottleVFXPreviewBridge.DrawPreviewControls(_target, showHeader: true);
-        }
-
-        private void DrawGatherEffectsTools()
-        {
-            EditorGUILayout.LabelField("Setup", EditorStyles.boldLabel);
-            if (GUILayout.Button("Gather Effects From Children"))
+            var bindings = new Foldout { text = "Engine events and effect bindings", value = false };
+            InspectorElement.FillDefaultInspector(bindings, serializedObject, this);
+            bindings.RegisterCallback<SerializedPropertyChangeEvent>(_ => ThrottleVFXPreviewBridge.RefreshIfActive(manager));
+            bindings.Add(new Button(() =>
             {
-                int gatheredCount = GatherEffectsFromChildren(_target);
-                ThrottleVFXPreviewBridge.ActivateAndRefresh(_target);
-                Debug.Log($"Gathered {gatheredCount} engine VFX effect references for {_target.name}.", _target);
-            }
+                GatherEffectsFromChildren(manager);
+                ThrottleVFXPreviewBridge.RefreshIfActive(manager);
+            }) { text = "Gather effects from children" });
+            root.Add(bindings);
+            return root;
         }
 
-        private static int GatherEffectsFromChildren(ThrottleVFXManager manager)
+        private static VisualElement CreateMeshControls(ThrottleVFXManager manager)
+        {
+            var low = new Foldout { text = "Low - Mesh and particle effects", value = false };
+            low.Add(new HelpBox("These are this engine's existing effects. Bell glow, heat distortion and unreplaced effects can also remain active at higher quality.", HelpBoxMessageType.Info));
+            foreach (MonoBehaviour effect in manager.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (effect is not IEngineFXData || effect is VolumetricPlumeSource)
+                    continue;
+
+                string path = AnimationUtility.CalculateTransformPath(effect.transform, manager.transform);
+                var layer = new Foldout
+                {
+                    text = $"{(path.Length > 0 ? path : manager.name)} ({effect.GetType().Name})",
+                    value = false
+                };
+                layer.Add(new Button(() => Selection.activeObject = effect) { text = "Edit curves, gradients and presets" });
+                low.Add(layer);
+                if (effect is not ThrottleBlendshapeData)
+                    continue;
+
+                var settings = new SerializedObject(effect);
+                layer.Add(new PropertyField(settings.FindProperty("UseAmbientPressure")));
+                layer.Add(new PropertyField(settings.FindProperty("UseEngineThrottle"), "Use engine thrust"));
+                layer.Add(new PropertyField(settings.FindProperty("OverexpandedBlendshapeIndex"), "Overexpansion shape"));
+                layer.Add(new PropertyField(settings.FindProperty("FullOverexpansionPressure"), "Full compression (atm)"));
+                layer.RegisterCallback<SerializedPropertyChangeEvent>(_ => ThrottleVFXPreviewBridge.RefreshIfActive(effect));
+                // Rebind after the enclosing inspector binds its manager object.
+                layer.RegisterCallback<AttachToPanelEvent>(_ => layer.Bind(settings));
+            }
+            return low;
+        }
+
+        private static VisualElement CreateVolumeControls(ThrottleVFXManager manager)
+        {
+            var volume = new Foldout { text = "Medium and High - Volumetric appearance", value = true };
+            void PopulateVolumes()
+            {
+                volume.Clear();
+                if (manager == null)
+                    return;
+
+                VolumetricPlumeSource[] sources = manager.GetComponentsInChildren<VolumetricPlumeSource>(true);
+                foreach (VolumetricPlumeSource source in sources)
+                {
+                    VisualElement controls = VolumetricPlumeSourceEditor.CreateProfileControls(new SerializedObject(source));
+                    if (sources.Length == 1)
+                    {
+                        volume.Add(controls);
+                        continue;
+                    }
+
+                    string path = AnimationUtility.CalculateTransformPath(source.transform, manager.transform);
+                    var group = new Foldout { text = path.Length > 0 ? path : manager.name };
+                    group.Add(controls);
+                    volume.Add(group);
+                }
+                if (sources.Length > 0)
+                    return;
+
+                volume.Add(new HelpBox("This engine currently uses its mesh effects at every quality. Add a source to author its volumetric appearance.", HelpBoxMessageType.Info));
+                volume.Add(new Button(() =>
+                {
+                    var source = Undo.AddComponent<VolumetricPlumeSource>(manager.gameObject);
+                    var module = manager.GetComponentInParent<Module_Engine>(true);
+                    Data_Engine.EngineMode mode = module != null ? module.DataEngine?.currentEngineModeData : null;
+                    if (mode != null)
+                    {
+                        using var settings = new SerializedObject(source);
+                        settings.FindProperty("_previewEngineType").intValue = (int)mode.engineType;
+                        settings.FindProperty("_previewMaximumThrust").floatValue = mode.maxThrust;
+                        settings.ApplyModifiedProperties();
+                    }
+                    PopulateVolumes();
+                    ThrottleVFXPreviewBridge.RefreshIfActive(manager);
+                }) { text = "Add volumetric source" });
+            }
+            PopulateVolumes();
+            volume.RegisterCallback<AttachToPanelEvent>(_ => Undo.undoRedoPerformed += PopulateVolumes);
+            volume.RegisterCallback<DetachFromPanelEvent>(_ => Undo.undoRedoPerformed -= PopulateVolumes);
+            return volume;
+        }
+
+        private static void GatherEffectsFromChildren(ThrottleVFXManager manager)
         {
             Undo.RecordObject(manager, "Gather Throttle VFX Effects");
 
@@ -110,7 +190,6 @@ namespace KSP.Editor
 
             EditorUtility.SetDirty(manager);
             PrefabUtility.RecordPrefabInstancePropertyModifications(manager);
-            return manager.FXModeActionEvents.Sum(modeEvent => modeEvent.ActionEvents.Sum(actionEvent => actionEvent.EngineEffects.Length));
         }
 
         private static List<EffectAssignment> GetAssignments(

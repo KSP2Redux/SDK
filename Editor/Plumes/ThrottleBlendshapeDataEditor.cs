@@ -67,6 +67,11 @@ namespace KSP.Editor
         [Serializable]
         private class BlendshapeSnapshot
         {
+            public bool HasPressureSettings;
+            public bool UseAmbientPressure;
+            public bool UseEngineThrottle;
+            public int OverexpandedBlendshapeIndex;
+            public float FullOverexpansionPressure;
             public float UpperAtmoNormalizedPressureThreshold;
             public int ZeroThrottleBlendshapeIndex;
             public int UpperAtmosphereBlendshapeIndex;
@@ -199,7 +204,8 @@ namespace KSP.Editor
             DrawPresetToolsSection();
             EditorGUILayout.Space();
             DrawValidationSection();
-            serializedObject.ApplyModifiedProperties();
+            if (serializedObject.ApplyModifiedProperties())
+                ThrottleVFXPreviewBridge.RefreshIfActive((ThrottleBlendshapeData)target);
         }
 
         private void DrawModeToolbar()
@@ -251,11 +257,11 @@ namespace KSP.Editor
                     if (GUILayout.Button("Focus Preview on Manager"))
                     {
                         ThrottleVFXPreviewBridge.ActivateAndRefresh(manager);
+                        Selection.activeObject = manager;
                         _previewStatus = "Updated parent manager preview.";
                     }
 
                     EditorGUILayout.EndHorizontal();
-                    ThrottleVFXPreviewBridge.DrawPreviewControls(manager, showHeader: false);
                 }
 
                 if (!string.IsNullOrEmpty(_previewStatus))
@@ -1223,6 +1229,11 @@ namespace KSP.Editor
         {
             return new BlendshapeSnapshot
             {
+                HasPressureSettings = true,
+                UseAmbientPressure = data.UseAmbientPressure,
+                UseEngineThrottle = data.UseEngineThrottle,
+                OverexpandedBlendshapeIndex = data.OverexpandedBlendshapeIndex,
+                FullOverexpansionPressure = data.FullOverexpansionPressure,
                 UpperAtmoNormalizedPressureThreshold = data.UpperAtmoNormalizedPressureThreshold,
                 ZeroThrottleBlendshapeIndex = data.ZeroThrottleBlendshapeIndex,
                 UpperAtmosphereBlendshapeIndex = data.UpperAtmosphereBlendshapeIndex,
@@ -1246,10 +1257,20 @@ namespace KSP.Editor
             ApplySnapshot(data, snapshot);
             RestoreLockedParams(data, locked);
             EditorUtility.SetDirty(data);
+            PrefabUtility.RecordPrefabInstancePropertyModifications(data);
+            ThrottleVFXPreviewBridge.RefreshIfActive(data);
         }
 
         private static void ApplySnapshot(ThrottleBlendshapeData data, BlendshapeSnapshot snapshot)
         {
+            // Older presets leave the layer's pressure and thrust behavior intact.
+            if (snapshot.HasPressureSettings)
+            {
+                data.UseAmbientPressure = snapshot.UseAmbientPressure;
+                data.UseEngineThrottle = snapshot.UseEngineThrottle;
+                data.OverexpandedBlendshapeIndex = snapshot.OverexpandedBlendshapeIndex;
+                data.FullOverexpansionPressure = snapshot.FullOverexpansionPressure;
+            }
             data.UpperAtmoNormalizedPressureThreshold = snapshot.UpperAtmoNormalizedPressureThreshold;
             data.ZeroThrottleBlendshapeIndex = snapshot.ZeroThrottleBlendshapeIndex;
             data.UpperAtmosphereBlendshapeIndex = snapshot.UpperAtmosphereBlendshapeIndex;

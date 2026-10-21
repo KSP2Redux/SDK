@@ -20,7 +20,7 @@ namespace KSP.Editor
 
         static VolumetricPlumeEditorAssets() => EditorApplication.delayCall += Load;
 
-        private static void Load()
+        internal static void Load()
         {
             VolumetricPlumeRenderer.SetEditorAssets(LoadShader(SHADER_PATH, SHADER_NAME),
                 LoadAsset<Texture2D>(NOISE_PATH, "EngineFlowNoise"),

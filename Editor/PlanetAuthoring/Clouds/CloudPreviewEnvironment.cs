@@ -49,8 +49,6 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         /// <inheritdoc />
         public bool CanCastShadows => true;
 
-        /// <inheritdoc />
-        public RenderTexture OceanDepthTexture => Ocean.OceanPreviewDriver.ActiveWaterDepth;
 
         /// <inheritdoc />
         public Light GetLocalLight() => SunCoupling.CurrentSun;
@@ -76,8 +74,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 material,
                 model,
                 _pqs.transform.position * AtmosphereConstants.LENGTH_UNIT_IN_KILOMETERS,
-                sun != null ? -sun.transform.forward : Vector3.up,
-                null
+                sun != null ? -sun.transform.forward : Vector3.up
             );
         }
 

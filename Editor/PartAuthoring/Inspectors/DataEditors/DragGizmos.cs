@@ -25,10 +25,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
                 return;
             }
 
-            var renderRoot = GetDragCubeRenderRoot(moduleDrag.gameObject);
-            var mat = renderRoot == null
-                ? moduleDrag.gameObject.transform.localToWorldMatrix
-                : renderRoot.transform.localToWorldMatrix;
+            // Cubes are in the part's frame, which is the frame the game evaluates them in
+            var mat = moduleDrag.gameObject.transform.localToWorldMatrix;
             var dataDrag = GetDragData(moduleDrag);
             if (dataDrag == null)
             {
@@ -116,33 +114,6 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
         {
             drag = Mathf.Clamp01(drag);
             return Color.Lerp(new Color(0.1f, 0.75f, 1f), new Color(1f, 0.35f, 0.1f), drag);
-        }
-
-        private static GameObject GetDragCubeRenderRoot(GameObject partObject)
-        {
-            if (partObject == null)
-            {
-                return null;
-            }
-            var modelTransform = FindChildRecursive(partObject.transform, "model");
-            return modelTransform == null ? partObject : modelTransform.gameObject;
-        }
-
-        private static Transform FindChildRecursive(Transform parentTransform, string childName)
-        {
-            if (parentTransform.name == childName)
-            {
-                return parentTransform;
-            }
-            foreach (Transform child in parentTransform)
-            {
-                var match = FindChildRecursive(child, childName);
-                if (match != null)
-                {
-                    return match;
-                }
-            }
-            return null;
         }
 
         private static Data_Drag GetDragData(Module_Drag moduleDrag)
