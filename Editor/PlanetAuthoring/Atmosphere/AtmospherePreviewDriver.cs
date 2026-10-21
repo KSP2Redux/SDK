@@ -159,8 +159,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                     _pqs.transform.position * AtmosphereConstants.LENGTH_UNIT_IN_KILOMETERS,
                     sunDirection,
                     0f,
-                    _pqs.data.heightMapInfo.DitheringScale,
-                    Ocean.OceanPreviewDriver.ActiveWaterDepth
+                    _pqs.data.heightMapInfo.DitheringScale
                 );
                 _hook.Material = _material;
                 _hook.Technique = _model.Technique;
