@@ -712,7 +712,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
                 var sampleRoot = GetDeployableAnimationRoot(partObject);
                 foreach (var capture in captures)
                 {
-                    var cube = CaptureDeployableDragCube(sampleRoot, renderRoot, clip, capture.name, capture.time, capture.weight);
+                    var cube = CaptureDeployableDragCube(sampleRoot, partObject, renderRoot, clip, capture.name, capture.time, capture.weight);
                     if (cube == null)
                     {
                         SetStatus($"Capture for {capture.name} produced no rendered area.", HelpBoxMessageType.Warning);
@@ -901,7 +901,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             return animator == null ? partObject : animator.gameObject;
         }
 
-        private static DragCube CaptureDeployableDragCube(GameObject sampleRoot, GameObject renderRoot, AnimationClip clip, string name, float normalizedTime, float weight)
+        private static DragCube CaptureDeployableDragCube(GameObject sampleRoot, GameObject partObject, GameObject renderRoot, AnimationClip clip, string name, float normalizedTime, float weight)
         {
             var startedAnimationMode = !AnimationMode.InAnimationMode();
             if (startedAnimationMode)
@@ -920,7 +920,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
                 };
                 var dragRenderer = new DragRenderer();
                 var context = new DragRenderContext();
-                var enumerator = dragRenderer.RenderPartDragCubes(renderRoot, dragCubes, context, false, true);
+                var enumerator = dragRenderer.RenderPartDragCubes(renderRoot, dragCubes, context, false, true, partObject.transform);
                 while (enumerator.MoveNext())
                 {
                 }
