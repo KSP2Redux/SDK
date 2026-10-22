@@ -40,7 +40,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Validation.Validators.Scatter
                 yield break;
 
             foreach (VegetationSystemPro system in UnityEngine.Object.FindObjectsByType<VegetationSystemPro>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                         FindObjectsInactive.Include))
             {
                 if (system == null || system.gameObject.scene != pqs.gameObject.scene)
                     continue;
