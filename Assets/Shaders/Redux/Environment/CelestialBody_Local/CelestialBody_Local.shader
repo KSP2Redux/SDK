@@ -7,7 +7,7 @@
 // The game's shader ships in Redux's replacement shader bundle, so a surface
 // material saved in the SDK or a mod project cannot reference it. Surface
 // materials are authored on this shader instead, and PQSRenderer moves them
-// onto the game's shader when the body loads (ShaderRefactorProfile). The
+// onto the game's shader when the body loads. The
 // properties are documented here for authoring. The passes are the URP
 // port's own (Ksp2Redux Assets/ReduxAssets/Shaders/URP/CelestialBody), with
 // the same pass order, included rather than copied, so the terrain looks the
@@ -575,7 +575,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		[ToggleOff(LOW_QUALITY)] _HighQualityEnabled ("High Quality", Float) = 1
 	}
 
-	// Pass order (C# pass offset 0, see ShaderRefactorProfile):
+	// Pass order (see PQSRenderer):
 	//   0 ForwardLit, 1 ShadowCaster, 2 DepthOnly, 3 DepthNormals,
 	//   4 CustomDepthPass, 5-7 Local Space Prepass NoDecals / 4Decals / InfDecals,
 	//   8 Local Space Deferred Decal Mask Pass.
@@ -747,7 +747,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			ENDHLSL
 		}
 
-		// 9: Deferred+ G-buffer. Last, because PQSRenderer draws passes 4 to 8 by index (ShaderRefactorProfile).
+		// 9: Deferred+ G-buffer. Last, because PQSRenderer draws passes 4 to 8 by index.
 		Pass
 		{
 			Name "GBuffer"
