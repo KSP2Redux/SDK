@@ -737,7 +737,7 @@ public static class PrefabVariantPatchCompiler
             }
 
             var ordinalKey =
-                target.CanonicalKey + ":" + component.GetType().AssemblyQualifiedName;
+                target.CanonicalKey + ":" + StableTypeName(component.GetType());
             ordinals.TryGetValue(ordinalKey, out var ordinal);
             ordinals[ordinalKey] = ordinal + 1;
             var fragment = CompileComponent(
@@ -747,7 +747,7 @@ public static class PrefabVariantPatchCompiler
                         .OfString(
                             target.CanonicalKey
                                 + ":"
-                                + component.GetType().AssemblyQualifiedName
+                                + StableTypeName(component.GetType())
                                 + ":"
                                 + ordinal
                         )
@@ -870,9 +870,7 @@ public static class PrefabVariantPatchCompiler
         {
             ObjectId = objectId,
             Name = gameObject.name,
-            TransformType = gameObject.transform
-                .GetType()
-                .AssemblyQualifiedName,
+            TransformType = StableTypeName(gameObject.transform.GetType()),
             Active = gameObject.activeSelf,
             Layer = gameObject.layer,
             Tag = gameObject.tag,
@@ -969,7 +967,7 @@ public static class PrefabVariantPatchCompiler
         var fragment = new PrefabPatchComponentFragment
         {
             ComponentId = componentId,
-            ComponentType = componentType.AssemblyQualifiedName
+            ComponentType = StableTypeName(componentType)
         };
         try
         {
@@ -1109,10 +1107,9 @@ public static class PrefabVariantPatchCompiler
                 value = new PrefabPatchValue
                 {
                     Kind = PrefabPatchValueKind.ManagedReference,
-                    SerializedType =
-                        property.managedReferenceValue
-                            .GetType()
-                            .AssemblyQualifiedName
+                    SerializedType = StableTypeName(
+                        property.managedReferenceValue.GetType()
+                    )
                 };
                 return true;
             case SerializedPropertyType.Boolean:
@@ -1229,11 +1226,27 @@ public static class PrefabVariantPatchCompiler
         }
     }
 
+    // Assembly-qualified type names without the assembly's version, culture and key. The game assembly's version is
+    // generated on every build, and keeping it changed every patch, and every ID hashed from a type name, on each
+    // compile. The runtime resolves the shortened names the same way.
+    private static readonly System.Text.RegularExpressions.Regex AssemblyDetails = new(
+        @", Version=[^,\]]*, Culture=[^,\]]*, PublicKeyToken=[^,\]]*",
+        System.Text.RegularExpressions.RegexOptions.CultureInvariant
+    );
+
+    private static string StableTypeName(Type type) =>
+        StripAssemblyDetails(type.AssemblyQualifiedName);
+
+    private static string StripAssemblyDetails(string typeName) =>
+        string.IsNullOrEmpty(typeName)
+            ? typeName
+            : AssemblyDetails.Replace(typeName, string.Empty);
+
     private static PrefabPatchValue JsonValue(object value, Type type) =>
         new()
         {
             Kind = PrefabPatchValueKind.Json,
-            SerializedType = type.AssemblyQualifiedName,
+            SerializedType = StableTypeName(type),
             String = JsonConvert.SerializeObject(
                 value,
                 PrefabPatchJson.Settings
@@ -1344,7 +1357,7 @@ public static class PrefabVariantPatchCompiler
             reference = new PrefabPatchObjectReference
             {
                 Address = identity.Address,
-                ExpectedType = identity.SourceType
+                ExpectedType = StripAssemblyDetails(identity.SourceType)
             };
             return true;
         }
@@ -1370,7 +1383,7 @@ public static class PrefabVariantPatchCompiler
             Address = AssetDatabase.IsSubAsset(value)
                 ? $"{entry.address}[{value.name}]"
                 : entry.address,
-            ExpectedType = value.GetType().AssemblyQualifiedName
+            ExpectedType = StableTypeName(value.GetType())
         };
         return true;
     }
@@ -1439,8 +1452,7 @@ public static class PrefabVariantPatchCompiler
                         OwnerPatchId = patchId,
                         ComponentId =
                             $"{objectId}:component-{ordinal}",
-                        ObjectType =
-                            component.GetType().AssemblyQualifiedName
+                        ObjectType = StableTypeName(component.GetType())
                     };
                 }
                 else
@@ -1450,7 +1462,7 @@ public static class PrefabVariantPatchCompiler
                         Kind = PrefabPatchTargetKind.PatchOwned,
                         OwnerPatchId = patchId,
                         ObjectId = objectId,
-                        ObjectType = value.GetType().AssemblyQualifiedName,
+                        ObjectType = StableTypeName(value.GetType()),
                         RuntimeLocator =
                             value is Transform transform
                                 ? new PrefabPatchRuntimeLocator
@@ -1458,9 +1470,7 @@ public static class PrefabVariantPatchCompiler
                                     TargetKind =
                                         PrefabPatchRuntimeTargetKind.Component,
                                     ComponentType =
-                                        transform
-                                            .GetType()
-                                            .AssemblyQualifiedName,
+                                        StableTypeName(transform.GetType()),
                                     ComponentOrdinal = 0,
                                     SiblingIndices = Array.Empty<int>()
                                 }
