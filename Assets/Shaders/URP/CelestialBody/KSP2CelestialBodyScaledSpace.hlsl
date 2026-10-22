@@ -62,6 +62,8 @@ float4 CelestialBodyScaled_ScaledSpaceFragment(CelestialBodyScaledSpaceVaryings 
         diffuse.rgb = lerp(diffuse.rgb, sunColor * input.eclipse * regolith, weight);
     }
     diffuse.rgb *= KSP2_CelestialBodyGasSunTransmission(input.positionWS, sunDirection);
+    // A solar eclipse only removes sunlight. Neighboring bodies have their own illumination.
+    diffuse.rgb += KSP2_CelestialBodyPlanetshine(normalize(input.normalWS));
     return SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv) * _Color * diffuse;
 }
 

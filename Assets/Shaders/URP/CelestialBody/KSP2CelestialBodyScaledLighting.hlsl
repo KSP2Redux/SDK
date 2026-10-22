@@ -46,13 +46,22 @@ float3 KSP2_CelestialBodyDirectLighting(float3 positionWS, float4 positionCS, fl
     return direct;
 }
 
+// Only a bound receiver owns these probe values. Unbound views must not inherit the observer's global GI.
+float3 KSP2_CelestialBodyPlanetshine(float3 normalWS)
+{
+    [branch] if (_KSP2BodyGI < 0.5)
+        return 0.0;
+    return max(0.0, SampleSH(normalWS)) + KSP2_SphericalGaussianAmbient(normalWS);
+}
+
 // The stock solid surface stored galaxy-cube diffuse and specular in its G-buffer. This also gives gas giants
 // an environment independent of the host camera's probes and avoids reading the observer cube while drawing it.
 float3 KSP2_CelestialBodyGalaxyLighting(float3 normalWS, float3 viewDirWS, KSP2Surface surface)
 {
     float3 diffuse = DecodeHDREnvironment(
         SAMPLE_TEXTURECUBE_LOD(_GalaxyCubemapTexture, sampler_GalaxyCubemapTexture, normalWS, _DiffuseCubemapMip),
-        _GalaxyCubemapTexture_HDR) * surface.occlusion;
+        _GalaxyCubemapTexture_HDR);
+    diffuse = (diffuse + KSP2_CelestialBodyPlanetshine(normalWS)) * surface.occlusion;
     float3 specular = DecodeHDREnvironment(
         SAMPLE_TEXTURECUBE_LOD(_GalaxyCubemapTexture, sampler_GalaxyCubemapTexture,
             reflect(-viewDirWS, normalWS), 8.0),

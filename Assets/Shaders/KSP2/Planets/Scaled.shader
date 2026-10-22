@@ -44,6 +44,7 @@ Shader "KSP2/Planets/Scaled"
         [HideInInspector] _KSP2EclipseOccluderIndices1 ("Eclipse occluders 1", Vector) = (-1,-1,-1,-1)
         [HideInInspector] _KSP2BodySunDirection ("Body sun direction", Vector) = (0,0,0,0)
         [HideInInspector] _KSP2BodySunColor ("Body sun color", Vector) = (0,0,0,0)
+        [HideInInspector] _KSP2BodyGI ("Body planetshine probe", Float) = 0
         [HideInInspector] _KSP2RegolithWeight ("Regolith diffuse weight", Range(0, 1)) = 0
         _RegolithStrength ("Regolith diffuse strength", Range(0, 1)) = 1
         _RegolithSingleScatteringAlbedo ("Regolith particle albedo (exploratory)", Range(0, 1)) = 0.5
@@ -75,6 +76,7 @@ Shader "KSP2/Planets/Scaled"
             float4 _KSP2EclipseOccluderIndices1;
             float4 _KSP2BodySunDirection;
             float4 _KSP2BodySunColor;
+            float _KSP2BodyGI;
             float4 _KSP2GasGiantAtmosphere;
             float  _KSP2GasGiantSunAngularRadius;
             float  _KSP2GasGiantSolarAttenuation;
