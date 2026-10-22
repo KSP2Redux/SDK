@@ -308,6 +308,10 @@ float3 KSP2_ShadeLight(Light light, float3 N, float3 V, KSP2Surface s, float clo
         diffuseTerm, specularTerm);
     if (horizon > 0.0)
         diffuseTerm = KSP2_SphereLightNdotL(dot(N, light.direction), horizon);
+#if defined(KSP2_CUSTOM_DIFFUSE_TERM)
+    else
+        diffuseTerm = KSP2_CUSTOM_DIFFUSE_TERM(N, V, light.direction, diffuseTerm);
+#endif
     float3 radiance = light.color * (light.distanceAttenuation * light.shadowAttenuation * cloudShadow);
     return (s.diffuseAlbedo * diffuseTerm + specularTerm) * radiance;
 }
@@ -371,6 +375,9 @@ float3 KSP2_DirectLighting(float3 positionWS, float4 positionCS, float3 N, float
     // The local sun carries the eclipse and the atmosphere's colour at the observer. A pixel more eclipsed than that,
     // past the terminator or in a moon's shadow, goes darker, and takes its own colour of the light.
     KSP2_ApplyLocalSun(mainLight, positionWS, N);
+#if defined(KSP2_CUSTOM_MAIN_LIGHT_COLOR)
+    KSP2_CUSTOM_MAIN_LIGHT_COLOR(positionWS, mainLight);
+#endif
 #ifdef _LIGHT_LAYERS
     if (IsMatchingLightLayer(mainLight.layerMask, meshRenderingLayers))
 #endif

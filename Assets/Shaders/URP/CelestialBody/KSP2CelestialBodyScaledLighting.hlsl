@@ -5,6 +5,8 @@
 
 // Scaled coordinates are outside the local terrain shadow cascades.
 #define KSP2_NO_TERRAIN_SHADOW
+#include "KSP2CelestialBodyScaledPhotometry.hlsl"
+#include "KSP2CelestialBodyGasSun.hlsl"
 #include "../Include/KSP2Lighting.hlsl"
 
 // Legacy explicit cubemap lighting, used only by materials without a simulation receiver.
@@ -33,6 +35,7 @@ float3 KSP2_CelestialBodyDirectLighting(float3 positionWS, float4 positionCS, fl
         sun.distanceAttenuation = 1.0;
         sun.shadowAttenuation = KSP2_EclipseVisibility(positionWS, _KSP2EclipseOccluderIndices0,
             _KSP2EclipseOccluderIndices1);
+        sun.color *= KSP2_CelestialBodyGasSunTransmission(positionWS, sun.direction);
         return KSP2_ShadeLight(sun, normalWS, viewDirWS, surface);
     }
 
