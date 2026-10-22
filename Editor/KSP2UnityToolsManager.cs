@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using Ksp2UnityTools.Editor.Modding;
 using ThunderKit.Core.Data;
 using ThunderKit.Core.Pipelines;
+using ThunderKit.Core.Utilities;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -21,7 +23,7 @@ namespace Ksp2UnityTools.Editor
     /// </summary>
     /// <remarks>
     /// On load it creates or loads the SDK's settings asset and, outside Redux itself, copies in the boot scene and the
-    /// game import asset a mod project needs.
+    /// game import asset a mod project needs, and points scripts still referenced through Assembly-CSharp at Ksp2Redux.
     /// </remarks>
     [InitializeOnLoad]
     public static class KSP2UnityToolsManager
@@ -30,6 +32,16 @@ namespace Ksp2UnityTools.Editor
         private const string PreferredBootKspScenePath = "Assets/boot-ksp.unity";
         private const string SettingsAssetPath = "Assets/ReduxSDKSettings.asset";
         private const string LegacySettingsAssetPath = "Assets/KSP2UTSettings.asset";
+        private const string LegacyScriptsRetargetedKey = "Ksp2UnityTools.LegacyScriptsRetargeted";
+
+        // ThunderKit names each imported game DLL's guid after the DLL, so these match every mod project
+        private static readonly string GameAssemblyGuid = PackageHelper.GetFileNameHash("Ksp2Redux");
+        private static readonly string[] LegacyGameAssemblyGuids =
+        {
+            PackageHelper.GetFileNameHash("Assembly-CSharp"),
+            PackageHelper.GetFileNameHash("Assembly-CSharp-firstpass")
+        };
+        private static readonly string[] ScriptReferencingExtensions = { ".prefab", ".unity", ".asset" };
 
         /// <summary>
         /// The SDK's settings for this project.
@@ -54,6 +66,8 @@ namespace Ksp2UnityTools.Editor
             EditorApplication.delayCall += RelinkAddressablesSettings;
 
 #if !REDUX
+
+            EditorApplication.delayCall += RetargetLegacyScriptReferences;
 
             if (ResolveBootKspScenePath() == null)
             {
@@ -122,6 +136,52 @@ namespace Ksp2UnityTools.Editor
             // The setter points the registered DefaultObject at these settings, or creates one when none is registered
             AddressableAssetSettingsDefaultObject.Settings = settings;
             UnityEngine.Debug.Log($"Redux SDK relinked the Addressables settings to {AssetDatabase.GetAssetPath(settings)}.");
+        }
+
+        // Assets made before the game code moved into Ksp2Redux point their scripts at Assembly-CSharp.dll, which is
+        // now a facade of type forwarders. The editor does not follow those, so each such script shows as missing.
+        // Once per session, since the scan reads every scene, prefab and asset in the project.
+        private static void RetargetLegacyScriptReferences()
+        {
+            if (SessionState.GetBool(LegacyScriptsRetargetedKey, false))
+                return;
+
+            SessionState.SetBool(LegacyScriptsRetargetedKey, true);
+
+            var retargetedPaths = new List<string>();
+            foreach (string path in Directory.EnumerateFiles("Assets", "*", SearchOption.AllDirectories))
+            {
+                if (!ScriptReferencingExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
+                    continue;
+
+                string yaml = File.ReadAllText(path);
+                string retargetedYaml = RetargetLegacyScriptGuids(yaml);
+                if (retargetedYaml == yaml)
+                    continue;
+
+                File.WriteAllText(path, retargetedYaml);
+                retargetedPaths.Add(path.Replace('\\', '/'));
+            }
+
+            if (retargetedPaths.Count == 0)
+                return;
+
+            AssetDatabase.Refresh();
+            UnityEngine.Debug.Log(
+                $"Redux SDK pointed the Assembly-CSharp scripts in {retargetedPaths.Count} assets at Ksp2Redux: {string.Join(", ", retargetedPaths)}"
+            );
+        }
+
+        // A script's fileID hashes only its namespace and class name, and the facades forward each type to the same
+        // name in Ksp2Redux, so swapping the guid is the whole retarget
+        internal static string RetargetLegacyScriptGuids(string yaml)
+        {
+            foreach (string legacyGuid in LegacyGameAssemblyGuids)
+            {
+                yaml = yaml.Replace($"guid: {legacyGuid}", $"guid: {GameAssemblyGuid}");
+            }
+
+            return yaml;
         }
 
         private static T FindProjectAsset<T>(string preferredPath) where T : UnityEngine.Object
