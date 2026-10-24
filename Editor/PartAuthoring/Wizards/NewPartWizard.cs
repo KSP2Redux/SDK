@@ -384,6 +384,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                         core.Data.family = FamilyOverride;
                         mutated = true;
                     }
+                    if (string.IsNullOrEmpty(Archetype?.Family) && !string.IsNullOrEmpty(CategoryOverride))
+                    {
+                        core.Data.category = PartFolderScaffold.ToPartCategory(CategoryOverride);
+                        mutated = true;
+                    }
                     if (mutated)
                     {
                         EditorUtility.SetDirty(prefabAsset);
