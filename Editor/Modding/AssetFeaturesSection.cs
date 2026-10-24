@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace Ksp2UnityTools.Editor.Modding
 {
     /// <summary>
-    /// Features and Excluded lists that edit the feature labels of an authored thing's content assets together, such
+    /// Required Features and Excluded Features lists that edit the feature labels of an authored thing's content assets together, such
     /// as a part's JSON or a body's JSON, science regions and resources.
     /// </summary>
     /// <remarks>
@@ -51,7 +51,7 @@ namespace Ksp2UnityTools.Editor.Modding
                 pendingSave = root.schedule.Execute(Save).StartingIn(SAVE_DELAY_MS);
             }
 
-            root.Add(BuildList("Features", features, owner, Save, SaveSoon));
+            root.Add(BuildList("Required Features", features, owner, Save, SaveSoon));
             root.Add(BuildList("Excluded Features", noFeatures, owner, Save, SaveSoon));
             return root;
         }

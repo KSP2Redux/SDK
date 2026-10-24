@@ -374,11 +374,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         // The gate filters the part's JSON, which names the prefab and icon, so only the JSON carries the features
         private static VisualElement BuildFeatures(CorePartData cpd)
         {
-            var section = new VisualElement();
-            section.AddToClassList("data-editor-section");
-            var header = new Label("Features");
-            header.AddToClassList("data-editor-section-header");
-            section.Add(header);
+            var section = new Foldout { text = "Features", value = true };
+            section.AddToClassList("sdk-section");
 
             string prefabPath = PathUtils.GetPrefabOrAssetPath(cpd, cpd.gameObject);
             Mod owner = string.IsNullOrEmpty(prefabPath)
