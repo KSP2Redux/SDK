@@ -42,17 +42,40 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         public static void PrepareForPlayMode()
         {
             EndMaterialization();
-            var loadedBundleCount = AssetBundle
-                .GetAllLoadedAssetBundles()
-                .Count();
-            if (loadedBundleCount == 0)
+            var loadedBundles = AssetBundle.GetAllLoadedAssetBundles().ToArray();
+            if (loadedBundles.Length == 0)
                 return;
 
-            AssetBundle.UnloadAllAssetBundles(true);
+            // Play mode stopped while a bundle still had an asset load in flight leaves that bundle
+            // half unloaded: Unity marks it unloaded but keeps its files open until the editor
+            // restarts. UnloadAllAssetBundles crashed the editor on such a bundle, while unloading
+            // it on its own only throws, so each bundle is unloaded separately.
+            var stuckBundles = new List<string>();
+            foreach (var bundle in loadedBundles)
+            {
+                try
+                {
+                    bundle.Unload(true);
+                }
+                catch (InvalidOperationException)
+                {
+                    stuckBundles.Add(bundle.name);
+                }
+            }
+
             Debug.Log(
                 $"[ReduxSDK.LinkedAddressables] Unloaded "
-                    + $"{loadedBundleCount} edit-time AssetBundle(s) before play mode."
+                    + $"{loadedBundles.Length - stuckBundles.Count} edit-time AssetBundle(s) before play mode."
             );
+            if (stuckBundles.Count > 0)
+            {
+                Debug.LogWarning(
+                    $"[ReduxSDK.LinkedAddressables] {stuckBundles.Count} AssetBundle(s) are stuck "
+                        + "from a play session stopped while it was loading, and game content in them "
+                        + "will fail to load until the editor restarts: "
+                        + string.Join(", ", stuckBundles)
+                );
+            }
         }
 
         public static UnityEngine.Object LoadMainAsset(
