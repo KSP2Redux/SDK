@@ -263,7 +263,7 @@ namespace KSP.Editor
 
                         if (effect.EngineFXComponent is MonoBehaviour mb)
                         {
-                            EnsureEngineFxComponentInitialized(mb, effect.EngineFXComponent);
+                            EngineVFXPreviewUtility.EnsureEngineFxComponentInitialized(mb, effect.EngineFXComponent);
                         }
                     }
                 }
@@ -369,27 +369,6 @@ namespace KSP.Editor
             StopPreviewParticles(manager);
             UnregisterEditorPreviewUpdate();
             SceneView.RepaintAll();
-        }
-
-        private static void EnsureEngineFxComponentInitialized(MonoBehaviour behaviour, IEngineFXData engineFxData)
-        {
-            MethodInfo awake = behaviour.GetType()
-                .GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            MethodInfo onEnable = behaviour.GetType()
-                .GetMethod("OnEnable", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-
-            if (engineFxData is ThrottleParticleSystemData particleData && particleData.VFX == null)
-            {
-                awake?.Invoke(behaviour, null);
-            }
-
-            if (engineFxData.TriggerUpdateVisuals != null)
-            {
-                return;
-            }
-
-            awake?.Invoke(behaviour, null);
-            onEnable?.Invoke(behaviour, null);
         }
 
         private static void UpdateEditorPreviewRegistration(ThrottleVFXManager manager)
