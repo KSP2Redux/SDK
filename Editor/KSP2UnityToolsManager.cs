@@ -33,6 +33,7 @@ namespace Ksp2UnityTools.Editor
         private const string SettingsAssetPath = "Assets/ReduxSDKSettings.asset";
         private const string LegacySettingsAssetPath = "Assets/KSP2UTSettings.asset";
         private const string LegacyScriptsRetargetedKey = "Ksp2UnityTools.LegacyScriptsRetargeted";
+        private const string LegacyEditorTestingFolder = "Assets/Mods/__Testing";
 
         // ThunderKit names each imported game DLL's guid after the DLL, so these match every mod project
         private static readonly string GameAssemblyGuid = PackageHelper.GetFileNameHash("Ksp2Redux");
@@ -203,13 +204,25 @@ namespace Ksp2UnityTools.Editor
         /// <exception cref="FileNotFoundException">Thrown when a mod has no pipeline, or the project has no boot scene.</exception>
         public static async Task TestModsInPlayMode(params Mod[] mods)
         {
-            if (Directory.Exists("Assets/Mods/__Testing"))
+            // A mod staged in the old, imported folder had its DLL imported and compiled when the editor next refreshed,
+            // which reloaded the domain under the running test.
+            if (!AssetDatabase.DeleteAsset(LegacyEditorTestingFolder) && Directory.Exists(LegacyEditorTestingFolder))
             {
-                Directory.Delete("Assets/Mods/__Testing", true);
+                Directory.Delete(LegacyEditorTestingFolder, true);
+            }
+
+            if (Directory.Exists(Mod.EditorTestingFolder))
+            {
+                Directory.Delete(Mod.EditorTestingFolder, true);
             }
 
             foreach (Mod mod in mods)
             {
+                if (mod.HasStaleEditorPipeline())
+                {
+                    mod.RefreshPipelines();
+                }
+
                 string testPipeline = mod.Folder + "/Pipelines/Build for Editor.asset";
                 await ExecuteOrThrow(AssetDatabase.LoadAssetAtPath<Pipeline>(testPipeline), testPipeline);
             }

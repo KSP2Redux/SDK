@@ -28,6 +28,13 @@ namespace Ksp2UnityTools.Editor.Modding
     public class Mod : TextAssetGenerator
     {
         private const string Ksp2PackageReferenceDirectory = "Packages/KSP2_x64";
+
+        /// <summary>
+        /// The folder Build for Editor stages mods into. Unity ignores a folder whose name ends in a tilde, so a staged
+        /// DLL is never imported and compiled into a running test session, and the game still reads it from disk.
+        /// </summary>
+        public const string EditorTestingFolder = "Assets/Mods/__Testing~";
+
         private static string[] _precompiledReferences;
 
         /// <inheritdoc />
@@ -496,6 +503,23 @@ namespace Ksp2UnityTools.Editor.Modding
         }
 
         /// <summary>
+        /// Whether the mod's Build for Editor pipeline stages anywhere but <see cref="EditorTestingFolder" />, as one
+        /// generated before that folder did.
+        /// </summary>
+        /// <returns>True if the pipeline needs regenerating before a test, false otherwise.</returns>
+        internal bool HasStaleEditorPipeline()
+        {
+            string manifestPath = Folder + "/Pipelines/Build for Editor Manifest.asset";
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(manifestPath))
+            {
+                if (asset is CopyFolderDatum copy && !copy.destinationPath.StartsWith(EditorTestingFolder + "/"))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Recreates the mod's three pipelines: build for the editor, build for the player, and deploy to a zip file.
         /// </summary>
         public void RefreshPipelines()
@@ -522,7 +546,7 @@ namespace Ksp2UnityTools.Editor.Modding
                 AssetDatabase.DeleteAsset(buildForEditorManifest);
             }
 
-            GeneratePipeline($"Assets/Mods/__Testing/{id}", buildForEditorManifest, buildForEditor, "Editor",true);
+            GeneratePipeline($"{EditorTestingFolder}/{id}", buildForEditorManifest, buildForEditor, "Editor", true);
             if (File.Exists(buildForPlayer))
             {
                 AssetDatabase.DeleteAsset(buildForPlayer);
