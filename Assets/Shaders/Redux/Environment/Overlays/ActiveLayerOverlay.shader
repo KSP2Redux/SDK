@@ -9,9 +9,8 @@ Shader "Redux/PlanetAuthoring/Overlays/ActiveLayerOverlay"
     // by the per-biome _BiomeMaskTex weight, take argmax across all 16, and
     // colorize via a 16-entry palette (hue per biome, brightness per layer).
     //
-    // PQSDecalController and the surface material set the prepass RTs each frame.
-    // The PreviewOverlayManager mirrors them onto this overlay's material before
-    // each draw via the same texture handles.
+    // The terrain graph declares this body's four weight reads and binds them
+    // through the overlay draw's property block.
     Properties
     {
         _Strength ("Strength", Range(0, 1)) = 0.7
