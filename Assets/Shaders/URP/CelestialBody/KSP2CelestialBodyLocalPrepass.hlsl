@@ -1,7 +1,7 @@
 // KSP2CelestialBodyLocalPrepass.hlsl
 //
-// Local-space prepass of CelestialBody_Local (stock passes 13-15, here 5-7). PQSRenderer.RenderPrepass
-// draws it with a CommandBuffer into PqsPrepassRenderTarget0..4, which the forward pass reads back
+// Local-space prepass of CelestialBody_Local (stock passes 13-15, here 5-7). PqsRender
+// draws into graph-owned weights and normals, which the surface draw reads back
 // as _LocalSpacePrepassTex0..4 at screen UV:
 //   SV_Target0..3  per-layer height/slope weights of biome R, G, B, A (LAYERS4)
 //   SV_Target4     blended world normal (scaled normal, then subzone, Mid and Large layers, then decals)
@@ -249,8 +249,15 @@ float4 CBL_ChannelLayerWeights(bool biomeActive, float4 biomeChan, float4 gatePr
 // ---------------------------------------------------------------------------
 // Fragment
 // ---------------------------------------------------------------------------
+#if defined(CBL_NORMALS_ONLY)
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferCommon.hlsl"
+float _PqsNormalsOct;
+half4 CBL_PrepassFragment(CBLPrepassVaryings i) : SV_Target0
+#else
 CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
+#endif
 {
+    CBL_DitherAlphaTest(i.positionCS.xy);
     float2 uv = i.uvHeight.xy;
     float3 worldPos = i.positionWS;
     float3 objectNormal = i.normalOS;
@@ -426,6 +433,10 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     bool4 biomeActive = biomeWeightNorm > 0.0;
     float height = i.uvHeight.z;
 
+#if defined(CBL_NORMALS_ONLY)
+    float3 normal = normalize(blendedNorm);
+    return half4(_PqsNormalsOct > 0.5 ? PackGBufferNormal(normal) : normal, 0.0);
+#else
     CBLPrepassOutput o;
     o.tex0 = CBL_LAYERS4(R, biomeActive.x);
     o.tex1 = CBL_LAYERS4(G, biomeActive.y);
@@ -433,6 +444,7 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     o.tex3 = CBL_LAYERS4(A, biomeActive.w);
     o.normal = float4(blendedNorm, 1.0);
     return o;
+#endif
 }
 
 #endif // KSP2_CELESTIALBODY_LOCAL_PREPASS_INCLUDED
