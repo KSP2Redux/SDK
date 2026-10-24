@@ -10,18 +10,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
     /// body's biome mask, then colorizing the argmax.
     /// </summary>
     /// <remarks>
-    /// The prepass RTs are screen-space textures written by the surface shader earlier in the same
-    /// frame. PQSRenderer sets them on the surface material directly. This overlay mirrors the
-    /// same handles onto its own material so a single sample suffices in the fragment.
+    /// The terrain graph binds this body's four weight inputs for each overlay draw.
+    /// No frame textures are retained on the overlay material.
     /// </remarks>
-    internal sealed class ActiveLayerPreviewOverlay : PreviewOverlay
+    internal sealed class ActiveLayerPreviewOverlay : PreviewOverlay, IPQSLayerWeightsOverlay
     {
         private const string ShaderName = "Redux/PlanetAuthoring/Overlays/ActiveLayerOverlay";
 
-        private static readonly int Prepass0Id = Shader.PropertyToID("_LocalSpacePrepassTex0");
-        private static readonly int Prepass1Id = Shader.PropertyToID("_LocalSpacePrepassTex1");
-        private static readonly int Prepass2Id = Shader.PropertyToID("_LocalSpacePrepassTex2");
-        private static readonly int Prepass3Id = Shader.PropertyToID("_LocalSpacePrepassTex3");
         private static readonly int BiomeMaskId = Shader.PropertyToID("_BiomeMaskTex");
         private static readonly int StrengthId = Shader.PropertyToID("_Strength");
         private static readonly int LayerEnableRId = Shader.PropertyToID("_LayerEnableR");
@@ -78,18 +73,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
             var surface = pqs?.data?.materialSettings?.surfaceMaterial;
             if (surface == null)
             {
-                OverlayMaterial.SetTexture(Prepass0Id, Texture2D.blackTexture);
-                OverlayMaterial.SetTexture(Prepass1Id, Texture2D.blackTexture);
-                OverlayMaterial.SetTexture(Prepass2Id, Texture2D.blackTexture);
-                OverlayMaterial.SetTexture(Prepass3Id, Texture2D.blackTexture);
                 OverlayMaterial.SetTexture(BiomeMaskId, Texture2D.blackTexture);
                 return;
             }
 
-            CopyTexture(surface, OverlayMaterial, Prepass0Id);
-            CopyTexture(surface, OverlayMaterial, Prepass1Id);
-            CopyTexture(surface, OverlayMaterial, Prepass2Id);
-            CopyTexture(surface, OverlayMaterial, Prepass3Id);
             CopyTexture(surface, OverlayMaterial, BiomeMaskId);
         }
 
