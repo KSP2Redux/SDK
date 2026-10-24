@@ -24,7 +24,8 @@
   "precompiledReferences": [
     "Newtonsoft.Json.dll",
     "Newtonsoft.Json.UnityConverters.dll",
-    "Ksp2Redux.dll"
+    "Ksp2Redux.dll",
+    "Unity.Postprocessing.Runtime.dll"
   ],
   "autoReferenced": true,
   "defineConstraints": [],
