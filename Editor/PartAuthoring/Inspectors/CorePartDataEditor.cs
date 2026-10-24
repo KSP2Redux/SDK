@@ -62,12 +62,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 HideModuleComponentEditors();
             }
             PartValidationExpensiveCache.Changed += OnExpensiveCacheChanged;
+            DragCubeBaker.CubesChanged += OnDragCubesChanged;
         }
 
         private void OnDisable()
         {
             RestoreModuleComponentEditors();
             PartValidationExpensiveCache.Changed -= OnExpensiveCacheChanged;
+            DragCubeBaker.CubesChanged -= OnDragCubesChanged;
+        }
+
+        // Drag cubes live on the drag module, which the tracking of this inspector's serialized object never sees, so
+        // the chips stayed stale after generating them until some core field changed (#2293)
+        private void OnDragCubesChanged(GameObject partObject)
+        {
+            if (IsPlayModeTransitioning()) return;
+            if (_root == null) return;
+            if (target is not CorePartData cpd || cpd.gameObject != partObject) return;
+            PopulateReadinessChips();
         }
 
         private void OnExpensiveCacheChanged(CorePartData part)
