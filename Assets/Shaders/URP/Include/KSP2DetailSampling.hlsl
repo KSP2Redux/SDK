@@ -24,12 +24,12 @@ float CBL_RampFade(float t, float4 p)
     return lerp(p.z, p.w, saturate((t - p.x) / max(p.y, 0.01)));
 }
 
+// The two strongest of a hex cell's three taps.
 struct CBLTileHash
 {
     float2 uv0;
     float2 uv1;
-    float2 uv2;
-    float3 weights;
+    float2 weights;
 };
 
 // stochasticScale is the terrain material's _StochasticScale.
@@ -49,15 +49,31 @@ CBLTileHash CBL_TileHash(float2 baseUV, float stochasticScale)
     float2 c0 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? cellYi : (cellYi + 1u))));
     float2 c1 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? (cellYi + 1u) : cellYi)));
     float2 c2 = float2(float((int)(inUpper ? (cellXi + 1u) : cellXi)), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    r.uv0 = float2(frac(sin(dot(float2(127.1, 311.7), c0)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c0)) * 43758.5468)) + baseUV;
-    r.uv1 = float2(frac(sin(dot(float2(127.1, 311.7), c1)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c1)) * 43758.5468)) + baseUV;
-    r.uv2 = float2(frac(sin(dot(float2(127.1, 311.7), c2)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c2)) * 43758.5468)) + baseUV;
-    r.weights = max(float3(inUpper ? triTest : -triTest, inUpper ? fracY : 1.0 - fracY, inUpper ? fracX : 1.0 - fracX), 0.0);
+    float2 uvA = float2(frac(sin(dot(float2(127.1, 311.7), c0)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c0)) * 43758.5468)) + baseUV;
+    float2 uvB = float2(frac(sin(dot(float2(127.1, 311.7), c1)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c1)) * 43758.5468)) + baseUV;
+    float2 uvC = float2(frac(sin(dot(float2(127.1, 311.7), c2)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c2)) * 43758.5468)) + baseUV;
+    float3 w = max(float3(inUpper ? triTest : -triTest, inUpper ? fracY : 1.0 - fracY, inUpper ? fracX : 1.0 - fracX), 0.0);
+    // Redux: stock blends all three taps. Keeping the two strongest saves a fetch per detail sample, and sharpening
+    // the weights to the 4th power first keeps the dropped tap's share small.
+    w *= w;
+    w *= w;
+    if (w.x < w.y && w.x < w.z)
+    {
+        uvA = uvC;
+        w.x = w.z;
+    }
+    else if (w.y < w.z)
+    {
+        uvB = uvC;
+        w.y = w.z;
+    }
+    r.uv0 = uvA;
+    r.uv1 = uvB;
+    r.weights = w.xy / max(w.x + w.y, 1e-6);
 #else
     r.uv0 = baseUV;
     r.uv1 = baseUV;
-    r.uv2 = baseUV;
-    r.weights = float3(1.0, 0.0, 0.0);
+    r.weights = float2(1.0, 0.0);
 #endif
     return r;
 }
@@ -67,14 +83,10 @@ CBLTileHash CBL_TileHash(float2 baseUV, float stochasticScale)
 float4 CBL_SampleDetail(TEXTURE2D_ARRAY_PARAM(tex, samp), CBLTileHash h, float index, float2 uvDdx, float2 uvDdy)
 {
 #if defined(ANTI_TILE_QUALITY_ON)
-    float4 sum = 0.0;
-    [branch] if (h.weights.x > 0.001)
-        sum += SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv0, index, uvDdx, uvDdy) * h.weights.x;
-    [branch] if (h.weights.y > 0.001)
-        sum += SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv1, index, uvDdx, uvDdy) * h.weights.y;
-    [branch] if (h.weights.z > 0.001)
-        sum += SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv2, index, uvDdx, uvDdy) * h.weights.z;
-    return sum;
+    // Both taps are fetched unconditionally so their latency overlaps. Stock's per-tap branches serialized it, which
+    // cost more than the fetches themselves.
+    return SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv0, index, uvDdx, uvDdy) * h.weights.x
+         + SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv1, index, uvDdx, uvDdy) * h.weights.y;
 #else
     return SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv0, index, uvDdx, uvDdy);
 #endif

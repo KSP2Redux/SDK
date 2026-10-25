@@ -554,8 +554,10 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     CBLBiomeMaterial mat = CBL_BiomeMaterial(channel, px.subzoneMask);
     bool biomeActive = projRatio > 0.0;
 
+    // Unrolled so layers[] and the per-layer uniforms index statically. As a dynamic loop FXC kept layers[] in an
+    // indexable temp array.
     CBLLayerResult layers[4];
-    [loop]
+    [unroll]
     for (uint l = 0u; l < 4u; l++)
     {
         CBLLayerResult r = (CBLLayerResult)0;
