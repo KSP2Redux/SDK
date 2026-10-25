@@ -359,21 +359,26 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
     float4 tint = mat.tint[layer];
+    float2 metSO, glossSO;
+    CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
+    // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
+    bool sampleMetal = metSO.x != 0.0;
 
     float2 nearUV = px.baseUV[1] * (nearScale * uvScale) + uvOffset;
     float2 nearDdx = px.baseUVDdx[1] * (nearScale * uvScale), nearDdy = px.baseUVDdy[1] * (nearScale * uvScale);
     CBLTileHash nearHash = CBL_TileHash(nearUV, _StochasticScale);
     float4 nearAlbedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
     float4 nearPacked = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
-    float nearMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
+    float nearMetal = 0.0;
+    [branch]
+    if (sampleMetal)
+        nearMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
 
     float wy = px.triWeight.y;
     float brightness = mat.brightness[layer];
     float contrast = mat.contrast[layer];
     float saturation = mat.saturation[layer];
     float normalStrength = mat.normalStrength[layer];
-    float2 metSO, glossSO;
-    CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
     float aoStrength = mat.aoStrength[layer];
 
     CBLLayerResult r;
@@ -402,7 +407,10 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
         CBLTileHash farHash = CBL_TileHash(farUV, _StochasticScale);
         float4 farAlbedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
         float4 farPacked = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
-        float farMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
+        float farMetal = 0.0;
+        [branch]
+        if (sampleMetal)
+            farMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
         r.nearColor = CBL_GradeColor(wy * farAlbedo.xyz, tint, brightness, contrast, saturation);
         r.nearNormal = mul((float3x3)TriplanarToWorld, CBL_ReorientSingleAxis(farPacked, px.triN, px.triWeight, px.triSign, px.triNzPositive)) * normalStrength;
         r.nearHeightAlpha = (wy * farAlbedo.w) * tint.w;
@@ -445,6 +453,10 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
     float4 tint = mat.tint[layer];
+    float2 metSO, glossSO;
+    CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
+    // A zero metallic scale multiplies the metal texels away, so the layer skips their fetches.
+    bool sampleMetal = metSO.x != 0.0;
 
     float3 albRGBNear = 0, albRGBFar = 0;
     float albANear = 0, albAFar = 0;
@@ -470,7 +482,10 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
             CBLTileHash nearHash = CBL_TileHash(nearUV, _StochasticScale);
             float4 albN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
             float4 nrmN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
-            float mN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
+            float mN = 0.0;
+            [branch]
+            if (sampleMetal)
+                mN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
             albRGBNear += w * albN.xyz;
             albANear += w * albN.w;
             nrmXNear += w * nrmN.x;
@@ -486,7 +501,10 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
                 CBLTileHash farHash = CBL_TileHash(farUV, _StochasticScale);
                 float4 albF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
                 float4 nrmF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
-                float mF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
+                float mF = 0.0;
+                [branch]
+                if (sampleMetal)
+                    mF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
                 albRGBFar += w * albF.xyz;
                 albAFar += w * albF.w;
                 nrmXFar += w * nrmF.x;
@@ -512,8 +530,6 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
     float contrast = mat.contrast[layer];
     float saturation = mat.saturation[layer];
     float normalStrength = mat.normalStrength[layer];
-    float2 metSO, glossSO;
-    CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
     float aoStrength = mat.aoStrength[layer];
 
     CBLLayerResult r;
