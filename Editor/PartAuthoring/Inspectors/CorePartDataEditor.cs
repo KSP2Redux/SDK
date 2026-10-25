@@ -62,12 +62,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
                 HideModuleComponentEditors();
             }
             PartValidationExpensiveCache.Changed += OnExpensiveCacheChanged;
+            DragCubeBaker.CubesChanged += OnDragCubesChanged;
         }
 
         private void OnDisable()
         {
             RestoreModuleComponentEditors();
             PartValidationExpensiveCache.Changed -= OnExpensiveCacheChanged;
+            DragCubeBaker.CubesChanged -= OnDragCubesChanged;
+        }
+
+        // Drag cubes live on the drag module, which the tracking of this inspector's serialized object never sees, so
+        // the chips stayed stale after generating them until some core field changed (#2293)
+        private void OnDragCubesChanged(GameObject partObject)
+        {
+            if (IsPlayModeTransitioning()) return;
+            if (_root == null) return;
+            if (target is not CorePartData cpd || cpd.gameObject != partObject) return;
+            PopulateReadinessChips();
         }
 
         private void OnExpensiveCacheChanged(CorePartData part)
@@ -374,11 +386,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors
         // The gate filters the part's JSON, which names the prefab and icon, so only the JSON carries the features
         private static VisualElement BuildFeatures(CorePartData cpd)
         {
-            var section = new VisualElement();
-            section.AddToClassList("data-editor-section");
-            var header = new Label("Features");
-            header.AddToClassList("data-editor-section-header");
-            section.Add(header);
+            var section = new Foldout { text = "Features", value = true };
+            section.AddToClassList("sdk-section");
 
             string prefabPath = PathUtils.GetPrefabOrAssetPath(cpd, cpd.gameObject);
             Mod owner = string.IsNullOrEmpty(prefabPath)

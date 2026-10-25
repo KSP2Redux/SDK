@@ -386,6 +386,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             }
             _cubesProp.serializedObject.ApplyModifiedProperties();
             RefreshCubesList();
+            NotifyCubesChanged();
         }
 
         private void RemoveCube(int index)
@@ -398,6 +399,16 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             _cubesProp.DeleteArrayElementAtIndex(index);
             _cubesProp.serializedObject.ApplyModifiedProperties();
             RefreshCubesList();
+            NotifyCubesChanged();
+        }
+
+        // The part inspector's readiness and validation chips count these cubes (#2293)
+        private void NotifyCubesChanged()
+        {
+            if (_module != null)
+            {
+                Ksp2UnityTools.Editor.PartAuthoring.Tools.DragCubeBaker.NotifyCubesChanged(_module.gameObject);
+            }
         }
 
         // -------------------- Drag Cube Tools --------------------
@@ -660,6 +671,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             SetStatus($"Calculated {dragCubes.Count} drag cube{(dragCubes.Count == 1 ? string.Empty : "s")}.", HelpBoxMessageType.Info);
             _cubesProp.serializedObject.Update();
             RefreshCubesList();
+            NotifyCubesChanged();
         }
 
         private void OnClickCaptureDeployable(AnimationClip[] clips, bool isRetracted, bool isExtended)
@@ -744,6 +756,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             SetStatus($"Captured {captured.Count} deployable cube{(captured.Count == 1 ? string.Empty : "s")}: {string.Join(", ", captured.ConvertAll(c => c.Name))}.", HelpBoxMessageType.Info);
             _cubesProp.serializedObject.Update();
             RefreshCubesList();
+            NotifyCubesChanged();
         }
 
         private void SetStatus(string message, HelpBoxMessageType type)

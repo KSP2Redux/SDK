@@ -227,6 +227,7 @@ namespace Ksp2UnityTools.Editor.Modding
         [Tooltip("The features the mod declares besides its own")]
         public List<ModFeature> features = new();
 
+        [NonSerialized] private bool _featureLabelSyncPending;
 
         /// <summary>
         /// Renames the mod asset to <see cref="PickerDisplayName" /> when it differs.
@@ -258,6 +259,21 @@ namespace Ksp2UnityTools.Editor.Modding
         private void OnValidate()
         {
             SyncPickerDisplayName();
+            if (!_featureLabelSyncPending)
+            {
+                // Addressables settings must not change while this asset imports, so the labels follow a frame later
+                _featureLabelSyncPending = true;
+                EditorApplication.delayCall += SyncFeatureLabels;
+            }
+        }
+
+        private void SyncFeatureLabels()
+        {
+            _featureLabelSyncPending = false;
+            if (this != null && ModPickerDisplayNameSync.CanTouchAssets())
+            {
+                AssetFeatureLabels.DeclareModFeatureLabels(this);
+            }
         }
 
         /// <inheritdoc />
