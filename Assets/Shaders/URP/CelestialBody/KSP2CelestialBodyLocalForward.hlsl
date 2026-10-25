@@ -20,6 +20,7 @@
 #define KSP2_CELESTIALBODY_LOCAL_FORWARD_INCLUDED
 
 #include "../Include/KSP2Lighting.hlsl"
+#include "../Include/KSP2DetailSampling.hlsl"
 #if defined(KSP2_GBUFFER_PASS)
     #include "../Include/KSP2GBuffer.hlsl"
 #endif
@@ -69,42 +70,9 @@ struct CBLGBuffer
     float3 emission;        // RT3: ambient + emission
 };
 
-// SH L0 + L1 at the shaded normal plus the vertex L2 term, clamped (stock EvaluateSphericalHarmonics
-// without the light probe proxy volume path).
-float3 CBL_AmbientSH(float3 normalWS, float3 shL2)
-{
-    return max(SHEvalLinearL0L1(normalWS, unity_SHAr, unity_SHAg, unity_SHAb) + shL2, 0.0);
-}
-
 //
 // Base pass (stock passes 1-3): scaled-space maps, prepass normal, decal albedo
 //
-float2 CBL_ResampleOpacity(float normDist)
-{
-    float4 fadeT = (normDist - _DistanceResampleFadeRangesNeg.wzyx) / (_DistanceResampleFadeRangesPos.wzyx - _DistanceResampleFadeRangesNeg.wzyx);
-    if (0.001 < fadeT.x)
-    {
-        float t = saturate(fadeT.x);
-        return float2(lerp(_DistanceResampleAlbedoOpacity.z, _DistanceResampleAlbedoOpacity.w, t), lerp(_DistanceResampleNormalOpacity.z, _DistanceResampleNormalOpacity.w, t));
-    }
-    if (0.001 < fadeT.y)
-    {
-        float t = saturate(fadeT.y);
-        return float2(lerp(_DistanceResampleAlbedoOpacity.y, _DistanceResampleAlbedoOpacity.z, t), lerp(_DistanceResampleNormalOpacity.y, _DistanceResampleNormalOpacity.z, t));
-    }
-    if (0.001 < fadeT.z)
-    {
-        float t = saturate(fadeT.z);
-        return float2(lerp(_DistanceResampleAlbedoOpacity.x, _DistanceResampleAlbedoOpacity.y, t), lerp(_DistanceResampleNormalOpacity.x, _DistanceResampleNormalOpacity.y, t));
-    }
-    if (0.001 < fadeT.w)
-    {
-        float t = saturate(fadeT.w);
-        return float2(lerp(1.0, _DistanceResampleAlbedoOpacity.x, t), lerp(1.0, _DistanceResampleNormalOpacity.x, t));
-    }
-    return float2(1.0, 1.0);
-}
-
 // Stock BlendDecal: lerps the tinted decal albedo into the running albedo in passes 2 and 3 only.
 // The Redux deferred port left this step out.
 float3 CBL_BlendDecalAlbedo(uint slot, bool checkActive, float3 localPos, float3 localPosDdx, float3 localPosDdy,
@@ -169,7 +137,8 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
     float packedFade = CBL_RampFade(cameraDist, _PackedScaledFadeParams);
     float emissionFade = CBL_RampFade(cameraDist, _EmissionScaledFadeParams);
 
-    float2 resampleOp = CBL_ResampleOpacity(min(cameraDist * 2e-5, 1.0));
+    float2 resampleOp = CBL_ResampleOpacity(min(cameraDist * 2e-5, 1.0), _DistanceResampleFadeRangesNeg, _DistanceResampleFadeRangesPos,
+        _DistanceResampleAlbedoOpacity, _DistanceResampleNormalOpacity);
     float albedoResample = resampleOp.x;
     float normalResample = resampleOp.y;
 
@@ -231,64 +200,6 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
     gb.normalEncoded = saturate(worldNormal * 0.5 + 0.5);
     gb.emission = lighting;
     return gb;
-}
-
-//
-// Anti-tile (ANTI_TILE_QUALITY_ON): hex-grid stochastic sampling of the small detail arrays.
-//
-struct CBLTileHash
-{
-    float2 uv0;
-    float2 uv1;
-    float2 uv2;
-    float3 weights;
-};
-
-CBLTileHash CBL_TileHash(float2 baseUV)
-{
-    CBLTileHash r;
-#if defined(ANTI_TILE_QUALITY_ON)
-    float2 scaled = (_StochasticScale * 3.464) * baseUV;
-    float gridY = dot(float2(-0.57735026, 1.15470052), scaled);
-    // Cell indices round-trip through int then uint on purpose: negative cells wrap the same way the stock shader's did.
-    uint cellXi = (uint)((int)floor(scaled.x));
-    uint cellYi = (uint)((int)floor(gridY));
-    float fracX = frac(scaled.x);
-    float fracY = frac(gridY);
-    float triTest = 1.0 - fracX - fracY;
-    bool inUpper = triTest >= 0.0;
-    float2 c0 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    float2 c1 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? (cellYi + 1u) : cellYi)));
-    float2 c2 = float2(float((int)(inUpper ? (cellXi + 1u) : cellXi)), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    r.uv0 = float2(frac(sin(dot(float2(127.1, 311.7), c0)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c0)) * 43758.5468)) + baseUV;
-    r.uv1 = float2(frac(sin(dot(float2(127.1, 311.7), c1)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c1)) * 43758.5468)) + baseUV;
-    r.uv2 = float2(frac(sin(dot(float2(127.1, 311.7), c2)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c2)) * 43758.5468)) + baseUV;
-    r.weights = max(float3(inUpper ? triTest : -triTest, inUpper ? fracY : 1.0 - fracY, inUpper ? fracX : 1.0 - fracX), 0.0);
-#else
-    r.uv0 = baseUV;
-    r.uv1 = baseUV;
-    r.uv2 = baseUV;
-    r.weights = float3(1.0, 0.0, 0.0);
-#endif
-    return r;
-}
-
-// Detail array sample with explicit gradients (the un-hashed UV's), so it is valid inside the
-// per-triangle and per-layer branches.
-float4 CBL_SampleDetail(TEXTURE2D_ARRAY_PARAM(tex, samp), CBLTileHash h, float index, float2 uvDdx, float2 uvDdy)
-{
-#if defined(ANTI_TILE_QUALITY_ON)
-    float4 sum = 0.0;
-    [branch] if (h.weights.x > 0.001)
-        sum += SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv0, index, uvDdx, uvDdy) * h.weights.x;
-    [branch] if (h.weights.y > 0.001)
-        sum += SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv1, index, uvDdx, uvDdy) * h.weights.y;
-    [branch] if (h.weights.z > 0.001)
-        sum += SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv2, index, uvDdx, uvDdy) * h.weights.z;
-    return sum;
-#else
-    return SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, h.uv0, index, uvDdx, uvDdy);
-#endif
 }
 
 //
@@ -423,52 +334,6 @@ struct CBLLayerResult
     bool   cascadesDiffer;  // false when both cascades sampled the same texels, so near* equals far*
 };
 
-// Cascade UV scales for the layer's distance-resample tier, and the near / far scale for this pixel.
-void CBL_CascadeScales(float distResampleMax, float4 cascadeT, out float nearScale, out float farScale)
-{
-    float4 uvScales;
-    if (3.0 < distResampleMax)
-        uvScales = _DistanceResampleUVScales;
-    else if (2.0 < distResampleMax)
-        uvScales = _DistanceResampleUVScales.xyzz;
-    else if (1.0 < distResampleMax)
-        uvScales = _DistanceResampleUVScales.xyyy;
-    else if (0.0 < distResampleMax)
-        uvScales = _DistanceResampleUVScales.xxxx;
-    else
-        uvScales = 1.0.xxxx;
-
-    nearScale = 1.0;
-    farScale = 1.0;
-    float4 uvScalesExt = float4(1.0, uvScales.xyz);
-    [unroll]
-    for (int j = 0; j < 4; j++)
-    {
-        if (cascadeT[j] > 0.001)
-        {
-            nearScale = uvScales[j];
-            farScale = (cascadeT[j] >= 1.0) ? uvScales[j] : uvScalesExt[j];
-        }
-    }
-}
-
-// Grading around mid grey: brightness, contrast, then saturation.
-float3 CBL_GradeColor(float3 albedo, float4 tint, float brightness, float contrast, float saturation)
-{
-    float3 graded = (albedo * tint.xyz + brightness - 0.21763764) * contrast + 0.21763764;
-    float lum = dot(graded, float3(0.2126729, 0.7151522, 0.072175));
-    return saturation * (graded - lum) + lum;
-}
-
-void CBL_LayerStrengths(float metallicStrength, float glossStrength, out float2 metScaleOffset, out float2 glossScaleOffset)
-{
-    // A strength of 15 or more switches from multiply to override: value = (strength - 15) * 0.2.
-    bool metOver = metallicStrength >= 15.0;
-    metScaleOffset = metOver ? float2(1.0, (metallicStrength - 15.0) * 0.2) : float2(metallicStrength, 0.0);
-    bool glossOver = glossStrength >= 15.0;
-    glossScaleOffset = glossOver ? float2(1.0, (glossStrength - 15.0) * 0.2) : float2(glossStrength, 0.0);
-}
-
 // Single-axis (Y plane) triplanar layer, stock passes 4-7.
 float3 CBL_ReorientSingleAxis(float4 packed, float3 triN, float3 triWeight, float3 triSign, bool triNzPositive)
 {
@@ -489,7 +354,7 @@ float3 CBL_ReorientSingleAxis(float4 packed, float3 triN, float3 triWeight, floa
 CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px)
 {
     float nearScale, farScale;
-    CBL_CascadeScales(mat.distanceResampleMax[layer], px.cascadeT, nearScale, farScale);
+    CBL_CascadeScales(mat.distanceResampleMax[layer], px.cascadeT, _DistanceResampleUVScales, nearScale, farScale);
     float uvScale = mat.uvScale[layer];
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
@@ -497,7 +362,7 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
 
     float2 nearUV = px.baseUV[1] * (nearScale * uvScale) + uvOffset;
     float2 nearDdx = px.baseUVDdx[1] * (nearScale * uvScale), nearDdy = px.baseUVDdy[1] * (nearScale * uvScale);
-    CBLTileHash nearHash = CBL_TileHash(nearUV);
+    CBLTileHash nearHash = CBL_TileHash(nearUV, _StochasticScale);
     float4 nearAlbedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
     float4 nearPacked = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
     float nearMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
@@ -533,7 +398,7 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
     {
         float2 farUV = px.baseUV[1] * (farScale * uvScale) + uvOffset;
         float2 farDdx = px.baseUVDdx[1] * (farScale * uvScale), farDdy = px.baseUVDdy[1] * (farScale * uvScale);
-        CBLTileHash farHash = CBL_TileHash(farUV);
+        CBLTileHash farHash = CBL_TileHash(farUV, _StochasticScale);
         float4 farAlbedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
         float4 farPacked = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
         float farMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
@@ -574,7 +439,7 @@ float3 CBL_ReorientThreeAxis(float2 wyX, float2 wyY, float2 wyZ, float3 triN, fl
 CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px)
 {
     float nearScale, farScale;
-    CBL_CascadeScales(mat.distanceResampleMax[layer], px.cascadeT, nearScale, farScale);
+    CBL_CascadeScales(mat.distanceResampleMax[layer], px.cascadeT, _DistanceResampleUVScales, nearScale, farScale);
     float uvScale = mat.uvScale[layer];
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
@@ -601,7 +466,7 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
         {
             float2 nearUV = px.baseUV[p] * (nearScale * uvScale) + uvOffset;
             float2 nearDdx = px.baseUVDdx[p] * (nearScale * uvScale), nearDdy = px.baseUVDdy[p] * (nearScale * uvScale);
-            CBLTileHash nearHash = CBL_TileHash(nearUV);
+            CBLTileHash nearHash = CBL_TileHash(nearUV, _StochasticScale);
             float4 albN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
             float4 nrmN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
             float mN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
@@ -617,7 +482,7 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
             {
                 float2 farUV = px.baseUV[p] * (farScale * uvScale) + uvOffset;
                 float2 farDdx = px.baseUVDdx[p] * (farScale * uvScale), farDdy = px.baseUVDdy[p] * (farScale * uvScale);
-                CBLTileHash farHash = CBL_TileHash(farUV);
+                CBLTileHash farHash = CBL_TileHash(farUV, _StochasticScale);
                 float4 albF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
                 float4 nrmF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
                 float mF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;

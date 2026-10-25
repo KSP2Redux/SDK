@@ -12,6 +12,8 @@
 #ifndef KSP2_CELESTIALBODY_LOCAL_COMMON_INCLUDED
 #define KSP2_CELESTIALBODY_LOCAL_COMMON_INCLUDED
 
+#include "../Include/KSP2DetailSampling.hlsl"
+
 // ---------------------------------------------------------------------------
 // Quad-mesh vertex stream. The terrain has no vertex buffer: PQSRenderer draws it with
 // DrawProceduralIndirect and every pass fetches its vertex through SV_VertexID. All four buffers
@@ -168,15 +170,6 @@ uint CBL_TriangleFlags(uint vertexID)
     return VisibleQuadMeshIndicesMask[vertexID / 3u];
 }
 
-// World-space frame of a quad-mesh vertex. The Redux port calls the geometric normal
-// "worldTangent" and the tangent "worldNormal"; the names here follow what the vectors are.
-struct CBLFrame
-{
-    float3 tangentWS;       // _PQSToWorld * tangent.xyz
-    float3 bitangentWS;
-    float3 normalWS;        // _PQSToWorld * normal, the geometric surface normal
-};
-
 CBLFrame CBL_BuildFrame(QuadMeshData q)
 {
     CBLFrame f;
@@ -220,141 +213,6 @@ void CBL_DitherAlphaTest(float2 pixelPos)
     uint2 dc = uint2(pixelPos) & 3u;
     if ((1.0 - _Transition) < kDitherMatrix[dc.y][dc.x])
         discard;
-}
-
-// ---------------------------------------------------------------------------
-// Fades and normal helpers
-// ---------------------------------------------------------------------------
-
-// Linear ramp from p.z to p.w over [p.x, p.x + p.y].
-float CBL_RampFade(float t, float4 p)
-{
-    return lerp(p.z, p.w, saturate((t - p.x) / max(p.y, 0.01)));
-}
-
-// DXT5nm / BC5 normal decode (red times alpha), matching UnpackNormalmapRGorAG.
-float3 CBL_DecodeDxt5nm(float4 s)
-{
-    float2 xy = float2(s.w * s.x, s.y) * 2.0 - 1.0;
-    return float3(xy, sqrt(saturate(1.0 - dot(xy, xy))));
-}
-
-struct CBLNormalLayer
-{
-    float3 normal;
-    float4 fade;
-};
-
-// Planar (Large / subzone) sampling context: cube-face UV and pole-projected local UV with their
-// derivatives, plus the polar blend.
-struct CBLNormalSampleCtx
-{
-    float2 faceUV;
-    float2 faceDdx;
-    float2 faceDdy;
-    float2 localUV;
-    float2 localDdx;
-    float2 localDdy;
-    float3 normLocalPos;
-    float  triSignYNorm;
-    float  normYBlend;
-};
-
-CBLNormalLayer CBL_DecodeAndReorientNormal(float4 faceSample, float4 localSample, CBLNormalSampleCtx ctx, float4 fadeParams,
-                                           CBLFrame frame)
-{
-    float3 faceN = CBL_DecodeDxt5nm(faceSample);
-    float3 tbnNorm = normalize(frame.tangentWS * faceN.x + frame.bitangentWS * faceN.y + frame.normalWS * faceN.z);
-
-    float3 localN = CBL_DecodeDxt5nm(localSample);
-    float absYP1 = abs(ctx.normLocalPos.y) + 1.0;
-    float reorientDot = dot(float3(ctx.normLocalPos.x, ctx.normLocalPos.z, absYP1), float3(-localN.x, -localN.y, localN.z));
-    float3 reorientVec = float3(
-        ctx.normLocalPos.x + localN.x + (ctx.normLocalPos.x * reorientDot) / absYP1,
-        ctx.normLocalPos.y + ctx.triSignYNorm * (reorientDot - localN.z),
-        ctx.normLocalPos.z + localN.y + (ctx.normLocalPos.z * reorientDot) / absYP1);
-    float3 reorientUnit = dot(reorientVec, reorientVec) < 0.0001 ? ctx.normLocalPos : normalize(reorientVec);
-    float3 worldNorm = normalize(mul((float3x3)_PQSToWorld, reorientUnit));
-
-    CBLNormalLayer r;
-    r.normal = lerp(worldNorm, tbnNorm, ctx.normYBlend);
-    r.fade = fadeParams;
-    return r;
-}
-
-CBLNormalLayer CBL_SampleLargeNormal(TEXTURE2D_PARAM(tex, samp), float4 uvParams, float4 fadeParams,
-                                     CBLNormalSampleCtx ctx, CBLFrame frame)
-{
-    float4 faceSample = SAMPLE_TEXTURE2D_GRAD(tex, samp, ctx.faceUV * uvParams.xy + uvParams.zw,
-                                              ctx.faceDdx * uvParams.xy, ctx.faceDdy * uvParams.xy);
-    float4 localSample = SAMPLE_TEXTURE2D_GRAD(tex, samp, ctx.localUV * uvParams.xy + uvParams.zw,
-                                               ctx.localDdx * uvParams.xy, ctx.localDdy * uvParams.xy);
-    return CBL_DecodeAndReorientNormal(faceSample, localSample, ctx, fadeParams, frame);
-}
-
-CBLNormalLayer CBL_SampleArrayNormal(TEXTURE2D_ARRAY_PARAM(tex, samp), float4 uvParams, float4 fadeParams, float arrayIndex,
-                                     CBLNormalSampleCtx ctx, CBLFrame frame)
-{
-    float4 faceSample = SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, ctx.faceUV * uvParams.xy + uvParams.zw, arrayIndex,
-                                                    ctx.faceDdx * uvParams.xy, ctx.faceDdy * uvParams.xy);
-    float4 localSample = SAMPLE_TEXTURE2D_ARRAY_GRAD(tex, samp, ctx.localUV * uvParams.xy + uvParams.zw, arrayIndex,
-                                                     ctx.localDdx * uvParams.xy, ctx.localDdy * uvParams.xy);
-    return CBL_DecodeAndReorientNormal(faceSample, localSample, ctx, fadeParams, frame);
-}
-
-// Triplanar Mid normal with RNM-style reorientation on the three PQS-space planes.
-CBLNormalLayer CBL_SampleMidNormal(TEXTURE2D_PARAM(tex, samp), float4 uvParams, float4 fadeParams,
-                                   float3 objNorm, float3 objectNormal, float3 triWeight, float3 triSign,
-                                   float2 triUV_YZ, float2 triUV_XZ, float2 triUV_XY)
-{
-    float3 yz_n = CBL_DecodeDxt5nm(SAMPLE_TEXTURE2D(tex, samp, triUV_YZ * uvParams.xy + uvParams.zw));
-    float3 xz_n = CBL_DecodeDxt5nm(SAMPLE_TEXTURE2D(tex, samp, triUV_XZ * uvParams.xy + uvParams.zw));
-    float3 xy_n = CBL_DecodeDxt5nm(SAMPLE_TEXTURE2D(tex, samp, triUV_XY * uvParams.xy + uvParams.zw));
-    float3 absP1 = abs(objNorm) + 1.0;
-    float yz_dot = dot(float3(objNorm.z, objNorm.y, absP1.x), float3(-yz_n.x, -yz_n.y, yz_n.z));
-    float xz_dot = dot(float3(objNorm.x, objNorm.z, absP1.y), float3(-xz_n.x, -xz_n.y, xz_n.z));
-    float xy_dot = dot(float3(objNorm.x, objNorm.y, absP1.z), float3(-xy_n.x, -xy_n.y, xy_n.z));
-    float3 reorient = float3(
-        objectNormal.x + triWeight.z * (xy_n.x + (xy_dot * objNorm.x) / absP1.z) + triWeight.x * triSign.x * (yz_dot - yz_n.z) + triWeight.y * (xz_n.x + (xz_dot * objNorm.x) / absP1.y),
-        objectNormal.y + triWeight.z * (xy_n.y + (xy_dot * objNorm.y) / absP1.z) + triWeight.x * (yz_n.y + (objNorm.y * yz_dot) / absP1.x) + triWeight.y * triSign.y * (xz_dot - xz_n.z),
-        objectNormal.z + triWeight.z * triSign.z * (xy_dot - xy_n.z) + triWeight.x * (yz_n.x + (objNorm.z * yz_dot) / absP1.x) + triWeight.y * (xz_n.y + (xz_dot * objNorm.z) / absP1.y));
-    CBLNormalLayer r;
-    r.normal = mul((float3x3)_PQSToWorld, normalize(reorient));
-    r.fade = fadeParams;
-    return r;
-}
-
-// Rotates v by the shortest-arc rotation that maps "from" onto "to".
-float3 CBL_RotateByHalfArcQuat(float3 from, float3 to, float3 v)
-{
-    // Degenerate when "to" is opposite "from": leave v unrotated instead of dividing by zero.
-    float quatDot = dot(from, to) + 1.0;
-    float quatLen = sqrt(max(2.0 * quatDot, 1e-8));
-    float3 qXYZ = cross(from, to) / quatLen;
-    float qW = quatDot / quatLen;
-    float diag = qW * qW - dot(qXYZ, qXYZ);
-    float3 rotated = v * diag + 2.0 * qW * cross(qXYZ, v) + 2.0 * dot(qXYZ, v) * qXYZ;
-    return quatDot < 0.0001 ? v : rotated;
-}
-
-// Folds four biome-channel normal layers into prevNorm: shortest-arc rotation from the geometric
-// normal to the fade-weighted channel sum, scaled by (1 - normalScaleFade) and the summed weight.
-float3 CBL_BlendLayerNormal(float3 prevNorm, CBLNormalLayer r, CBLNormalLayer g, CBLNormalLayer b, CBLNormalLayer a,
-                            float4 biomeWeightNorm, float3 geomNormalWS, float normalScaleFade, float cameraDist)
-{
-    float4 fades = float4(CBL_RampFade(cameraDist, r.fade), CBL_RampFade(cameraDist, g.fade),
-                          CBL_RampFade(cameraDist, b.fade), CBL_RampFade(cameraDist, a.fade));
-    float4 w = biomeWeightNorm * fades;
-    float blendWeight = saturate(w.x + w.y + w.z + w.w);
-    float3 blendNorm = w.x * r.normal + w.y * g.normal + w.z * b.normal + w.w * a.normal;
-    // No change when the layers carry no weight or their sum collapses to zero.
-    float3 result = prevNorm;
-    if (0.001 < blendWeight && dot(blendNorm, blendNorm) >= 0.0001)
-    {
-        float3 rotated = CBL_RotateByHalfArcQuat(geomNormalWS, blendNorm, prevNorm);
-        result = lerp(prevNorm, rotated, (1.0 - normalScaleFade) * blendWeight);
-    }
-    return result;
 }
 
 #endif // KSP2_CELESTIALBODY_LOCAL_COMMON_INCLUDED
