@@ -301,15 +301,15 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     float invBiomeWeightSum = 1.0 / max(biomeWeightNorm.x + biomeWeightNorm.y + biomeWeightNorm.z + biomeWeightNorm.w, 0.001);
     float4 hmBiomeWeight = invBiomeWeightSum * biomeWeightNorm;
 
-    CBLNormalLayer midR = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalR, sampler_LinearRepeat), _MidNormalRUVParams, _MidNormalRFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY);
-    CBLNormalLayer midG = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalG, sampler_LinearRepeat), _MidNormalGUVParams, _MidNormalGFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY);
-    CBLNormalLayer midB = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalB, sampler_LinearRepeat), _MidNormalBUVParams, _MidNormalBFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY);
-    CBLNormalLayer midA = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalA, sampler_LinearRepeat), _MidNormalAUVParams, _MidNormalAFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY);
+    CBLNormalLayer midR = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalR, sampler_LinearRepeat), _MidNormalRUVParams, _MidNormalRFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld);
+    CBLNormalLayer midG = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalG, sampler_LinearRepeat), _MidNormalGUVParams, _MidNormalGFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld);
+    CBLNormalLayer midB = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalB, sampler_LinearRepeat), _MidNormalBUVParams, _MidNormalBFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld);
+    CBLNormalLayer midA = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormalA, sampler_LinearRepeat), _MidNormalAUVParams, _MidNormalAFadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld);
 
-    CBLNormalLayer largeR = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalR, sampler_LinearRepeat), _LargeNormalRUVParams, _LargeNormalRFadeParams, normCtx, frame);
-    CBLNormalLayer largeG = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalG, sampler_LinearRepeat), _LargeNormalGUVParams, _LargeNormalGFadeParams, normCtx, frame);
-    CBLNormalLayer largeB = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalB, sampler_LinearRepeat), _LargeNormalBUVParams, _LargeNormalBFadeParams, normCtx, frame);
-    CBLNormalLayer largeA = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalA, sampler_LinearRepeat), _LargeNormalAUVParams, _LargeNormalAFadeParams, normCtx, frame);
+    CBLNormalLayer largeR = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalR, sampler_LinearRepeat), _LargeNormalRUVParams, _LargeNormalRFadeParams, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer largeG = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalG, sampler_LinearRepeat), _LargeNormalGUVParams, _LargeNormalGFadeParams, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer largeB = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalB, sampler_LinearRepeat), _LargeNormalBUVParams, _LargeNormalBFadeParams, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer largeA = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormalA, sampler_LinearRepeat), _LargeNormalAUVParams, _LargeNormalAFadeParams, normCtx, frame, (float3x3)_PQSToWorld);
 
 #if defined(SUB_ZONES_ENABLED)
     // dot(subzone weight, filter) per family and channel. Scales each layer normal and gates the
@@ -333,19 +333,19 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     CBL_APPLY_SZ(largeB, largeSzFilter.z, biomeWeightNorm.z);
     CBL_APPLY_SZ(largeA, largeSzFilter.w, biomeWeightNorm.w);
 
-    CBLNormalLayer sz3R = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalRUVParams, _Subzone3NormalRFadeParams, _Subzone3NormalIndices.x, normCtx, frame);
-    CBLNormalLayer sz3G = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalGUVParams, _Subzone3NormalGFadeParams, _Subzone3NormalIndices.y, normCtx, frame);
-    CBLNormalLayer sz3B = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalBUVParams, _Subzone3NormalBFadeParams, _Subzone3NormalIndices.z, normCtx, frame);
-    CBLNormalLayer sz3A = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalAUVParams, _Subzone3NormalAFadeParams, _Subzone3NormalIndices.w, normCtx, frame);
+    CBLNormalLayer sz3R = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalRUVParams, _Subzone3NormalRFadeParams, _Subzone3NormalIndices.x, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer sz3G = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalGUVParams, _Subzone3NormalGFadeParams, _Subzone3NormalIndices.y, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer sz3B = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalBUVParams, _Subzone3NormalBFadeParams, _Subzone3NormalIndices.z, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer sz3A = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3NormalAUVParams, _Subzone3NormalAFadeParams, _Subzone3NormalIndices.w, normCtx, frame, (float3x3)_PQSToWorld);
     CBL_APPLY_SZ(sz3R, sz3SzFilter.x, biomeWeightNorm.x);
     CBL_APPLY_SZ(sz3G, sz3SzFilter.y, biomeWeightNorm.y);
     CBL_APPLY_SZ(sz3B, sz3SzFilter.z, biomeWeightNorm.z);
     CBL_APPLY_SZ(sz3A, sz3SzFilter.w, biomeWeightNorm.w);
 
-    CBLNormalLayer sz4R = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalRUVParams, _Subzone4NormalRFadeParams, _Subzone4NormalIndices.x, normCtx, frame);
-    CBLNormalLayer sz4G = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalGUVParams, _Subzone4NormalGFadeParams, _Subzone4NormalIndices.y, normCtx, frame);
-    CBLNormalLayer sz4B = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalBUVParams, _Subzone4NormalBFadeParams, _Subzone4NormalIndices.z, normCtx, frame);
-    CBLNormalLayer sz4A = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalAUVParams, _Subzone4NormalAFadeParams, _Subzone4NormalIndices.w, normCtx, frame);
+    CBLNormalLayer sz4R = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalRUVParams, _Subzone4NormalRFadeParams, _Subzone4NormalIndices.x, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer sz4G = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalGUVParams, _Subzone4NormalGFadeParams, _Subzone4NormalIndices.y, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer sz4B = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalBUVParams, _Subzone4NormalBFadeParams, _Subzone4NormalIndices.z, normCtx, frame, (float3x3)_PQSToWorld);
+    CBLNormalLayer sz4A = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4NormalAUVParams, _Subzone4NormalAFadeParams, _Subzone4NormalIndices.w, normCtx, frame, (float3x3)_PQSToWorld);
     CBL_APPLY_SZ(sz4R, sz4SzFilter.x, biomeWeightNorm.x);
     CBL_APPLY_SZ(sz4G, sz4SzFilter.y, biomeWeightNorm.y);
     CBL_APPLY_SZ(sz4B, sz4SzFilter.z, biomeWeightNorm.z);
