@@ -382,7 +382,8 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
     r.farHeightAlpha = (wy * nearAlbedo.w) * tint.w;
     r.farMetallic = (wy * nearMetal) * metSO.x + metSO.y;
     r.farGloss = (wy * nearPacked.x) * glossSO.x + glossSO.y;
-    r.farAO = pow(max(wy * nearPacked.z, 0.0), aoStrength);
+    // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
+    r.farAO = pow(max(wy * nearPacked.z, FLT_MIN), aoStrength);
 
     // Outside a cascade transition both cascades use the same scale, so the far cascade would fetch the same
     // texels and shade them to the same values. Most terrain from altitude is outside one.
@@ -407,7 +408,7 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
         r.nearHeightAlpha = (wy * farAlbedo.w) * tint.w;
         r.nearMetallic = (wy * farMetal) * metSO.x + metSO.y;
         r.nearGloss = (wy * farPacked.x) * glossSO.x + glossSO.y;
-        r.nearAO = pow(max(wy * farPacked.z, 0.0), aoStrength);
+        r.nearAO = pow(max(wy * farPacked.z, FLT_MIN), aoStrength);
     }
     return r;
 }
@@ -522,7 +523,8 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
     r.farHeightAlpha = albANear * tint.w;
     r.farMetallic = metNear * metSO.x + metSO.y;
     r.farGloss = nrmXNear * glossSO.x + glossSO.y;
-    r.farAO = pow(max(nrmZNear, 0.0), aoStrength);
+    // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
+    r.farAO = pow(max(nrmZNear, FLT_MIN), aoStrength);
 
     r.cascadesDiffer = sampleFar;
     r.nearColor = r.farColor;
@@ -540,7 +542,7 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
         r.nearHeightAlpha = albAFar * tint.w;
         r.nearMetallic = metFar * metSO.x + metSO.y;
         r.nearGloss = nrmXFar * glossSO.x + glossSO.y;
-        r.nearAO = pow(max(nrmZFar, 0.0), aoStrength);
+        r.nearAO = pow(max(nrmZFar, FLT_MIN), aoStrength);
     }
     return r;
 }
