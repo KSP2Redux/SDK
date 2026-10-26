@@ -1443,3 +1443,53 @@
 }
 
 /* endregion */
+
+/* region ============ Tooltip ============ */
+
+/* The flight HUD tooltip: the stock callout frame, black with a white rim and notched corners, and white text. The
+   stock text is realtimerounded-regular at 12, which Redux draws as JetBrains Mono ExtraLight at 0.88 of the size. */
+.tooltip {
+    position: absolute;
+    max-width: 400px;
+    min-height: 20px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/tooltip-frame.png?fileID=21300000&guid=f1e68c594f95ae74d83a63644064c6d7&type=3#tooltip-frame');
+    -unity-slice-left: 3;
+    -unity-slice-right: 3;
+    -unity-slice-top: 3;
+    -unity-slice-bottom: 3;
+}
+
+.tooltip__label {
+    margin: 0;
+    padding: 3px 10px;
+    color: #ffffff;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    /*noinspection CssUnknownTarget*/
+    -unity-font-definition: url('Fonts/JetBrainsMono/JetBrainsMono-ExtraLight SDF.asset');
+    font-size: 10.5px;
+}
+
+/* The VAB tooltip: a dark plate with a cyan edge on the left. */
+.tooltip.oab-tooltip {
+    min-height: 35px;
+    background-image: none;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-left-width: 3px;
+    border-left-color: rgb(13, 217, 254);
+    background-color: rgb(42, 42, 42);
+}
+
+.oab-tooltip > .tooltip__label {
+    padding: 0 10px;
+    color: rgb(204, 237, 254);
+    /*noinspection CssInvalidFunction,CssUnresolvedCustomProperty,CssUnknownProperty*/
+    -unity-font-definition: var(--font-medium);
+    font-size: 14px;
+}
+
+/* endregion */
