@@ -660,18 +660,22 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
 
     float4 biomeMask = SAMPLE_TEXTURE2D(_BiomeMaskTex, sampler_LinearRepeat, i.uv);
 
-#if defined(DEBUG_OUTPUT_BIOME_COLOR)
-    // Unlit biome mask view: R red, G green, B blue, A yellow.
-    float4 maskNorm = biomeMask / max(dot(biomeMask, 1.0), 0.001);
-    float3 debugColor = maskNorm.x * float3(1.0, 0.0, 0.0) + maskNorm.y * float3(0.0, 1.0, 0.0)
-                      + maskNorm.z * float3(0.0, 0.0, 1.0) + maskNorm.w * float3(1.0, 1.0, 0.0);
-    normalWS = normalize(i.normalWS);
-    viewDirWS = GetWorldSpaceNormalizeViewDir(i.positionWS);
-    KSP2Surface surface = (KSP2Surface)0;
-    surface.emission = debugColor;
-    surface.alpha = 1.0;
-    return surface;
-#else
+    // DEBUG_OUTPUT_BIOME_COLOR is a dynamic branch, uniform over the draw, not a variant.
+    [branch]
+    if (DEBUG_OUTPUT_BIOME_COLOR)
+    {
+        // Unlit biome mask view: R red, G green, B blue, A yellow.
+        float4 maskNorm = biomeMask / max(dot(biomeMask, 1.0), 0.001);
+        float3 debugColor = maskNorm.x * float3(1.0, 0.0, 0.0) + maskNorm.y * float3(0.0, 1.0, 0.0)
+                          + maskNorm.z * float3(0.0, 0.0, 1.0) + maskNorm.w * float3(1.0, 1.0, 0.0);
+        normalWS = normalize(i.normalWS);
+        viewDirWS = GetWorldSpaceNormalizeViewDir(i.positionWS);
+        KSP2Surface debugSurface = (KSP2Surface)0;
+        debugSurface.emission = debugColor;
+        debugSurface.alpha = 1.0;
+        return debugSurface;
+    }
+
     float3 positionWS = i.positionWS;
     float2 prepassUV = i.screenPos.xy / i.screenPos.z;      // PQS prepass targets
     float cameraDist = distance(_WorldSpaceCameraPos, positionWS);
@@ -793,32 +797,29 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     surface.alpha = 1.0;
 
     return surface;
-#endif
 }
 
 float3 CBL_IndirectAndEmission(CBLForwardVaryings i, float3 normalWS, float3 viewDirWS, KSP2Surface surface)
 {
-#if defined(DEBUG_OUTPUT_BIOME_COLOR)
-    return surface.emission;
-#else
+    [branch]
+    if (DEBUG_OUTPUT_BIOME_COLOR)
+        return surface.emission;
     float2 urpScreenUV = GetNormalizedScreenSpaceUV(i.positionCS);
     float3 ambientDiffuse, envSpecular;
     KSP2_IndirectLighting(i.positionWS, normalWS, viewDirWS, surface, urpScreenUV, ambientDiffuse, envSpecular);
     return envSpecular + surface.emission;
-#endif
 }
 
 half4 CBL_ForwardFragment(CBLForwardVaryings i) : SV_Target
 {
     float3 normalWS, viewDirWS;
     KSP2Surface surface = CBL_Surface(i, normalWS, viewDirWS);
-#if defined(DEBUG_OUTPUT_BIOME_COLOR)
-    return half4(CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface), 1.0);
-#else
+    [branch]
+    if (DEBUG_OUTPUT_BIOME_COLOR)
+        return half4(CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface), 1.0);
     float2 urpScreenUV = GetNormalizedScreenSpaceUV(i.positionCS);
     float3 direct = KSP2_DirectLighting(i.positionWS, i.positionCS, normalWS, viewDirWS, surface, urpScreenUV);
     return half4(direct + CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface), 1.0);
-#endif
 }
 
 #if defined(KSP2_GBUFFER_PASS)

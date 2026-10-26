@@ -604,7 +604,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 			// The variant set of the CelestialBody_Local port this pass includes.
 			#pragma multi_compile_local_fragment _ SUB_ZONES_ENABLED
 			#pragma multi_compile_fragment _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
+			#pragma dynamic_branch_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
 			#pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
 
 			#pragma multi_compile_fragment _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
@@ -769,12 +769,11 @@ Shader "Redux/Environment/CelestialBody_Local"
 
 			#pragma multi_compile_local_fragment _ SUB_ZONES_ENABLED
 			#pragma multi_compile_fragment _ ANTI_TILE_QUALITY_ON
-			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
+			#pragma dynamic_branch_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
 			#pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
 			#pragma multi_compile_local_fragment _ _WRITE_RENDERING_LAYERS
-			#pragma multi_compile_local_fragment _ _RENDER_PASS_ENABLED
+			#define _RENDER_PASS_ENABLED 1
 
-			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
 			#pragma multi_compile_local_fragment _ PQS_SHADOWMASK
 			#if defined(PQS_SHADOWMASK)
 			    #define SHADOWS_SHADOWMASK 1
@@ -796,7 +795,6 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma vertex CBL_PrepassVertex
 			#pragma fragment CBL_PrepassFragment
 			#define CBL_NORMALS_ONLY
-			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
 			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#define CBL_PREPASS_ZONE CBL_ZONE_NO_DECALS
@@ -815,7 +813,6 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma vertex CBL_PrepassVertex
 			#pragma fragment CBL_PrepassFragment
 			#define CBL_NORMALS_ONLY
-			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
 			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#pragma multi_compile_local _ DECALS_ENABLED
@@ -835,7 +832,6 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma vertex CBL_PrepassVertex
 			#pragma fragment CBL_PrepassFragment
 			#define CBL_NORMALS_ONLY
-			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
 			#pragma multi_compile_local _ SUB_ZONES_ENABLED
 			#pragma multi_compile_local _ REDUX_GRADIENCE
 			#pragma multi_compile_local _ DECALS_ENABLED
