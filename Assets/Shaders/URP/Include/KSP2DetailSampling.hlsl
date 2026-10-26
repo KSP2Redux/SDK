@@ -32,6 +32,12 @@ struct CBLTileHash
     float2 weights;
 };
 
+// A hex cell's random UV offset.
+float2 CBL_CellOffset(float2 cell)
+{
+    return float2(frac(sin(dot(float2(127.1, 311.7), cell)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), cell)) * 43758.5468));
+}
+
 // stochasticScale is the terrain material's _StochasticScale.
 CBLTileHash CBL_TileHash(float2 baseUV, float stochasticScale)
 {
@@ -39,36 +45,35 @@ CBLTileHash CBL_TileHash(float2 baseUV, float stochasticScale)
 #if defined(ANTI_TILE_QUALITY_ON)
     float2 scaled = (stochasticScale * 3.464) * baseUV;
     float gridY = dot(float2(-0.57735026, 1.15470052), scaled);
-    // Cell indices round-trip through int then uint on purpose: negative cells wrap the same way the stock shader's did.
-    uint cellXi = (uint)((int)floor(scaled.x));
-    uint cellYi = (uint)((int)floor(gridY));
-    float fracX = frac(scaled.x);
-    float fracY = frac(gridY);
+    // Stock took the cell indices through int and uint and back to float. Floor and +1 are exact in float below 2^24,
+    // so the cells are the same, without the conversions.
+    float cellX = floor(scaled.x);
+    float cellY = floor(gridY);
+    float fracX = scaled.x - cellX;
+    float fracY = gridY - cellY;
     float triTest = 1.0 - fracX - fracY;
     bool inUpper = triTest >= 0.0;
-    float2 c0 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    float2 c1 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? (cellYi + 1u) : cellYi)));
-    float2 c2 = float2(float((int)(inUpper ? (cellXi + 1u) : cellXi)), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    float2 uvA = float2(frac(sin(dot(float2(127.1, 311.7), c0)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c0)) * 43758.5468)) + baseUV;
-    float2 uvB = float2(frac(sin(dot(float2(127.1, 311.7), c1)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c1)) * 43758.5468)) + baseUV;
-    float2 uvC = float2(frac(sin(dot(float2(127.1, 311.7), c2)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c2)) * 43758.5468)) + baseUV;
+    float2 c0 = inUpper ? float2(cellX, cellY) : float2(cellX + 1.0, cellY + 1.0);
+    float2 c1 = inUpper ? float2(cellX, cellY + 1.0) : float2(cellX + 1.0, cellY);
+    float2 c2 = inUpper ? float2(cellX + 1.0, cellY) : float2(cellX, cellY + 1.0);
     float3 w = max(float3(inUpper ? triTest : -triTest, inUpper ? fracY : 1.0 - fracY, inUpper ? fracX : 1.0 - fracX), 0.0);
     // Redux: stock blends all three taps. Keeping the two strongest saves a fetch per detail sample, and sharpening
-    // the weights to the 4th power first keeps the dropped tap's share small.
+    // the weights to the 4th power first keeps the dropped tap's share small. The taps are chosen before hashing, so
+    // the dropped cell is never hashed.
     w *= w;
     w *= w;
     if (w.x < w.y && w.x < w.z)
     {
-        uvA = uvC;
+        c0 = c2;
         w.x = w.z;
     }
     else if (w.y < w.z)
     {
-        uvB = uvC;
+        c1 = c2;
         w.y = w.z;
     }
-    r.uv0 = uvA;
-    r.uv1 = uvB;
+    r.uv0 = CBL_CellOffset(c0) + baseUV;
+    r.uv1 = CBL_CellOffset(c1) + baseUV;
     r.weights = w.xy / max(w.x + w.y, 1e-6);
 #else
     r.uv0 = baseUV;
