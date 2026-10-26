@@ -204,15 +204,14 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
 
 //
 // Biome material: one channel's _CBL array values, with the subzone-weighted height weight already resolved for this
-// pixel. The tint and brightness are read per layer by CBL_LayerTint.
+// pixel. The tint and brightness are read per layer by CBL_LayerTint, and the enable and weight softness by the
+// height blend, so none of them are held through the layers' sampling.
 //
 struct CBLBiomeMaterial
 {
     uint   channel;
     float4 biome;               // per-layer detail array slice, -1 = unused
-    float4 enable;
     float4 heightWeight;        // gate and height-blend weight (enable folded in)
-    float4 weightSoftness;
     float4 uvScale;
     float4 uvOffset;
     float4 contrast;
@@ -232,8 +231,7 @@ CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
     CBLBiomeMaterial m;
     m.channel = channel;
     m.biome = _CBLBiome[channel];
-    m.enable = _CBLEnable[channel];
-    m.weightSoftness = _CBLWeightSoftness[channel];
+    float4 enable = _CBLEnable[channel];
     m.uvScale = _CBLUVScale[channel];
     m.uvOffset = _CBLUVOffset[channel];
     m.contrast = _CBLContrast[channel];
@@ -247,9 +245,9 @@ CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
     // Subzone mode replaces the height weight with a blend weighted by the subzone mask.
     [unroll]
     for (uint l = 0u; l < 4u; l++)
-        m.heightWeight[l] = m.enable[l] * dot(_CBLSubzoneWeight[channel * 4u + l], subzoneMask);
+        m.heightWeight[l] = enable[l] * dot(_CBLSubzoneWeight[channel * 4u + l], subzoneMask);
 #else
-    m.heightWeight = _CBLHeightWeight[channel] * m.enable;
+    m.heightWeight = _CBLHeightWeight[channel] * enable;
 #endif
     return m;
 }
@@ -296,24 +294,24 @@ struct CBLBiomePixel
     float3 shL2;
 };
 
-// One layer's samples. "near" and "far" follow the Redux port: near* values come from the far
-// cascade UV and pair with the far height-blend weights.
-struct CBLLayerResult
+// One layer's samples at one cascade scale.
+struct CBLLayerSample
 {
-    float3 nearColor;
-    float3 farColor;
-    float3 nearNormal;
-    float3 farNormal;
-    float  nearHeightAlpha;
-    float  farHeightAlpha;
-    float  nearMetallic;
-    float  farMetallic;
-    float  nearGloss;
-    float  farGloss;
-    float  nearAO;
-    float  farAO;
-    bool   cascadesDiffer;  // false when both cascades sampled the same texels, so near* equals far*
+    float3 color;
+    float3 normal;
+    float  heightAlpha;
+    float  metallic;
+    float  gloss;
+    float  ao;
 };
+
+// The layer's UV scale for this pixel's near or far distance cascade.
+float CBL_LayerCascadeScale(CBLBiomeMaterial mat, uint layer, float4 cascadeT, bool far)
+{
+    float nearScale, farScale;
+    CBL_CascadeScales(mat.distanceResampleMax[layer], cascadeT, _DistanceResampleUVScales, nearScale, farScale);
+    return far ? farScale : nearScale;
+}
 
 // Single-axis (Y plane) triplanar layer, stock passes 4-7.
 float3 CBL_ReorientSingleAxis(float4 packed, float3 triN, float3 triWeight, float3 triSign, bool triNzPositive)
@@ -332,74 +330,38 @@ float3 CBL_ReorientSingleAxis(float4 packed, float3 triN, float3 triWeight, floa
     return normalize(triN + triWeight.z * zBlend + triWeight.y * yBlend + xBlend);
 }
 
-CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px)
+CBLLayerSample CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale)
 {
-    float nearScale, farScale;
-    CBL_CascadeScales(mat.distanceResampleMax[layer], px.cascadeT, _DistanceResampleUVScales, nearScale, farScale);
-    float uvScale = mat.uvScale[layer];
+    float scale = cascadeScale * mat.uvScale[layer];
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
     float2 metSO, glossSO;
     CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
-    // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
-    bool sampleMetal = metSO.x != 0.0;
 
-    float2 nearUV = px.baseUV[1] * (nearScale * uvScale) + uvOffset;
-    float2 nearDdx = px.baseUVDdx[1] * (nearScale * uvScale), nearDdy = px.baseUVDdy[1] * (nearScale * uvScale);
-    CBLTileHash nearHash = CBL_TileHash(nearUV, _StochasticScale);
-    float4 nearAlbedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
-    float4 nearPacked = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
-    float nearMetal = 0.0;
+    float2 uv = px.baseUV[1] * scale + uvOffset;
+    float2 uvDdx = px.baseUVDdx[1] * scale, uvDdy = px.baseUVDdy[1] * scale;
+    CBLTileHash hash = CBL_TileHash(uv, _StochasticScale);
+    float4 albedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
+    float4 packed = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
+    // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
+    float metal = 0.0;
     [branch]
-    if (sampleMetal)
-        nearMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
+    if (metSO.x != 0.0)
+        metal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy).x;
 
     float wy = px.triWeight.y;
     float4 tint;
     float brightness;
     CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
-    float contrast = mat.contrast[layer];
-    float saturation = mat.saturation[layer];
-    float normalStrength = mat.normalStrength[layer];
-    float aoStrength = mat.aoStrength[layer];
 
-    CBLLayerResult r;
-    r.farColor = CBL_GradeColor(wy * nearAlbedo.xyz, tint, brightness, contrast, saturation);
-    r.farNormal = mul((float3x3)TriplanarToWorld, CBL_ReorientSingleAxis(nearPacked, px.triN, px.triWeight, px.triSign, px.triNzPositive)) * normalStrength;
-    r.farHeightAlpha = (wy * nearAlbedo.w) * tint.w;
-    r.farMetallic = (wy * nearMetal) * metSO.x + metSO.y;
-    r.farGloss = (wy * nearPacked.x) * glossSO.x + glossSO.y;
+    CBLLayerSample r;
+    r.color = CBL_GradeColor(wy * albedo.xyz, tint, brightness, mat.contrast[layer], mat.saturation[layer]);
+    r.normal = mul((float3x3)TriplanarToWorld, CBL_ReorientSingleAxis(packed, px.triN, px.triWeight, px.triSign, px.triNzPositive)) * mat.normalStrength[layer];
+    r.heightAlpha = (wy * albedo.w) * tint.w;
+    r.metallic = (wy * metal) * metSO.x + metSO.y;
+    r.gloss = (wy * packed.x) * glossSO.x + glossSO.y;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
-    r.farAO = pow(max(wy * nearPacked.z, FLT_MIN), aoStrength);
-
-    // Outside a cascade transition both cascades use the same scale, so the far cascade would fetch the same
-    // texels and shade them to the same values. Most terrain from altitude is outside one.
-    r.cascadesDiffer = farScale != nearScale;
-    r.nearColor = r.farColor;
-    r.nearNormal = r.farNormal;
-    r.nearHeightAlpha = r.farHeightAlpha;
-    r.nearMetallic = r.farMetallic;
-    r.nearGloss = r.farGloss;
-    r.nearAO = r.farAO;
-    [branch]
-    if (r.cascadesDiffer)
-    {
-        float2 farUV = px.baseUV[1] * (farScale * uvScale) + uvOffset;
-        float2 farDdx = px.baseUVDdx[1] * (farScale * uvScale), farDdy = px.baseUVDdy[1] * (farScale * uvScale);
-        CBLTileHash farHash = CBL_TileHash(farUV, _StochasticScale);
-        float4 farAlbedo = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
-        float4 farPacked = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
-        float farMetal = 0.0;
-        [branch]
-        if (sampleMetal)
-            farMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
-        r.nearColor = CBL_GradeColor(wy * farAlbedo.xyz, tint, brightness, contrast, saturation);
-        r.nearNormal = mul((float3x3)TriplanarToWorld, CBL_ReorientSingleAxis(farPacked, px.triN, px.triWeight, px.triSign, px.triNzPositive)) * normalStrength;
-        r.nearHeightAlpha = (wy * farAlbedo.w) * tint.w;
-        r.nearMetallic = (wy * farMetal) * metSO.x + metSO.y;
-        r.nearGloss = (wy * farPacked.x) * glossSO.x + glossSO.y;
-        r.nearAO = pow(max(wy * farPacked.z, FLT_MIN), aoStrength);
-    }
+    r.ao = pow(max(wy * packed.z, FLT_MIN), mat.aoStrength[layer]);
     return r;
 }
 
@@ -427,11 +389,9 @@ float3 CBL_ReorientThreeAxis(float2 wyX, float2 wyY, float2 wyZ, float3 triN, fl
     return normalize(blended);
 }
 
-CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px)
+CBLLayerSample CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale)
 {
-    float nearScale, farScale;
-    CBL_CascadeScales(mat.distanceResampleMax[layer], px.cascadeT, _DistanceResampleUVScales, nearScale, farScale);
-    float uvScale = mat.uvScale[layer];
+    float scale = cascadeScale * mat.uvScale[layer];
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
     float2 metSO, glossSO;
@@ -439,210 +399,166 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
     // A zero metallic scale multiplies the metal texels away, so the layer skips their fetches.
     bool sampleMetal = metSO.x != 0.0;
 
-    float3 albRGBNear = 0, albRGBFar = 0;
-    float albANear = 0, albAFar = 0;
-    float nrmXNear = 0, nrmXFar = 0;
-    float nrmZNear = 0, nrmZFar = 0;
-    float metNear = 0, metFar = 0;
-    float2 wyNear[3], wyFar[3];
-
-    // Outside a cascade transition both cascades use the same scale, so the far cascade would fetch the same
-    // texels and shade them to the same values. Most terrain from altitude is outside one.
-    bool sampleFar = farScale != nearScale;
+    float3 albRGB = 0;
+    float albA = 0, nrmX = 0, nrmZ = 0, met = 0;
+    float2 wy[3];
     [unroll]
     for (uint p = 0u; p < 3u; p++)
     {
-        wyNear[p] = 0.0;
-        wyFar[p] = 0.0;
+        wy[p] = 0.0;
         float w = px.triWeight[p];
         [branch]
         if (w > 0.001)
         {
-            float2 nearUV = px.baseUV[p] * (nearScale * uvScale) + uvOffset;
-            float2 nearDdx = px.baseUVDdx[p] * (nearScale * uvScale), nearDdy = px.baseUVDdy[p] * (nearScale * uvScale);
-            CBLTileHash nearHash = CBL_TileHash(nearUV, _StochasticScale);
-            float4 albN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
-            float4 nrmN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy);
-            float mN = 0.0;
+            float2 uv = px.baseUV[p] * scale + uvOffset;
+            float2 uvDdx = px.baseUVDdx[p] * scale, uvDdy = px.baseUVDdy[p] * scale;
+            CBLTileHash hash = CBL_TileHash(uv, _StochasticScale);
+            float4 alb = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
+            float4 nrm = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
+            float m = 0.0;
             [branch]
             if (sampleMetal)
-                mN = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
-            albRGBNear += w * albN.xyz;
-            albANear += w * albN.w;
-            nrmXNear += w * nrmN.x;
-            nrmZNear += w * nrmN.z;
-            metNear += w * mN;
-            wyNear[p] = float2(nrmN.w, nrmN.y);
-
-            [branch]
-            if (sampleFar)
-            {
-                float2 farUV = px.baseUV[p] * (farScale * uvScale) + uvOffset;
-                float2 farDdx = px.baseUVDdx[p] * (farScale * uvScale), farDdy = px.baseUVDdy[p] * (farScale * uvScale);
-                CBLTileHash farHash = CBL_TileHash(farUV, _StochasticScale);
-                float4 albF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
-                float4 nrmF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy);
-                float mF = 0.0;
-                [branch]
-                if (sampleMetal)
-                    mF = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), farHash, index, farDdx, farDdy).x;
-                albRGBFar += w * albF.xyz;
-                albAFar += w * albF.w;
-                nrmXFar += w * nrmF.x;
-                nrmZFar += w * nrmF.z;
-                metFar += w * mF;
-                wyFar[p] = float2(nrmF.w, nrmF.y);
-            }
+                m = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy).x;
+            albRGB += w * alb.xyz;
+            albA += w * alb.w;
+            nrmX += w * nrm.x;
+            nrmZ += w * nrm.z;
+            met += w * m;
+            wy[p] = float2(nrm.w, nrm.y);
         }
-    }
-    if (!sampleFar)
-    {
-        albRGBFar = albRGBNear;
-        albAFar = albANear;
-        nrmXFar = nrmXNear;
-        nrmZFar = nrmZNear;
-        metFar = metNear;
-        wyFar[0] = wyNear[0];
-        wyFar[1] = wyNear[1];
-        wyFar[2] = wyNear[2];
     }
 
     float4 tint;
     float brightness;
     CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
-    float contrast = mat.contrast[layer];
-    float saturation = mat.saturation[layer];
-    float normalStrength = mat.normalStrength[layer];
-    float aoStrength = mat.aoStrength[layer];
 
-    CBLLayerResult r;
-    float3 reorientedNear = CBL_ReorientThreeAxis(wyNear[0], wyNear[1], wyNear[2], px.triN, px.triWeight, px.triSign, px.triNzPositive);
-    r.farColor = CBL_GradeColor(albRGBNear, tint, brightness, contrast, saturation);
-    r.farNormal = mul((float3x3)TriplanarToWorld, reorientedNear) * normalStrength;
-    r.farHeightAlpha = albANear * tint.w;
-    r.farMetallic = metNear * metSO.x + metSO.y;
-    r.farGloss = nrmXNear * glossSO.x + glossSO.y;
+    CBLLayerSample r;
+    float3 reoriented = CBL_ReorientThreeAxis(wy[0], wy[1], wy[2], px.triN, px.triWeight, px.triSign, px.triNzPositive);
+    r.color = CBL_GradeColor(albRGB, tint, brightness, mat.contrast[layer], mat.saturation[layer]);
+    r.normal = mul((float3x3)TriplanarToWorld, reoriented) * mat.normalStrength[layer];
+    r.heightAlpha = albA * tint.w;
+    r.metallic = met * metSO.x + metSO.y;
+    r.gloss = nrmX * glossSO.x + glossSO.y;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
-    r.farAO = pow(max(nrmZNear, FLT_MIN), aoStrength);
-
-    r.cascadesDiffer = sampleFar;
-    r.nearColor = r.farColor;
-    r.nearNormal = r.farNormal;
-    r.nearHeightAlpha = r.farHeightAlpha;
-    r.nearMetallic = r.farMetallic;
-    r.nearGloss = r.farGloss;
-    r.nearAO = r.farAO;
-    [branch]
-    if (r.cascadesDiffer)
-    {
-        float3 reorientedFar = CBL_ReorientThreeAxis(wyFar[0], wyFar[1], wyFar[2], px.triN, px.triWeight, px.triSign, px.triNzPositive);
-        r.nearColor = CBL_GradeColor(albRGBFar, tint, brightness, contrast, saturation);
-        r.nearNormal = mul((float3x3)TriplanarToWorld, reorientedFar) * normalStrength;
-        r.nearHeightAlpha = albAFar * tint.w;
-        r.nearMetallic = metFar * metSO.x + metSO.y;
-        r.nearGloss = nrmXFar * glossSO.x + glossSO.y;
-        r.nearAO = pow(max(nrmZFar, FLT_MIN), aoStrength);
-    }
+    r.ao = pow(max(nrmZ, FLT_MIN), mat.aoStrength[layer]);
     return r;
 }
 
+// The cascades' blended layer results, summed with their distance-resample lerp weights.
+struct CBLCascadeSum
+{
+    float3 color;
+    float3 normal;
+    float  gloss;
+    float  ao;
+    float  metallic;
+};
+
+// Samples the active layers at one cascade scale, height-blends them, and adds the blend weighted by cascadeWeight.
+void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4], bool far, float4 layerWeight,
+                           CBLBiomePixel px, float cascadeWeight, inout CBLCascadeSum sum)
+{
+    float4 heightWeight = mat.heightWeight;
+
+    // Unrolled so layers[] and the per-layer uniforms index statically. As a dynamic loop FXC kept layers[] in an
+    // indexable temp array.
+    CBLLayerSample layers[4];
+    [unroll]
+    for (uint k = 0u; k < 4u; k++)
+    {
+        CBLLayerSample r = (CBLLayerSample)0;
+        [branch]
+        if (active[k])
+        {
+            float scale = CBL_LayerCascadeScale(mat, k, px.cascadeT, far);
+            [branch]
+            if (threeAxis)
+                r = CBL_ProcessLayerThreeAxis(mat, k, px, scale);
+            else
+                r = CBL_ProcessLayerSingleAxis(mat, k, px, scale);
+        }
+        layers[k] = r;
+    }
+
+    // Height blend between the four layers.
+    float4 enabledWeight = layerWeight * _CBLEnable[mat.channel];
+    float4 blendInput = layerWeight * heightWeight;
+    float4 normalizedBlend = blendInput / max(dot(blendInput, 1.0), 0.001);
+    float4 soft = max(_CBLWeightSoftness[mat.channel], 0.001);
+    float4 heightAlpha = float4(layers[0].heightAlpha, layers[1].heightAlpha, layers[2].heightAlpha, layers[3].heightAlpha);
+    float4 heightBlend = saturate(pow(max(heightAlpha * enabledWeight + heightWeight - 0.5, 0.0), soft) - 0.5);
+    float4 hb = heightWeight * heightBlend;
+    float threshold = _HeightblendFactor.x - max(max(hb.x, hb.y), max(hb.z, hb.w));
+    float4 blend = max(heightBlend * heightWeight + threshold, 0.0);
+    float4 w = blend / max(dot(blend, 1.0), 0.001);
+
+    float3 blendedColor = 0, normalizedColor = 0, blendedNormal = 0;
+    float blendedGloss = 0, blendedAO = 0, blendedMet = 0;
+    [unroll]
+    for (uint j = 0u; j < 4u; j++)
+    {
+        blendedColor += layers[j].color * w[j];
+        normalizedColor += layers[j].color * normalizedBlend[j];
+        blendedNormal += layers[j].normal * w[j];
+        blendedGloss += layers[j].gloss * w[j];
+        blendedAO += layers[j].ao * w[j];
+        blendedMet += layers[j].metallic * w[j];
+    }
+
+    // Alpha-to-height fade between the height blend and the plain weight blend.
+    sum.color += cascadeWeight * lerp(blendedColor, normalizedColor, px.alphaToHeightFade);
+    sum.normal += cascadeWeight * blendedNormal;
+    sum.gloss += cascadeWeight * blendedGloss;
+    sum.ao += cascadeWeight * blendedAO;
+    sum.metallic += cascadeWeight * blendedMet;
+}
+
 // One biome channel's additive contribution (one stock additive pass), blended into gb.
+//
+// Inside a distance-resample transition the layers are sampled at two cascade scales, height-blended separately, and
+// lerped by uvResampleOp. The cascades run one after the other and each one's blended result is accumulated with its
+// lerp weight, so only one cascade's four layer results are held at a time. Holding both until a single blend kept
+// about sixty registers live through every layer's sampling. Outside a transition, which is most terrain, both
+// cascades use the same scale and the near cascade alone, weighted 1, gives the same result.
+//
+// The far cascade is a second call behind a branch, not a second loop iteration. As a loop the compiler spilled the
+// values live across it and reloaded them at every biome pass.
 void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float projRatio, CBLBiomePixel px,
                          inout CBLGBuffer gb)
 {
     CBLBiomeMaterial mat = CBL_BiomeMaterial(channel, px.subzoneMask);
     bool biomeActive = projRatio > 0.0;
 
-    // Unrolled so layers[] and the per-layer uniforms index statically. As a dynamic loop FXC kept layers[] in an
-    // indexable temp array.
-    CBLLayerResult layers[4];
+    bool active[4];
+    bool cascadesDiffer = false;
     [unroll]
     for (uint l = 0u; l < 4u; l++)
     {
-        CBLLayerResult r = (CBLLayerResult)0;
-        [branch]
-        if (mat.biome[l] >= 0.0 && biomeActive && mat.heightWeight[l] > 0.0)
-        {
-            [branch]
-            if (threeAxis)
-                r = CBL_ProcessLayerThreeAxis(mat, l, px);
-            else
-                r = CBL_ProcessLayerSingleAxis(mat, l, px);
-        }
-        layers[l] = r;
+        active[l] = mat.biome[l] >= 0.0 && biomeActive && mat.heightWeight[l] > 0.0;
+        float nearScale, farScale;
+        CBL_CascadeScales(mat.distanceResampleMax[l], px.cascadeT, _DistanceResampleUVScales, nearScale, farScale);
+        cascadesDiffer = cascadesDiffer || (active[l] && farScale != nearScale);
     }
 
-    // Height blend between the four layers.
-    float4 heightWeight = mat.heightWeight;
-    float4 enabledWeight = layerWeight * mat.enable;
-    float4 blendInput = layerWeight * heightWeight;
-    float4 normalizedBlend = blendInput / max(dot(blendInput, 1.0), 0.001);
-    float4 soft = max(mat.weightSoftness, 0.001);
-    float4 farHeightAlpha = float4(layers[0].farHeightAlpha, layers[1].farHeightAlpha, layers[2].farHeightAlpha, layers[3].farHeightAlpha);
-    float4 heightBlendNear = saturate(pow(max(farHeightAlpha * enabledWeight + heightWeight - 0.5, 0.0), soft) - 0.5);
-    float4 hbNear = heightWeight * heightBlendNear;
-    float thresholdNear = _HeightblendFactor.x - max(max(hbNear.x, hbNear.y), max(hbNear.z, hbNear.w));
-    float4 blendNear = max(heightBlendNear * heightWeight + thresholdNear, 0.0);
-    float4 wNear = blendNear / max(dot(blendNear, 1.0), 0.001);
-
-    float3 blendedNearColor = 0, nearNormalized = 0, blendedNearNormal = 0;
-    float blendedNearGloss = 0, blendedNearAO = 0, blendedNearMet = 0;
-    [unroll]
-    for (uint k = 0u; k < 4u; k++)
-    {
-        blendedNearColor += layers[k].farColor * wNear[k];
-        nearNormalized += layers[k].farColor * normalizedBlend[k];
-        blendedNearNormal += layers[k].farNormal * wNear[k];
-        blendedNearGloss += layers[k].farGloss * wNear[k];
-        blendedNearAO += layers[k].farAO * wNear[k];
-        blendedNearMet += layers[k].farMetallic * wNear[k];
-    }
-
-    // The far cascade's blend only differs when a layer sampled the cascades apart.
-    float3 blendedFarColor = blendedNearColor, farNormalized = nearNormalized, blendedFarNormal = blendedNearNormal;
-    float blendedFarGloss = blendedNearGloss, blendedFarAO = blendedNearAO, blendedFarMet = blendedNearMet;
+    // Near by uvResampleOp and far by the rest.
+    CBLCascadeSum sum = (CBLCascadeSum)0;
+    CBL_AccumulateCascade(mat, threeAxis, active, false, layerWeight, px, cascadesDiffer ? px.uvResampleOp : 1.0, sum);
     [branch]
-    if (layers[0].cascadesDiffer || layers[1].cascadesDiffer || layers[2].cascadesDiffer || layers[3].cascadesDiffer)
-    {
-        float4 nearHeightAlpha = float4(layers[0].nearHeightAlpha, layers[1].nearHeightAlpha, layers[2].nearHeightAlpha, layers[3].nearHeightAlpha);
-        float4 heightBlendFar = saturate(pow(max(nearHeightAlpha * enabledWeight + heightWeight - 0.5, 0.0), soft) - 0.5);
-        float4 hbFar = heightWeight * heightBlendFar;
-        float thresholdFar = _HeightblendFactor.x - max(max(hbFar.x, hbFar.y), max(hbFar.z, hbFar.w));
-        float4 blendFar = max(heightBlendFar * heightWeight + thresholdFar, 0.0);
-        float4 wFar = blendFar / max(dot(blendFar, 1.0), 0.001);
+    if (cascadesDiffer)
+        CBL_AccumulateCascade(mat, threeAxis, active, true, layerWeight, px, 1.0 - px.uvResampleOp, sum);
+    float3 color = sum.color, normal = sum.normal;
+    float gloss = sum.gloss, ao = sum.ao, metallic = sum.metallic;
 
-        blendedFarColor = 0;
-        farNormalized = 0;
-        blendedFarNormal = 0;
-        blendedFarGloss = 0;
-        blendedFarAO = 0;
-        blendedFarMet = 0;
-        [unroll]
-        for (uint j = 0u; j < 4u; j++)
-        {
-            blendedFarColor += layers[j].nearColor * wFar[j];
-            farNormalized += layers[j].nearColor * normalizedBlend[j];
-            blendedFarNormal += layers[j].nearNormal * wFar[j];
-            blendedFarGloss += layers[j].nearGloss * wFar[j];
-            blendedFarAO += layers[j].nearAO * wFar[j];
-            blendedFarMet += layers[j].nearMetallic * wFar[j];
-        }
-    }
-
-    // Alpha-to-height fade between the height blend and the plain weight blend, then the
-    // distance-resample lerp between the far and near cascade.
-    float3 farComposed = lerp(blendedFarColor, farNormalized, px.alphaToHeightFade);
-    float3 nearComposed = lerp(blendedNearColor, nearNormalized, px.alphaToHeightFade);
-    float3 finalColor = projRatio * lerp(farComposed, nearComposed, px.uvResampleOp);
-    float3 blendedNormal = projRatio * lerp(blendedFarNormal, blendedNearNormal, px.uvResampleOp);
+    float3 finalColor = projRatio * color;
+    float3 blendedNormal = projRatio * normal;
 
     // Shortest-arc rotation from the geometric normal to the blended layer normal, applied to the prepass normal.
     float3 rotated = CBL_RotateByHalfArcQuat(px.geomNormalWS, blendedNormal, px.prepassNormal);
     float3 finalNormal = lerp(px.prepassNormal, rotated, px.normalFade);
 
-    float finalSmoothness = projRatio * lerp(blendedFarGloss, blendedNearGloss, px.uvResampleOp) * px.packedFade;
-    float finalOcclusion = projRatio * lerp(blendedFarAO, blendedNearAO, px.uvResampleOp) * px.packedFade;
-    float finalMetallic = projRatio * lerp(blendedFarMet, blendedNearMet, px.uvResampleOp) * px.packedFade;
+    float finalSmoothness = projRatio * gloss * px.packedFade;
+    float finalOcclusion = projRatio * ao * px.packedFade;
+    float finalMetallic = projRatio * metallic * px.packedFade;
 
     float3 albedoOut = finalColor * px.albedoFade;
     float3 diffuseOut = (0.96 - 0.96 * finalMetallic) * albedoOut;
