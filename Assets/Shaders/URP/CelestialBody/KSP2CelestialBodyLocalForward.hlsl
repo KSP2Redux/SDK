@@ -203,19 +203,18 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
 }
 
 //
-// Biome material: one channel's _CBL array values, with the subzone-weighted tint, brightness and
-// height weight already resolved for this pixel.
+// Biome material: one channel's _CBL array values, with the subzone-weighted height weight already resolved for this
+// pixel. The tint and brightness are read per layer by CBL_LayerTint.
 //
 struct CBLBiomeMaterial
 {
+    uint   channel;
     float4 biome;               // per-layer detail array slice, -1 = unused
     float4 enable;
     float4 heightWeight;        // gate and height-blend weight (enable folded in)
     float4 weightSoftness;
     float4 uvScale;
     float4 uvOffset;
-    float4 tint[4];
-    float4 brightness;
     float4 contrast;
     float4 saturation;
     float4 normalStrength;
@@ -231,6 +230,7 @@ struct CBLBiomeMaterial
 CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
 {
     CBLBiomeMaterial m;
+    m.channel = channel;
     m.biome = _CBLBiome[channel];
     m.enable = _CBLEnable[channel];
     m.weightSoftness = _CBLWeightSoftness[channel];
@@ -244,27 +244,32 @@ CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
     m.aoStrength = _CBLAOStrength[channel];
     m.distanceResampleMax = _CBLDistanceResampleMax[channel];
 #if defined(SUB_ZONES_ENABLED)
-    // Subzone mode replaces the tint, brightness and height weight with blends weighted by the subzone mask and
-    // drops the tint alpha factor on the height alpha.
+    // Subzone mode replaces the height weight with a blend weighted by the subzone mask.
     [unroll]
     for (uint l = 0u; l < 4u; l++)
-    {
-        uint i = channel * 4u + l;
-        float4 weight = _CBLSubzoneWeight[i];
-        float4 wm = subzoneMask * weight;
-        m.tint[l] = float4((wm.x * _CBLSubzoneTint[i * 4u] + wm.y * _CBLSubzoneTint[i * 4u + 1u]
-                          + wm.z * _CBLSubzoneTint[i * 4u + 2u] + wm.w * _CBLSubzoneTint[i * 4u + 3u]).rgb, 1.0);
-        m.brightness[l] = dot(_CBLSubzoneBrightness[i], wm);
-        m.heightWeight[l] = m.enable[l] * dot(weight, subzoneMask);
-    }
+        m.heightWeight[l] = m.enable[l] * dot(_CBLSubzoneWeight[channel * 4u + l], subzoneMask);
 #else
-    [unroll]
-    for (uint l = 0u; l < 4u; l++)
-        m.tint[l] = _CBLTint[channel * 4u + l];
-    m.brightness = _CBLBrightness[channel];
     m.heightWeight = _CBLHeightWeight[channel] * m.enable;
 #endif
     return m;
+}
+
+// One layer's tint and brightness, read where the layer grades its colour. Resolved for all four layers with the
+// material, the subzone blends held about sixteen registers through every layer's sampling.
+void CBL_LayerTint(CBLBiomeMaterial mat, uint layer, float4 subzoneMask, out float4 tint, out float brightness)
+{
+    uint i = mat.channel * 4u + layer;
+#if defined(SUB_ZONES_ENABLED)
+    // Subzone mode blends the tint and brightness by the subzone mask and drops the tint alpha factor on the height
+    // alpha.
+    float4 wm = subzoneMask * _CBLSubzoneWeight[i];
+    tint = float4((wm.x * _CBLSubzoneTint[i * 4u] + wm.y * _CBLSubzoneTint[i * 4u + 1u]
+                 + wm.z * _CBLSubzoneTint[i * 4u + 2u] + wm.w * _CBLSubzoneTint[i * 4u + 3u]).rgb, 1.0);
+    brightness = dot(_CBLSubzoneBrightness[i], wm);
+#else
+    tint = _CBLTint[i];
+    brightness = _CBLBrightness[mat.channel][layer];
+#endif
 }
 
 //
@@ -334,7 +339,6 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
     float uvScale = mat.uvScale[layer];
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
-    float4 tint = mat.tint[layer];
     float2 metSO, glossSO;
     CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
     // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
@@ -351,7 +355,9 @@ CBLLayerResult CBL_ProcessLayerSingleAxis(CBLBiomeMaterial mat, uint layer, CBLB
         nearMetal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), nearHash, index, nearDdx, nearDdy).x;
 
     float wy = px.triWeight.y;
-    float brightness = mat.brightness[layer];
+    float4 tint;
+    float brightness;
+    CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
     float contrast = mat.contrast[layer];
     float saturation = mat.saturation[layer];
     float normalStrength = mat.normalStrength[layer];
@@ -428,7 +434,6 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
     float uvScale = mat.uvScale[layer];
     float uvOffset = mat.uvOffset[layer];
     float index = mat.biome[layer];
-    float4 tint = mat.tint[layer];
     float2 metSO, glossSO;
     CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
     // A zero metallic scale multiplies the metal texels away, so the layer skips their fetches.
@@ -502,7 +507,9 @@ CBLLayerResult CBL_ProcessLayerThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBi
         wyFar[2] = wyNear[2];
     }
 
-    float brightness = mat.brightness[layer];
+    float4 tint;
+    float brightness;
+    CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
     float contrast = mat.contrast[layer];
     float saturation = mat.saturation[layer];
     float normalStrength = mat.normalStrength[layer];
