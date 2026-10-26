@@ -184,13 +184,15 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
         }
     }
 
-    // Ambient: SH at the prepass normal plus the vertex L2 term, plus the atmosphere SG lobes.
+    // Ambient: SH at the prepass normal plus the vertex L2 term, plus the atmosphere SG lobes, in the other bodies'
+    // eclipse at the pixel as the sun is (#2341). The emission keeps its own light.
     float projRatio = biomeMask.x / max(dot(biomeMask, 1.0), 0.001);
     float3 shLight = CBL_AmbientSH(worldNormal, i.shL2);
     float3 atmosSpec = KSP2_SphericalGaussianAmbient(worldNormal);
     float3 emissionContrib = (emissionFade * normalResample) * (emissionFade * (emissionSample.xyz * _EmissionScale));
+    float ambientEclipse = KSP2_EclipseLocalOtherBodiesFactor(i.positionWS);
     float3 lighting = emissionContrib * (packedFade * packedSample.z)
-                    + (shLight * (occlusion + (1.0 - projRatio) * occlusion) + atmosSpec) * albedo;
+                    + (shLight * (occlusion + (1.0 - projRatio) * occlusion) + atmosSpec) * albedo * ambientEclipse;
 
     CBLGBuffer gb;
     gb.diffuse = saturate(albedo * (0.96 - 0.96 * metallic));
@@ -313,6 +315,7 @@ struct CBLBiomePixel
     float3 geomNormalWS;
     float4 subzoneMask;
     float3 shL2;
+    float  ambientEclipse;      // KSP2_EclipseLocalOtherBodiesFactor at the pixel, which the ambient light takes
 };
 
 // One layer's samples. "near" and "far" follow the Redux port: near* values come from the far
@@ -664,7 +667,8 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     float3 albedoOut = finalColor * px.albedoFade;
     float3 diffuseOut = (0.96 - 0.96 * finalMetallic) * albedoOut;
     float occlusionTerm = finalOcclusion + (1.0 - projRatio) * finalOcclusion;
-    float3 litColor = (CBL_AmbientSH(finalNormal, px.shL2) * occlusionTerm + KSP2_SphericalGaussianAmbient(finalNormal)) * albedoOut;
+    float3 litColor = (CBL_AmbientSH(finalNormal, px.shL2) * occlusionTerm + KSP2_SphericalGaussianAmbient(finalNormal))
+        * albedoOut * px.ambientEclipse;
 
     // The stock blend state, with the UNORM targets clamping each step.
     float alpha = saturate(projRatio);
@@ -718,6 +722,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     px.triWeight = triWeightRaw / max(triWeightRaw.x + triWeightRaw.y + triWeightRaw.z, 0.001);
     px.triSign = sign(px.triN);
     px.triNzPositive = px.triN.z >= 0.0;
+    px.ambientEclipse = KSP2_EclipseLocalOtherBodiesFactor(positionWS);
     float2 triUVScale = _TriplanarUVScaleOffset.xy * 0.01;
     px.baseUV[0] = triplanarLocalPos.zy * triUVScale + _TriplanarUVScaleOffset.zw;
     px.baseUV[1] = triplanarLocalPos.xz * triUVScale + _TriplanarUVScaleOffset.zw;
