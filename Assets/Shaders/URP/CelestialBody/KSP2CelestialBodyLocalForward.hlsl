@@ -203,7 +203,7 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
 }
 
 //
-// Biome material: one channel's _Small* uniforms, with the subzone-weighted tint, brightness and
+// Biome material: one channel's _CBL array values, with the subzone-weighted tint, brightness and
 // height weight already resolved for this pixel.
 //
 struct CBLBiomeMaterial
@@ -225,69 +225,45 @@ struct CBLBiomeMaterial
     float4 distanceResampleMax;
 };
 
-#if defined(SUB_ZONES_ENABLED)
-    // Subzone mode replaces the scalar tint, brightness and height weight with blends weighted by
-    // the subzone mask and drops the tint alpha factor on the height alpha.
-    #define CBL_BIOME_TINT_BRIGHTNESS(CH) \
-        float4 wm1 = subzoneMask * _SmallSubzoneWeight##CH##1; \
-        float4 wm2 = subzoneMask * _SmallSubzoneWeight##CH##2; \
-        float4 wm3 = subzoneMask * _SmallSubzoneWeight##CH##3; \
-        float4 wm4 = subzoneMask * _SmallSubzoneWeight##CH##4; \
-        m.tint[0] = float4((wm1.x * _SmallSubzoneTint##CH##1_R + wm1.y * _SmallSubzoneTint##CH##1_G + wm1.z * _SmallSubzoneTint##CH##1_B + wm1.w * _SmallSubzoneTint##CH##1_A).rgb, 1.0); \
-        m.tint[1] = float4((wm2.x * _SmallSubzoneTint##CH##2_R + wm2.y * _SmallSubzoneTint##CH##2_G + wm2.z * _SmallSubzoneTint##CH##2_B + wm2.w * _SmallSubzoneTint##CH##2_A).rgb, 1.0); \
-        m.tint[2] = float4((wm3.x * _SmallSubzoneTint##CH##3_R + wm3.y * _SmallSubzoneTint##CH##3_G + wm3.z * _SmallSubzoneTint##CH##3_B + wm3.w * _SmallSubzoneTint##CH##3_A).rgb, 1.0); \
-        m.tint[3] = float4((wm4.x * _SmallSubzoneTint##CH##4_R + wm4.y * _SmallSubzoneTint##CH##4_G + wm4.z * _SmallSubzoneTint##CH##4_B + wm4.w * _SmallSubzoneTint##CH##4_A).rgb, 1.0); \
-        m.brightness = float4(dot(_SmallSubzoneBrightness##CH##1, wm1), dot(_SmallSubzoneBrightness##CH##2, wm2), \
-                              dot(_SmallSubzoneBrightness##CH##3, wm3), dot(_SmallSubzoneBrightness##CH##4, wm4)); \
-        m.heightWeight = _SmallEnable##CH * float4(dot(_SmallSubzoneWeight##CH##1, subzoneMask), dot(_SmallSubzoneWeight##CH##2, subzoneMask), \
-                                                  dot(_SmallSubzoneWeight##CH##3, subzoneMask), dot(_SmallSubzoneWeight##CH##4, subzoneMask));
-#else
-    #define CBL_BIOME_TINT_BRIGHTNESS(CH) \
-        m.tint[0] = _SmallTint##CH##1; \
-        m.tint[1] = _SmallTint##CH##2; \
-        m.tint[2] = _SmallTint##CH##3; \
-        m.tint[3] = _SmallTint##CH##4; \
-        m.brightness = _SmallBrightness##CH; \
-        m.heightWeight = _SmallHeightWeight##CH * _SmallEnable##CH;
-#endif
-
-#define CBL_BIOME_MATERIAL_FN(CH) \
-    CBLBiomeMaterial CBL_BiomeMaterial##CH(float4 subzoneMask) \
-    { \
-        CBLBiomeMaterial m; \
-        m.biome = _SmallBiome##CH; \
-        m.enable = _SmallEnable##CH; \
-        m.weightSoftness = _SmallWeightSoftness##CH; \
-        m.uvScale = _SmallUVScale##CH; \
-        m.uvOffset = _SmallUVOffset##CH; \
-        m.contrast = _SmallContrast##CH; \
-        m.saturation = _SmallSaturation##CH; \
-        m.normalStrength = _SmallNormalStrength##CH; \
-        m.metallicStrength = _SmallMetallicStrength##CH; \
-        m.glossStrength = _SmallGlossStrength##CH; \
-        m.aoStrength = _SmallAOStrength##CH; \
-        m.distanceResampleMax = _SmallDistanceResampleMax##CH; \
-        CBL_BIOME_TINT_BRIGHTNESS(CH) \
-        return m; \
-    }
-
-CBL_BIOME_MATERIAL_FN(R)
-CBL_BIOME_MATERIAL_FN(G)
-CBL_BIOME_MATERIAL_FN(B)
-CBL_BIOME_MATERIAL_FN(A)
-
+// Indexed by the channel being shaded, so only that channel's values are read. Selected from four named property
+// sets, the compiler held a whole set in registers across the four layers, and with the subzone blends from named
+// properties it computed all four channels before the biome loop and spilled them.
 CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
 {
     CBLBiomeMaterial m;
-    [branch]
-    if (channel == 0u)
-        m = CBL_BiomeMaterialR(subzoneMask);
-    else if (channel == 1u)
-        m = CBL_BiomeMaterialG(subzoneMask);
-    else if (channel == 2u)
-        m = CBL_BiomeMaterialB(subzoneMask);
-    else
-        m = CBL_BiomeMaterialA(subzoneMask);
+    m.biome = _CBLBiome[channel];
+    m.enable = _CBLEnable[channel];
+    m.weightSoftness = _CBLWeightSoftness[channel];
+    m.uvScale = _CBLUVScale[channel];
+    m.uvOffset = _CBLUVOffset[channel];
+    m.contrast = _CBLContrast[channel];
+    m.saturation = _CBLSaturation[channel];
+    m.normalStrength = _CBLNormalStrength[channel];
+    m.metallicStrength = _CBLMetallicStrength[channel];
+    m.glossStrength = _CBLGlossStrength[channel];
+    m.aoStrength = _CBLAOStrength[channel];
+    m.distanceResampleMax = _CBLDistanceResampleMax[channel];
+#if defined(SUB_ZONES_ENABLED)
+    // Subzone mode replaces the tint, brightness and height weight with blends weighted by the subzone mask and
+    // drops the tint alpha factor on the height alpha.
+    [unroll]
+    for (uint l = 0u; l < 4u; l++)
+    {
+        uint i = channel * 4u + l;
+        float4 weight = _CBLSubzoneWeight[i];
+        float4 wm = subzoneMask * weight;
+        m.tint[l] = float4((wm.x * _CBLSubzoneTint[i * 4u] + wm.y * _CBLSubzoneTint[i * 4u + 1u]
+                          + wm.z * _CBLSubzoneTint[i * 4u + 2u] + wm.w * _CBLSubzoneTint[i * 4u + 3u]).rgb, 1.0);
+        m.brightness[l] = dot(_CBLSubzoneBrightness[i], wm);
+        m.heightWeight[l] = m.enable[l] * dot(weight, subzoneMask);
+    }
+#else
+    [unroll]
+    for (uint l = 0u; l < 4u; l++)
+        m.tint[l] = _CBLTint[channel * 4u + l];
+    m.brightness = _CBLBrightness[channel];
+    m.heightWeight = _CBLHeightWeight[channel] * m.enable;
+#endif
     return m;
 }
 

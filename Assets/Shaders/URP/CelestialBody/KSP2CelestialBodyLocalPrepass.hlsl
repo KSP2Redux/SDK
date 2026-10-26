@@ -217,31 +217,35 @@ float4 CBL_ChannelLayerWeights(bool biomeActive, float4 biomeChan, float4 gatePr
         CBL_LayerWeight(biomeActive, biomeChan.w, gateProduct.w, height, heightParams4, heightEnable.w, slopeParams4, slopeEnable.w, gradWeights4, tintGw4.w, tintRw4.w, diffs));
 }
 
+// CI is the channel's index into the _CBL arrays (R G B A = 0 to 3). The subzone tint alphas are subzones G (1) and R (0).
+#define CBL_CH_LAYER4(A, CI) A[(CI) * 4], A[(CI) * 4 + 1], A[(CI) * 4 + 2], A[(CI) * 4 + 3]
+#define CBL_CH_TINT_ALPHA(CI, S) float4(_CBLSubzoneTint[(CI) * 16 + (S)].w, _CBLSubzoneTint[(CI) * 16 + 4 + (S)].w, \
+    _CBLSubzoneTint[(CI) * 16 + 8 + (S)].w, _CBLSubzoneTint[(CI) * 16 + 12 + (S)].w)
 #if defined(SUB_ZONES_ENABLED)
-    #define CBL_LAYERS4(C, active) CBL_ChannelLayerWeights( \
-        active, _SmallBiome##C, \
-        _SmallEnable##C * float4( \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##1), \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##2), \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##3), \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##4)), \
+    #define CBL_LAYERS4(CI, active) CBL_ChannelLayerWeights( \
+        active, _CBLBiome[CI], \
+        _CBLEnable[CI] * float4( \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4]), \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 1]), \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 2]), \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 3])), \
         height, \
-        _SmallBiome##C##HeightParams1, _SmallBiome##C##HeightParams2, _SmallBiome##C##HeightParams3, _SmallBiome##C##HeightParams4, \
-        _SmallBiomeHeightEnable##C, \
-        _SmallBiome##C##SlopeParams1, _SmallBiome##C##SlopeParams2, _SmallBiome##C##SlopeParams3, _SmallBiome##C##SlopeParams4, \
-        _SmallBiomeSlopeEnable##C, \
-        _SmallBiome##C##GradMapWeights1, _SmallBiome##C##GradMapWeights2, _SmallBiome##C##GradMapWeights3, _SmallBiome##C##GradMapWeights4, \
-        float4(_SmallSubzoneTint##C##1_G.w, _SmallSubzoneTint##C##2_G.w, _SmallSubzoneTint##C##3_G.w, _SmallSubzoneTint##C##4_G.w), \
-        float4(_SmallSubzoneTint##C##1_R.w, _SmallSubzoneTint##C##2_R.w, _SmallSubzoneTint##C##3_R.w, _SmallSubzoneTint##C##4_R.w), \
+        CBL_CH_LAYER4(_CBLBiomeHeightParams, CI), \
+        _CBLBiomeHeightEnable[CI], \
+        CBL_CH_LAYER4(_CBLBiomeSlopeParams, CI), \
+        _CBLBiomeSlopeEnable[CI], \
+        CBL_CH_LAYER4(_CBLBiomeGradMapWeights, CI), \
+        CBL_CH_TINT_ALPHA(CI, 1), \
+        CBL_CH_TINT_ALPHA(CI, 0), \
         diffs)
 #else
-    #define CBL_LAYERS4(C, active) CBL_ChannelLayerWeights( \
-        active, _SmallBiome##C, _SmallHeightWeight##C * _SmallEnable##C, height, \
-        _SmallBiome##C##HeightParams1, _SmallBiome##C##HeightParams2, _SmallBiome##C##HeightParams3, _SmallBiome##C##HeightParams4, \
-        _SmallBiomeHeightEnable##C, \
-        _SmallBiome##C##SlopeParams1, _SmallBiome##C##SlopeParams2, _SmallBiome##C##SlopeParams3, _SmallBiome##C##SlopeParams4, \
-        _SmallBiomeSlopeEnable##C, \
-        _SmallBiome##C##GradMapWeights1, _SmallBiome##C##GradMapWeights2, _SmallBiome##C##GradMapWeights3, _SmallBiome##C##GradMapWeights4, \
+    #define CBL_LAYERS4(CI, active) CBL_ChannelLayerWeights( \
+        active, _CBLBiome[CI], _CBLHeightWeight[CI] * _CBLEnable[CI], height, \
+        CBL_CH_LAYER4(_CBLBiomeHeightParams, CI), \
+        _CBLBiomeHeightEnable[CI], \
+        CBL_CH_LAYER4(_CBLBiomeSlopeParams, CI), \
+        _CBLBiomeSlopeEnable[CI], \
+        CBL_CH_LAYER4(_CBLBiomeGradMapWeights, CI), \
         (float4)0, (float4)0, \
         diffs)
 #endif
@@ -448,10 +452,10 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     return half4(_PqsNormalsOct > 0.5 ? PackGBufferNormal(normal) : normal, 0.0);
 #else
     CBLPrepassOutput o;
-    o.tex0 = CBL_LAYERS4(R, biomeActive.x);
-    o.tex1 = CBL_LAYERS4(G, biomeActive.y);
-    o.tex2 = CBL_LAYERS4(B, biomeActive.z);
-    o.tex3 = CBL_LAYERS4(A, biomeActive.w);
+    o.tex0 = CBL_LAYERS4(0, biomeActive.x);
+    o.tex1 = CBL_LAYERS4(1, biomeActive.y);
+    o.tex2 = CBL_LAYERS4(2, biomeActive.z);
+    o.tex3 = CBL_LAYERS4(3, biomeActive.w);
     o.normal = float4(blendedNorm, 1.0);
     return o;
 #endif
