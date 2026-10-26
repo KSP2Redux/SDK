@@ -88,6 +88,13 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
 
             Bind<Slider,        float>  ("icon-padding-field",  () => _settings.cameraPadding,        v => _settings.cameraPadding = v);
             Bind<Vector3Field,  Vector3>("icon-rotation-field", () => _settings.partTransformRotation, v => _settings.partTransformRotation = v);
+            Bind<Toggle,        bool>   ("icon-deployed-toggle", () => _settings.showDeployed,         v => _settings.showDeployed = v);
+            // Only parts with a deployed pose to show get the toggle.
+            var deployedToggle = this.Q<Toggle>("icon-deployed-toggle");
+            if (deployedToggle != null)
+            {
+                deployedToggle.style.display = HasDeployedPose(_target) ? DisplayStyle.Flex : DisplayStyle.None;
+            }
 
             Bind<Slider, float>("icon-yaw-field",                   () => _settings.cameraYawDegrees,        v => _settings.cameraYawDegrees = v);
             Bind<Slider, float>("icon-pitch-field",                 () => _settings.cameraPitchDegrees,      v => _settings.cameraPitchDegrees = v);
@@ -116,6 +123,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
         {
             SetField<Slider, float>      ("icon-padding-field",                _settings.cameraPadding);
             SetField<Vector3Field, Vector3>("icon-rotation-field",            _settings.partTransformRotation);
+            SetField<Toggle, bool>       ("icon-deployed-toggle",              _settings.showDeployed);
             SetField<Slider, float>      ("icon-yaw-field",                    _settings.cameraYawDegrees);
             SetField<Slider, float>      ("icon-pitch-field",                  _settings.cameraPitchDegrees);
             SetField<Slider, float>      ("icon-roll-field",                   _settings.cameraOrbitDegrees);
@@ -134,6 +142,76 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.Sections
             SetField<ColorField, Color>  ("icon-accent-color",                 _settings.moduleColorAccent);
             SetField<Toggle, bool>       ("icon-outline-toggle",               _settings.addOutline);
             SetField<SliderInt, int>     ("icon-outline-radius",               _settings.outlineRadius);
+        }
+
+        // Whether the part has a deployed pose the icon renderer can show: a deployable with an animator, as solar
+        // panels, cargo bays, antennas and legs have, or an engine whose animator has the state of its deployed mode,
+        // as the extending bell of the Descant.
+        private static bool HasDeployedPose(CorePartData target)
+        {
+            if (target == null)
+            {
+                return false;
+            }
+
+            foreach (KSP.Modules.Module_Deployable deployable in target.GetComponentsInChildren<KSP.Modules.Module_Deployable>(true))
+            {
+                foreach (Animator animator in deployable.GetComponentsInChildren<Animator>(true))
+                {
+                    if (animator.runtimeAnimatorController != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            foreach (KSP.Modules.Module_Engine engine in target.GetComponentsInChildren<KSP.Modules.Module_Engine>(true))
+            {
+                string stateName = engine.DataEngine?.DeployedModeAnimationStateShortName;
+                if (string.IsNullOrEmpty(stateName))
+                {
+                    continue;
+                }
+
+                foreach (Animator animator in engine.GetComponentsInChildren<Animator>(true))
+                {
+                    if (animator.runtimeAnimatorController is not UnityEditor.Animations.AnimatorController controller)
+                    {
+                        continue;
+                    }
+
+                    foreach (UnityEditor.Animations.AnimatorControllerLayer layer in controller.layers)
+                    {
+                        if (HasState(layer.stateMachine, stateName))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasState(UnityEditor.Animations.AnimatorStateMachine machine, string stateName)
+        {
+            foreach (UnityEditor.Animations.ChildAnimatorState child in machine.states)
+            {
+                if (child.state.name == stateName)
+                {
+                    return true;
+                }
+            }
+
+            foreach (UnityEditor.Animations.ChildAnimatorStateMachine child in machine.stateMachines)
+            {
+                if (HasState(child.stateMachine, stateName))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void SetField<TField, TValue>(string name, TValue value) where TField : BaseField<TValue>

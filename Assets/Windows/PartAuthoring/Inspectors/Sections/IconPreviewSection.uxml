@@ -21,6 +21,7 @@
                 <editor:EnumField    name="icon-preset-field"   label="Preset" />
                 <engine:Slider       name="icon-padding-field"  label="Padding"       low-value="0.1" high-value="3" show-input-field="true" />
                 <engine:Vector3Field name="icon-rotation-field" label="Part Rotation" />
+                <engine:Toggle       name="icon-deployed-toggle" label="Deployed" tooltip="Draw the part deployed: an engine's extending bell or other deployed mode, or an opened solar panel, cargo bay, antenna or leg. Off draws the prefab's own pose." />
 
             </engine:VisualElement>
 
