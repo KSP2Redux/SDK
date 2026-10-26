@@ -700,7 +700,15 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
                 layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex3, sampler_LinearClamp, prepassUV, 0);
                 projRatio = biomeMask.w / projSum;
             }
-            CBL_AccumulateBiome(channel, threeAxis, layerWeight, projRatio, px, gb);
+
+            // A constant triplanar mode per call, so each mode's layer code is laid out in one piece and scheduled
+            // without a branch in the middle of other work. Branching on it inside every layer interleaved the two
+            // modes' code, and warps stalled more on instruction fetch.
+            [branch]
+            if (threeAxis)
+                CBL_AccumulateBiome(channel, true, layerWeight, projRatio, px, gb);
+            else
+                CBL_AccumulateBiome(channel, false, layerWeight, projRatio, px, gb);
         }
     }
 
