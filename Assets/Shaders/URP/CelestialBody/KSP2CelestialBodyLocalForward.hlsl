@@ -488,12 +488,13 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
     float4 heightWeight = mat.heightWeight;
 
     // Unrolled so albedo[] and the per-layer uniforms index statically. As a dynamic loop FXC kept the layer results
-    // in an indexable temp array. No [branch] on the layers, so the compiler is free to overlap their fetches.
+    // in an indexable temp array.
     float4 albedo[4];
     [unroll]
     for (uint k = 0u; k < 4u; k++)
     {
         albedo[k] = 0.0;
+        [branch]
         if (active[k])
             albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far));
     }
