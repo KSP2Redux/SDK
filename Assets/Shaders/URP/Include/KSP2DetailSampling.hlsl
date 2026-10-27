@@ -296,6 +296,29 @@ float3 CBL_BlendLayerNormal(float3 prevNorm, CBLNormalLayer r, CBLNormalLayer g,
     return result;
 }
 
+// One layer's term of a family sum for CBL_BlendSummedNormal: the normal times its weight (biome weight times the
+// layer's distance fade) in xyz, and that weight in w.
+float4 CBL_LayerNormalTerm(CBLNormalLayer l, float biomeWeight, float cameraDist)
+{
+    float w = biomeWeight * CBL_RampFade(cameraDist, l.fade);
+    return float4(l.normal * w, w);
+}
+
+// CBL_BlendLayerNormal on a family already summed with CBL_LayerNormalTerm, so the caller holds four floats per
+// family instead of four layers.
+float3 CBL_BlendSummedNormal(float3 prevNorm, float4 familySum, float3 geomNormalWS, float normalScaleFade)
+{
+    float blendWeight = saturate(familySum.w);
+    float3 blendNorm = familySum.xyz;
+    float3 result = prevNorm;
+    if (0.001 < blendWeight && dot(blendNorm, blendNorm) >= 0.0001)
+    {
+        float3 rotated = CBL_RotateByHalfArcQuat(geomNormalWS, blendNorm, prevNorm);
+        result = lerp(prevNorm, rotated, (1.0 - normalScaleFade) * blendWeight);
+    }
+    return result;
+}
+
 // The albedo and normal opacity of the distance-resample cascade at a normalized distance. rangesNeg, rangesPos,
 // albedoOpacity and normalOpacity are the terrain material's _DistanceResample* vectors of the same names.
 float2 CBL_ResampleOpacity(float normDist, float4 rangesNeg, float4 rangesPos, float4 albedoOpacity, float4 normalOpacity)

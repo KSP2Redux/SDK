@@ -168,6 +168,14 @@ void CBL_ApplyDecals(inout CBLHeightDiffs diffs, inout float3 nrmAccum, float3 l
 
 // Squared-ramp trapezoid window with its enable, from a layer's packed _CBLLayerFade entries. The three pieces meet
 // with both sides counted, so an axis exactly on the centre or the end of the plateau weighs 2 as in stock.
+// One layer's term of a subzone family sum: the normal scaled by its subzone filter, and a zero weight when the
+// filter times the biome weight is under 0.001.
+float4 CBL_SubzoneNormalTerm(CBLNormalLayer l, float szFilter, float biomeWeight, float cameraDist)
+{
+    l.normal *= szFilter;
+    return CBL_LayerNormalTerm(l, biomeWeight * step(0.001, szFilter * biomeWeight), cameraDist);
+}
+
 float CBL_FadeWindow(float axis, float4 window, float4 ramp)
 {
     float fi = saturate((axis - window.x) * ramp.x);
@@ -306,37 +314,13 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     float invBiomeWeightSum = 1.0 / max(biomeWeightNorm.x + biomeWeightNorm.y + biomeWeightNorm.z + biomeWeightNorm.w, 0.001);
     float4 hmBiomeWeight = invBiomeWeightSum * biomeWeightNorm;
 
-    // Redux: a channel with no biome weight skips its normal samples, which BlendLayerNormal weights by zero. The
-    // biome mask is exactly zero over wide areas, so whole waves skip together.
-    CBLNormalLayer midR = (CBLNormalLayer)0, midG = (CBLNormalLayer)0, midB = (CBLNormalLayer)0, midA = (CBLNormalLayer)0;
-    CBLNormalLayer largeR = (CBLNormalLayer)0, largeG = (CBLNormalLayer)0, largeB = (CBLNormalLayer)0, largeA = (CBLNormalLayer)0;
+    // Redux: each layer folds into its family's sum as soon as it is sampled, so four floats per family stay live
+    // instead of every layer's normal and fade. A channel with no biome weight skips its normal samples, which
+    // BlendLayerNormal weights by zero. The biome mask is exactly zero over wide areas, so whole waves skip together.
+    float4 midSum = 0.0, largeSum = 0.0;
 #if defined(SUB_ZONES_ENABLED)
-    CBLNormalLayer sz3R = (CBLNormalLayer)0, sz3G = (CBLNormalLayer)0, sz3B = (CBLNormalLayer)0, sz3A = (CBLNormalLayer)0;
-    CBLNormalLayer sz4R = (CBLNormalLayer)0, sz4G = (CBLNormalLayer)0, sz4B = (CBLNormalLayer)0, sz4A = (CBLNormalLayer)0;
-    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
-        sz3##C = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3Normal##C##UVParams, _Subzone3Normal##C##FadeParams, _Subzone3NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld); \
-        sz4##C = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4Normal##C##UVParams, _Subzone4Normal##C##FadeParams, _Subzone4NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld);
-#else
-    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx)
-#endif
-    #define CBL_SAMPLE_CHANNEL_NORMALS(C, idx) \
-        [branch] \
-        if (biomeWeightNorm.idx > 0.0) \
-        { \
-            mid##C = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormal##C, sampler_LinearRepeat), _MidNormal##C##UVParams, _MidNormal##C##FadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld); \
-            large##C = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormal##C, sampler_LinearRepeat), _LargeNormal##C##UVParams, _LargeNormal##C##FadeParams, normCtx, frame, (float3x3)_PQSToWorld); \
-            CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
-        }
-    CBL_SAMPLE_CHANNEL_NORMALS(R, x)
-    CBL_SAMPLE_CHANNEL_NORMALS(G, y)
-    CBL_SAMPLE_CHANNEL_NORMALS(B, z)
-    CBL_SAMPLE_CHANNEL_NORMALS(A, w)
-    #undef CBL_SAMPLE_CHANNEL_NORMALS
-    #undef CBL_SAMPLE_SUBZONE_NORMALS
-
-#if defined(SUB_ZONES_ENABLED)
-    // dot(subzone weight, filter) per family and channel. Scales each layer normal and gates the
-    // channel's fade so an inactive channel adds nothing to BlendLayerNormal's weight.
+    // dot(subzone weight, filter) per family and channel. Scales each layer normal, and a layer whose filter times
+    // biome weight is under 0.001 adds nothing to BlendLayerNormal's weight.
     #define CBL_SZ_FILTER(PRE) float4( \
         dot(subzoneWeight, _##PRE##RSubzoneFilter), dot(subzoneWeight, _##PRE##GSubzoneFilter), \
         dot(subzoneWeight, _##PRE##BSubzoneFilter), dot(subzoneWeight, _##PRE##ASubzoneFilter))
@@ -346,36 +330,41 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     float4 sz4SzFilter = CBL_SZ_FILTER(Subzone4);
     #undef CBL_SZ_FILTER
 
-    #define CBL_APPLY_SZ(r, szF, c) { r.normal *= (szF); r.fade *= step(0.001, (szF) * (c)); }
-    CBL_APPLY_SZ(midR, midSzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(midG, midSzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(midB, midSzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(midA, midSzFilter.w, biomeWeightNorm.w);
-    CBL_APPLY_SZ(largeR, largeSzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(largeG, largeSzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(largeB, largeSzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(largeA, largeSzFilter.w, biomeWeightNorm.w);
+    float4 sz3Sum = 0.0, sz4Sum = 0.0;
+    #define CBL_TERM(layer, szF, idx) CBL_SubzoneNormalTerm(layer, (szF).idx, biomeWeightNorm.idx, cameraDist)
+    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
+        sz3Sum += CBL_TERM(CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3Normal##C##UVParams, _Subzone3Normal##C##FadeParams, _Subzone3NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld), sz3SzFilter, idx); \
+        sz4Sum += CBL_TERM(CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4Normal##C##UVParams, _Subzone4Normal##C##FadeParams, _Subzone4NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld), sz4SzFilter, idx);
+#else
+    #define CBL_TERM(layer, szF, idx) CBL_LayerNormalTerm(layer, biomeWeightNorm.idx, cameraDist)
+    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx)
+#endif
+    #define CBL_SAMPLE_CHANNEL_NORMALS(C, idx) \
+        [branch] \
+        if (biomeWeightNorm.idx > 0.0) \
+        { \
+            midSum += CBL_TERM(CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormal##C, sampler_LinearRepeat), _MidNormal##C##UVParams, _MidNormal##C##FadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld), midSzFilter, idx); \
+            largeSum += CBL_TERM(CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormal##C, sampler_LinearRepeat), _LargeNormal##C##UVParams, _LargeNormal##C##FadeParams, normCtx, frame, (float3x3)_PQSToWorld), largeSzFilter, idx); \
+            CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
+        }
+    CBL_SAMPLE_CHANNEL_NORMALS(R, x)
+    CBL_SAMPLE_CHANNEL_NORMALS(G, y)
+    CBL_SAMPLE_CHANNEL_NORMALS(B, z)
+    CBL_SAMPLE_CHANNEL_NORMALS(A, w)
+    #undef CBL_SAMPLE_CHANNEL_NORMALS
+    #undef CBL_SAMPLE_SUBZONE_NORMALS
+    #undef CBL_TERM
 
-    CBL_APPLY_SZ(sz3R, sz3SzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(sz3G, sz3SzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(sz3B, sz3SzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(sz3A, sz3SzFilter.w, biomeWeightNorm.w);
-
-    CBL_APPLY_SZ(sz4R, sz4SzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(sz4G, sz4SzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(sz4B, sz4SzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(sz4A, sz4SzFilter.w, biomeWeightNorm.w);
-    #undef CBL_APPLY_SZ
-
+#if defined(SUB_ZONES_ENABLED)
     // Subzone blend order: scaled -> Subzone4 -> Subzone3 -> Mid -> Large.
-    float3 blendedNorm = CBL_BlendLayerNormal(scaledNormal, sz4R, sz4G, sz4B, sz4A, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, sz3R, sz3G, sz3B, sz3A, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, midR, midG, midB, midA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, largeR, largeG, largeB, largeA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
+    float3 blendedNorm = CBL_BlendSummedNormal(scaledNormal, sz4Sum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, sz3Sum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, midSum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, largeSum, frame.normalWS, normalFade);
 #else
     // Blend order: scaled -> Mid -> Large.
-    float3 blendedNorm = CBL_BlendLayerNormal(scaledNormal, midR, midG, midB, midA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, largeR, largeG, largeB, largeA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
+    float3 blendedNorm = CBL_BlendSummedNormal(scaledNormal, midSum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, largeSum, frame.normalWS, normalFade);
 #endif
 
     // Height-map gradients, per biome channel weighted by hmBiomeWeight.
