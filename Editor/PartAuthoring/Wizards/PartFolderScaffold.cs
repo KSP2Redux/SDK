@@ -297,10 +297,33 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Wizards
                 }
                 core.Core.data.partName = _partName;
                 core.Core.data.family = _archetype.Family ?? string.Empty;
+                core.Core.data.category = ToPartCategory(_archetype.Category);
                 core.Core.data.sizeKey = _sizeKey;
                 core.Core.data.sizeCategory = MetaAssemblySizeFilterType.Auto;
             }
             return core;
+        }
+
+        /// <summary>
+        /// Maps a wizard category, which also names the part's Redux folder, to the part category the OAB picker uses.
+        /// </summary>
+        /// <param name="category">The archetype's category or the category picked for the Empty archetype.</param>
+        /// <returns>The matching part category, or <see cref="PartCategories.none" /> when there is none.</returns>
+        internal static PartCategories ToPartCategory(string category)
+        {
+            switch (category)
+            {
+                case "Aerodynamics":
+                    return PartCategories.Aero;
+                case "Engines":
+                    return PartCategories.Engine;
+                case "Fuel Tank":
+                    return PartCategories.FuelTank;
+                case "Payloads":
+                    return PartCategories.Payload;
+            }
+
+            return Enum.TryParse(category, true, out PartCategories parsed) ? parsed : PartCategories.none;
         }
 
         private void AddModules(GameObject root)

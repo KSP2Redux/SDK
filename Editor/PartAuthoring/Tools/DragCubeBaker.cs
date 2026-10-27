@@ -15,6 +15,26 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         private static readonly FieldInfo DataDragField =
             typeof(Module_Drag).GetField("dataDrag", BindingFlags.Instance | BindingFlags.NonPublic);
 
+        /// <summary>
+        /// Fires when the authoring tools change a part's drag cubes, with the part's object.
+        /// </summary>
+        /// <remarks>
+        /// The cubes live on the drag module, so an inspector that tracks only the part's core data misses the change.
+        /// </remarks>
+        public static event Action<GameObject> CubesChanged;
+
+        /// <summary>
+        /// Raises <see cref="CubesChanged" /> for a part.
+        /// </summary>
+        /// <param name="partObject">The part whose drag cubes changed.</param>
+        public static void NotifyCubesChanged(GameObject partObject)
+        {
+            if (partObject != null)
+            {
+                CubesChanged?.Invoke(partObject);
+            }
+        }
+
         public static BakeResult Bake(GameObject partObject)
         {
             if (partObject == null)
@@ -69,6 +89,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             dataDrag.UpdateExposedArea = true;
 
             EditorUtility.SetDirty(moduleDrag);
+            NotifyCubesChanged(partObject);
             return BakeResult.Baked(dragCubes.Count);
         }
 

@@ -156,8 +156,36 @@ namespace Ksp2UnityTools.Editor.Modding
             RemoveUnusedFeatureLabels(settings);
         }
 
+        /// <summary>
+        /// Declares the required and excluded feature labels of every feature a mod declares, so they can be picked
+        /// in the Addressables window before any asset carries them, and drops those of features it no longer has.
+        /// </summary>
+        /// <param name="mod">The mod whose features changed.</param>
+        public static void DeclareModFeatureLabels(Mod mod)
+        {
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null || mod == null)
+                return;
+
+            foreach (string label in DeclaredLabels(mod))
+            {
+                AddressablesTools.EnsureLabelIsDefined(settings, label);
+            }
+
+            RemoveUnusedFeatureLabels(settings);
+        }
+
+        private static IEnumerable<string> DeclaredLabels(Mod mod)
+        {
+            foreach (string feature in Qualified(mod.features.Select(feature => feature.id), mod.id))
+            {
+                yield return FeatureSelector.FEATURE_TAG_PREFIX + feature;
+                yield return FeatureSelector.NO_FEATURE_TAG_PREFIX + feature;
+            }
+        }
+
         // An edit that is abandoned or replaced leaves its label declared, so declared feature labels no entry
-        // carries are dropped
+        // carries are dropped. Labels of features a mod declares stay, since authors pick them before tagging.
         private static void RemoveUnusedFeatureLabels(AddressableAssetSettings settings)
         {
             var used = new HashSet<string>(
@@ -168,6 +196,15 @@ namespace Ksp2UnityTools.Editor.Modding
                     .Where(IsFeatureLabel),
                 StringComparer.Ordinal
             );
+            foreach (string modGuid in AssetDatabase.FindAssets($"t:{nameof(Mod)}"))
+            {
+                var mod = AssetDatabase.LoadAssetAtPath<Mod>(AssetDatabase.GUIDToAssetPath(modGuid));
+                if (mod != null)
+                {
+                    used.UnionWith(DeclaredLabels(mod));
+                }
+            }
+
             foreach (string label in settings.GetLabels().Where(label => IsFeatureLabel(label) && !used.Contains(label)).ToList())
             {
                 settings.RemoveLabel(label);

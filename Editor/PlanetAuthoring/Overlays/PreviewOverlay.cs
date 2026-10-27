@@ -37,7 +37,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Overlays
         /// </summary>
         /// <remarks>
         /// Called when the overlay is enabled and whenever the manager refreshes. Inputs include
-        /// mask textures, planet radius, and any prepass handles required by the shader.
+        /// mask textures and planet radius. Graph inputs are bound separately for each draw.
         /// </remarks>
         /// <param name="pqs">The PQS for the currently previewed body.</param>
         public abstract void RefreshBindings(PQS pqs);

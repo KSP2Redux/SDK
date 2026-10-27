@@ -18,7 +18,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 {
 	Properties
 	{
-		// ===== Scaled-space maps (PARAMS §3.1) =====
+		// ===== Scaled-space maps (PARAMS Ã‚Â§3.1) =====
 		// Whole-planet equirectangular maps. Dominate the look from orbit and
 		// crossfade out as the local detail stack takes over. Each *FadeParams
 		// is (start, range, nearOpacity, farOpacity). _PackedScaledTex packs
@@ -33,12 +33,12 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_EmissionScaledFadeParams ("Scaled-space Emission Fade Params", Vector) = (0,20000,0.5,1)
 		_EmissionScale ("Scaled-space Emission Scale", Range(0, 20)) = 0
 
-		// ===== LOD transition (PARAMS §3.11) =====
+		// ===== LOD transition (PARAMS Ã‚Â§3.11) =====
 		// Dither alpha-test driven by PQSRenderer during quad LOD swaps.
 		// Don't edit by hand.
 		_Transition ("Transition", Float) = 0
 
-		// ===== Biome control (PARAMS §3.2) =====
+		// ===== Biome control (PARAMS Ã‚Â§3.2) =====
 		// Master mask: which biome covers which part of the planet. R/G/B/A
 		// are the four biome channels. _SubzoneMaskTex adds 4 extra weight
 		// channels when SUB_ZONES_ENABLED.
@@ -46,7 +46,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_BiomeCutoffs ("Biome Cutoffs", Vector) = (0,0,0,0)
 		_SubzoneMaskTex ("Subzone Mask Map", 2D) = "white" {}
 
-		// ===== Global gradience / curvature (PARAMS §3.10, reserved) =====
+		// ===== Global gradience / curvature (PARAMS Ã‚Â§3.10, reserved) =====
 		_GlobalGradienceTex ("Global Gradience Map", 2D) = "black" {}
 		_GlobalCurvatureTex ("Global Curvature Map", 2D) = "black" {}
 
@@ -54,19 +54,19 @@ Shader "Redux/Environment/CelestialBody_Local"
 		// `multi_compile_local _ REDUX_GRADIENCE` pragma and toggled directly from the
 		// surface authoring inspector. No Property declaration is needed.
 
-		// ===== Per-biome height-map UV scales (PARAMS §3.4 / §3.5) =====
+		// ===== Per-biome height-map UV scales (PARAMS Ã‚Â§3.4 / Ã‚Â§3.5) =====
 		// One scalar per biome (R,G,B,A) -- UV scale on each tier's gradience map.
 		_LargeHeightMapUVScales ("Large Grad Map UV Scales", Vector) = (1,1,1,1)
 		_MediumHeightMapUVScales ("Medium Grad Map UV Scales", Vector) = (1,1,1,1)
 		_Subzone3HeightMapUVScales ("Subzone 3 Grad Map UV Scales", Vector) = (1,1,1,1)
 		_Subzone4HeightMapUVScales ("Subzone 4 Grad Map UV Scales", Vector) = (1,1,1,1)
 
-		// ===== Triplanar projection (PARAMS §3.3) =====
+		// ===== Triplanar projection (PARAMS Ã‚Â§3.3) =====
 		// Controls how 2D detail tiles project onto the curved planet surface.
 		_TriplanarContrast ("Triplanar Contrast", Range(1, 8)) = 4
 		_TriplanarUVScaleOffset ("Triplanar UV Scale/Offset", Vector) = (1,1,0,0)
 
-		// ===== Subzone normal slice indices (PARAMS §3.5) =====
+		// ===== Subzone normal slice indices (PARAMS Ã‚Â§3.5) =====
 		// Per-biome (R,G,B,A) slice into _SubZonesNormalTextureArray. -1 disables.
 		_SubZonesNormalTextureArray ("Sub Zones Normal Array", 2DArray) = "bump" {}
 		_Subzone1NormalIndices ("Subzone 1 Normal Array Indices", Vector) = (-1,-1,-1,-1)
@@ -74,7 +74,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_Subzone3NormalIndices ("Subzone 3 Normal Array Indices", Vector) = (-1,-1,-1,-1)
 		_Subzone4NormalIndices ("Subzone 4 Normal Array Indices", Vector) = (-1,-1,-1,-1)
 
-		// ===== Large per-biome layer: continent / region scale (PARAMS §3.4.1) =====
+		// ===== Large per-biome layer: continent / region scale (PARAMS Ã‚Â§3.4.1) =====
 		// Low-frequency normal/gradience/curvature maps per biome (R/G/B/A).
 		// Each only contributes where its biome mask is active. Curvature is
 		// reserved (declared but not yet consumed by V3). _Large*SubzoneFilter
@@ -104,7 +104,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_LargeBSubzoneFilter ("Large B Subzone Filter", Vector) = (1,1,1,1)
 		_LargeASubzoneFilter ("Large A Subzone Filter", Vector) = (1,1,1,1)
 
-		// ===== Mid per-biome layer: ridge / outcrop scale (PARAMS §3.4.2) =====
+		// ===== Mid per-biome layer: ridge / outcrop scale (PARAMS Ã‚Â§3.4.2) =====
 		// Same shape as Large but tiled finer for mid-frequency variation.
 		_MidCurvatureR ("Mid Curvature R", 2D) = "black" {}
 		_MidCurvatureG ("Mid Curvature G", 2D) = "black" {}
@@ -131,7 +131,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_MidBSubzoneFilter ("Mid B Subzone Filter", Vector) = (1,1,1,1)
 		_MidASubzoneFilter ("Mid A Subzone Filter", Vector) = (1,1,1,1)
 
-		// ===== Subzone 3: tier-2 per-biome mid layer (PARAMS §3.5) =====
+		// ===== Subzone 3: tier-2 per-biome mid layer (PARAMS Ã‚Â§3.5) =====
 		// Active only when SUB_ZONES_ENABLED. Stack with Subzone 4 for layered
 		// effects (lichen patches, cracked soil, drift snow patterns).
 		_Subzone3CurvatureR ("Subzone 3 Curvature R", 2D) = "black" {}
@@ -159,7 +159,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_Subzone3BSubzoneFilter ("Global3 B Subzone Filter", Vector) = (1,1,1,1)
 		_Subzone3ASubzoneFilter ("Global3 A Subzone Filter", Vector) = (1,1,1,1)
 
-		// ===== Subzone 4: tier-2 per-biome mid layer (PARAMS §3.5) =====
+		// ===== Subzone 4: tier-2 per-biome mid layer (PARAMS Ã‚Â§3.5) =====
 		// Independent second tier; combines with Subzone 3.
 		_Subzone4CurvatureR ("Subzone 4 Curvature R", 2D) = "black" {}
 		_Subzone4CurvatureG ("Subzone 4 Curvature G", 2D) = "black" {}
@@ -186,18 +186,18 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_Subzone4BSubzoneFilter ("Global4 B Subzone Filter", Vector) = (1,1,1,1)
 		_Subzone4ASubzoneFilter ("Global4 A Subzone Filter", Vector) = (1,1,1,1)
 
-		// ===== Sphere radius (PARAMS §3.3) =====
+		// ===== Sphere radius (PARAMS Ã‚Â§3.3) =====
 		// Used by the decal apply loop to cull far-away decals. Auto-set by PQSRenderer.
 		_Radius ("Sphere Radius", Float) = 0
 
-		// ===== Small detail tile arrays (PARAMS §3.6.1) =====
+		// ===== Small detail tile arrays (PARAMS Ã‚Â§3.6.1) =====
 		// Shared pool of up-close detail materials. All biome layers index into
 		// these by slice. Normal array uses DXT5nm-style packing.
 		_SmallAlbedoArray ("Small Albedo Array", 2DArray) = "white" {}
 		_SmallNormalArray ("Small Normal Array", 2DArray) = "bump" {}
 		_SmallMetalArray ("Small Metal Array", 2DArray) = "white" {}
 
-		// ===== Decals (PARAMS §3.8, DECALS_ENABLED) =====
+		// ===== Decals (PARAMS Ã‚Â§3.8, DECALS_ENABLED) =====
 		// Texture content for projected stickers. Placements come from
 		// PqsDecalInstance at runtime, not from this material.
 		_DecalAlbedo ("Decal Albedo", 2DArray) = "white" {}
@@ -207,7 +207,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_DecalStaticData ("Decal Static Data", 2D) = "black" {}
 		_DecalFadeParams ("Decal Fade Params", Vector) = (0,20000,1,0)
 
-		// ===== Small biome: slice indices + master weight (PARAMS §3.6.1) =====
+		// ===== Small biome: slice indices + master weight (PARAMS Ã‚Â§3.6.1) =====
 		// Per-biome 4-vector of (layer1..4) slice indices into _Small*Array
 		// (-1 = unused), per-layer global intensity, and height-blend softness.
 		_SmallBiomeR ("Small Biome R", Vector) = (-1,-1,-1,-1)
@@ -223,7 +223,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallWeightSoftnessB ("Small Height Weight Softness B", Vector) = (0,0,0,0)
 		_SmallWeightSoftnessA ("Small Height Weight Softness A", Vector) = (0,0,0,0)
 
-		// ===== Small biome: per-layer altitude window (PARAMS §3.6.2) =====
+		// ===== Small biome: per-layer altitude window (PARAMS Ã‚Â§3.6.2) =====
 		// Trapezoidal (center, upRange, downRange, fadeOut) altitude window per
 		// layer, in meters of terrain height. Use to keep snow above the snow
 		// line, sand below the dunes, etc.
@@ -248,7 +248,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallBiomeAHeightParams3 ("Small Biome A Height Params 3", Vector) = (0,0,0,0)
 		_SmallBiomeAHeightParams4 ("Small Biome A Height Params 4", Vector) = (0,0,0,0)
 
-		// ===== Small biome: per-layer slope window + grad-map mix (PARAMS §3.6.2) =====
+		// ===== Small biome: per-layer slope window + grad-map mix (PARAMS Ã‚Â§3.6.2) =====
 		// Slope window in degrees: (center, upRange, downRange, fadeOut). Place
 		// grass on flats (center ~0), rock on cliffs (center ~90). GradMapWeights
 		// = (aux/biome, large, mid, unused) mixes _LargeGradience* / _MidGradience*
@@ -290,7 +290,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallBiomeAGradMapWeights3 ("Small Biome A Gradient Map Weights 3", Vector) = (1,1,1,1)
 		_SmallBiomeAGradMapWeights4 ("Small Biome A Gradient Map Weights 4", Vector) = (1,1,1,1)
 
-		// ===== Small biome: per-layer peak/cavity window (PARAMS §3.6.2, reserved) =====
+		// ===== Small biome: per-layer peak/cavity window (PARAMS Ã‚Â§3.6.2, reserved) =====
 		// Curvature-driven gating. Declared but not yet consumed by V3.
 		_SmallBiomePeakCavEnableR ("Small Biome R Peak/Cavity Enable", Vector) = (0,0,0,0)
 		_SmallBiomeRPeakCavParams1 ("Small Biome R Peak/Cavity Params 1", Vector) = (0,0,0,0)
@@ -329,7 +329,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallBiomeACurvMapWeights3 ("Small Biome A Curvature Map Weights 3", Vector) = (1,1,1,1)
 		_SmallBiomeACurvMapWeights4 ("Small Biome A Curvature Map Weights 4", Vector) = (1,1,1,1)
 
-		// ===== Small biome: per-layer UVs (PARAMS §3.6.3) =====
+		// ===== Small biome: per-layer UVs (PARAMS Ã‚Â§3.6.3) =====
 		// Bigger scale = smaller print on the surface; offset breaks alignment
 		// between layers that share the same tile.
 		_SmallUVScaleR ("Small UV Scale R", Vector) = (1,1,1,1)
@@ -341,7 +341,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallUVOffsetB ("Small UV Offset B", Vector) = (1,1,1,1)
 		_SmallUVOffsetA ("Small UV Offset A", Vector) = (1,1,1,1)
 
-		// ===== Small biome: per-layer color grading (PARAMS §3.6.4) =====
+		// ===== Small biome: per-layer color grading (PARAMS Ã‚Â§3.6.4) =====
 		// Tint (RGB multiplies albedo, A multiplies layer height-blend coverage),
 		// brightness (additive), contrast (around mid-gray ~0.218), saturation.
 		_SmallTintR1 ("Small Tint R 1", Color) = (1,1,1,1)
@@ -373,7 +373,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallSaturationB ("Small Saturation B", Vector) = (1,1,1,1)
 		_SmallSaturationA ("Small Saturation A", Vector) = (1,1,1,1)
 
-		// ===== Small biome: per-layer PBR (PARAMS §3.6.5) =====
+		// ===== Small biome: per-layer PBR (PARAMS Ã‚Â§3.6.5) =====
 		// Per-layer normal/gloss/metallic strength multipliers. Set Gloss or
 		// Metallic >= 15 to switch from multiply to override mode (the layer
 		// forces a fixed value instead of multiplying the source map).
@@ -390,7 +390,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallMetallicStrengthB ("Small Metallic Strength B", Vector) = (0,0,0,0)
 		_SmallMetallicStrengthA ("Small Metallic Strength A", Vector) = (0,0,0,0)
 
-		// ===== Small biome: per-layer emission (PARAMS §3.6.6) =====
+		// ===== Small biome: per-layer emission (PARAMS Ã‚Â§3.6.6) =====
 		// Per-layer self-illumination strength + 4 HDR colors per biome.
 		// Use for crystal veins, lava cracks, glowing fungi, bioluminescence.
 		_SmallEmissionStrengthR ("Small Emission Strength R", Vector) = (0,0,0,0)
@@ -414,14 +414,14 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallEmissionColorA3 ("Small Emission Color A 3", Color) = (1,1,1,1)
 		_SmallEmissionColorA4 ("Small Emission Color A 4", Color) = (1,1,1,1)
 
-		// ===== Small biome: per-layer AO (PARAMS §3.6.5) =====
+		// ===== Small biome: per-layer AO (PARAMS Ã‚Â§3.6.5) =====
 		// Per-layer ambient-occlusion power.
 		_SmallAOStrengthR ("Small AO Strength R", Vector) = (1,1,1,1)
 		_SmallAOStrengthG ("Small AO Strength G", Vector) = (1,1,1,1)
 		_SmallAOStrengthB ("Small AO Strength B", Vector) = (1,1,1,1)
 		_SmallAOStrengthA ("Small AO Strength A", Vector) = (1,1,1,1)
 
-		// ===== Small biome: per-layer distance-resample tier + enable (PARAMS §3.6.1 / §3.9) =====
+		// ===== Small biome: per-layer distance-resample tier + enable (PARAMS Ã‚Â§3.6.1 / Ã‚Â§3.9) =====
 		// ResampleMax 0..4 = how aggressively this layer re-tiles at far range.
 		// Enable 0/1 = mute a slot without resetting its slice index.
 		_SmallDistanceResampleMaxR ("Small R Distance Resample Max", Vector) = (4,4,4,4)
@@ -433,7 +433,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallEnableB ("Small Enable B", Vector) = (0,0,0,0)
 		_SmallEnableA ("Small Enable A", Vector) = (0,0,0,0)
 
-		// ===== Subzone overrides: per-layer weight (PARAMS §3.7, SUB_ZONES_ENABLED) =====
+		// ===== Subzone overrides: per-layer weight (PARAMS Ã‚Â§3.7, SUB_ZONES_ENABLED) =====
 		// (sz0,sz1,sz2,sz3) replaces _SmallHeightWeight<C>.<i> in SZ mode.
 		_SmallSubzoneWeightR1 ("Small Subzone Weight R1", Vector) = (1,1,1,1)
 		_SmallSubzoneWeightR2 ("Small Subzone Weight R2", Vector) = (1,1,1,1)
@@ -452,7 +452,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallSubzoneWeightA3 ("Small Subzone Weight A3", Vector) = (1,1,1,1)
 		_SmallSubzoneWeightA4 ("Small Subzone Weight A4", Vector) = (1,1,1,1)
 
-		// ===== Subzone overrides: per-layer additive brightness (PARAMS §3.7) =====
+		// ===== Subzone overrides: per-layer additive brightness (PARAMS Ã‚Â§3.7) =====
 		// (sz0,sz1,sz2,sz3) additive brightness for layer <i> of biome <C>.
 		_SmallSubzoneBrightnessR1 ("Small Subzone Brightness R1", Vector) = (0,0,0,0)
 		_SmallSubzoneBrightnessR2 ("Small Subzone Brightness R2", Vector) = (0,0,0,0)
@@ -471,7 +471,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallSubzoneBrightnessA3 ("Small Subzone Brightness A3", Vector) = (0,0,0,0)
 		_SmallSubzoneBrightnessA4 ("Small Subzone Brightness A4", Vector) = (0,0,0,0)
 
-		// ===== Subzone overrides: per-layer tint (PARAMS §3.7) =====
+		// ===== Subzone overrides: per-layer tint (PARAMS Ã‚Â§3.7) =====
 		// _SmallSubzoneTint<C><i>_<S>: <C>=biome channel, <i>=layer 1..4,
 		// <S>=subzone channel. The four <S> variants are blended by
 		// _SubzoneMaskTex per pixel. .w of the _R and _G variants doubles as
@@ -541,7 +541,7 @@ Shader "Redux/Environment/CelestialBody_Local"
 		_SmallSubzoneTintA4_B ("Small Subzone Tint A1 - B", Color) = (1,1,1,1)
 		_SmallSubzoneTintA4_A ("Small Subzone Tint A1 - A", Color) = (1,1,1,1)
 
-		// ===== Cross-biome blend & distance cascade (PARAMS §3.9 / §3.10) =====
+		// ===== Cross-biome blend & distance cascade (PARAMS Ã‚Â§3.9 / Ã‚Â§3.10) =====
 		// _HeightblendFactor / _GlobalBlend control how the four biomes composite.
 		// _DistanceResample* drives the at-distance retiling cascade for the
 		// small detail stack. _AlphaToHeightFadeParams fades the alpha-vs-
@@ -558,13 +558,13 @@ Shader "Redux/Environment/CelestialBody_Local"
 		[HideInInspector] _DistanceResampleFadeRangesPos ("Distance Resample Fade Ranges Pos", Vector) = (1,1,1,1)
 		[HideInInspector] _DistanceResampleFadeRangesNeg ("Distance Resample Fade Ranges Ned", Vector) = (1,1,1,1)
 
-		// ===== Anti-tile / shoreline (PARAMS §3.3 / §3.11) =====
+		// ===== Anti-tile / shoreline (PARAMS Ã‚Â§3.3 / Ã‚Â§3.11) =====
 		// _StochasticScale: hex-grid period for ANTI_TILE_QUALITY_ON.
 		// _ShorelineTex: reserved (sea-level tinting; not yet consumed by V3).
 		_StochasticScale ("Scale", Range(0.25, 2)) = 1
 		_ShorelineTex ("Shoreline", 2D) = "white" {}
 
-		// ===== Internal: prepass bindings + quality toggle (PARAMS §3.11) =====
+		// ===== Internal: prepass bindings + quality toggle (PARAMS Ã‚Â§3.11) =====
 		// _LocalSpacePrepassTex0..4: written by passes 13/14/15, consumed by
 		// passes 1..11. _HighQualityEnabled: reserved quality-tier toggle.
 		[HideInInspector] _LocalSpacePrepassTex0 ("Local Space Prepass Texture 0", 2D) = "white" {}
@@ -752,6 +752,14 @@ Shader "Redux/Environment/CelestialBody_Local"
 		{
 			Name "GBuffer"
 			Tags { "LightMode" = "UniversalGBuffer" }
+			Stencil
+			{
+				Ref 32
+				ReadMask 96
+				WriteMask 96
+				Comp Always
+				Pass Replace
+			}
 
 			HLSLPROGRAM
 			#pragma target 5.0
@@ -763,12 +771,77 @@ Shader "Redux/Environment/CelestialBody_Local"
 			#pragma multi_compile_fragment _ ANTI_TILE_QUALITY_ON
 			#pragma multi_compile_local_fragment _ DEBUG_OUTPUT_BIOME_COLOR
 			#pragma multi_compile_fragment _ RK_GALAXY_CUBEMAP RK_OBSERVER_CUBEMAP
-			#pragma multi_compile_fragment _ _WRITE_RENDERING_LAYERS
-			#pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
+			#pragma multi_compile_local_fragment _ _WRITE_RENDERING_LAYERS
+			#pragma multi_compile_local_fragment _ _RENDER_PASS_ENABLED
 
+			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+			#pragma multi_compile_local_fragment _ PQS_SHADOWMASK
+			#if defined(PQS_SHADOWMASK)
+			    #define SHADOWS_SHADOWMASK 1
+			#endif
 			#define KSP2_SPECULAR_SETUP
 			#define KSP2_GBUFFER_PASS
 			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalForward.hlsl"
+			ENDHLSL
+		}
+
+		// 10-12: early normal consumers evaluate terrain at their own stage.
+		Pass
+		{
+			Name "Early Normals NoDecals"
+			Tags { "LightMode" = "KSP2PQSEarlyNormals" }
+
+			HLSLPROGRAM
+			#pragma target 5.0
+			#pragma vertex CBL_PrepassVertex
+			#pragma fragment CBL_PrepassFragment
+			#define CBL_NORMALS_ONLY
+			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
+			#pragma multi_compile_local _ REDUX_GRADIENCE
+			#define CBL_PREPASS_ZONE CBL_ZONE_NO_DECALS
+			#define CBL_DECALS_NONE
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
+			ENDHLSL
+		}
+
+		Pass
+		{
+			Name "Early Normals 4Decals"
+			Tags { "LightMode" = "KSP2PQSEarlyNormals" }
+
+			HLSLPROGRAM
+			#pragma target 5.0
+			#pragma vertex CBL_PrepassVertex
+			#pragma fragment CBL_PrepassFragment
+			#define CBL_NORMALS_ONLY
+			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
+			#pragma multi_compile_local _ REDUX_GRADIENCE
+			#pragma multi_compile_local _ DECALS_ENABLED
+			#define CBL_PREPASS_ZONE CBL_ZONE_4_DECALS
+			#define CBL_DECALS_PACKED4
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
+			ENDHLSL
+		}
+
+		Pass
+		{
+			Name "Early Normals InfDecals"
+			Tags { "LightMode" = "KSP2PQSEarlyNormals" }
+
+			HLSLPROGRAM
+			#pragma target 5.0
+			#pragma vertex CBL_PrepassVertex
+			#pragma fragment CBL_PrepassFragment
+			#define CBL_NORMALS_ONLY
+			#pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+			#pragma multi_compile_local _ SUB_ZONES_ENABLED
+			#pragma multi_compile_local _ REDUX_GRADIENCE
+			#pragma multi_compile_local _ DECALS_ENABLED
+			#define CBL_PREPASS_ZONE CBL_ZONE_INF_DECALS
+			#define CBL_DECALS_INFINITE
+			#include "Packages/ksp2redux.sdk/Assets/Shaders/URP/CelestialBody/KSP2CelestialBodyLocalPrepass.hlsl"
 			ENDHLSL
 		}
 	}

@@ -231,6 +231,37 @@ float KSP2_EclipseLocalSunFactor(float3 positionWS)
     return factor;
 }
 
+// The share of the star the bodies other than the observer's own leave at a pixel of the local scene, with the ring's
+// shadow: the part of KSP2_EclipseLocalSunFactor that the ambient light and the environment reflections take as well.
+// The observer's own night is left out, as the ambient probe holds the planet's day and night itself. The scene's
+// ambient light dimmed only with the eclipse at the observer, so a moon's shadow on the ground stayed grey from outside
+// it and went black once the vessel entered it (#2341). It keeps the table whichever light is the main one, as the
+// ambient light does not come from the sun and takes the shadows while the sun is off. 1 when there is no table.
+float KSP2_EclipseLocalOtherBodiesFactor(float3 positionWS)
+{
+    float factor = 1.0;
+    [branch]
+    if (_KSP2EclipseLocalSceneCount >= 0.5 && _KSP2EclipseLocalStar.w > 0.0)
+    {
+        float3 toStar = _KSP2EclipseLocalStar.xyz - positionWS;
+        float starDistance = length(toStar);
+        float starAngularRadius = KSP2_EclipseAngularRadius(_KSP2EclipseLocalStar.w, starDistance);
+        int first = _KSP2EclipseLocalOwnBodyFirst > 0.5 ? 1 : 0;
+        int count = (int)_KSP2EclipseLocalSceneCount;
+        [loop]
+        for (int i = first; i < count; i++)
+        {
+            factor *= 1.0 - KSP2_EclipseOccluderFraction(positionWS, toStar, starDistance, starAngularRadius,
+                _KSP2EclipseLocalOccluders[i]);
+        }
+
+        factor *= KSP2_EclipseRingTransmittance(positionWS, toStar / max(starDistance, 1e-6),
+            _KSP2EclipseLocalRingCenter, _KSP2EclipseLocalRingNormal.xyz, _KSP2EclipseLocalRingRadii.xy);
+    }
+
+    return factor;
+}
+
 // The local star's angular radius at the observer, the size of its disc in a mirror, or 0 without a table.
 float KSP2_EclipseLocalStarAngularRadius()
 {

@@ -142,6 +142,12 @@ namespace KSP.Editor
                     continue;
                 }
 
+                // Child systems that play along with their parent effect stay out of the manager, as in stock engines.
+                if (behaviour is IEngineFXDataModeHint { IsExcludedFromEngineFXManager: true })
+                {
+                    continue;
+                }
+
                 List<EffectAssignment> assignments = GetAssignments(behaviour, existingAssignments);
                 foreach (EffectAssignment assignment in assignments)
                 {
@@ -199,10 +205,21 @@ namespace KSP.Editor
         {
             if (behaviour is IEngineFXDataModeHint { HasEngineFXModeHint: true } modeHint)
             {
-                return new List<EffectAssignment>
+                var hinted = new List<EffectAssignment>
                 {
                     new(Mathf.Max(0, modeHint.EngineFXEngineModeIndex), modeHint.EngineFXModeEvent)
                 };
+                // An effect shared by several modes or events, such as a flame used by both modes of an afterburning
+                // jet, lists the others here.
+                if (modeHint.EngineFXAdditionalAssignments != null)
+                {
+                    foreach (EngineFXModeAssignment additional in modeHint.EngineFXAdditionalAssignments)
+                    {
+                        hinted.Add(new EffectAssignment(Mathf.Max(0, additional.EngineModeIndex), additional.ModeEvent));
+                    }
+                }
+
+                return hinted;
             }
 
             if (existingAssignments.TryGetValue(behaviour.gameObject, out List<EffectAssignment> assignments))

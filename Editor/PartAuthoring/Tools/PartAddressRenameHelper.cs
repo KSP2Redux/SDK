@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -92,18 +93,24 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             var conflicts = new List<string>();
             var empty = new RenamePlan(oldName, newName, items, conflicts);
 
-            if (target == null) return empty;
-            if (string.IsNullOrEmpty(oldName) || string.IsNullOrEmpty(newName)) return empty;
-            if (oldName == newName) return empty;
+            if (target == null)
+                return empty;
+            if (string.IsNullOrEmpty(oldName) || string.IsNullOrEmpty(newName))
+                return empty;
+            if (oldName == newName)
+                return empty;
 
             var settings = AddressableAssetSettingsDefaultObject.Settings;
-            if (settings == null) return empty;
+            if (settings == null)
+                return empty;
 
             var prefabPath = PathUtils.GetPrefabOrAssetPath(target, target.gameObject);
-            if (string.IsNullOrEmpty(prefabPath)) return empty;
+            if (string.IsNullOrEmpty(prefabPath))
+                return empty;
 
             var folder = Path.GetDirectoryName(prefabPath)?.Replace('\\', '/');
-            if (string.IsNullOrEmpty(folder)) return empty;
+            if (string.IsNullOrEmpty(folder))
+                return empty;
 
             TryAddFolderItem(folder, oldName, newName, items, conflicts);
             TryAddPrefabItem(settings, prefabPath, folder, oldName, newName, items, conflicts);
@@ -121,7 +128,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         /// <returns>True if the plan was applied or had no work, false if the user cancelled.</returns>
         public static bool ConfirmAndApply(RenamePlan plan, bool showDialog = true)
         {
-            if (!plan.HasWork) return true;
+            if (!plan.HasWork)
+                return true;
 
             if (showDialog)
             {
@@ -130,7 +138,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                     BuildDialogMessage(plan),
                     "Rename",
                     "Skip");
-                if (!go) return false;
+                if (!go)
+                    return false;
             }
 
             Apply(plan);
@@ -140,17 +149,20 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         private static void TryAddFolderItem(string folder, string oldName, string newName, List<RenameItem> items, List<string> conflicts)
         {
             var leaf = Path.GetFileName(folder);
-            if (leaf != oldName) return;
+            if (leaf != oldName)
+                return;
             var parent = Path.GetDirectoryName(folder)?.Replace('\\', '/');
-            if (string.IsNullOrEmpty(parent)) return;
+            if (string.IsNullOrEmpty(parent))
+                return;
             var newFolderPath = $"{parent}/{newName}";
-            if (AssetDatabase.IsValidFolder(newFolderPath))
+            if (!IsSamePath(folder, newFolderPath) && AssetDatabase.IsValidFolder(newFolderPath))
             {
                 conflicts.Add($"Folder: '{newName}' already exists at '{parent}', skipped");
                 return;
             }
             var guid = AssetDatabase.AssetPathToGUID(folder);
-            if (string.IsNullOrEmpty(guid)) return;
+            if (string.IsNullOrEmpty(guid))
+                return;
             items.Add(new RenameItem("Folder", guid, folder, null, null, newName));
         }
 
@@ -164,7 +176,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             List<string> conflicts)
         {
             var guid = AssetDatabase.AssetPathToGUID(prefabPath);
-            if (string.IsNullOrEmpty(guid)) return;
+            if (string.IsNullOrEmpty(guid))
+                return;
 
             var entry = settings.FindAssetEntry(guid);
             var oldAddress = entry?.address;
@@ -174,7 +187,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
             if (Path.GetFileNameWithoutExtension(prefabPath) == oldName)
             {
                 var newPrefabPath = $"{folder}/{newName}.prefab";
-                if (File.Exists(newPrefabPath))
+                if (File.Exists(newPrefabPath) && !IsSamePath(prefabPath, newPrefabPath))
                 {
                     conflicts.Add($"Prefab: '{newName}.prefab' already exists, skipped");
                 }
@@ -184,7 +197,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
                 }
             }
 
-            if (newFileName == null && (oldAddress == null || oldAddress == newAddress)) return;
+            if (newFileName == null && (oldAddress == null || oldAddress == newAddress))
+                return;
             items.Add(new RenameItem("Prefab", guid, prefabPath, oldAddress, newAddress, newFileName));
         }
 
@@ -199,20 +213,31 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         {
             var oldPath = $"{folder}/{oldFileName}";
             var newPath = $"{folder}/{newFileName}";
-            if (!File.Exists(oldPath)) return;
-            if (File.Exists(newPath))
+            if (!File.Exists(oldPath))
+                return;
+            if (File.Exists(newPath) && !IsSamePath(oldPath, newPath))
             {
                 conflicts.Add($"{kind}: '{newFileName}' already exists, skipped");
                 return;
             }
 
             var guid = AssetDatabase.AssetPathToGUID(oldPath);
-            if (string.IsNullOrEmpty(guid)) return;
+            if (string.IsNullOrEmpty(guid))
+                return;
             var entry = settings.FindAssetEntry(guid);
             var oldAddress = entry?.address;
             var newAddress = entry != null && entry.address == oldFileName ? newFileName : oldAddress;
-            items.Add(new RenameItem(kind, guid, oldPath, oldAddress, newAddress, newFileName));
+
+            // The lookup ignores case, so the file found may already carry the new name
+            var renamedFileName = Path.GetFileName(AssetDatabase.GUIDToAssetPath(guid)) == newFileName ? null : newFileName;
+            if (renamedFileName == null && (oldAddress == null || oldAddress == newAddress))
+                return;
+            items.Add(new RenameItem(kind, guid, oldPath, oldAddress, newAddress, renamedFileName));
         }
+
+        // Windows ignores case in paths, so a target differing only in case is the source itself, not a conflict
+        private static bool IsSamePath(string path, string otherPath) =>
+            string.Equals(path, otherPath, StringComparison.OrdinalIgnoreCase);
 
         private static string BuildDialogMessage(RenamePlan plan)
         {
@@ -246,7 +271,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         private static void Apply(RenamePlan plan)
         {
             var settings = AddressableAssetSettingsDefaultObject.Settings;
-            if (settings == null) return;
+            if (settings == null)
+                return;
 
             // Folder rename runs first so subsequent path resolutions via GUID reflect the new location.
             foreach (var item in plan.Items)
@@ -267,9 +293,11 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
 
             foreach (var item in plan.Items)
             {
-                if (!item.AddressChanges) continue;
+                if (!item.AddressChanges)
+                    continue;
                 var entry = settings.FindAssetEntry(item.Guid);
-                if (entry == null) continue;
+                if (entry == null)
+                    continue;
                 entry.address = item.NewAddress;
                 settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryModified, entry, true);
             }
@@ -280,16 +308,30 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Tools
         private static void RenameByGuid(RenameItem item)
         {
             var currentPath = AssetDatabase.GUIDToAssetPath(item.Guid);
-            if (string.IsNullOrEmpty(currentPath)) return;
+            if (string.IsNullOrEmpty(currentPath))
+                return;
             // Folders have no extension to strip. GetFileNameWithoutExtension would truncate at the first dot.
             var newName = item.Kind == "Folder"
                 ? item.NewFileName
                 : Path.GetFileNameWithoutExtension(item.NewFileName);
-            var error = AssetDatabase.RenameAsset(currentPath, newName);
-            if (!string.IsNullOrEmpty(error))
+
+            // A case-only rename goes through a temporary name, since the file system sees both names as one
+            if (IsSamePath(Path.GetFileName(currentPath), item.NewFileName))
             {
-                Debug.LogError($"[PartAddressRenameHelper] Failed to rename '{currentPath}' to '{item.NewFileName}': {error}");
+                if (!TryRenameAsset(currentPath, $"{newName}_{item.Guid}"))
+                    return;
+                currentPath = AssetDatabase.GUIDToAssetPath(item.Guid);
             }
+            TryRenameAsset(currentPath, newName);
+        }
+
+        private static bool TryRenameAsset(string path, string newName)
+        {
+            var error = AssetDatabase.RenameAsset(path, newName);
+            if (string.IsNullOrEmpty(error))
+                return true;
+            Debug.LogError($"[PartAddressRenameHelper] Failed to rename '{path}' to '{newName}': {error}");
+            return false;
         }
     }
 }

@@ -22,6 +22,72 @@
 #ifndef KSP2_LEGACY_LIGHTS_INCLUDED
 #define KSP2_LEGACY_LIGHTS_INCLUDED
 
+// Reuse each vessel's plasma capture for windward-contact falloff. Zero means an ordinary light.
+float _ReentryContactEnabled;
+float _ReentryContactLightSlots[MAX_VISIBLE_LIGHTS];
+float4x4 _ReentryContactWorldToFlow[4];
+float4 _ReentryContactRects[4];
+float4 _ReentryContactParams[4];
+TEXTURE2D(_ReentryContactSurface0); TEXTURE2D(_ReentryContactEdge0);
+TEXTURE2D(_ReentryContactSurface1); TEXTURE2D(_ReentryContactEdge1);
+TEXTURE2D(_ReentryContactSurface2); TEXTURE2D(_ReentryContactEdge2);
+TEXTURE2D(_ReentryContactSurface3); TEXTURE2D(_ReentryContactEdge3);
+
+float KSP2_ReentryContactProximity(TEXTURE2D_PARAM(surfaceTexture, surfaceSampler),
+    TEXTURE2D_PARAM(edgeTexture, edgeSampler), float2 uv, float3 position, float4 rect, float invRangeSqr)
+{
+    float4 surface = SAMPLE_TEXTURE2D_LOD(surfaceTexture, surfaceSampler, uv, 0);
+    float distanceSqr;
+    UNITY_BRANCH
+    if (surface.z >= 0.5)
+    {
+        // Inside the silhouette, only the separation from the windward depth is needed.
+        float separation = position.z - surface.w / surface.z;
+        distanceSqr = separation * separation;
+    }
+    else
+    {
+        // Only fragments outside the silhouette need the nearest projected edge seed.
+        // This is a windward projection approximation, not an exact 3D nearest-point query.
+        float4 edge = SAMPLE_TEXTURE2D_LOD(edgeTexture, edgeSampler, uv, 0);
+        if (edge.w <= 0)
+            return 0;
+        float3 contact = float3(rect.xy + edge.xy * rect.zw, edge.z);
+        float3 delta = position - contact;
+        distanceSqr = dot(delta, delta);
+    }
+    return rcp(1 + distanceSqr * invRangeSqr);
+}
+
+float KSP2_ReentryContactAttenuation(int lightIndex, float3 positionWS, float attenuation)
+{
+    UNITY_BRANCH
+    if (_ReentryContactEnabled < 0.5 || attenuation <= 0 || lightIndex < 0 || lightIndex >= MAX_VISIBLE_LIGHTS)
+        return attenuation;
+    int slot = (int)_ReentryContactLightSlots[lightIndex] - 1;
+    if (slot < 0 || slot >= 4)
+        return attenuation;
+
+    float3 position = mul(_ReentryContactWorldToFlow[slot], float4(positionWS, 1)).xyz;
+    float4 rect = _ReentryContactRects[slot];
+    float2 uv = (position.xy - rect.xy) / rect.zw;
+    float2 falloff = _ReentryContactParams[slot].xy;
+    if (any(uv < 0) || any(uv > 1))
+        return attenuation * falloff.y;
+
+    #define REENTRY_CONTACT_PROXIMITY(index) KSP2_ReentryContactProximity( \
+        TEXTURE2D_ARGS(_ReentryContactSurface##index, sampler_LinearClamp), \
+        TEXTURE2D_ARGS(_ReentryContactEdge##index, sampler_PointClamp), uv, position, rect, falloff.x)
+    float proximity;
+    UNITY_BRANCH
+    if (slot == 0) { proximity = REENTRY_CONTACT_PROXIMITY(0); }
+    else if (slot == 1) { proximity = REENTRY_CONTACT_PROXIMITY(1); }
+    else if (slot == 2) { proximity = REENTRY_CONTACT_PROXIMITY(2); }
+    else { proximity = REENTRY_CONTACT_PROXIMITY(3); }
+    #undef REENTRY_CONTACT_PROXIMITY
+    return attenuation * lerp(falloff.y, 1, proximity);
+}
+
 // _LightTextureB0: the Built-in range falloff.
 float KSP2_LegacyRangeAttenuation(float distanceSqr, float invRangeSqr)
 {
@@ -87,21 +153,27 @@ int KSP2_AdditionalLightBufferIndex(uint i)
 Light KSP2_GetAdditionalLight(uint i, InputData inputData, half4 shadowMask, AmbientOcclusionFactor aoFactor)
 {
     Light light = GetAdditionalLight(i, inputData, shadowMask, aoFactor);
-    light.distanceAttenuation = KSP2_LegacyAdditionalLightAttenuation(KSP2_AdditionalLightBufferIndex(i), inputData.positionWS);
+    int index = KSP2_AdditionalLightBufferIndex(i);
+    light.distanceAttenuation = KSP2_ReentryContactAttenuation(index, inputData.positionWS,
+        KSP2_LegacyAdditionalLightAttenuation(index, inputData.positionWS));
     return light;
 }
 
 Light KSP2_GetAdditionalLight(uint i, float3 positionWS, half4 shadowMask)
 {
     Light light = GetAdditionalLight(i, positionWS, shadowMask);
-    light.distanceAttenuation = KSP2_LegacyAdditionalLightAttenuation(KSP2_AdditionalLightBufferIndex(i), positionWS);
+    int index = KSP2_AdditionalLightBufferIndex(i);
+    light.distanceAttenuation = KSP2_ReentryContactAttenuation(index, positionWS,
+        KSP2_LegacyAdditionalLightAttenuation(index, positionWS));
     return light;
 }
 
 Light KSP2_GetAdditionalLight(uint i, float3 positionWS)
 {
     Light light = GetAdditionalLight(i, positionWS);
-    light.distanceAttenuation = KSP2_LegacyAdditionalLightAttenuation(KSP2_AdditionalLightBufferIndex(i), positionWS);
+    int index = KSP2_AdditionalLightBufferIndex(i);
+    light.distanceAttenuation = KSP2_ReentryContactAttenuation(index, positionWS,
+        KSP2_LegacyAdditionalLightAttenuation(index, positionWS));
     return light;
 }
 

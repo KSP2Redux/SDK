@@ -23,3 +23,7 @@ Visual prefab-patch authoring uses the `PatchManager.PrefabPatching` assembly
 imported from KSP2 Redux by ThunderKit, just like the other game assemblies. The
 editor creates variants from linked prefabs and compiles them to Patch Manager's
 public declarative manifest format; Patch Manager is not a separate Unity package.
+
+## Snapshot releases
+
+SDK snapshots use a game-versioned SemVer tag and are published to the public Unity registry. See [.github/RELEASING.md](.github/RELEASING.md) for the release process.

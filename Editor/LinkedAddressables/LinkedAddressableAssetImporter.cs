@@ -1,5 +1,6 @@
 using Ksp2UnityTools.LinkedAddressables;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -8,10 +9,27 @@ using UnityEngine;
 
 namespace Ksp2UnityTools.Editor.LinkedAddressables
 {
-    [ScriptedImporter(18, Extension)]
+    [ScriptedImporter(19, Extension)]
     public sealed class LinkedAddressableAssetImporter : ScriptedImporter
     {
         public const string Extension = "bkaddressable";
+
+        private const string MainAssemblyName = "Assembly-CSharp";
+        private const string FirstPassAssemblyName = "Assembly-CSharp-firstpass";
+
+        private static readonly Lazy<Dictionary<Type, string>> ScriptPaths =
+            new(() =>
+            {
+                var paths = new Dictionary<Type, string>();
+                foreach (var script in MonoImporter.GetAllRuntimeMonoScripts())
+                {
+                    var scriptType = script != null ? script.GetClass() : null;
+                    if (scriptType != null && !paths.ContainsKey(scriptType))
+                        paths.Add(scriptType, AssetDatabase.GetAssetPath(script).Replace('\\', '/'));
+                }
+
+                return paths;
+            });
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
@@ -108,10 +126,51 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                         + ":"
                         + sourceObject.SourcePathId
                         + ":"
-                        + sourceObject.SourceType,
+                        + GetIdentifierTypeName(sourceObject.SourceType),
                     sourceObject.Target
                 );
             }
+        }
+
+        // A component's identifier, and the local file ID Unity derives from it, has to stay what it was when prefab
+        // variants of the linked asset were authored, or their overrides lose their targets. Game scripts compiled
+        // into Assembly-CSharp and Assembly-CSharp-firstpass then. They moved into one game assembly, whose name and
+        // build-generated version changed the type names and orphaned every override of a game script component.
+        // Facades with the old names forward to it, and the identifier keeps the name the type had in the stock
+        // bundles.
+        private static string GetIdentifierTypeName(string sourceType)
+        {
+            var type = string.IsNullOrWhiteSpace(sourceType)
+                ? null
+                : Type.GetType(sourceType, false);
+            if (type == null)
+                return sourceType;
+
+            var assemblyName = type.Assembly.GetName().Name;
+            if (
+                assemblyName == MainAssemblyName
+                || assemblyName == FirstPassAssemblyName
+                || Type.GetType($"{type.FullName}, {MainAssemblyName}", false) != type
+            )
+            {
+                return sourceType;
+            }
+
+            var legacyAssembly = IsFirstPassScript(type)
+                ? FirstPassAssemblyName
+                : MainAssemblyName;
+            return $"{type.FullName}, {legacyAssembly}, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null";
+        }
+
+        // Unity compiled scripts in these top-level folders into Assembly-CSharp-firstpass.
+        private static bool IsFirstPassScript(Type type)
+        {
+            if (!ScriptPaths.Value.TryGetValue(type, out var path))
+                return false;
+
+            return path.StartsWith("Assets/Plugins/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("Assets/Standard Assets/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("Assets/Pro Standard Assets/", StringComparison.OrdinalIgnoreCase);
         }
 
         public static LinkedAddressableDescriptor ReadDescriptor(string assetPath)
