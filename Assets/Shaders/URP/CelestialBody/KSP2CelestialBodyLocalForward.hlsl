@@ -365,27 +365,21 @@ float3 CBL_ReorientSingleAxis(float4 packed, CBLBiomePixel px)
     return normalize(px.saBase + px.triWeight.y * yBlend);
 }
 
-// Single-axis (Y plane) layer surface, stock passes 4-7. hash is the layer's tile hash from CBL_LayerAlbedo.
-CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale,
-                                           CBLTileHash hash)
+// Single-axis (Y plane) layer surface, stock passes 4-7, from the layer's normal and metal texels, which
+// CBL_SampleSingleAxisSurface fetched in the albedo phase.
+CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float4 packed, float metal)
 {
-    float index = mat.biome[layer];
     float2 metSO, glossSO;
     CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
-
-    float2 uv, uvDdx, uvDdy;
-    CBL_PlaneUV(px, 1u, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
-    float4 packed = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
-    // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
-    float metal = 0.0;
-    [branch]
-    if (metSO.x != 0.0)
-        metal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy).x;
 
     float wy = px.triWeight.y;
     CBLLayerSurface r;
     r.normal = CBL_ReorientSingleAxis(packed, px) * mat.normalStrength[layer];
+#if defined(PQS_NO_METAL)
+    r.metallic = 0.0;
+#else
     r.metallic = (wy * metal) * metSO.x + metSO.y;
+#endif
     r.gloss = (wy * packed.x) * glossSO.x + glossSO.y;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
     r.ao = pow(max(wy * packed.z, FLT_MIN), mat.aoStrength[layer]);
@@ -440,9 +434,11 @@ CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLB
             CBLTileHash hash = CBL_TileHash(uv, _StochasticScale);
             float4 nrm = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
             float m = 0.0;
+#if !defined(PQS_NO_METAL)
             [branch]
             if (sampleMetal)
                 m = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy).x;
+#endif
             nrmX += w * nrm.x;
             nrmZ += w * nrm.z;
             met += w * m;
@@ -453,23 +449,46 @@ CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLB
     CBLLayerSurface r;
     float3 reoriented = CBL_ReorientThreeAxis(wy[0], wy[1], wy[2], px.triN, px.triWeight, px.triSign, px.triNzPositive);
     r.normal = reoriented * mat.normalStrength[layer];
+#if defined(PQS_NO_METAL)
+    r.metallic = 0.0;
+#else
     r.metallic = met * metSO.x + metSO.y;
+#endif
     r.gloss = nrmX * glossSO.x + glossSO.y;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
     r.ao = pow(max(nrmZ, FLT_MIN), mat.aoStrength[layer]);
     return r;
 }
 
-// One layer's graded colour (xyz) and height alpha (w) at one cascade scale, from its albedo fetches alone. Single-axis
-// layers sample the Y plane weighted by its triplanar weight, 3-axis layers every plane with a weight. yHash is the Y
-// plane's tile hash, for a single-axis layer's surface fetches.
+// A single-axis layer's normal and metal texels, fetched with its albedo from the same tile hash and UV.
+void CBL_SampleSingleAxisSurface(CBLBiomeMaterial mat, uint layer, CBLTileHash hash, float2 uvDdx, float2 uvDdy,
+                                 out float4 packed, out float metal)
+{
+    float index = mat.biome[layer];
+    packed = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
+    metal = 0.0;
+#if !defined(PQS_NO_METAL)
+    // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
+    float2 metSO, glossSO;
+    CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
+    [branch]
+    if (metSO.x != 0.0)
+        metal = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallMetalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy).x;
+#endif
+}
+
+// One layer's graded colour (xyz) and height alpha (w) at one cascade scale. Single-axis layers sample the Y plane
+// weighted by its triplanar weight, and also fetch their normal and metal texels for the surface phase, with yHash
+// the Y plane's tile hash. 3-axis layers sample every plane with a weight, and fetch their surface later.
 float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiomePixel px, float cascadeScale,
-                       out CBLTileHash yHash)
+                       out CBLTileHash yHash, out float4 yNormal, out float yMetal)
 {
     float index = mat.biome[layer];
     float3 albRGB = 0;
     float albA = 0;
     yHash = (CBLTileHash)0;
+    yNormal = 0.0;
+    yMetal = 0.0;
     [unroll]
     for (uint p = 0u; p < 3u; p++)
     {
@@ -485,6 +504,8 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
             albA += w * alb.w;
             if (p == 1u)
                 yHash = hash;
+            if (!threeAxis)
+                CBL_SampleSingleAxisSurface(mat, layer, hash, uvDdx, uvDdy, yNormal, yMetal);
         }
     }
 
@@ -497,10 +518,11 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
 // A single-axis layer's graded colour and height alpha, as CBL_LayerAlbedo, from a tile hash already worked out for
 // another layer with the same UV.
 float4 CBL_LayerAlbedoSharedHash(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale,
-                                 CBLTileHash hash)
+                                 CBLTileHash hash, out float4 yNormal, out float yMetal)
 {
     float2 uv, uvDdx, uvDdy;
     CBL_PlaneUV(px, 1u, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
+    CBL_SampleSingleAxisSurface(mat, layer, hash, uvDdx, uvDdy, yNormal, yMetal);
     float4 alb = px.triWeight.y * CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash,
                                                    mat.biome[layer], uvDdx, uvDdy);
     float4 tint;
@@ -526,8 +548,9 @@ struct CBLCascadeSum
 // fetched and added straight into the sums with its weight. Fetched together, each layer's ten results were held until
 // the blend, about thirty registers through the last layer's sampling. Each texture is still fetched once.
 //
-// Single-axis layers keep their tile hash from the albedo phase for the surface phase, six values per layer. 3-axis
-// layers would keep eighteen, so they compute it again.
+// Single-axis layers fetch their normal and metal texels in the albedo phase too, from the same tile hash and UV, and
+// hold those five values per layer for the surface phase. 3-axis layers would hold three planes' worth, so they
+// compute their tile hashes again and fetch in the surface phase.
 void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4], bool far, float4 layerWeight,
                            CBLBiomePixel px, float cascadeWeight, inout CBLCascadeSum sum)
 {
@@ -536,12 +559,15 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
     // Unrolled so albedo[] and the per-layer uniforms index statically. As a dynamic loop FXC kept the layer results
     // in an indexable temp array.
     float4 albedo[4];
-    CBLTileHash hashes[4];
+    float4 yNormal[4];
+    float yMetal[4];
+    CBLTileHash hash0 = (CBLTileHash)0;
     [unroll]
     for (uint k = 0u; k < 4u; k++)
     {
         albedo[k] = 0.0;
-        hashes[k] = (CBLTileHash)0;
+        yNormal[k] = 0.0;
+        yMetal[k] = 0.0;
         [branch]
         if (active[k])
         {
@@ -552,12 +578,16 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
                            && mat.uvOffset[0] == mat.uvOffset[k] && mat.distanceResampleMax[0] == mat.distanceResampleMax[k];
             [branch]
             if (sharedHash)
-            {
-                hashes[k] = hashes[0];
-                albedo[k] = CBL_LayerAlbedoSharedHash(mat, k, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[0]);
-            }
+                albedo[k] = CBL_LayerAlbedoSharedHash(mat, k, px, CBL_LayerCascadeScale(mat, k, px, far), hash0,
+                                                      yNormal[k], yMetal[k]);
             else
-                albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[k]);
+            {
+                CBLTileHash hash;
+                albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far), hash,
+                                            yNormal[k], yMetal[k]);
+                if (k == 0u)
+                    hash0 = hash;
+            }
         }
     }
 
@@ -593,12 +623,11 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
         [branch]
         if (active[s])
         {
-            float scale = CBL_LayerCascadeScale(mat, s, px, far);
             CBLLayerSurface r;
             if (threeAxis)
-                r = CBL_LayerSurfaceThreeAxis(mat, s, px, scale);
+                r = CBL_LayerSurfaceThreeAxis(mat, s, px, CBL_LayerCascadeScale(mat, s, px, far));
             else
-                r = CBL_LayerSurfaceSingleAxis(mat, s, px, scale, hashes[s]);
+                r = CBL_LayerSurfaceSingleAxis(mat, s, px, yNormal[s], yMetal[s]);
             float ws = cascadeWeight * w[s];
             sum.normal += ws * r.normal;
             sum.gloss += ws * r.gloss;
