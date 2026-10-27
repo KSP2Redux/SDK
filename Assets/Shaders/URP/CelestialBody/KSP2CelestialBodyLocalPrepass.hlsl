@@ -388,7 +388,7 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     CBLHeightAccum hm = (CBLHeightAccum)0;
 #if defined(SUB_ZONES_ENABLED)
     #define CBL_ACCUM_HEIGHT(C, idx) \
-        if (0.001 < hmBiomeWeight.idx) \
+        [flatten] if (0.001 < hmBiomeWeight.idx) \
         { \
             hm.large += hmBiomeWeight.idx * largeSzFilter.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_LargeGradience##C, sampler_LinearRepeat), _LargeHeightMapUVScales.idx, hmCtx); \
             hm.med += hmBiomeWeight.idx * midSzFilter.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_MidGradience##C, sampler_LinearRepeat), _MediumHeightMapUVScales.idx, hmCtx); \
@@ -397,7 +397,7 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
         }
 #else
     #define CBL_ACCUM_HEIGHT(C, idx) \
-        if (0.001 < hmBiomeWeight.idx) \
+        [flatten] if (0.001 < hmBiomeWeight.idx) \
         { \
             hm.large += hmBiomeWeight.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_LargeGradience##C, sampler_LinearRepeat), _LargeHeightMapUVScales.idx, hmCtx); \
             hm.med += hmBiomeWeight.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_MidGradience##C, sampler_LinearRepeat), _MediumHeightMapUVScales.idx, hmCtx); \
