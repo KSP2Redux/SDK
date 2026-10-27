@@ -131,13 +131,18 @@ void CBL_CascadeBand(float4 cascadeT, out uint nearIndex, out uint farIndex)
     }
 }
 
+// The layer's distance-resample tier: the highest band index with a scale of its own.
+uint CBL_CascadeTier(float distResampleMax)
+{
+    return (3.0 < distResampleMax) ? 4u : (2.0 < distResampleMax) ? 3u : (1.0 < distResampleMax) ? 2u
+         : (0.0 < distResampleMax) ? 1u : 0u;
+}
+
 // The cascade UV scale at a band index for the layer's distance-resample tier. Index 0 is unscaled, and index i is
 // _DistanceResampleUVScales[i - 1], clamped to the tier's last scale. A tier of 0 leaves every index unscaled.
 float CBL_CascadeScale(float distResampleMax, float4 resampleUVScales, uint index)
 {
-    uint tier = (3.0 < distResampleMax) ? 4u : (2.0 < distResampleMax) ? 3u : (1.0 < distResampleMax) ? 2u
-              : (0.0 < distResampleMax) ? 1u : 0u;
-    uint i = min(index, tier);
+    uint i = min(index, CBL_CascadeTier(distResampleMax));
     return (i == 4u) ? resampleUVScales.w : (i == 3u) ? resampleUVScales.z : (i == 2u) ? resampleUVScales.y
          : (i == 1u) ? resampleUVScales.x : 1.0;
 }

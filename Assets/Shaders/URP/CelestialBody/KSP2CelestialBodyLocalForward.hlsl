@@ -304,10 +304,12 @@ struct CBLLayerSurface
     float  ao;
 };
 
-// The layer's UV scale for this pixel's near or far distance cascade.
+// The layer's UV scale for this pixel's near or far distance cascade. The far cascade reads its own copy of the
+// layer's resample maximum, so the compiler computes its scales there rather than holding them from the near cascade.
 float CBL_LayerCascadeScale(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, bool far)
 {
-    return CBL_CascadeScale(mat.distanceResampleMax[layer], _DistanceResampleUVScales, far ? px.cascadeFar : px.cascadeNear);
+    return CBL_CascadeScale(CBL_OPAQUE(mat.distanceResampleMax[layer], far), _DistanceResampleUVScales,
+                            far ? px.cascadeFar : px.cascadeNear);
 }
 
 // A triplanar plane's layer UV and its screen derivatives: plane 0 (X) projects zy, 1 (Y) xz and 2 (Z) xy. The pixel
@@ -508,11 +510,14 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
             albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[k]);
     }
 
-    // Height blend between the four layers.
-    float4 enabledWeight = layerWeight * _CBLEnable[mat.channel];
-    float4 blendInput = layerWeight * heightWeight;
+    // Height blend between the four layers. The far cascade computes its own inputs from copies of the layer weight and
+    // softness. Otherwise the compiler kept the near cascade's results, about a dozen registers, through every far
+    // fetch.
+    float4 lw = CBL_OPAQUE(layerWeight, far);
+    float4 enabledWeight = lw * _CBLEnable[mat.channel];
+    float4 blendInput = lw * heightWeight;
     float4 normalizedBlend = blendInput / max(dot(blendInput, 1.0), 0.001);
-    float4 soft = max(_CBLWeightSoftness[mat.channel], 0.001);
+    float4 soft = max(CBL_OPAQUE(_CBLWeightSoftness[mat.channel], far), 0.001);
     float4 heightAlpha = float4(albedo[0].w, albedo[1].w, albedo[2].w, albedo[3].w);
     float4 heightBlend = saturate(pow(max(heightAlpha * enabledWeight + heightWeight - 0.5, 0.0), soft) - 0.5);
     float4 hb = heightWeight * heightBlend;
@@ -568,16 +573,17 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     CBLBiomeMaterial mat = CBL_BiomeMaterial(channel, px.subzoneMask);
     bool biomeActive = projRatio > 0.0;
 
+    // The cascades differ for a layer when its tier reaches past the far band, since both band indexes clamp to the
+    // tier. Compared by band rather than by scale, so no scale is computed here and held into the cascades.
     bool active[4];
     bool cascadesDiffer = false;
     [unroll]
     for (uint l = 0u; l < 4u; l++)
     {
         active[l] = mat.biome[l] >= 0.0 && biomeActive && mat.heightWeight[l] > 0.0;
-        float nearScale = CBL_LayerCascadeScale(mat, l, px, false);
-        float farScale = CBL_LayerCascadeScale(mat, l, px, true);
-        cascadesDiffer = cascadesDiffer || (active[l] && farScale != nearScale);
+        cascadesDiffer = cascadesDiffer || (active[l] && CBL_CascadeTier(mat.distanceResampleMax[l]) > px.cascadeFar);
     }
+    cascadesDiffer = cascadesDiffer && px.cascadeNear != px.cascadeFar;
 
     // Near by uvResampleOp and far by the rest.
     CBLCascadeSum sum = (CBLCascadeSum)0;
