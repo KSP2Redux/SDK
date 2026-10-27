@@ -613,6 +613,46 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     gb.emission += litColor;
 }
 
+// One additive biome pass, run when the triangle is in its zone and bucket and touches its biome channel: the pass's
+// layer weights from the prepass, then its channel's layers blended into gb. Passes 0-3 are flat R G B A
+// (single-axis), 4-7 non-flat R G B A (3-axis).
+void CBL_BiomePass(uint passIndex, bool threeAxis, uint biomeBits, uint bucket, float2 prepassUV, float4 biomeMask,
+                   float projSum, CBLBiomePixel px, inout CBLGBuffer gb)
+{
+    uint channel = passIndex & 3u;
+    uint bucketBit = threeAxis ? CBL_BUCKET_NON_FLAT : CBL_BUCKET_FLAT;
+    [branch]
+    if ((biomeBits & (1u << channel)) != 0u && (bucket & bucketBit) != 0u)
+    {
+        // Keyed to the pass, so each pass fetches its own weights in its branch rather than all four before the loop.
+        float2 passPrepassUV = CBL_OPAQUE(prepassUV, passIndex);
+        float4 layerWeight;
+        float projRatio;
+        [branch]
+        if (channel == 0u)
+        {
+            layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex0, sampler_LinearClamp, passPrepassUV, 0);
+            projRatio = biomeMask.x / projSum;
+        }
+        else if (channel == 1u)
+        {
+            layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex1, sampler_LinearClamp, passPrepassUV, 0);
+            projRatio = biomeMask.y / projSum;
+        }
+        else if (channel == 2u)
+        {
+            layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex2, sampler_LinearClamp, passPrepassUV, 0);
+            projRatio = biomeMask.z / projSum;
+        }
+        else
+        {
+            layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex3, sampler_LinearClamp, passPrepassUV, 0);
+            projRatio = biomeMask.w / projSum;
+        }
+        CBL_AccumulateBiome(channel, threeAxis, layerWeight, projRatio, px, gb);
+    }
+}
+
 //
 // Fragment
 //
@@ -696,56 +736,19 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
 #endif
     px.shL2 = i.shL2;
 
-    // Additive biome passes in stock pass order: flat R G B A (single-axis), then non-flat R G B A
-    // (3-axis). A pass runs on a triangle in its zone and bucket that touches its biome channel.
+    // Additive biome passes in stock pass order, the single-axis passes 0-3 and then the 3-axis passes 4-7. Each mode
+    // has its own loop, so the compiler allocates registers for each apart: the single-axis passes need fewer, and in
+    // one loop they took on the 3-axis code's spills. Each mode's code is also laid out in one piece. Branching on the
+    // mode inside every layer interleaved the two modes' code, and warps stalled more on instruction fetch.
     uint biomeBits = ((flags & CBL_ZONE_MASK) != 0u) ? (flags & CBL_DebugBiomeMask() & CBL_BIOME_BITS) : 0u;
     uint bucket = flags & CBL_DebugTriplanarBucketing();
     float projSum = max(dot(biomeMask, 1.0), 0.001);
     [loop]
-    for (uint passIndex = 0u; passIndex < 8u; passIndex++)
-    {
-        uint channel = passIndex & 3u;
-        bool threeAxis = passIndex >= 4u;
-        uint bucketBit = threeAxis ? CBL_BUCKET_NON_FLAT : CBL_BUCKET_FLAT;
-        [branch]
-        if ((biomeBits & (1u << channel)) != 0u && (bucket & bucketBit) != 0u)
-        {
-            // Keyed to the pass, so each pass fetches its own weights in its branch rather than all four before the loop.
-            float2 passPrepassUV = CBL_OPAQUE(prepassUV, passIndex);
-            float4 layerWeight;
-            float projRatio;
-            [branch]
-            if (channel == 0u)
-            {
-                layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex0, sampler_LinearClamp, passPrepassUV, 0);
-                projRatio = biomeMask.x / projSum;
-            }
-            else if (channel == 1u)
-            {
-                layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex1, sampler_LinearClamp, passPrepassUV, 0);
-                projRatio = biomeMask.y / projSum;
-            }
-            else if (channel == 2u)
-            {
-                layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex2, sampler_LinearClamp, passPrepassUV, 0);
-                projRatio = biomeMask.z / projSum;
-            }
-            else
-            {
-                layerWeight = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex3, sampler_LinearClamp, passPrepassUV, 0);
-                projRatio = biomeMask.w / projSum;
-            }
-
-            // A constant triplanar mode per call, so each mode's layer code is laid out in one piece and scheduled
-            // without a branch in the middle of other work. Branching on it inside every layer interleaved the two
-            // modes' code, and warps stalled more on instruction fetch.
-            [branch]
-            if (threeAxis)
-                CBL_AccumulateBiome(channel, true, layerWeight, projRatio, px, gb);
-            else
-                CBL_AccumulateBiome(channel, false, layerWeight, projRatio, px, gb);
-        }
-    }
+    for (uint flatPass = 0u; flatPass < 4u; flatPass++)
+        CBL_BiomePass(flatPass, false, biomeBits, bucket, prepassUV, biomeMask, projSum, px, gb);
+    [loop]
+    for (uint nonFlatPass = 4u; nonFlatPass < 8u; nonFlatPass++)
+        CBL_BiomePass(nonFlatPass, true, biomeBits, bucket, prepassUV, biomeMask, projSum, px, gb);
 
     // Light the accumulated GBuffer: direct lights + reflection specular + RT3 (ambient, emission).
     normalWS = normalize(gb.normalEncoded * 2.0 - 1.0);
