@@ -105,6 +105,12 @@ CBUFFER_START(UnityPerMaterial)
     float4 _CBLBiomeSlopeParams[16];
     float4 _CBLBiomeGradMapWeights[16];
     float4 _CBLSubzoneTint[64];
+    // Worked out from the arrays above when PqsRender packs them. _CBLCascadeTier[channel] holds each layer's
+    // distance-resample tier, its _SmallDistanceResampleMax rounded up and clamped to 0-4. Row channel * 4 + layer of
+    // _CBLLayerUVScale holds the layer's UV scale times its cascade scale at band indexes 1-4, each index clamped to the
+    // tier, so index i is _CBLUVScale times _DistanceResampleUVScales[min(i, tier) - 1], or times 1 at tier 0.
+    float4 _CBLCascadeTier[4];
+    float4 _CBLLayerUVScale[16];
     float4 _HeightblendFactor;
     float4 _DistanceResampleDistances;
     float4 _DistanceResampleUVScales;

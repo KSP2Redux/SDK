@@ -285,7 +285,7 @@ struct CBLBiomePixel
     float3 triPos;              // triplanar position, scaled to UVs per plane by CBL_PlaneUV
     float3 triPosDdx;
     float3 triPosDdy;
-    uint   cascadeNear;         // distance-resample band indexes for CBL_CascadeScale
+    uint   cascadeNear;         // distance-resample band indexes for CBL_LayerCascadeScale
     uint   cascadeFar;
     float  alphaToHeightFade;
     float  uvResampleOp;
@@ -307,12 +307,15 @@ struct CBLLayerSurface
     float  ao;
 };
 
-// The layer's UV scale for this pixel's near or far distance cascade. The far cascade reads its own copy of the
-// layer's resample maximum, so the compiler computes its scales there rather than holding them from the near cascade.
+// The layer's UV scale times its cascade scale for this pixel's near or far distance cascade, picked from the layer's
+// row of _CBLLayerUVScale. The far cascade reads its own copy of the row, so the compiler picks its scales there
+// rather than holding them from the near cascade.
 float CBL_LayerCascadeScale(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, bool far)
 {
-    return CBL_CascadeScale(CBL_OPAQUE(mat.distanceResampleMax[layer], far), _DistanceResampleUVScales,
-                            far ? px.cascadeFar : px.cascadeNear);
+    uint i = far ? px.cascadeFar : px.cascadeNear;
+    float4 row = CBL_OPAQUE(_CBLLayerUVScale[mat.channel * 4u + layer], far);
+    float4 pick = float4(i == 1u, i == 2u, i == 3u, i == 4u);
+    return (i == 0u) ? mat.uvScale[layer] : dot(pick, row);
 }
 
 // A triplanar plane's layer UV and its screen derivatives: plane 0 (X) projects zy, 1 (Y) xz and 2 (Z) xy. The pixel
@@ -411,7 +414,7 @@ float3 CBL_ReorientThreeAxis(float2 wyX, float2 wyY, float2 wyZ, float3 triN, fl
 }
 
 // 3-axis layer surface, stock passes 8-11.
-CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale)
+CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float layerScale)
 {
     float index = mat.biome[layer];
     float2 metSO, glossSO;
@@ -430,7 +433,7 @@ CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLB
         if (w > 0.001)
         {
             float2 uv, uvDdx, uvDdy;
-            CBL_PlaneUV(px, p, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
+            CBL_PlaneUV(px, p, layerScale, mat.uvOffset[layer], uv, uvDdx, uvDdy);
             CBLTileHash hash = CBL_TileHash(uv, _StochasticScale);
             float4 nrm = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
             float m = 0.0;
@@ -480,7 +483,7 @@ void CBL_SampleSingleAxisSurface(CBLBiomeMaterial mat, uint layer, CBLTileHash h
 // One layer's graded colour (xyz) and height alpha (w) at one cascade scale. Single-axis layers sample the Y plane
 // weighted by its triplanar weight, and also fetch their normal and metal texels for the surface phase, with yHash
 // the Y plane's tile hash. 3-axis layers sample every plane with a weight, and fetch their surface later.
-float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiomePixel px, float cascadeScale,
+float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiomePixel px, float layerScale,
                        out CBLTileHash yHash, out float4 yNormal, out float yMetal)
 {
     float index = mat.biome[layer];
@@ -497,7 +500,7 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
         if (threeAxis ? w > 0.001 : p == 1u)
         {
             float2 uv, uvDdx, uvDdy;
-            CBL_PlaneUV(px, p, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
+            CBL_PlaneUV(px, p, layerScale, mat.uvOffset[layer], uv, uvDdx, uvDdy);
             CBLTileHash hash = CBL_TileHash(uv, _StochasticScale);
             float4 alb = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
             albRGB += w * alb.xyz;
@@ -517,11 +520,11 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
 
 // A single-axis layer's graded colour and height alpha, as CBL_LayerAlbedo, from a tile hash already worked out for
 // another layer with the same UV.
-float4 CBL_LayerAlbedoSharedHash(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale,
+float4 CBL_LayerAlbedoSharedHash(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float layerScale,
                                  CBLTileHash hash, out float4 yNormal, out float yMetal)
 {
     float2 uv, uvDdx, uvDdy;
-    CBL_PlaneUV(px, 1u, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
+    CBL_PlaneUV(px, 1u, layerScale, mat.uvOffset[layer], uv, uvDdx, uvDdy);
     CBL_SampleSingleAxisSurface(mat, layer, hash, uvDdx, uvDdy, yNormal, yMetal);
     float4 alb = px.triWeight.y * CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash,
                                                    mat.biome[layer], uvDdx, uvDdy);
@@ -661,7 +664,7 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     for (uint l = 0u; l < 4u; l++)
     {
         active[l] = mat.biome[l] >= 0.0 && biomeActive && mat.heightWeight[l] > 0.0;
-        cascadesDiffer = cascadesDiffer || (active[l] && CBL_CascadeTier(mat.distanceResampleMax[l]) > px.cascadeFar);
+        cascadesDiffer = cascadesDiffer || (active[l] && _CBLCascadeTier[channel][l] > (float)px.cascadeFar);
     }
     cascadesDiffer = cascadesDiffer && px.cascadeNear != px.cascadeFar;
 
