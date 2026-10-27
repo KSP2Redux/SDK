@@ -131,11 +131,11 @@ void CBL_CascadeBand(float4 cascadeT, out uint nearIndex, out uint farIndex)
     }
 }
 
-// The layer's distance-resample tier: the highest band index with a scale of its own.
+// The layer's distance-resample tier: the highest band index with a scale of its own. That is the maximum rounded up,
+// from 0 to 4: a maximum in (0, 1] is tier 1, in (1, 2] tier 2, and so on.
 uint CBL_CascadeTier(float distResampleMax)
 {
-    return (3.0 < distResampleMax) ? 4u : (2.0 < distResampleMax) ? 3u : (1.0 < distResampleMax) ? 2u
-         : (0.0 < distResampleMax) ? 1u : 0u;
+    return (uint)min(max(ceil(distResampleMax), 0.0), 4.0);
 }
 
 // The cascade UV scale at a band index for the layer's distance-resample tier. Index 0 is unscaled, and index i is

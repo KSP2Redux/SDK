@@ -494,6 +494,21 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
     return float4(CBL_GradeColor(albRGB, tint, brightness, mat.contrast[layer], mat.saturation[layer]), albA * tint.w);
 }
 
+// A single-axis layer's graded colour and height alpha, as CBL_LayerAlbedo, from a tile hash already worked out for
+// another layer with the same UV.
+float4 CBL_LayerAlbedoSharedHash(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale,
+                                 CBLTileHash hash)
+{
+    float2 uv, uvDdx, uvDdy;
+    CBL_PlaneUV(px, 1u, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
+    float4 alb = px.triWeight.y * CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash,
+                                                   mat.biome[layer], uvDdx, uvDdy);
+    float4 tint;
+    float brightness;
+    CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
+    return float4(CBL_GradeColor(alb.xyz, tint, brightness, mat.contrast[layer], mat.saturation[layer]), alb.w * tint.w);
+}
+
 // The cascades' blended layer results, summed with their distance-resample lerp weights.
 struct CBLCascadeSum
 {
@@ -529,7 +544,21 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
         hashes[k] = (CBLTileHash)0;
         [branch]
         if (active[k])
-            albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[k]);
+        {
+            // A single-axis layer with the same UV scale, offset and resample maximum as layer 0 has the same UV at
+            // either cascade, so when layer 0 is active it takes layer 0's tile hash. The terrain materials often
+            // repeat these across layers.
+            bool sharedHash = !threeAxis && k > 0u && active[0] && mat.uvScale[0] == mat.uvScale[k]
+                           && mat.uvOffset[0] == mat.uvOffset[k] && mat.distanceResampleMax[0] == mat.distanceResampleMax[k];
+            [branch]
+            if (sharedHash)
+            {
+                hashes[k] = hashes[0];
+                albedo[k] = CBL_LayerAlbedoSharedHash(mat, k, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[0]);
+            }
+            else
+                albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[k]);
+        }
     }
 
     // Height blend between the four layers. The far cascade computes its own inputs from copies of the layer weight and
