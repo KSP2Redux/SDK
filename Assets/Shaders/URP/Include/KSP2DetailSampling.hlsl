@@ -35,7 +35,9 @@ struct CBLTileHash
 // A hex cell's random UV offset.
 float2 CBL_CellOffset(float2 cell)
 {
-    return float2(frac(sin(dot(float2(127.1, 311.7), cell)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), cell)) * 43758.5468));
+    // Redux: one sine per cell rather than stock's two. Both offsets come from it, scaled by two unrelated constants.
+    float s = sin(dot(float2(127.1, 311.7), cell));
+    return frac(s * float2(43758.5468, 28001.8384));
 }
 
 // stochasticScale is the terrain material's _StochasticScale.
