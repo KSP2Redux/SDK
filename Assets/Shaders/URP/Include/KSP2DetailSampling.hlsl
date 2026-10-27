@@ -140,11 +140,14 @@ uint CBL_CascadeTier(float distResampleMax)
 
 // The cascade UV scale at a band index for the layer's distance-resample tier. Index 0 is unscaled, and index i is
 // _DistanceResampleUVScales[i - 1], clamped to the tier's last scale. A tier of 0 leaves every index unscaled.
+//
+// The scale is picked with a dot product, so the compiler loads all four scales at once into uniform registers.
+// Selected with conditionals, it loaded the scale with a chain of predicated constant loads at every use.
 float CBL_CascadeScale(float distResampleMax, float4 resampleUVScales, uint index)
 {
     uint i = min(index, CBL_CascadeTier(distResampleMax));
-    return (i == 4u) ? resampleUVScales.w : (i == 3u) ? resampleUVScales.z : (i == 2u) ? resampleUVScales.y
-         : (i == 1u) ? resampleUVScales.x : 1.0;
+    float4 pick = float4(i == 1u, i == 2u, i == 3u, i == 4u);
+    return (i == 0u) ? 1.0 : dot(pick, resampleUVScales);
 }
 
 // Cascade UV scales for the layer's distance-resample tier, and the near / far scale for this pixel.
