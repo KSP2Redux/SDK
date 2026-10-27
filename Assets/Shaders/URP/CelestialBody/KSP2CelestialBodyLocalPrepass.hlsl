@@ -178,13 +178,9 @@ float CBL_FadeWindow(float axis, float4 window, float4 ramp)
     return w * ramp.z + ramp.w;
 }
 
-// One layer: gate, then height window times slope window. layer is channel * 4 + layer.
-float CBL_LayerWeight(bool biomeActive, float biomeChan, float gateProduct, float height, uint layer,
-                      float4 gradWeights, float tintGw, float tintRw, CBLHeightDiffs diffs)
+// One layer, ungated: height window times slope window. layer is channel * 4 + layer.
+float CBL_LayerWeight(float height, uint layer, float4 gradWeights, float tintGw, float tintRw, CBLHeightDiffs diffs)
 {
-    if (!(biomeActive && biomeChan >= 0.0 && gateProduct > 0.0))
-        return 0.0;
-
     float heightW = CBL_FadeWindow(height, _CBLLayerFade[layer * 4], _CBLLayerFade[layer * 4 + 1]);
     float2 grad = diffs.sz4 * tintGw
                 + diffs.sz3 * tintRw
@@ -206,11 +202,21 @@ float4 CBL_ChannelLayerWeights(uint channel, bool biomeActive, float4 biomeChan,
                                float4 gradWeights1, float4 gradWeights2, float4 gradWeights3, float4 gradWeights4,
                                float4 tintGw4, float4 tintRw4, CBLHeightDiffs diffs)
 {
-    return float4(
-        CBL_LayerWeight(biomeActive, biomeChan.x, gateProduct.x, height, channel * 4, gradWeights1, tintGw4.x, tintRw4.x, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.y, gateProduct.y, height, channel * 4 + 1, gradWeights2, tintGw4.y, tintRw4.y, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.z, gateProduct.z, height, channel * 4 + 2, gradWeights3, tintGw4.z, tintRw4.z, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.w, gateProduct.w, height, channel * 4 + 3, gradWeights4, tintGw4.w, tintRw4.w, diffs));
+    // One branch for the channel, so its four layers are worked out side by side. A layer with no biome or no weight
+    // is zeroed after.
+    float4 w = 0.0;
+    [branch]
+    if (biomeActive)
+    {
+        w = float4(
+            CBL_LayerWeight(height, channel * 4, gradWeights1, tintGw4.x, tintRw4.x, diffs),
+            CBL_LayerWeight(height, channel * 4 + 1, gradWeights2, tintGw4.y, tintRw4.y, diffs),
+            CBL_LayerWeight(height, channel * 4 + 2, gradWeights3, tintGw4.z, tintRw4.z, diffs),
+            CBL_LayerWeight(height, channel * 4 + 3, gradWeights4, tintGw4.w, tintRw4.w, diffs));
+        bool4 layerOn = biomeChan >= 0.0 && gateProduct > 0.0;
+        w = layerOn ? w : 0.0;
+    }
+    return w;
 }
 
 // CI is the channel's index into the _CBL arrays (R G B A = 0 to 3). The subzone tint alphas are subzones G (1) and R (0).
