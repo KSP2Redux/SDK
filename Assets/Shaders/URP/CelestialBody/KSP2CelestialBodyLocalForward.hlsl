@@ -376,18 +376,19 @@ CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBL
 {
     float2 metSO, glossSO;
     CBL_LayerStrengths(mat.metallicStrength[layer], mat.glossStrength[layer], metSO, glossSO);
+    float4 surface = _CBLLayerSurface[mat.channel * 4u + layer];
 
     float wy = px.triWeight.y;
     CBLLayerSurface r;
-    r.normal = CBL_ReorientSingleAxis(packed, px) * mat.normalStrength[layer];
+    r.normal = CBL_ReorientSingleAxis(packed, px) * surface.x;
 #if defined(PQS_NO_METAL)
     r.metallic = 0.0;
 #else
     r.metallic = (wy * metal) * metSO.x + metSO.y;
 #endif
-    r.gloss = (wy * packed.x) * glossSO.x + glossSO.y;
+    r.gloss = (wy * packed.x) * surface.y + surface.z;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
-    r.ao = pow(max(wy * packed.z, FLT_MIN), mat.aoStrength[layer]);
+    r.ao = pow(max(wy * packed.z, FLT_MIN), surface.w);
     return r;
 }
 
@@ -453,15 +454,16 @@ CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLB
 
     CBLLayerSurface r;
     float3 reoriented = CBL_ReorientThreeAxis(wy[0], wy[1], wy[2], px.triN, px.triWeight, px.triSign, px.triNzPositive);
-    r.normal = reoriented * mat.normalStrength[layer];
+    float4 surface = _CBLLayerSurface[mat.channel * 4u + layer];
+    r.normal = reoriented * surface.x;
 #if defined(PQS_NO_METAL)
     r.metallic = 0.0;
 #else
     r.metallic = met * metSO.x + metSO.y;
 #endif
-    r.gloss = nrmX * glossSO.x + glossSO.y;
+    r.gloss = nrmX * surface.y + surface.z;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
-    r.ao = pow(max(nrmZ, FLT_MIN), mat.aoStrength[layer]);
+    r.ao = pow(max(nrmZ, FLT_MIN), surface.w);
     return r;
 }
 

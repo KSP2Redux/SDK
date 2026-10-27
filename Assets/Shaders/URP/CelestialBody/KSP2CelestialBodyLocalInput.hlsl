@@ -114,6 +114,9 @@ CBUFFER_START(UnityPerMaterial)
     float4 _CBLBandUVScale[20];
     float4 _CBLBandSharedHash[20];
     float4 _CBLBandBeyondTier[20];
+    // Indexed channel * 4 + layer: the layer's normal strength, its gloss scale and offset as CBL_LayerStrengths
+    // decodes them from _SmallGlossStrength, and its AO strength.
+    float4 _CBLLayerSurface[16];
     float4 _HeightblendFactor;
     float4 _DistanceResampleDistances;
     float4 _DistanceResampleUVScales;
