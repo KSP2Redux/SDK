@@ -121,6 +121,8 @@ CBUFFER_START(UnityPerMaterial)
     float  _Radius;
     float  _StochasticScale;
     float  _HighQualityEnabled;
+    // Never set, so always 0. The compiler cannot prove that, so a term scaled by it keeps a value from being hoisted.
+    float  _CBLOpaqueZero;
 CBUFFER_END
 
 #endif // KSP2_CELESTIALBODY_LOCAL_INPUT_INCLUDED

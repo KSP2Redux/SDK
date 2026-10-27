@@ -114,35 +114,43 @@ void CBL_LayerStrengths(float metallicStrength, float glossStrength, out float2 
     glossScaleOffset = glossOver ? float2(1.0, (glossStrength - 15.0) * 0.2) : float2(glossStrength, 0.0);
 }
 
+// The pixel's distance-resample band as near and far scale indexes for CBL_CascadeScale: the last band whose cascadeT
+// is past 0.001 picks the near scale, and the far scale is the band below it until the fade completes.
+void CBL_CascadeBand(float4 cascadeT, out uint nearIndex, out uint farIndex)
+{
+    nearIndex = 0u;
+    farIndex = 0u;
+    [unroll]
+    for (uint j = 0u; j < 4u; j++)
+    {
+        if (cascadeT[j] > 0.001)
+        {
+            nearIndex = j + 1u;
+            farIndex = (cascadeT[j] >= 1.0) ? j + 1u : j;
+        }
+    }
+}
+
+// The cascade UV scale at a band index for the layer's distance-resample tier. Index 0 is unscaled, and index i is
+// _DistanceResampleUVScales[i - 1], clamped to the tier's last scale. A tier of 0 leaves every index unscaled.
+float CBL_CascadeScale(float distResampleMax, float4 resampleUVScales, uint index)
+{
+    uint tier = (3.0 < distResampleMax) ? 4u : (2.0 < distResampleMax) ? 3u : (1.0 < distResampleMax) ? 2u
+              : (0.0 < distResampleMax) ? 1u : 0u;
+    uint i = min(index, tier);
+    return (i == 4u) ? resampleUVScales.w : (i == 3u) ? resampleUVScales.z : (i == 2u) ? resampleUVScales.y
+         : (i == 1u) ? resampleUVScales.x : 1.0;
+}
+
 // Cascade UV scales for the layer's distance-resample tier, and the near / far scale for this pixel.
 // resampleUVScales is the terrain material's _DistanceResampleUVScales.
 void CBL_CascadeScales(float distResampleMax, float4 cascadeT, float4 resampleUVScales, out float nearScale,
                        out float farScale)
 {
-    float4 uvScales;
-    if (3.0 < distResampleMax)
-        uvScales = resampleUVScales;
-    else if (2.0 < distResampleMax)
-        uvScales = resampleUVScales.xyzz;
-    else if (1.0 < distResampleMax)
-        uvScales = resampleUVScales.xyyy;
-    else if (0.0 < distResampleMax)
-        uvScales = resampleUVScales.xxxx;
-    else
-        uvScales = 1.0.xxxx;
-
-    nearScale = 1.0;
-    farScale = 1.0;
-    float4 uvScalesExt = float4(1.0, uvScales.xyz);
-    [unroll]
-    for (int j = 0; j < 4; j++)
-    {
-        if (cascadeT[j] > 0.001)
-        {
-            nearScale = uvScales[j];
-            farScale = (cascadeT[j] >= 1.0) ? uvScales[j] : uvScalesExt[j];
-        }
-    }
+    uint nearIndex, farIndex;
+    CBL_CascadeBand(cascadeT, nearIndex, farIndex);
+    nearScale = CBL_CascadeScale(distResampleMax, resampleUVScales, nearIndex);
+    farScale = CBL_CascadeScale(distResampleMax, resampleUVScales, farIndex);
 }
 
 
