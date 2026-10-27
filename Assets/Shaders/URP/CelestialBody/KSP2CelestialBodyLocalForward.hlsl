@@ -204,7 +204,7 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
 
 //
 // Biome material: one channel's _CBL array values, with the subzone-weighted height weight already resolved for this
-// pixel. The tint and brightness are read per layer by CBL_LayerTint, and the enable and weight softness by the
+// pixel. The tint and brightness are read per layer by CBL_LayerGrade, and the enable and weight softness by the
 // height blend, so none of them are held through the layers' sampling.
 //
 struct CBLBiomeMaterial
@@ -214,8 +214,6 @@ struct CBLBiomeMaterial
     float4 heightWeight;        // gate and height-blend weight (enable folded in)
     float4 uvScale;
     float4 uvOffset;
-    float4 contrast;
-    float4 saturation;
     float4 normalStrength;
     float4 metallicStrength;
     float4 glossStrength;
@@ -234,8 +232,6 @@ CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
     float4 enable = _CBLEnable[channel];
     m.uvScale = _CBLUVScale[channel];
     m.uvOffset = _CBLUVOffset[channel];
-    m.contrast = _CBLContrast[channel];
-    m.saturation = _CBLSaturation[channel];
     m.normalStrength = _CBLNormalStrength[channel];
     m.metallicStrength = _CBLMetallicStrength[channel];
     m.glossStrength = _CBLGlossStrength[channel];
@@ -252,22 +248,28 @@ CBLBiomeMaterial CBL_BiomeMaterial(uint channel, float4 subzoneMask)
     return m;
 }
 
-// One layer's tint and brightness, read where the layer grades its colour. Resolved for all four layers with the
-// material, the subzone blends held about sixteen registers through every layer's sampling.
-void CBL_LayerTint(CBLBiomeMaterial mat, uint layer, float4 subzoneMask, out float4 tint, out float brightness)
+// One layer's graded colour from its albedo, and its tint alpha for the height alpha. The grade is
+// albedo * tint * contrast + (brightness * contrast + 0.21763764 * (1 - contrast)), then saturated about its luminance,
+// with the tint and brightness blended by the subzone mask in subzone mode. PqsRender folds the contrast and the subzone
+// weights into the _CBLLayerGrade arrays, so the layer blends four packed tints and adds one offset.
+float3 CBL_LayerGrade(CBLBiomeMaterial mat, uint layer, float4 subzoneMask, float3 albedo, out float tintAlpha)
 {
     uint i = mat.channel * 4u + layer;
+    float4 grade = _CBLLayerGrade[i];
 #if defined(SUB_ZONES_ENABLED)
-    // Subzone mode blends the tint and brightness by the subzone mask and drops the tint alpha factor on the height
-    // alpha.
-    float4 wm = subzoneMask * _CBLSubzoneWeight[i];
-    tint = float4((wm.x * _CBLSubzoneTint[i * 4u] + wm.y * _CBLSubzoneTint[i * 4u + 1u]
-                 + wm.z * _CBLSubzoneTint[i * 4u + 2u] + wm.w * _CBLSubzoneTint[i * 4u + 3u]).rgb, 1.0);
-    brightness = dot(_CBLSubzoneBrightness[i], wm);
+    // Subzone mode drops the tint alpha factor on the height alpha.
+    float4 tint = subzoneMask.x * _CBLLayerGradeSubzoneTint[i * 4u]
+                + subzoneMask.y * _CBLLayerGradeSubzoneTint[i * 4u + 1u]
+                + subzoneMask.z * _CBLLayerGradeSubzoneTint[i * 4u + 2u]
+                + subzoneMask.w * _CBLLayerGradeSubzoneTint[i * 4u + 3u];
+    tintAlpha = 1.0;
 #else
-    tint = _CBLTint[i];
-    brightness = _CBLBrightness[mat.channel][layer];
+    float4 tint = _CBLLayerGradeTint[i];
+    tintAlpha = _CBLTint[i].w;
 #endif
+    float3 graded = albedo * tint.rgb + (tint.w + grade.x);
+    float lum = dot(graded, float3(0.2126729, 0.7151522, 0.072175));
+    return grade.y * (graded - lum) + lum;
 }
 
 //
@@ -516,10 +518,9 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
         }
     }
 
-    float4 tint;
-    float brightness;
-    CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
-    return float4(CBL_GradeColor(albRGB, tint, brightness, mat.contrast[layer], mat.saturation[layer]), albA * tint.w);
+    float tintAlpha;
+    float3 graded = CBL_LayerGrade(mat, layer, px.subzoneMask, albRGB, tintAlpha);
+    return float4(graded, albA * tintAlpha);
 }
 
 // A single-axis layer's graded colour and height alpha, as CBL_LayerAlbedo, from a tile hash already worked out for
@@ -532,10 +533,9 @@ float4 CBL_LayerAlbedoSharedHash(CBLBiomeMaterial mat, uint layer, CBLBiomePixel
     CBL_SampleSingleAxisSurface(mat, layer, hash, uvDdx, uvDdy, yNormal, yMetal);
     float4 alb = px.triWeight.y * CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash,
                                                    mat.biome[layer], uvDdx, uvDdy);
-    float4 tint;
-    float brightness;
-    CBL_LayerTint(mat, layer, px.subzoneMask, tint, brightness);
-    return float4(CBL_GradeColor(alb.xyz, tint, brightness, mat.contrast[layer], mat.saturation[layer]), alb.w * tint.w);
+    float tintAlpha;
+    float3 graded = CBL_LayerGrade(mat, layer, px.subzoneMask, alb.xyz, tintAlpha);
+    return float4(graded, alb.w * tintAlpha);
 }
 
 // The cascades' blended layer results, summed with their distance-resample lerp weights.

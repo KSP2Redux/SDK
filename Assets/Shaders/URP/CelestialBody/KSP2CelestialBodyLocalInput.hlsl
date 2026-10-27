@@ -117,6 +117,13 @@ CBUFFER_START(UnityPerMaterial)
     // Indexed channel * 4 + layer: the layer's normal strength, its gloss scale and offset as CBL_LayerStrengths
     // decodes them from _SmallGlossStrength, and its AO strength.
     float4 _CBLLayerSurface[16];
+    // The layer's colour grade, see CBL_LayerGrade. Indexed channel * 4 + layer, _CBLLayerGrade holds
+    // 0.21763764 * (1 - contrast) and the saturation, and _CBLLayerGradeTint the tint times the contrast in rgb and the
+    // brightness times the contrast in a. Indexed (channel * 4 + layer) * 4 + subzone, _CBLLayerGradeSubzoneTint holds
+    // the same for subzone mode, with each subzone's tint and brightness also times its weight.
+    float4 _CBLLayerGrade[16];
+    float4 _CBLLayerGradeTint[16];
+    float4 _CBLLayerGradeSubzoneTint[64];
     float4 _HeightblendFactor;
     float4 _DistanceResampleDistances;
     float4 _DistanceResampleUVScales;
