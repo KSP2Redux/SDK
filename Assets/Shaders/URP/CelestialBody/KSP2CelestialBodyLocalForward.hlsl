@@ -279,6 +279,9 @@ struct CBLBiomePixel
     float3 triWeight;
     float3 triSign;
     bool   triNzPositive;
+    float3 saBase;              // single-axis reorient terms that do not depend on the layer, see CBL_SingleAxisBase
+    float3 saYDotN;
+    float2 saYScale;
     float3 triPos;              // triplanar position, scaled to UVs per plane by CBL_PlaneUV
     float3 triPosDdx;
     float3 triPosDdy;
@@ -298,7 +301,7 @@ struct CBLBiomePixel
 // One layer's normal-side results at one cascade scale. The colour and height alpha come from CBL_LayerAlbedo.
 struct CBLLayerSurface
 {
-    float3 normal;
+    float3 normal;              // triplanar space, scaled by the layer's normal strength
     float  metallic;
     float  gloss;
     float  ao;
@@ -326,21 +329,40 @@ void CBL_PlaneUV(CBLBiomePixel px, uint plane, float scale, float uvOffset, out 
     uvDdy = posDdy * triUVScale * scale;
 }
 
+// The pixel's triplanar normal, its plane weights and its signs.
+void CBL_TriplanarFrame(float3 normalOS, out float3 triN, out float3 triWeight, out float3 triSign, out bool triNzPositive)
+{
+    triN = normalize(mul((float3x3)TriplanarBasis, normalize(normalOS)));
+    float3 triWeightRaw = pow(abs(triN), _TriplanarContrast * TriplanarContrastBoost);
+    triWeight = triWeightRaw / max(triWeightRaw.x + triWeightRaw.y + triWeightRaw.z, 0.001);
+    triSign = sign(triN);
+    triNzPositive = triN.z >= 0.0;
+}
+
+// The single-axis reorient's terms that depend only on the pixel's normal: the X and Z plane blends on top of the
+// normal, and the Y plane's dot and scale factors. Worked out once per pixel rather than in every layer.
+void CBL_SingleAxisBase(float3 triN, float3 triWeight, float3 triSign, bool triNzPositive, out float3 saBase,
+                        out float3 saYDotN, out float2 saYScale)
+{
+    float3 absN1 = abs(triN) + 1.0;
+    float dotZY = triN.z + triN.y;
+    float3 xBlend = triWeight.x * float3(triSign.x * dotZY, ((dotZY * triN.y) / absN1.x) - 1.0, ((dotZY * triN.z) / absN1.x) - 1.0);
+    float dotXY = triN.x + triN.y;
+    float3 zBlend = float3(((dotXY * triN.x) / absN1.z) - 1.0, ((dotXY * triN.y) / absN1.z) - 1.0, (triNzPositive ? 1.0 : -1.0) * dotXY);
+    saBase = triN + triWeight.z * zBlend + xBlend;
+    saYDotN = float3(triN.x, triN.z, absN1.y);
+    saYScale = float2(triN.x, triN.z) / absN1.y;
+}
+
 // Single-axis (Y plane) triplanar layer, stock passes 4-7.
-float3 CBL_ReorientSingleAxis(float4 packed, float3 triN, float3 triWeight, float3 triSign, bool triNzPositive)
+float3 CBL_ReorientSingleAxis(float4 packed, CBLBiomePixel px)
 {
     float tsX = packed.w * 2.0 - 1.0;
     float tsY = packed.y * 2.0 - 1.0;
     float tsZ = sqrt(1.0 - min(tsX * tsX + tsY * tsY, 1.0));
-    float3 absN1 = abs(triN) + 1.0;
-
-    float dotZY = triN.z + triN.y;
-    float3 xBlend = triWeight.x * float3(triSign.x * dotZY, ((dotZY * triN.y) / absN1.x) - 1.0, ((dotZY * triN.z) / absN1.x) - 1.0);
-    float yDot = dot(float3(triN.x, triN.z, absN1.y), float3(-tsX, -tsY, tsZ));
-    float dotXY = triN.x + triN.y;
-    float3 zBlend = float3(((dotXY * triN.x) / absN1.z) - 1.0, ((dotXY * triN.y) / absN1.z) - 1.0, (triNzPositive ? 1.0 : -1.0) * dotXY);
-    float3 yBlend = float3(tsX + (yDot * triN.x) / absN1.y, triSign.y * (yDot - tsZ), tsY + (yDot * triN.z) / absN1.y);
-    return normalize(triN + triWeight.z * zBlend + triWeight.y * yBlend + xBlend);
+    float yDot = dot(px.saYDotN, float3(-tsX, -tsY, tsZ));
+    float3 yBlend = float3(tsX + yDot * px.saYScale.x, px.triSign.y * (yDot - tsZ), tsY + yDot * px.saYScale.y);
+    return normalize(px.saBase + px.triWeight.y * yBlend);
 }
 
 // Single-axis (Y plane) layer surface, stock passes 4-7. hash is the layer's tile hash from CBL_LayerAlbedo.
@@ -362,7 +384,7 @@ CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBL
 
     float wy = px.triWeight.y;
     CBLLayerSurface r;
-    r.normal = mul((float3x3)TriplanarToWorld, CBL_ReorientSingleAxis(packed, px.triN, px.triWeight, px.triSign, px.triNzPositive)) * mat.normalStrength[layer];
+    r.normal = CBL_ReorientSingleAxis(packed, px) * mat.normalStrength[layer];
     r.metallic = (wy * metal) * metSO.x + metSO.y;
     r.gloss = (wy * packed.x) * glossSO.x + glossSO.y;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
@@ -430,7 +452,7 @@ CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLB
 
     CBLLayerSurface r;
     float3 reoriented = CBL_ReorientThreeAxis(wy[0], wy[1], wy[2], px.triN, px.triWeight, px.triSign, px.triNzPositive);
-    r.normal = mul((float3x3)TriplanarToWorld, reoriented) * mat.normalStrength[layer];
+    r.normal = reoriented * mat.normalStrength[layer];
     r.metallic = met * metSO.x + metSO.y;
     r.gloss = nrmX * glossSO.x + glossSO.y;
     // FLT_MIN, not 0: pow(0, 0) is exp2(0 * -inf) = NaN on AMD, and a zero AO strength must leave the layer unoccluded.
@@ -595,7 +617,8 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     float gloss = sum.gloss, ao = sum.ao, metallic = sum.metallic;
 
     float3 finalColor = projRatio * color;
-    float3 blendedNormal = projRatio * normal;
+    // The layer normals are summed in triplanar space and taken to world space once, rather than once per layer.
+    float3 blendedNormal = projRatio * mul((float3x3)TriplanarToWorld, normal);
 
     // Shortest-arc rotation from the geometric normal to the blended layer normal, applied to the prepass normal.
     float3 rotated = CBL_RotateByHalfArcQuat(px.geomNormalWS, blendedNormal, px.prepassNormal);
@@ -701,11 +724,8 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     float4x4 worldToTriplanar = mul(TriplanarBasis, _PQSToLocal);
     worldToTriplanar._m13 -= SphereRadius;
     float3 triplanarLocalPos = mul(worldToTriplanar, float4(positionWS, 1.0)).xyz;
-    px.triN = normalize(mul((float3x3)TriplanarBasis, normalize(i.normalOS)));
-    float3 triWeightRaw = pow(abs(px.triN), _TriplanarContrast * TriplanarContrastBoost);
-    px.triWeight = triWeightRaw / max(triWeightRaw.x + triWeightRaw.y + triWeightRaw.z, 0.001);
-    px.triSign = sign(px.triN);
-    px.triNzPositive = px.triN.z >= 0.0;
+    CBL_TriplanarFrame(i.normalOS, px.triN, px.triWeight, px.triSign, px.triNzPositive);
+    CBL_SingleAxisBase(px.triN, px.triWeight, px.triSign, px.triNzPositive, px.saBase, px.saYDotN, px.saYScale);
     px.triPos = triplanarLocalPos;
     px.triPosDdx = ddx(triplanarLocalPos);
     px.triPosDdy = ddy(triplanarLocalPos);
@@ -752,6 +772,9 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     [loop]
     for (uint flatPass = 0u; flatPass < 4u; flatPass++)
         CBL_BiomePass(flatPass, false, biomeBits, bucket, prepassUV, biomeMask, projSum, px, gb);
+    // The 3-axis passes work the triplanar frame out again from a copy of the normal, so the single-axis loop does not
+    // hold it. It needs only the Y weight and sign, and its own terms from CBL_SingleAxisBase.
+    CBL_TriplanarFrame(CBL_OPAQUE(i.normalOS, 1u), px.triN, px.triWeight, px.triSign, px.triNzPositive);
     [loop]
     for (uint nonFlatPass = 4u; nonFlatPass < 8u; nonFlatPass++)
         CBL_BiomePass(nonFlatPass, true, biomeBits, bucket, prepassUV, biomeMask, projSum, px, gb);
