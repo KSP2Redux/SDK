@@ -124,6 +124,13 @@ CBUFFER_START(UnityPerMaterial)
     float4 _CBLLayerGrade[16];
     float4 _CBLLayerGradeTint[16];
     float4 _CBLLayerGradeSubzoneTint[64];
+    // The layer's height and slope windows for the prepass, see CBL_FadeWindow. Indexed (channel * 4 + layer) * 4 + k:
+    //   k = 0, 2   the height (0) or slope (2) window's start, centre, end of the plateau and end of the fade out:
+    //              center - downRange, center, center + upRange, center + upRange + fadeOut
+    //   k = 1, 3   its fade-in and fade-out reciprocals 1 / max(downRange, 0.001) and 1 / max(fadeOut, 0.001), then the
+    //              enable's scale and bias, the window weight being w * scale + bias. A slope window with a zero centre
+    //              and up range that is enabled has both 0, so the layer gets no weight.
+    float4 _CBLLayerFade[64];
     float4 _HeightblendFactor;
     float4 _DistanceResampleDistances;
     float4 _DistanceResampleUVScales;

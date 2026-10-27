@@ -166,27 +166,26 @@ void CBL_ApplyDecals(inout CBLHeightDiffs diffs, inout float3 nrmAccum, float3 l
 // Per-layer weights (LAYERS4)
 // ---------------------------------------------------------------------------
 
-// Squared-ramp trapezoid window, p = (center, upRange, downRange, fadeOut).
-float CBL_FadeTri(float axis, float4 p)
+// Squared-ramp trapezoid window with its enable, from a layer's packed _CBLLayerFade entries. The three pieces meet
+// with both sides counted, so an axis exactly on the centre or the end of the plateau weighs 2 as in stock.
+float CBL_FadeWindow(float axis, float4 window, float4 ramp)
 {
-    float hi = p.x + p.y;
-    float lo = p.x - p.z;
-    float fi = saturate((axis - lo) / max(p.x - lo, 0.001));
-    float fo = 1.0 - saturate((axis - hi) / max(p.w, 0.001));
-    return step(axis, hi + p.w) * step(hi, axis) * fo * fo
-         + step(p.x, axis) * step(axis, hi)
-         + fi * fi * step(lo, axis) * step(axis, p.x);
+    float fi = saturate((axis - window.x) * ramp.x);
+    float fo = 1.0 - saturate((axis - window.z) * ramp.y);
+    float w = step(axis, window.w) * step(window.z, axis) * fo * fo
+            + step(window.y, axis) * step(axis, window.z)
+            + fi * fi * step(window.x, axis) * step(axis, window.y);
+    return w * ramp.z + ramp.w;
 }
 
-// One layer: gate, then height window times slope window.
-float CBL_LayerWeight(bool biomeActive, float biomeChan, float gateProduct, float height,
-                      float4 heightParams, float heightEnable, float4 slopeParams, float slopeEnable,
+// One layer: gate, then height window times slope window. layer is channel * 4 + layer.
+float CBL_LayerWeight(bool biomeActive, float biomeChan, float gateProduct, float height, uint layer,
                       float4 gradWeights, float tintGw, float tintRw, CBLHeightDiffs diffs)
 {
     if (!(biomeActive && biomeChan >= 0.0 && gateProduct > 0.0))
         return 0.0;
 
-    float heightW = lerp(1.0 - heightEnable, 1.0, CBL_FadeTri(height, heightParams));
+    float heightW = CBL_FadeWindow(height, _CBLLayerFade[layer * 4], _CBLLayerFade[layer * 4 + 1]);
     float2 grad = diffs.sz4 * tintGw
                 + diffs.sz3 * tintRw
                 + diffs.mid * gradWeights.z
@@ -199,22 +198,19 @@ float CBL_LayerWeight(bool biomeActive, float biomeChan, float gateProduct, floa
 #else
     float slopeAng = min(length(grad), 1.0) * 90.0;
 #endif
-    bool slopeDegenerate = slopeParams.x == 0.0 && slopeParams.y == 0.0 && slopeEnable != 0.0;
-    float slopeW = slopeDegenerate ? 0.0 : lerp(1.0 - slopeEnable, 1.0, CBL_FadeTri(slopeAng, slopeParams));
+    float slopeW = CBL_FadeWindow(slopeAng, _CBLLayerFade[layer * 4 + 2], _CBLLayerFade[layer * 4 + 3]);
     return heightW * slopeW;
 }
 
-float4 CBL_ChannelLayerWeights(bool biomeActive, float4 biomeChan, float4 gateProduct, float height,
-                               float4 heightParams1, float4 heightParams2, float4 heightParams3, float4 heightParams4, float4 heightEnable,
-                               float4 slopeParams1, float4 slopeParams2, float4 slopeParams3, float4 slopeParams4, float4 slopeEnable,
+float4 CBL_ChannelLayerWeights(uint channel, bool biomeActive, float4 biomeChan, float4 gateProduct, float height,
                                float4 gradWeights1, float4 gradWeights2, float4 gradWeights3, float4 gradWeights4,
                                float4 tintGw4, float4 tintRw4, CBLHeightDiffs diffs)
 {
     return float4(
-        CBL_LayerWeight(biomeActive, biomeChan.x, gateProduct.x, height, heightParams1, heightEnable.x, slopeParams1, slopeEnable.x, gradWeights1, tintGw4.x, tintRw4.x, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.y, gateProduct.y, height, heightParams2, heightEnable.y, slopeParams2, slopeEnable.y, gradWeights2, tintGw4.y, tintRw4.y, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.z, gateProduct.z, height, heightParams3, heightEnable.z, slopeParams3, slopeEnable.z, gradWeights3, tintGw4.z, tintRw4.z, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.w, gateProduct.w, height, heightParams4, heightEnable.w, slopeParams4, slopeEnable.w, gradWeights4, tintGw4.w, tintRw4.w, diffs));
+        CBL_LayerWeight(biomeActive, biomeChan.x, gateProduct.x, height, channel * 4, gradWeights1, tintGw4.x, tintRw4.x, diffs),
+        CBL_LayerWeight(biomeActive, biomeChan.y, gateProduct.y, height, channel * 4 + 1, gradWeights2, tintGw4.y, tintRw4.y, diffs),
+        CBL_LayerWeight(biomeActive, biomeChan.z, gateProduct.z, height, channel * 4 + 2, gradWeights3, tintGw4.z, tintRw4.z, diffs),
+        CBL_LayerWeight(biomeActive, biomeChan.w, gateProduct.w, height, channel * 4 + 3, gradWeights4, tintGw4.w, tintRw4.w, diffs));
 }
 
 // CI is the channel's index into the _CBL arrays (R G B A = 0 to 3). The subzone tint alphas are subzones G (1) and R (0).
@@ -223,28 +219,20 @@ float4 CBL_ChannelLayerWeights(bool biomeActive, float4 biomeChan, float4 gatePr
     _CBLSubzoneTint[(CI) * 16 + 8 + (S)].w, _CBLSubzoneTint[(CI) * 16 + 12 + (S)].w)
 #if defined(SUB_ZONES_ENABLED)
     #define CBL_LAYERS4(CI, active) CBL_ChannelLayerWeights( \
-        active, _CBLBiome[CI], \
+        CI, active, _CBLBiome[CI], \
         _CBLEnable[CI] * float4( \
             dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4]), \
             dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 1]), \
             dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 2]), \
             dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 3])), \
         height, \
-        CBL_CH_LAYER4(_CBLBiomeHeightParams, CI), \
-        _CBLBiomeHeightEnable[CI], \
-        CBL_CH_LAYER4(_CBLBiomeSlopeParams, CI), \
-        _CBLBiomeSlopeEnable[CI], \
         CBL_CH_LAYER4(_CBLBiomeGradMapWeights, CI), \
         CBL_CH_TINT_ALPHA(CI, 1), \
         CBL_CH_TINT_ALPHA(CI, 0), \
         diffs)
 #else
     #define CBL_LAYERS4(CI, active) CBL_ChannelLayerWeights( \
-        active, _CBLBiome[CI], _CBLHeightWeight[CI] * _CBLEnable[CI], height, \
-        CBL_CH_LAYER4(_CBLBiomeHeightParams, CI), \
-        _CBLBiomeHeightEnable[CI], \
-        CBL_CH_LAYER4(_CBLBiomeSlopeParams, CI), \
-        _CBLBiomeSlopeEnable[CI], \
+        CI, active, _CBLBiome[CI], _CBLHeightWeight[CI] * _CBLEnable[CI], height, \
         CBL_CH_LAYER4(_CBLBiomeGradMapWeights, CI), \
         (float4)0, (float4)0, \
         diffs)
