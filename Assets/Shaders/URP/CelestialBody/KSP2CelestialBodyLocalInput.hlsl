@@ -121,8 +121,17 @@ CBUFFER_START(UnityPerMaterial)
     float  _Radius;
     float  _StochasticScale;
     float  _HighQualityEnabled;
-    // Never set, so always 0. The compiler cannot prove that, so a term scaled by it keeps a value from being hoisted.
-    float  _CBLOpaqueZero;
+    float  _CBLOpaqueZero;      // never set, so always 0, see CBL_OPAQUE
 CBUFFER_END
+
+// Keeps the compiler from moving a fetch or calculation away from where it is written, by making its input depend on
+// key. Used to cut how many values are held in registers.
+// - Keyed by a loop index, it keeps a loop-invariant fetch or calculation inside the loop. Left invariant, the compiler
+//   moves it ahead of the loop and holds or spills the result through every iteration.
+// - Keyed by distinct constants, it keeps two copies of one calculation apart, so the later copy is recomputed where it
+//   is used rather than the earlier result being held until then.
+// The value itself is unchanged: it adds _CBLOpaqueZero * key, and that uniform is never set, so it is 0. Its value is
+// unknown when the shader compiles, so the compiler cannot drop the term.
+#define CBL_OPAQUE(value, key) ((value) + _CBLOpaqueZero * (float)(key))
 
 #endif // KSP2_CELESTIALBODY_LOCAL_INPUT_INCLUDED

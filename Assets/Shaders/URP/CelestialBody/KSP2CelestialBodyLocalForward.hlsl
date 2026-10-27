@@ -341,8 +341,9 @@ float3 CBL_ReorientSingleAxis(float4 packed, float3 triN, float3 triWeight, floa
     return normalize(triN + triWeight.z * zBlend + triWeight.y * yBlend + xBlend);
 }
 
-// Single-axis (Y plane) layer surface, stock passes 4-7.
-CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale)
+// Single-axis (Y plane) layer surface, stock passes 4-7. hash is the layer's tile hash from CBL_LayerAlbedo.
+CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, float cascadeScale,
+                                           CBLTileHash hash)
 {
     float index = mat.biome[layer];
     float2 metSO, glossSO;
@@ -350,7 +351,6 @@ CBLLayerSurface CBL_LayerSurfaceSingleAxis(CBLBiomeMaterial mat, uint layer, CBL
 
     float2 uv, uvDdx, uvDdy;
     CBL_PlaneUV(px, 1u, cascadeScale * mat.uvScale[layer], mat.uvOffset[layer], uv, uvDdx, uvDdy);
-    CBLTileHash hash = CBL_TileHash(uv, _StochasticScale);
     float4 packed = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallNormalArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
     // A zero metallic scale multiplies the metal texel away, so the layer skips its fetch.
     float metal = 0.0;
@@ -437,12 +437,15 @@ CBLLayerSurface CBL_LayerSurfaceThreeAxis(CBLBiomeMaterial mat, uint layer, CBLB
 }
 
 // One layer's graded colour (xyz) and height alpha (w) at one cascade scale, from its albedo fetches alone. Single-axis
-// layers sample the Y plane weighted by its triplanar weight, 3-axis layers every plane with a weight.
-float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiomePixel px, float cascadeScale)
+// layers sample the Y plane weighted by its triplanar weight, 3-axis layers every plane with a weight. yHash is the Y
+// plane's tile hash, for a single-axis layer's surface fetches.
+float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiomePixel px, float cascadeScale,
+                       out CBLTileHash yHash)
 {
     float index = mat.biome[layer];
     float3 albRGB = 0;
     float albA = 0;
+    yHash = (CBLTileHash)0;
     [unroll]
     for (uint p = 0u; p < 3u; p++)
     {
@@ -456,6 +459,8 @@ float4 CBL_LayerAlbedo(CBLBiomeMaterial mat, uint layer, bool threeAxis, CBLBiom
             float4 alb = CBL_SampleDetail(TEXTURE2D_ARRAY_ARGS(_SmallAlbedoArray, sampler_LinearRepeat), hash, index, uvDdx, uvDdy);
             albRGB += w * alb.xyz;
             albA += w * alb.w;
+            if (p == 1u)
+                yHash = hash;
         }
     }
 
@@ -480,8 +485,10 @@ struct CBLCascadeSum
 // The blend weights depend only on each layer's height alpha, which comes from its albedo. So the albedo of all four
 // layers is fetched first, keeping each layer's colour and height alpha, and then each layer's normal and metal are
 // fetched and added straight into the sums with its weight. Fetched together, each layer's ten results were held until
-// the blend, about thirty registers through the last layer's sampling. Each texture is still fetched once. Only the
-// tile hash is computed in both phases.
+// the blend, about thirty registers through the last layer's sampling. Each texture is still fetched once.
+//
+// Single-axis layers keep their tile hash from the albedo phase for the surface phase, six values per layer. 3-axis
+// layers would keep eighteen, so they compute it again.
 void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4], bool far, float4 layerWeight,
                            CBLBiomePixel px, float cascadeWeight, inout CBLCascadeSum sum)
 {
@@ -490,13 +497,15 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
     // Unrolled so albedo[] and the per-layer uniforms index statically. As a dynamic loop FXC kept the layer results
     // in an indexable temp array.
     float4 albedo[4];
+    CBLTileHash hashes[4];
     [unroll]
     for (uint k = 0u; k < 4u; k++)
     {
         albedo[k] = 0.0;
+        hashes[k] = (CBLTileHash)0;
         [branch]
         if (active[k])
-            albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far));
+            albedo[k] = CBL_LayerAlbedo(mat, k, threeAxis, px, CBL_LayerCascadeScale(mat, k, px, far), hashes[k]);
     }
 
     // Height blend between the four layers.
@@ -533,7 +542,7 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
             if (threeAxis)
                 r = CBL_LayerSurfaceThreeAxis(mat, s, px, scale);
             else
-                r = CBL_LayerSurfaceSingleAxis(mat, s, px, scale);
+                r = CBL_LayerSurfaceSingleAxis(mat, s, px, scale, hashes[s]);
             float ws = cascadeWeight * w[s];
             sum.normal += ws * r.normal;
             sum.gloss += ws * r.gloss;
@@ -701,9 +710,8 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
         [branch]
         if ((biomeBits & (1u << channel)) != 0u && (bucket & bucketBit) != 0u)
         {
-            // Offset by an opaque zero per pass, so the compiler fetches each pass's weights in its branch. As a loop
-            // invariant it fetched all four before the loop and held or spilled the sixteen values through it.
-            float2 passPrepassUV = prepassUV + _CBLOpaqueZero * (float)passIndex;
+            // Keyed to the pass, so each pass fetches its own weights in its branch rather than all four before the loop.
+            float2 passPrepassUV = CBL_OPAQUE(prepassUV, passIndex);
             float4 layerWeight;
             float projRatio;
             [branch]
