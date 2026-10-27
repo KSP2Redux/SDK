@@ -703,16 +703,22 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
 // One additive biome pass, run when the triangle is in its zone and bucket and touches its biome channel: the pass's
 // layer weights from the prepass, then its channel's layers blended into gb. Passes 0-3 are flat R G B A
 // (single-axis), 4-7 non-flat R G B A (3-axis).
-void CBL_BiomePass(uint passIndex, bool threeAxis, uint biomeBits, uint bucket, float2 prepassUV, float4 biomeMask,
+void CBL_BiomePass(uint passIndex, bool threeAxis, uint triangleFlags, float3 screenPos, float4 biomeMask,
                    float projSum, CBLBiomePixel px, inout CBLGBuffer gb)
 {
     uint channel = passIndex & 3u;
     uint bucketBit = threeAxis ? CBL_BUCKET_NON_FLAT : CBL_BUCKET_FLAT;
+    // The pass test and the prepass UV are worked out in each pass from the triangle's flags and the screen position,
+    // read again from the interpolants. Worked out once before the loops, they were spilled and every pass waited on
+    // reloading them.
+    uint flags = triangleFlags | (uint)CBL_OPAQUE(0.0, passIndex);
+    uint biomeBits = ((flags & CBL_ZONE_MASK) != 0u) ? (flags & CBL_DebugBiomeMask() & CBL_BIOME_BITS) : 0u;
     [branch]
-    if ((biomeBits & (1u << channel)) != 0u && (bucket & bucketBit) != 0u)
+    if ((biomeBits & (1u << channel)) != 0u && (flags & CBL_DebugTriplanarBucketing() & bucketBit) != 0u)
     {
         // Keyed to the pass, so each pass fetches its own weights in its branch rather than all four before the loop.
-        float2 passPrepassUV = CBL_OPAQUE(prepassUV, passIndex);
+        float3 passScreenPos = CBL_OPAQUE(screenPos, passIndex);
+        float2 passPrepassUV = passScreenPos.xy / passScreenPos.z;
         float4 layerWeight;
         float projRatio;
         [branch]
@@ -829,13 +835,18 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     float projSum = max(dot(biomeMask, 1.0), 0.001);
     [loop]
     for (uint flatPass = 0u; flatPass < 4u; flatPass++)
-        CBL_BiomePass(flatPass, false, biomeBits, bucket, prepassUV, biomeMask, projSum, px, gb);
+        CBL_BiomePass(flatPass, false, i.triangleInfo.x, i.screenPos, biomeMask, projSum, px, gb);
     // The 3-axis passes work the triplanar frame out again from a copy of the normal, so the single-axis loop does not
-    // hold it. It needs only the Y weight and sign, and its own terms from CBL_SingleAxisBase.
-    CBL_TriplanarFrame(CBL_OPAQUE(i.normalOS, 1u), px.triN, px.triWeight, px.triSign, px.triNzPositive);
-    [loop]
-    for (uint nonFlatPass = 4u; nonFlatPass < 8u; nonFlatPass++)
-        CBL_BiomePass(nonFlatPass, true, biomeBits, bucket, prepassUV, biomeMask, projSum, px, gb);
+    // hold it. It needs only the Y weight and sign, and its own terms from CBL_SingleAxisBase. A pixel with no 3-axis
+    // pass skips the frame and the loop.
+    [branch]
+    if ((bucket & CBL_BUCKET_NON_FLAT) != 0u && biomeBits != 0u)
+    {
+        CBL_TriplanarFrame(CBL_OPAQUE(i.normalOS, 1u), px.triN, px.triWeight, px.triSign, px.triNzPositive);
+        [loop]
+        for (uint nonFlatPass = 4u; nonFlatPass < 8u; nonFlatPass++)
+            CBL_BiomePass(nonFlatPass, true, i.triangleInfo.x, i.screenPos, biomeMask, projSum, px, gb);
+    }
 
     // Light the accumulated GBuffer: direct lights + reflection specular + RT3 (ambient, emission).
     normalWS = normalize(gb.normalEncoded * 2.0 - 1.0);
