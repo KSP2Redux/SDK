@@ -307,15 +307,17 @@ struct CBLLayerSurface
     float  ao;
 };
 
-// The layer's UV scale times its cascade scale for this pixel's near or far distance cascade, picked from the layer's
-// row of _CBLLayerUVScale. The far cascade reads its own copy of the row, so the compiler picks its scales there
-// rather than holding them from the near cascade.
+// The index of this pixel's near or far cascade band for the material's channel in the band-major arrays.
+uint CBL_BandIndex(CBLBiomeMaterial mat, CBLBiomePixel px, bool far)
+{
+    return (far ? px.cascadeFar : px.cascadeNear) * 4u + mat.channel;
+}
+
+// The layer's UV scale times its cascade scale for this pixel's near or far distance cascade. The far cascade reads its
+// own copy, so the compiler loads its scales there rather than holding them from the near cascade.
 float CBL_LayerCascadeScale(CBLBiomeMaterial mat, uint layer, CBLBiomePixel px, bool far)
 {
-    uint i = far ? px.cascadeFar : px.cascadeNear;
-    float4 row = CBL_OPAQUE(_CBLLayerUVScale[mat.channel * 4u + layer], far);
-    float4 pick = float4(i == 1u, i == 2u, i == 3u, i == 4u);
-    return (i == 0u) ? mat.uvScale[layer] : dot(pick, row);
+    return CBL_OPAQUE(_CBLBandUVScale[CBL_BandIndex(mat, px, far)], far)[layer];
 }
 
 // A triplanar plane's layer UV and its screen derivatives: plane 0 (X) projects zy, 1 (Y) xz and 2 (Z) xy. The pixel
@@ -574,11 +576,11 @@ void CBL_AccumulateCascade(CBLBiomeMaterial mat, bool threeAxis, bool active[4],
         [branch]
         if (active[k])
         {
-            // A single-axis layer with the same UV scale, offset and resample maximum as layer 0 has the same UV at
-            // either cascade, so when layer 0 is active it takes layer 0's tile hash. The terrain materials often
-            // repeat these across layers.
-            bool sharedHash = !threeAxis && k > 0u && active[0] && mat.uvScale[0] == mat.uvScale[k]
-                           && mat.uvOffset[0] == mat.uvOffset[k] && mat.distanceResampleMax[0] == mat.distanceResampleMax[k];
+            // A single-axis layer whose scale at this band and UV offset equal layer 0's has the same UV, so when
+            // layer 0 is active it takes layer 0's tile hash. The terrain materials often repeat these across layers,
+            // and at band 0 every layer is at its unscaled UV scale. PqsRender works out the test for each band.
+            bool sharedHash = !threeAxis && k > 0u && active[0]
+                           && CBL_OPAQUE(_CBLBandSharedHash[CBL_BandIndex(mat, px, far)], far)[k] > 0.5;
             [branch]
             if (sharedHash)
                 albedo[k] = CBL_LayerAlbedoSharedHash(mat, k, px, CBL_LayerCascadeScale(mat, k, px, far), hash0,
@@ -664,7 +666,7 @@ void CBL_AccumulateBiome(uint channel, bool threeAxis, float4 layerWeight, float
     for (uint l = 0u; l < 4u; l++)
     {
         active[l] = mat.biome[l] >= 0.0 && biomeActive && mat.heightWeight[l] > 0.0;
-        cascadesDiffer = cascadesDiffer || (active[l] && _CBLCascadeTier[channel][l] > (float)px.cascadeFar);
+        cascadesDiffer = cascadesDiffer || (active[l] && _CBLBandBeyondTier[px.cascadeFar * 4u + channel][l] > 0.5);
     }
     cascadesDiffer = cascadesDiffer && px.cascadeNear != px.cascadeFar;
 
