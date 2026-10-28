@@ -34,19 +34,21 @@ struct CBLForwardVaryings
     float3 normalWS     : TEXCOORD2;    // geometric normal
     float3 normalOS     : TEXCOORD3;    // PQS-space normal, drives the triplanar weights
     float3 shL2         : TEXCOORD4;    // SH L2 band at the geometric normal, as the stock vertex stage did
-    float3 screenPos    : TEXCOORD5;    // prepass target UV = xy / z
+    float4 screenPos    : TEXCOORD5;    // prepass target UV = xy / z, w the vertex's eclipse for CBL_AmbientEclipse
     nointerpolation uint2 triangleInfo : TEXCOORD6;  // x bucketing flags, y packed decal slots
 };
 
 CBLForwardVaryings CBL_ForwardVertex(uint vertexID : SV_VertexID)
 {
     QuadMeshData q = CBL_FetchVisibleVertex(vertexID);
+    // First, so the loop over the bodies runs before the other outputs are live. At the end it held them all.
+    float ambientEclipse = KSP2_EclipseLocalOtherBodiesFactor(q.position);
     uint flags = CBL_TriangleFlags(vertexID);
     CBLFrame frame = CBL_BuildFrame(q);
 
     CBLForwardVaryings o;
     o.positionCS = TransformWorldToHClip(q.position);
-    o.screenPos = CBL_PrepassScreenPos(o.positionCS);
+    o.screenPos.xyz = CBL_PrepassScreenPos(o.positionCS);
     o.clipDist = CBL_ClipDistance(flags, CBL_ZONE_MASK);
     o.uv = q.uv;
     o.positionWS = q.position;
@@ -54,7 +56,26 @@ CBLForwardVaryings CBL_ForwardVertex(uint vertexID : SV_VertexID)
     o.normalOS = q.normal;
     o.shL2 = SHEvalLinearL2(frame.normalWS, unity_SHBr, unity_SHBg, unity_SHBb, unity_SHC);
     o.triangleInfo = uint2(flags, BucketedQuadInfoDecalIndices[vertexID / 3u]);
+    o.screenPos.w = ambientEclipse;
     return o;
+}
+
+// The other bodies' eclipse that the ambient light takes (#2341). Near the camera it is the vertex's, interpolated: the
+// bodies' penumbrae are tens to hundreds of km wide and the triangles there are far smaller. Farther out the triangles
+// grow, and the ring's shadow has hard edges that would smear across them, so the pixel computes its own and fades to
+// it across the band. The band follows the camera distance, so the branch only diverges along a ring of the screen.
+#define CBL_ECLIPSE_PIXEL_FADE_START 10000.0
+#define CBL_ECLIPSE_PIXEL_FADE_END 20000.0
+
+float CBL_AmbientEclipse(float vertexEclipse, float3 positionWS, float cameraDist)
+{
+    float pixelWeight = saturate((cameraDist - CBL_ECLIPSE_PIXEL_FADE_START)
+        * (1.0 / (CBL_ECLIPSE_PIXEL_FADE_END - CBL_ECLIPSE_PIXEL_FADE_START)));
+    float eclipse = vertexEclipse;
+    [branch]
+    if (pixelWeight > 0.0)
+        eclipse = lerp(vertexEclipse, KSP2_EclipseLocalOtherBodiesFactor(positionWS), pixelWeight);
+    return eclipse;
 }
 
 //
@@ -99,7 +120,8 @@ float3 CBL_BlendDecalAlbedo(uint slot, bool checkActive, float3 localPos, float3
     return lerp(albedo, decalColor.rgb * decal.TintColor.rgb, decalFade * decal.AlbedoOpacity * alpha);
 }
 
-CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist, float3 localPos, float4 biomeMask)
+CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist, float3 localPos, float4 biomeMask,
+                        float ambientEclipse)
 {
     float2 uv = i.uv;
     uint flags = i.triangleInfo.x;
@@ -185,12 +207,11 @@ CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist
     }
 
     // Ambient: SH at the prepass normal plus the vertex L2 term, plus the atmosphere SG lobes, in the other bodies'
-    // eclipse at the pixel as the sun is (#2341). The emission keeps its own light.
+    // eclipse (CBL_AmbientEclipse) as the sun is (#2341). The emission keeps its own light.
     float projRatio = biomeMask.x / max(dot(biomeMask, 1.0), 0.001);
     float3 shLight = CBL_AmbientSH(worldNormal, i.shL2);
     float3 atmosSpec = KSP2_SphericalGaussianAmbient(worldNormal);
     float3 emissionContrib = (emissionFade * normalResample) * (emissionFade * (emissionSample.xyz * _EmissionScale));
-    float ambientEclipse = KSP2_EclipseLocalOtherBodiesFactor(i.positionWS);
     float3 lighting = emissionContrib * (packedFade * packedSample.z)
                     + (shLight * (occlusion + (1.0 - projRatio) * occlusion) + atmosSpec) * albedo * ambientEclipse;
 
@@ -300,7 +321,7 @@ struct CBLBiomePixel
     float3 geomNormalWS;
     float4 subzoneMask;
     float3 shL2;
-    float  ambientEclipse;      // KSP2_EclipseLocalOtherBodiesFactor at the pixel, which the ambient light takes
+    float  ambientEclipse;      // CBL_AmbientEclipse, the other bodies' eclipse that the ambient light takes
 };
 
 // One layer's normal-side results at one cascade scale. The colour and height alpha come from CBL_LayerAlbedo.
@@ -760,7 +781,7 @@ void CBL_BiomePass(uint passIndex, bool threeAxis, uint triangleFlags, float3 sc
 //
 // Fragment
 //
-KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 viewDirWS)
+KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 viewDirWS, out float ambientEclipse)
 {
     CBL_DitherAlphaTest(i.positionCS.xy);
 
@@ -776,6 +797,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
                           + maskNorm.z * float3(0.0, 0.0, 1.0) + maskNorm.w * float3(1.0, 1.0, 0.0);
         normalWS = normalize(i.normalWS);
         viewDirWS = GetWorldSpaceNormalizeViewDir(i.positionWS);
+        ambientEclipse = 1.0;
         KSP2Surface debugSurface = (KSP2Surface)0;
         debugSurface.emission = debugColor;
         debugSurface.alpha = 1.0;
@@ -788,7 +810,8 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     float3 localPos = mul(_PQSToLocal, float4(positionWS, 1.0)).xyz;
     uint flags = i.triangleInfo.x;
 
-    CBLGBuffer gb = CBL_BasePass(i, prepassUV, cameraDist, localPos, biomeMask);
+    ambientEclipse = CBL_AmbientEclipse(i.screenPos.w, positionWS, cameraDist);
+    CBLGBuffer gb = CBL_BasePass(i, prepassUV, cameraDist, localPos, biomeMask, ambientEclipse);
 
     // Per-pixel biome inputs. The triplanar position comes from the world position through one combined matrix, as
     // stock's compiled shader took it. Through the PQS-space position first, every pixel was rounded at the body's
@@ -804,7 +827,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     px.triPos = triplanarLocalPos;
     px.triPosDdx = ddx(triplanarLocalPos);
     px.triPosDdy = ddy(triplanarLocalPos);
-    px.ambientEclipse = KSP2_EclipseLocalOtherBodiesFactor(positionWS);
+    px.ambientEclipse = ambientEclipse;
 
     px.alphaToHeightFade = CBL_RampFade(cameraDist, _AlphaToHeightFadeParams);
     float normalizedDist = min(cameraDist * 2.0e-05, 1.0);
@@ -847,7 +870,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     float projSum = max(dot(biomeMask, 1.0), 0.001);
     [loop]
     for (uint flatPass = 0u; flatPass < 4u; flatPass++)
-        CBL_BiomePass(flatPass, false, i.triangleInfo.x, i.screenPos, biomeMask, projSum, px, gb);
+        CBL_BiomePass(flatPass, false, i.triangleInfo.x, i.screenPos.xyz, biomeMask, projSum, px, gb);
     // The 3-axis passes work the triplanar frame out again from a copy of the normal, so the single-axis loop does not
     // hold it. It needs only the Y weight and sign, and its own terms from CBL_SingleAxisBase. A pixel with no 3-axis
     // pass skips the frame and the loop.
@@ -857,7 +880,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
         CBL_TriplanarFrame(CBL_OPAQUE(i.normalOS, 1u), px.triN, px.triWeight, px.triSign, px.triNzPositive);
         [loop]
         for (uint nonFlatPass = 4u; nonFlatPass < 8u; nonFlatPass++)
-            CBL_BiomePass(nonFlatPass, true, i.triangleInfo.x, i.screenPos, biomeMask, projSum, px, gb);
+            CBL_BiomePass(nonFlatPass, true, i.triangleInfo.x, i.screenPos.xyz, biomeMask, projSum, px, gb);
     }
 
     // Light the accumulated GBuffer: direct lights + reflection specular + RT3 (ambient, emission).
@@ -878,27 +901,30 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     return surface;
 }
 
-float3 CBL_IndirectAndEmission(CBLForwardVaryings i, float3 normalWS, float3 viewDirWS, KSP2Surface surface)
+float3 CBL_IndirectAndEmission(CBLForwardVaryings i, float3 normalWS, float3 viewDirWS, KSP2Surface surface,
+                               float ambientEclipse)
 {
     [branch]
     if (DEBUG_OUTPUT_BIOME_COLOR)
         return surface.emission;
     float2 urpScreenUV = GetNormalizedScreenSpaceUV(i.positionCS);
     float3 ambientDiffuse, envSpecular;
-    KSP2_IndirectLighting(i.positionWS, normalWS, viewDirWS, surface, urpScreenUV, ambientDiffuse, envSpecular);
+    KSP2_IndirectLightingEclipsed(i.positionWS, normalWS, viewDirWS, surface, urpScreenUV, ambientEclipse,
+        ambientDiffuse, envSpecular);
     return envSpecular + surface.emission;
 }
 
 half4 CBL_ForwardFragment(CBLForwardVaryings i) : SV_Target
 {
     float3 normalWS, viewDirWS;
-    KSP2Surface surface = CBL_Surface(i, normalWS, viewDirWS);
+    float ambientEclipse;
+    KSP2Surface surface = CBL_Surface(i, normalWS, viewDirWS, ambientEclipse);
     [branch]
     if (DEBUG_OUTPUT_BIOME_COLOR)
-        return half4(CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface), 1.0);
+        return half4(CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface, ambientEclipse), 1.0);
     float2 urpScreenUV = GetNormalizedScreenSpaceUV(i.positionCS);
     float3 direct = KSP2_DirectLighting(i.positionWS, i.positionCS, normalWS, viewDirWS, surface, urpScreenUV);
-    return half4(direct + CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface), 1.0);
+    return half4(direct + CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface, ambientEclipse), 1.0);
 }
 
 #if defined(KSP2_GBUFFER_PASS)
@@ -906,9 +932,10 @@ half4 CBL_ForwardFragment(CBLForwardVaryings i) : SV_Target
 GBufferFragOutput CBL_GBufferFragment(CBLForwardVaryings i)
 {
     float3 normalWS, viewDirWS;
-    KSP2Surface surface = CBL_Surface(i, normalWS, viewDirWS);
+    float ambientEclipse;
+    KSP2Surface surface = CBL_Surface(i, normalWS, viewDirWS, ambientEclipse);
     return KSP2_GBufferOutputWithIndirect(surface, i.positionCS, normalWS,
-        CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface), kKSP2MaterialFlagEnvironmentReflections);
+        CBL_IndirectAndEmission(i, normalWS, viewDirWS, surface, ambientEclipse), kKSP2MaterialFlagEnvironmentReflections);
 }
 #endif
 

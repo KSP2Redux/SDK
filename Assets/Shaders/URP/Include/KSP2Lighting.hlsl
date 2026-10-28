@@ -263,9 +263,10 @@ float3 KSP2_EnvironmentReflectionWeight(float3 N, float3 V, float smoothness, fl
     return occlusion * (F0 * environmentBRDF.x + environmentBRDF.y);
 }
 
-// Indirect diffuse (to be multiplied by diffuse albedo) and indirect specular, both occluded.
-void KSP2_IndirectLighting(float3 positionWS, float3 N, float3 V, KSP2Surface s, float2 normalizedScreenSpaceUV,
-                           out float3 ambientDiffuse, out float3 envSpecular)
+// KSP2_IndirectLighting with the other bodies' eclipse at the pixel supplied by the caller, for a shader that already
+// has it (the terrain interpolates it from its vertices).
+void KSP2_IndirectLightingEclipsed(float3 positionWS, float3 N, float3 V, KSP2Surface s, float2 normalizedScreenSpaceUV,
+                                   float eclipse, out float3 ambientDiffuse, out float3 envSpecular)
 {
     float3 envColor = KSP2_EnvironmentReflection(reflect(-V, N), positionWS, s.smoothness, normalizedScreenSpaceUV);
     envSpecular = envColor * KSP2_EnvironmentReflectionWeight(N, V, s.smoothness, 0.96 - s.metallic * 0.96, s.F0, s.occlusion);
@@ -275,9 +276,16 @@ void KSP2_IndirectLighting(float3 positionWS, float3 N, float3 V, KSP2Surface s,
     ambientDiffuse = (ambient + diffuseCube * _DiffuseCubemapIntensity) * s.occlusion;
 
     // The sky and the surroundings this light comes from lie in the same moon's shadow as the pixel.
-    float eclipse = KSP2_EclipseLocalOtherBodiesFactor(positionWS);
     ambientDiffuse *= eclipse;
     envSpecular *= eclipse;
+}
+
+// Indirect diffuse (to be multiplied by diffuse albedo) and indirect specular, both occluded.
+void KSP2_IndirectLighting(float3 positionWS, float3 N, float3 V, KSP2Surface s, float2 normalizedScreenSpaceUV,
+                           out float3 ambientDiffuse, out float3 envSpecular)
+{
+    KSP2_IndirectLightingEclipsed(positionWS, N, V, s, normalizedScreenSpaceUV,
+        KSP2_EclipseLocalOtherBodiesFactor(positionWS), ambientDiffuse, envSpecular);
 }
 
 // ---------------------------------------------------------------------------
