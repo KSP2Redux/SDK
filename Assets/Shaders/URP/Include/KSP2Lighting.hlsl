@@ -273,6 +273,11 @@ void KSP2_IndirectLighting(float3 positionWS, float3 N, float3 V, KSP2Surface s,
     float3 ambient = _DiffuseAmbientIntensity * (KSP2_SphericalGaussianAmbient(N) + SampleSH(N));
     float3 diffuseCube = KSP2_SampleDiffuseEnvironment(N, positionWS, normalizedScreenSpaceUV);
     ambientDiffuse = (ambient + diffuseCube * _DiffuseCubemapIntensity) * s.occlusion;
+
+    // The sky and the surroundings this light comes from lie in the same moon's shadow as the pixel.
+    float eclipse = KSP2_EclipseLocalOtherBodiesFactor(positionWS);
+    ambientDiffuse *= eclipse;
+    envSpecular *= eclipse;
 }
 
 // ---------------------------------------------------------------------------
