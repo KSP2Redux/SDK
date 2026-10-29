@@ -108,7 +108,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Tools
         // The behaviour that loaded a live body holds both its data and, once local space has loaded, its PQS.
         private static PQS FindLivePqs(CoreCelestialBodyData body)
         {
-            foreach (CelestialBodyBehavior behavior in Object.FindObjectsByType<CelestialBodyBehavior>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (CelestialBodyBehavior behavior in Object.FindObjectsByType<CelestialBodyBehavior>(FindObjectsInactive.Include))
             {
                 if (behavior.CelestialBodyData == body && behavior.PqsController != null)
                     return behavior.PqsController;
