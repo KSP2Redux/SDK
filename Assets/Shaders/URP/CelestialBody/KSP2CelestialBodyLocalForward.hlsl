@@ -29,20 +29,20 @@ struct CBLForwardVaryings
 {
     float4 positionCS   : SV_POSITION;
     float  clipDist     : SV_ClipDistance0;
-    float2 uv           : TEXCOORD0;
+    float4 uv           : TEXCOORD0;    // xy the mesh UV, zw the eclipse terms' xy for CBL_AmbientEclipse
     float3 positionWS   : TEXCOORD1;
     float3 normalWS     : TEXCOORD2;    // geometric normal
     float3 normalOS     : TEXCOORD3;    // PQS-space normal, drives the triplanar weights
     float3 shL2         : TEXCOORD4;    // SH L2 band at the geometric normal, as the stock vertex stage did
-    float4 screenPos    : TEXCOORD5;    // prepass target UV = xy / z, w the vertex's eclipse for CBL_AmbientEclipse
+    float4 screenPos    : TEXCOORD5;    // prepass target UV = xy / z, w the eclipse terms' z
     nointerpolation uint2 triangleInfo : TEXCOORD6;  // x bucketing flags, y packed decal slots
 };
 
 CBLForwardVaryings CBL_ForwardVertex(uint vertexID : SV_VertexID)
 {
     QuadMeshData q = CBL_FetchVisibleVertex(vertexID);
-    // First, so the loop over the bodies runs before the other outputs are live. At the end it held them all.
-    float ambientEclipse = KSP2_EclipseLocalOtherBodiesFactor(q.position);
+    // Do this before anything else to keep register usage down.
+    float3 eclipseTerms = KSP2_EclipseLocalOtherBodiesTerms(q.position);
     uint flags = CBL_TriangleFlags(vertexID);
     CBLFrame frame = CBL_BuildFrame(q);
 
@@ -50,32 +50,20 @@ CBLForwardVaryings CBL_ForwardVertex(uint vertexID : SV_VertexID)
     o.positionCS = TransformWorldToHClip(q.position);
     o.screenPos.xyz = CBL_PrepassScreenPos(o.positionCS);
     o.clipDist = CBL_ClipDistance(flags, CBL_ZONE_MASK);
-    o.uv = q.uv;
+    o.uv = float4(q.uv, eclipseTerms.xy);
     o.positionWS = q.position;
     o.normalWS = frame.normalWS;
     o.normalOS = q.normal;
     o.shL2 = SHEvalLinearL2(frame.normalWS, unity_SHBr, unity_SHBg, unity_SHBb, unity_SHC);
     o.triangleInfo = uint2(flags, BucketedQuadInfoDecalIndices[vertexID / 3u]);
-    o.screenPos.w = ambientEclipse;
+    o.screenPos.w = eclipseTerms.z;
     return o;
 }
 
-// The other bodies' eclipse that the ambient light takes (#2341). Near the camera it is the vertex's, interpolated: the
-// bodies' penumbrae are tens to hundreds of km wide and the triangles there are far smaller. Farther out the triangles
-// grow, and the ring's shadow has hard edges that would smear across them, so the pixel computes its own and fades to
-// it across the band. The band follows the camera distance, so the branch only diverges along a ring of the screen.
-#define CBL_ECLIPSE_PIXEL_FADE_START 10000.0
-#define CBL_ECLIPSE_PIXEL_FADE_END 20000.0
-
-float CBL_AmbientEclipse(float vertexEclipse, float3 positionWS, float cameraDist)
+// Get the ambient eclipse occlusion.
+float CBL_AmbientEclipse(CBLForwardVaryings i)
 {
-    float pixelWeight = saturate((cameraDist - CBL_ECLIPSE_PIXEL_FADE_START)
-        * (1.0 / (CBL_ECLIPSE_PIXEL_FADE_END - CBL_ECLIPSE_PIXEL_FADE_START)));
-    float eclipse = vertexEclipse;
-    [branch]
-    if (pixelWeight > 0.0)
-        eclipse = lerp(vertexEclipse, KSP2_EclipseLocalOtherBodiesFactor(positionWS), pixelWeight);
-    return eclipse;
+    return KSP2_EclipseLocalOtherBodiesFromTerms(float3(i.uv.zw, i.screenPos.w), i.positionWS);
 }
 
 //
@@ -123,7 +111,7 @@ float3 CBL_BlendDecalAlbedo(uint slot, bool checkActive, float3 localPos, float3
 CBLGBuffer CBL_BasePass(CBLForwardVaryings i, float2 prepassUV, float cameraDist, float3 localPos, float4 biomeMask,
                         float ambientEclipse)
 {
-    float2 uv = i.uv;
+    float2 uv = i.uv.xy;
     uint flags = i.triangleInfo.x;
 
     float3 normalSample = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex4, sampler_LinearClamp, prepassUV, 0).xyz;
@@ -785,7 +773,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
 {
     CBL_DitherAlphaTest(i.positionCS.xy);
 
-    float4 biomeMask = SAMPLE_TEXTURE2D(_BiomeMaskTex, sampler_LinearRepeat, i.uv);
+    float4 biomeMask = SAMPLE_TEXTURE2D(_BiomeMaskTex, sampler_LinearRepeat, i.uv.xy);
 
     // DEBUG_OUTPUT_BIOME_COLOR is a dynamic branch, uniform over the draw, not a variant.
     [branch]
@@ -810,7 +798,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     float3 localPos = mul(_PQSToLocal, float4(positionWS, 1.0)).xyz;
     uint flags = i.triangleInfo.x;
 
-    ambientEclipse = CBL_AmbientEclipse(i.screenPos.w, positionWS, cameraDist);
+    ambientEclipse = CBL_AmbientEclipse(i);
     CBLGBuffer gb = CBL_BasePass(i, prepassUV, cameraDist, localPos, biomeMask, ambientEclipse);
 
     // Per-pixel biome inputs. The triplanar position comes from the world position through one combined matrix, as
@@ -855,7 +843,7 @@ KSP2Surface CBL_Surface(CBLForwardVaryings i, out float3 normalWS, out float3 vi
     px.prepassNormal = SAMPLE_TEXTURE2D_LOD(_LocalSpacePrepassTex4, sampler_LinearClamp, prepassUV, 0).xyz;
     px.geomNormalWS = i.normalWS;
 #if defined(SUB_ZONES_ENABLED)
-    px.subzoneMask = SAMPLE_TEXTURE2D(_SubzoneMaskTex, sampler_LinearRepeat, i.uv);
+    px.subzoneMask = SAMPLE_TEXTURE2D(_SubzoneMaskTex, sampler_LinearRepeat, i.uv.xy);
 #else
     px.subzoneMask = 0.0;
 #endif

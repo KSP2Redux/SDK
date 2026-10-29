@@ -262,6 +262,87 @@ float KSP2_EclipseLocalOtherBodiesFactor(float3 positionWS)
     return factor;
 }
 
+// Compute per-vertex eclipse terms.
+//
+// This is designed so that you can call it in the vertex shader, interpolate the returned
+// value, then call KSP2_EclipseLocalOtherBodiesFromTerms in order to get the eclipse
+// occlusion.
+//
+// The returned values are
+//   x  main occluder's position across its penumbra, 0 at first contact, 1 at full overlap, unclamped
+//   y  main occluder's area ratio, the largest fraction of the star it can cover
+//   z  product of the other occluders' factors
+//
+// Be aware that the mesh needs to be sufficiently detailed in screen space or else the
+// resulting eclipse shadow will look off.
+float3 KSP2_EclipseLocalOtherBodiesTerms(float3 positionWS)
+{
+    float3 terms = float3(-1.0, 0.0, 1.0);
+    [branch]
+    if (_KSP2EclipseLocalSceneCount >= 0.5 && _KSP2EclipseLocalStar.w > 0.0)
+    {
+        float3 toStar = _KSP2EclipseLocalStar.xyz - positionWS;
+        float starDistance = length(toStar);
+        float starAngularRadius = KSP2_EclipseAngularRadius(_KSP2EclipseLocalStar.w, starDistance);
+        int first = _KSP2EclipseLocalOwnBodyFirst > 0.5 ? 1 : 0;
+        int count = (int)_KSP2EclipseLocalSceneCount;
+        float bestT = -1.0e30;
+        [loop]
+        for (int i = first; i < count; i++)
+        {
+            float4 occluder = _KSP2EclipseLocalOccluders[i];
+            float3 toOccluder = occluder.xyz - positionWS;
+            float occluderDistance = length(toOccluder);
+            float t = -1.0e4;
+            float areaRatio = 0.0;
+            if (occluderDistance < starDistance && occluder.w > 0.0)
+            {
+                // No test for an occluder behind the point. The angle is then over 90 degrees, well outside the penumbra.
+                float separation = atan2(length(cross(toStar, toOccluder)), dot(toStar, toOccluder));
+                float occluderAngularRadius = KSP2_EclipseAngularRadius(occluder.w, occluderDistance);
+                float outer = occluderAngularRadius + starAngularRadius;
+                float inner = abs(occluderAngularRadius - starAngularRadius);
+                t = (outer - separation) / max(outer - inner, 1e-9);
+                areaRatio = min(1.0, (occluderAngularRadius * occluderAngularRadius)
+                    / max(starAngularRadius * starAngularRadius, 1e-20));
+            }
+
+            float covered = areaRatio * smoothstep(0.0, 1.0, t);
+            if (t > bestT)
+            {
+                terms.z *= 1.0 - terms.y * smoothstep(0.0, 1.0, terms.x);
+                terms.xy = float2(t, areaRatio);
+                bestT = t;
+            }
+            else
+            {
+                terms.z *= 1.0 - covered;
+            }
+        }
+    }
+
+    return terms;
+}
+
+// Compute the eclipse occlusion factor for a pixel.
+//
+// This takes the occlusion terms calculated by KSP2_EclipseLocalOtherBodiesTerms
+// and uses them to calculate the eclipse occlusion factor due to both the
+// orbiting bodies and any given rings.
+float KSP2_EclipseLocalOtherBodiesFromTerms(float3 terms, float3 positionWS)
+{
+    float factor = 1.0;
+    [branch]
+    if (_KSP2EclipseLocalSceneCount >= 0.5 && _KSP2EclipseLocalStar.w > 0.0)
+    {
+        factor = (1.0 - terms.y * smoothstep(0.0, 1.0, terms.x)) * terms.z;
+        factor *= KSP2_EclipseRingTransmittance(positionWS, normalize(_KSP2EclipseLocalStar.xyz - positionWS),
+            _KSP2EclipseLocalRingCenter, _KSP2EclipseLocalRingNormal.xyz, _KSP2EclipseLocalRingRadii.xy);
+    }
+
+    return factor;
+}
+
 // The local star's angular radius at the observer, the size of its disc in a mirror, or 0 without a table.
 float KSP2_EclipseLocalStarAngularRadius()
 {
