@@ -13,6 +13,9 @@
 #define KSP2_NO_TERRAIN_SHADOW
 #include "../Include/KSP2Lighting.hlsl"
 
+// N.L of the smooth sphere over which a map body's night side fades in from its terminator.
+#define KSP2_MAP_NIGHT_RAMP 0.2
+
 TEXTURE2D(_MainTex);            SAMPLER(sampler_MainTex);
 TEXTURE2D(_NormalMap);          SAMPLER(sampler_NormalMap);
 TEXTURE2D(_PackedMap);          SAMPLER(sampler_PackedMap);
@@ -147,7 +150,25 @@ float4 CelestialBodyScaled_ForwardFragment(CelestialBodyScaledVaryings input) : 
         // The map's only light is the star's map light, so the map table's eclipse takes all of it. The flag is set
         // for the map camera alone.
         [branch] if (_KSP2EclipseMapActive > 0.5)
-            direct *= KSP2_EclipseVisibility(input.positionWS, _KSP2EclipseOccluderIndices0, _KSP2EclipseOccluderIndices1);
+        {
+            // The map table lists the body itself first, to darken the lit slopes of its night side. As an occluder
+            // its horizon is a line a degree wide, so the night side began as a hard cut. The body's own night comes
+            // from a ramp of the smooth sphere's N.L instead, which darkens the terminator gradually as the real
+            // Moon does and keeps the relief picking out its own shadows. The other bodies still shadow it.
+            float4 indices0 = _KSP2EclipseOccluderIndices0;
+            float nightRamp = 1.0;
+            [branch] if (indices0.x >= 0.0)
+            {
+                float4 selfOccluder = _KSP2EclipseOccluders[min((int)indices0.x, KSP2_ECLIPSE_MAX_OCCLUDERS - 1)];
+                [branch] if (distance(selfOccluder.xyz, TransformObjectToWorld(float3(0.0, 0.0, 0.0))) < selfOccluder.w * 0.01)
+                {
+                    indices0.x = -1.0;
+                    nightRamp = smoothstep(0.0, KSP2_MAP_NIGHT_RAMP, dot(normalize(input.normalWS), GetMainLight().direction));
+                }
+            }
+
+            direct *= nightRamp * KSP2_EclipseVisibility(input.positionWS, indices0, _KSP2EclipseOccluderIndices1);
+        }
         color += direct;
     }
     return float4(color, 1.0);
