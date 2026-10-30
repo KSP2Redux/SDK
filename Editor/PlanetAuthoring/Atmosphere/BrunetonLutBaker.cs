@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using KSP.Rendering;
 using KSP.Rendering.Utility;
 using Ksp2UnityTools.Editor.PlanetAuthoring.Authoring;
@@ -37,9 +38,10 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
         /// Bakes the model's lookup tables to texture assets and assigns them to the model.
         /// </summary>
         /// <remarks>
-        /// Writes <c>&lt;prefix&gt;_Transmittance</c>, <c>_Irradiance</c> and <c>_Scattering</c>
-        /// assets into <paramref name="folder" />, overwriting earlier bakes in place so references
-        /// to them survive.
+        /// Writes new tables as lossless 32-bit EXR sources for <c>&lt;prefix&gt;_Transmittance</c>,
+        /// <c>_Irradiance</c> and <c>_Scattering</c> into <paramref name="folder" />.
+        /// Rebakes update existing EXR files in place. When only a legacy native asset exists,
+        /// it is updated in place instead so its references and addressable keys survive.
         /// </remarks>
         /// <param name="model">The atmosphere model to bake.</param>
         /// <param name="folder">The project folder to write the texture assets into. Created if missing.</param>
@@ -53,6 +55,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
 
             EnsureFolder(folder);
             var textures = new TextureSet();
+            Texture2D transmittance = null;
+            Texture2D irradiance = null;
+            Texture3D scattering = null;
             try
             {
                 textures.Create();
@@ -61,14 +66,15 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                 Precompute(compute, textures);
 
                 string assetPrefix = string.IsNullOrWhiteSpace(model.name) ? model.PlanetName : model.name;
-                Texture2D transmittance = ReadTexture2D(textures.Transmittance[READ], $"{assetPrefix}_Transmittance");
-                Texture2D irradiance = ReadTexture2D(textures.Irradiance[READ], $"{assetPrefix}_Irradiance");
-                Texture3D scattering = ReadTexture3D(compute, textures.Scattering[READ], $"{assetPrefix}_Scattering");
+                transmittance = ReadTexture2D(textures.Transmittance[READ], $"{assetPrefix}_Transmittance");
+                irradiance = ReadTexture2D(textures.Irradiance[READ], $"{assetPrefix}_Irradiance");
+                scattering = ReadTexture3D(compute, textures.Scattering[READ], $"{assetPrefix}_Scattering");
 
                 Undo.RecordObject(model, "Bake Atmosphere LUTs");
-                model.TransmittanceTexture = SaveAsset(transmittance, $"{folder}/{assetPrefix}_Transmittance.asset");
-                model.IrradianceTexture = SaveAsset(irradiance, $"{folder}/{assetPrefix}_Irradiance.asset");
-                model.ScatteringTexture = SaveAsset(scattering, $"{folder}/{assetPrefix}_Scattering.asset");
+                // Local sunlight samples transmittance on the CPU. The other tables are GPU-only.
+                model.TransmittanceTexture = SaveTexture(transmittance, $"{folder}/{assetPrefix}_Transmittance.exr", true);
+                model.IrradianceTexture = SaveTexture(irradiance, $"{folder}/{assetPrefix}_Irradiance.exr", false);
+                model.ScatteringTexture = SaveTexture(scattering, $"{folder}/{assetPrefix}_Scattering.exr", false);
                 EditorUtility.SetDirty(model);
 
                 // Lets the stale-tables check tell these tables from ones baked before an edit.
@@ -90,6 +96,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             finally
             {
                 textures.Release();
+                Object.DestroyImmediate(transmittance);
+                Object.DestroyImmediate(irradiance);
+                Object.DestroyImmediate(scattering);
             }
         }
 
@@ -478,21 +487,99 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             return texture;
         }
 
-        private static T SaveAsset<T>(T asset, string path) where T : Object
+        /// <summary>
+        /// Saves a lookup table without changing existing asset references or float precision.
+        /// </summary>
+        /// <remarks>
+        /// New tables use lossless 32-bit EXR, with a single row of slices for a 3D table.
+        /// Existing EXR files take precedence over legacy native assets. A legacy native asset
+        /// is updated in place when no EXR exists. The source stays owned by the caller.
+        /// </remarks>
+        /// <typeparam name="T">The lookup texture type.</typeparam>
+        /// <param name="source">The readable 2D or 3D lookup table.</param>
+        /// <param name="path">The project-relative EXR path.</param>
+        /// <param name="readable">Whether an imported EXR texture needs a CPU copy.</param>
+        /// <returns>The imported or updated lookup texture.</returns>
+        internal static T SaveTexture<T>(T source, string path, bool readable) where T : Texture
         {
             path = path.Replace('\\', '/');
-            var existing = AssetDatabase.LoadAssetAtPath<T>(path);
-            if (existing == null)
+            if (!File.Exists(path))
             {
-                AssetDatabase.CreateAsset(asset, path);
-                return asset;
+                var existing = AssetDatabase.LoadAssetAtPath<T>(Path.ChangeExtension(path, ".asset"));
+                if (existing != null)
+                {
+                    EditorUtility.CopySerialized(source, existing);
+                    existing.name = source.name;
+                    EditorUtility.SetDirty(existing);
+                    return existing;
+                }
             }
 
-            EditorUtility.CopySerialized(asset, existing);
-            existing.name = asset.name;
-            EditorUtility.SetDirty(existing);
-            Object.DestroyImmediate(asset);
-            return existing;
+            var volume = source as Texture3D;
+            var atlas = source as Texture2D;
+            int depth = volume != null ? volume.depth : 1;
+            if (volume != null)
+            {
+                // A single row of slices maps directly to Unity's native 3D flipbook importer.
+                atlas = new Texture2D(source.width * depth, source.height, TextureFormat.RGBAFloat, false, true);
+                NativeArray<Color> pixels = volume.GetPixelData<Color>(0);
+                NativeArray<Color> atlasPixels = atlas.GetPixelData<Color>(0);
+                for (int z = 0; z < depth; z++)
+                {
+                    for (int y = 0; y < source.height; y++)
+                    {
+                        int sourceOffset = (z * source.height + y) * source.width;
+                        int targetOffset = y * atlas.width + z * source.width;
+                        for (int x = 0; x < source.width; x++)
+                        {
+                            atlasPixels[targetOffset + x] = pixels[sourceOffset + x];
+                        }
+                    }
+                }
+                atlas.Apply(false, false);
+            }
+
+            if (atlas == null)
+                throw new ArgumentException("An atmosphere lookup table must be a Texture2D or Texture3D.", nameof(source));
+
+            try
+            {
+                File.WriteAllBytes(path, atlas.EncodeToEXR(Texture2D.EXRFlags.OutputAsFloat | Texture2D.EXRFlags.CompressZIP));
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+                importer.textureType = TextureImporterType.Default;
+                importer.textureShape = volume != null ? TextureImporterShape.Texture3D : TextureImporterShape.Texture2D;
+                importer.sRGBTexture = false;
+                importer.mipmapEnabled = false;
+                importer.streamingMipmaps = false;
+                importer.npotScale = TextureImporterNPOTScale.None;
+                importer.alphaSource = TextureImporterAlphaSource.FromInput;
+                importer.alphaIsTransparency = false;
+                importer.isReadable = readable;
+                importer.wrapMode = TextureWrapMode.Clamp;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.flipbookColumns = depth;
+                settings.flipbookRows = 1;
+                importer.SetTextureSettings(settings);
+
+                TextureImporterPlatformSettings platform = importer.GetDefaultPlatformTextureSettings();
+                platform.format = TextureImporterFormat.RGBAFloat;
+                platform.maxTextureSize = Mathf.Max(32, Mathf.NextPowerOfTwo(Mathf.Max(atlas.width, atlas.height)));
+                platform.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SetPlatformTextureSettings(platform);
+                importer.ClearPlatformTextureSettings("Standalone");
+                importer.SaveAndReimport();
+                return AssetDatabase.LoadAssetAtPath<T>(path);
+            }
+            finally
+            {
+                if (volume != null)
+                    Object.DestroyImmediate(atlas);
+            }
         }
 
         private static RenderTexture NewTexture2D(int width, int height)
