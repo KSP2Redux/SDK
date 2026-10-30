@@ -166,27 +166,30 @@ void CBL_ApplyDecals(inout CBLHeightDiffs diffs, inout float3 nrmAccum, float3 l
 // Per-layer weights (LAYERS4)
 // ---------------------------------------------------------------------------
 
-// Squared-ramp trapezoid window, p = (center, upRange, downRange, fadeOut).
-float CBL_FadeTri(float axis, float4 p)
+// Squared-ramp trapezoid window with its enable, from a layer's packed _CBLLayerFade entries. The three pieces meet
+// with both sides counted, so an axis exactly on the centre or the end of the plateau weighs 2 as in stock.
+// One layer's term of a subzone family sum: the normal scaled by its subzone filter, and a zero weight when the
+// filter times the biome weight is under 0.001.
+float4 CBL_SubzoneNormalTerm(CBLNormalLayer l, float szFilter, float biomeWeight, float cameraDist)
 {
-    float hi = p.x + p.y;
-    float lo = p.x - p.z;
-    float fi = saturate((axis - lo) / max(p.x - lo, 0.001));
-    float fo = 1.0 - saturate((axis - hi) / max(p.w, 0.001));
-    return step(axis, hi + p.w) * step(hi, axis) * fo * fo
-         + step(p.x, axis) * step(axis, hi)
-         + fi * fi * step(lo, axis) * step(axis, p.x);
+    l.normal *= szFilter;
+    return CBL_LayerNormalTerm(l, biomeWeight * step(0.001, szFilter * biomeWeight), cameraDist);
 }
 
-// One layer: gate, then height window times slope window.
-float CBL_LayerWeight(bool biomeActive, float biomeChan, float gateProduct, float height,
-                      float4 heightParams, float heightEnable, float4 slopeParams, float slopeEnable,
-                      float4 gradWeights, float tintGw, float tintRw, CBLHeightDiffs diffs)
+float CBL_FadeWindow(float axis, float4 window, float4 ramp)
 {
-    if (!(biomeActive && biomeChan >= 0.0 && gateProduct > 0.0))
-        return 0.0;
+    float fi = saturate((axis - window.x) * ramp.x);
+    float fo = 1.0 - saturate((axis - window.z) * ramp.y);
+    float w = step(axis, window.w) * step(window.z, axis) * fo * fo
+            + step(window.y, axis) * step(axis, window.z)
+            + fi * fi * step(window.x, axis) * step(axis, window.y);
+    return w * ramp.z + ramp.w;
+}
 
-    float heightW = lerp(1.0 - heightEnable, 1.0, CBL_FadeTri(height, heightParams));
+// One layer, ungated: height window times slope window. layer is channel * 4 + layer.
+float CBL_LayerWeight(float height, uint layer, float4 gradWeights, float tintGw, float tintRw, CBLHeightDiffs diffs)
+{
+    float heightW = CBL_FadeWindow(height, _CBLLayerFade[layer * 4], _CBLLayerFade[layer * 4 + 1]);
     float2 grad = diffs.sz4 * tintGw
                 + diffs.sz3 * tintRw
                 + diffs.mid * gradWeights.z
@@ -199,49 +202,52 @@ float CBL_LayerWeight(bool biomeActive, float biomeChan, float gateProduct, floa
 #else
     float slopeAng = min(length(grad), 1.0) * 90.0;
 #endif
-    bool slopeDegenerate = slopeParams.x == 0.0 && slopeParams.y == 0.0 && slopeEnable != 0.0;
-    float slopeW = slopeDegenerate ? 0.0 : lerp(1.0 - slopeEnable, 1.0, CBL_FadeTri(slopeAng, slopeParams));
+    float slopeW = CBL_FadeWindow(slopeAng, _CBLLayerFade[layer * 4 + 2], _CBLLayerFade[layer * 4 + 3]);
     return heightW * slopeW;
 }
 
-float4 CBL_ChannelLayerWeights(bool biomeActive, float4 biomeChan, float4 gateProduct, float height,
-                               float4 heightParams1, float4 heightParams2, float4 heightParams3, float4 heightParams4, float4 heightEnable,
-                               float4 slopeParams1, float4 slopeParams2, float4 slopeParams3, float4 slopeParams4, float4 slopeEnable,
+float4 CBL_ChannelLayerWeights(uint channel, bool biomeActive, float4 biomeChan, float4 gateProduct, float height,
                                float4 gradWeights1, float4 gradWeights2, float4 gradWeights3, float4 gradWeights4,
                                float4 tintGw4, float4 tintRw4, CBLHeightDiffs diffs)
 {
-    return float4(
-        CBL_LayerWeight(biomeActive, biomeChan.x, gateProduct.x, height, heightParams1, heightEnable.x, slopeParams1, slopeEnable.x, gradWeights1, tintGw4.x, tintRw4.x, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.y, gateProduct.y, height, heightParams2, heightEnable.y, slopeParams2, slopeEnable.y, gradWeights2, tintGw4.y, tintRw4.y, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.z, gateProduct.z, height, heightParams3, heightEnable.z, slopeParams3, slopeEnable.z, gradWeights3, tintGw4.z, tintRw4.z, diffs),
-        CBL_LayerWeight(biomeActive, biomeChan.w, gateProduct.w, height, heightParams4, heightEnable.w, slopeParams4, slopeEnable.w, gradWeights4, tintGw4.w, tintRw4.w, diffs));
+    // One branch for the channel, so its four layers are worked out side by side. A layer with no biome or no weight
+    // is zeroed after.
+    float4 w = 0.0;
+    [branch]
+    if (biomeActive)
+    {
+        w = float4(
+            CBL_LayerWeight(height, channel * 4, gradWeights1, tintGw4.x, tintRw4.x, diffs),
+            CBL_LayerWeight(height, channel * 4 + 1, gradWeights2, tintGw4.y, tintRw4.y, diffs),
+            CBL_LayerWeight(height, channel * 4 + 2, gradWeights3, tintGw4.z, tintRw4.z, diffs),
+            CBL_LayerWeight(height, channel * 4 + 3, gradWeights4, tintGw4.w, tintRw4.w, diffs));
+        bool4 layerOn = biomeChan >= 0.0 && gateProduct > 0.0;
+        w = layerOn ? w : 0.0;
+    }
+    return w;
 }
 
+// CI is the channel's index into the _CBL arrays (R G B A = 0 to 3). The subzone tint alphas are subzones G (1) and R (0).
+#define CBL_CH_LAYER4(A, CI) A[(CI) * 4], A[(CI) * 4 + 1], A[(CI) * 4 + 2], A[(CI) * 4 + 3]
+#define CBL_CH_TINT_ALPHA(CI, S) float4(_CBLSubzoneTint[(CI) * 16 + (S)].w, _CBLSubzoneTint[(CI) * 16 + 4 + (S)].w, \
+    _CBLSubzoneTint[(CI) * 16 + 8 + (S)].w, _CBLSubzoneTint[(CI) * 16 + 12 + (S)].w)
 #if defined(SUB_ZONES_ENABLED)
-    #define CBL_LAYERS4(C, active) CBL_ChannelLayerWeights( \
-        active, _SmallBiome##C, \
-        _SmallEnable##C * float4( \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##1), \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##2), \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##3), \
-            dot(subzoneWeight, _SmallSubzoneWeight##C##4)), \
+    #define CBL_LAYERS4(CI, active) CBL_ChannelLayerWeights( \
+        CI, active, _CBLBiome[CI], \
+        _CBLEnable[CI] * float4( \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4]), \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 1]), \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 2]), \
+            dot(subzoneWeight, _CBLSubzoneWeight[(CI) * 4 + 3])), \
         height, \
-        _SmallBiome##C##HeightParams1, _SmallBiome##C##HeightParams2, _SmallBiome##C##HeightParams3, _SmallBiome##C##HeightParams4, \
-        _SmallBiomeHeightEnable##C, \
-        _SmallBiome##C##SlopeParams1, _SmallBiome##C##SlopeParams2, _SmallBiome##C##SlopeParams3, _SmallBiome##C##SlopeParams4, \
-        _SmallBiomeSlopeEnable##C, \
-        _SmallBiome##C##GradMapWeights1, _SmallBiome##C##GradMapWeights2, _SmallBiome##C##GradMapWeights3, _SmallBiome##C##GradMapWeights4, \
-        float4(_SmallSubzoneTint##C##1_G.w, _SmallSubzoneTint##C##2_G.w, _SmallSubzoneTint##C##3_G.w, _SmallSubzoneTint##C##4_G.w), \
-        float4(_SmallSubzoneTint##C##1_R.w, _SmallSubzoneTint##C##2_R.w, _SmallSubzoneTint##C##3_R.w, _SmallSubzoneTint##C##4_R.w), \
+        CBL_CH_LAYER4(_CBLBiomeGradMapWeights, CI), \
+        CBL_CH_TINT_ALPHA(CI, 1), \
+        CBL_CH_TINT_ALPHA(CI, 0), \
         diffs)
 #else
-    #define CBL_LAYERS4(C, active) CBL_ChannelLayerWeights( \
-        active, _SmallBiome##C, _SmallHeightWeight##C * _SmallEnable##C, height, \
-        _SmallBiome##C##HeightParams1, _SmallBiome##C##HeightParams2, _SmallBiome##C##HeightParams3, _SmallBiome##C##HeightParams4, \
-        _SmallBiomeHeightEnable##C, \
-        _SmallBiome##C##SlopeParams1, _SmallBiome##C##SlopeParams2, _SmallBiome##C##SlopeParams3, _SmallBiome##C##SlopeParams4, \
-        _SmallBiomeSlopeEnable##C, \
-        _SmallBiome##C##GradMapWeights1, _SmallBiome##C##GradMapWeights2, _SmallBiome##C##GradMapWeights3, _SmallBiome##C##GradMapWeights4, \
+    #define CBL_LAYERS4(CI, active) CBL_ChannelLayerWeights( \
+        CI, active, _CBLBiome[CI], _CBLHeightWeight[CI] * _CBLEnable[CI], height, \
+        CBL_CH_LAYER4(_CBLBiomeGradMapWeights, CI), \
         (float4)0, (float4)0, \
         diffs)
 #endif
@@ -308,37 +314,13 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     float invBiomeWeightSum = 1.0 / max(biomeWeightNorm.x + biomeWeightNorm.y + biomeWeightNorm.z + biomeWeightNorm.w, 0.001);
     float4 hmBiomeWeight = invBiomeWeightSum * biomeWeightNorm;
 
-    // Redux: a channel with no biome weight skips its normal samples, which BlendLayerNormal weights by zero. The
-    // biome mask is exactly zero over wide areas, so whole waves skip together.
-    CBLNormalLayer midR = (CBLNormalLayer)0, midG = (CBLNormalLayer)0, midB = (CBLNormalLayer)0, midA = (CBLNormalLayer)0;
-    CBLNormalLayer largeR = (CBLNormalLayer)0, largeG = (CBLNormalLayer)0, largeB = (CBLNormalLayer)0, largeA = (CBLNormalLayer)0;
+    // Redux: each layer folds into its family's sum as soon as it is sampled, so four floats per family stay live
+    // instead of every layer's normal and fade. A channel with no biome weight skips its normal samples, which
+    // BlendLayerNormal weights by zero. The biome mask is exactly zero over wide areas, so whole waves skip together.
+    float4 midSum = 0.0, largeSum = 0.0;
 #if defined(SUB_ZONES_ENABLED)
-    CBLNormalLayer sz3R = (CBLNormalLayer)0, sz3G = (CBLNormalLayer)0, sz3B = (CBLNormalLayer)0, sz3A = (CBLNormalLayer)0;
-    CBLNormalLayer sz4R = (CBLNormalLayer)0, sz4G = (CBLNormalLayer)0, sz4B = (CBLNormalLayer)0, sz4A = (CBLNormalLayer)0;
-    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
-        sz3##C = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3Normal##C##UVParams, _Subzone3Normal##C##FadeParams, _Subzone3NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld); \
-        sz4##C = CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4Normal##C##UVParams, _Subzone4Normal##C##FadeParams, _Subzone4NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld);
-#else
-    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx)
-#endif
-    #define CBL_SAMPLE_CHANNEL_NORMALS(C, idx) \
-        [branch] \
-        if (biomeWeightNorm.idx > 0.0) \
-        { \
-            mid##C = CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormal##C, sampler_LinearRepeat), _MidNormal##C##UVParams, _MidNormal##C##FadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld); \
-            large##C = CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormal##C, sampler_LinearRepeat), _LargeNormal##C##UVParams, _LargeNormal##C##FadeParams, normCtx, frame, (float3x3)_PQSToWorld); \
-            CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
-        }
-    CBL_SAMPLE_CHANNEL_NORMALS(R, x)
-    CBL_SAMPLE_CHANNEL_NORMALS(G, y)
-    CBL_SAMPLE_CHANNEL_NORMALS(B, z)
-    CBL_SAMPLE_CHANNEL_NORMALS(A, w)
-    #undef CBL_SAMPLE_CHANNEL_NORMALS
-    #undef CBL_SAMPLE_SUBZONE_NORMALS
-
-#if defined(SUB_ZONES_ENABLED)
-    // dot(subzone weight, filter) per family and channel. Scales each layer normal and gates the
-    // channel's fade so an inactive channel adds nothing to BlendLayerNormal's weight.
+    // dot(subzone weight, filter) per family and channel. Scales each layer normal, and a layer whose filter times
+    // biome weight is under 0.001 adds nothing to BlendLayerNormal's weight.
     #define CBL_SZ_FILTER(PRE) float4( \
         dot(subzoneWeight, _##PRE##RSubzoneFilter), dot(subzoneWeight, _##PRE##GSubzoneFilter), \
         dot(subzoneWeight, _##PRE##BSubzoneFilter), dot(subzoneWeight, _##PRE##ASubzoneFilter))
@@ -348,36 +330,41 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     float4 sz4SzFilter = CBL_SZ_FILTER(Subzone4);
     #undef CBL_SZ_FILTER
 
-    #define CBL_APPLY_SZ(r, szF, c) { r.normal *= (szF); r.fade *= step(0.001, (szF) * (c)); }
-    CBL_APPLY_SZ(midR, midSzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(midG, midSzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(midB, midSzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(midA, midSzFilter.w, biomeWeightNorm.w);
-    CBL_APPLY_SZ(largeR, largeSzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(largeG, largeSzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(largeB, largeSzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(largeA, largeSzFilter.w, biomeWeightNorm.w);
+    float4 sz3Sum = 0.0, sz4Sum = 0.0;
+    #define CBL_TERM(layer, szF, idx) CBL_SubzoneNormalTerm(layer, (szF).idx, biomeWeightNorm.idx, cameraDist)
+    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
+        sz3Sum += CBL_TERM(CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone3Normal##C##UVParams, _Subzone3Normal##C##FadeParams, _Subzone3NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld), sz3SzFilter, idx); \
+        sz4Sum += CBL_TERM(CBL_SampleArrayNormal(TEXTURE2D_ARRAY_ARGS(_SubZonesNormalTextureArray, sampler_LinearRepeat), _Subzone4Normal##C##UVParams, _Subzone4Normal##C##FadeParams, _Subzone4NormalIndices.idx, normCtx, frame, (float3x3)_PQSToWorld), sz4SzFilter, idx);
+#else
+    #define CBL_TERM(layer, szF, idx) CBL_LayerNormalTerm(layer, biomeWeightNorm.idx, cameraDist)
+    #define CBL_SAMPLE_SUBZONE_NORMALS(C, idx)
+#endif
+    #define CBL_SAMPLE_CHANNEL_NORMALS(C, idx) \
+        [branch] \
+        if (biomeWeightNorm.idx > 0.0) \
+        { \
+            midSum += CBL_TERM(CBL_SampleMidNormal(TEXTURE2D_ARGS(_MidNormal##C, sampler_LinearRepeat), _MidNormal##C##UVParams, _MidNormal##C##FadeParams, objNorm, objectNormal, triWeight, triSign, triUV_YZ, triUV_XZ, triUV_XY, (float3x3)_PQSToWorld), midSzFilter, idx); \
+            largeSum += CBL_TERM(CBL_SampleLargeNormal(TEXTURE2D_ARGS(_LargeNormal##C, sampler_LinearRepeat), _LargeNormal##C##UVParams, _LargeNormal##C##FadeParams, normCtx, frame, (float3x3)_PQSToWorld), largeSzFilter, idx); \
+            CBL_SAMPLE_SUBZONE_NORMALS(C, idx) \
+        }
+    CBL_SAMPLE_CHANNEL_NORMALS(R, x)
+    CBL_SAMPLE_CHANNEL_NORMALS(G, y)
+    CBL_SAMPLE_CHANNEL_NORMALS(B, z)
+    CBL_SAMPLE_CHANNEL_NORMALS(A, w)
+    #undef CBL_SAMPLE_CHANNEL_NORMALS
+    #undef CBL_SAMPLE_SUBZONE_NORMALS
+    #undef CBL_TERM
 
-    CBL_APPLY_SZ(sz3R, sz3SzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(sz3G, sz3SzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(sz3B, sz3SzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(sz3A, sz3SzFilter.w, biomeWeightNorm.w);
-
-    CBL_APPLY_SZ(sz4R, sz4SzFilter.x, biomeWeightNorm.x);
-    CBL_APPLY_SZ(sz4G, sz4SzFilter.y, biomeWeightNorm.y);
-    CBL_APPLY_SZ(sz4B, sz4SzFilter.z, biomeWeightNorm.z);
-    CBL_APPLY_SZ(sz4A, sz4SzFilter.w, biomeWeightNorm.w);
-    #undef CBL_APPLY_SZ
-
+#if defined(SUB_ZONES_ENABLED)
     // Subzone blend order: scaled -> Subzone4 -> Subzone3 -> Mid -> Large.
-    float3 blendedNorm = CBL_BlendLayerNormal(scaledNormal, sz4R, sz4G, sz4B, sz4A, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, sz3R, sz3G, sz3B, sz3A, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, midR, midG, midB, midA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, largeR, largeG, largeB, largeA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
+    float3 blendedNorm = CBL_BlendSummedNormal(scaledNormal, sz4Sum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, sz3Sum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, midSum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, largeSum, frame.normalWS, normalFade);
 #else
     // Blend order: scaled -> Mid -> Large.
-    float3 blendedNorm = CBL_BlendLayerNormal(scaledNormal, midR, midG, midB, midA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
-    blendedNorm = CBL_BlendLayerNormal(blendedNorm, largeR, largeG, largeB, largeA, biomeWeightNorm, frame.normalWS, normalFade, cameraDist);
+    float3 blendedNorm = CBL_BlendSummedNormal(scaledNormal, midSum, frame.normalWS, normalFade);
+    blendedNorm = CBL_BlendSummedNormal(blendedNorm, largeSum, frame.normalWS, normalFade);
 #endif
 
     // Height-map gradients, per biome channel weighted by hmBiomeWeight.
@@ -390,7 +377,7 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     CBLHeightAccum hm = (CBLHeightAccum)0;
 #if defined(SUB_ZONES_ENABLED)
     #define CBL_ACCUM_HEIGHT(C, idx) \
-        if (0.001 < hmBiomeWeight.idx) \
+        [flatten] if (0.001 < hmBiomeWeight.idx) \
         { \
             hm.large += hmBiomeWeight.idx * largeSzFilter.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_LargeGradience##C, sampler_LinearRepeat), _LargeHeightMapUVScales.idx, hmCtx); \
             hm.med += hmBiomeWeight.idx * midSzFilter.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_MidGradience##C, sampler_LinearRepeat), _MediumHeightMapUVScales.idx, hmCtx); \
@@ -399,7 +386,7 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
         }
 #else
     #define CBL_ACCUM_HEIGHT(C, idx) \
-        if (0.001 < hmBiomeWeight.idx) \
+        [flatten] if (0.001 < hmBiomeWeight.idx) \
         { \
             hm.large += hmBiomeWeight.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_LargeGradience##C, sampler_LinearRepeat), _LargeHeightMapUVScales.idx, hmCtx); \
             hm.med += hmBiomeWeight.idx * CBL_SampleAndBlendHeight(TEXTURE2D_ARGS(_MidGradience##C, sampler_LinearRepeat), _MediumHeightMapUVScales.idx, hmCtx); \
@@ -448,10 +435,10 @@ CBLPrepassOutput CBL_PrepassFragment(CBLPrepassVaryings i)
     return half4(_PqsNormalsOct > 0.5 ? PackGBufferNormal(normal) : normal, 0.0);
 #else
     CBLPrepassOutput o;
-    o.tex0 = CBL_LAYERS4(R, biomeActive.x);
-    o.tex1 = CBL_LAYERS4(G, biomeActive.y);
-    o.tex2 = CBL_LAYERS4(B, biomeActive.z);
-    o.tex3 = CBL_LAYERS4(A, biomeActive.w);
+    o.tex0 = CBL_LAYERS4(0, biomeActive.x);
+    o.tex1 = CBL_LAYERS4(1, biomeActive.y);
+    o.tex2 = CBL_LAYERS4(2, biomeActive.z);
+    o.tex3 = CBL_LAYERS4(3, biomeActive.w);
     o.normal = float4(blendedNorm, 1.0);
     return o;
 #endif

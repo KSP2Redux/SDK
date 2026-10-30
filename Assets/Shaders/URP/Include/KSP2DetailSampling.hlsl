@@ -32,6 +32,14 @@ struct CBLTileHash
     float2 weights;
 };
 
+// A hex cell's random UV offset.
+float2 CBL_CellOffset(float2 cell)
+{
+    // Redux: one sine per cell rather than stock's two. Both offsets come from it, scaled by two unrelated constants.
+    float s = sin(dot(float2(127.1, 311.7), cell));
+    return frac(s * float2(43758.5468, 28001.8384));
+}
+
 // stochasticScale is the terrain material's _StochasticScale.
 CBLTileHash CBL_TileHash(float2 baseUV, float stochasticScale)
 {
@@ -39,36 +47,35 @@ CBLTileHash CBL_TileHash(float2 baseUV, float stochasticScale)
 #if defined(ANTI_TILE_QUALITY_ON)
     float2 scaled = (stochasticScale * 3.464) * baseUV;
     float gridY = dot(float2(-0.57735026, 1.15470052), scaled);
-    // Cell indices round-trip through int then uint on purpose: negative cells wrap the same way the stock shader's did.
-    uint cellXi = (uint)((int)floor(scaled.x));
-    uint cellYi = (uint)((int)floor(gridY));
-    float fracX = frac(scaled.x);
-    float fracY = frac(gridY);
+    // Stock took the cell indices through int and uint and back to float. Floor and +1 are exact in float below 2^24,
+    // so the cells are the same, without the conversions.
+    float cellX = floor(scaled.x);
+    float cellY = floor(gridY);
+    float fracX = scaled.x - cellX;
+    float fracY = gridY - cellY;
     float triTest = 1.0 - fracX - fracY;
     bool inUpper = triTest >= 0.0;
-    float2 c0 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    float2 c1 = float2(float((int)(inUpper ? cellXi : (cellXi + 1u))), float((int)(inUpper ? (cellYi + 1u) : cellYi)));
-    float2 c2 = float2(float((int)(inUpper ? (cellXi + 1u) : cellXi)), float((int)(inUpper ? cellYi : (cellYi + 1u))));
-    float2 uvA = float2(frac(sin(dot(float2(127.1, 311.7), c0)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c0)) * 43758.5468)) + baseUV;
-    float2 uvB = float2(frac(sin(dot(float2(127.1, 311.7), c1)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c1)) * 43758.5468)) + baseUV;
-    float2 uvC = float2(frac(sin(dot(float2(127.1, 311.7), c2)) * 43758.5468), frac(sin(dot(float2(269.5, 183.3), c2)) * 43758.5468)) + baseUV;
+    float2 c0 = inUpper ? float2(cellX, cellY) : float2(cellX + 1.0, cellY + 1.0);
+    float2 c1 = inUpper ? float2(cellX, cellY + 1.0) : float2(cellX + 1.0, cellY);
+    float2 c2 = inUpper ? float2(cellX + 1.0, cellY) : float2(cellX, cellY + 1.0);
     float3 w = max(float3(inUpper ? triTest : -triTest, inUpper ? fracY : 1.0 - fracY, inUpper ? fracX : 1.0 - fracX), 0.0);
     // Redux: stock blends all three taps. Keeping the two strongest saves a fetch per detail sample, and sharpening
-    // the weights to the 4th power first keeps the dropped tap's share small.
+    // the weights to the 4th power first keeps the dropped tap's share small. The taps are chosen before hashing, so
+    // the dropped cell is never hashed.
     w *= w;
     w *= w;
     if (w.x < w.y && w.x < w.z)
     {
-        uvA = uvC;
+        c0 = c2;
         w.x = w.z;
     }
     else if (w.y < w.z)
     {
-        uvB = uvC;
+        c1 = c2;
         w.y = w.z;
     }
-    r.uv0 = uvA;
-    r.uv1 = uvB;
+    r.uv0 = CBL_CellOffset(c0) + baseUV;
+    r.uv1 = CBL_CellOffset(c1) + baseUV;
     r.weights = w.xy / max(w.x + w.y, 1e-6);
 #else
     r.uv0 = baseUV;
@@ -109,35 +116,51 @@ void CBL_LayerStrengths(float metallicStrength, float glossStrength, out float2 
     glossScaleOffset = glossOver ? float2(1.0, (glossStrength - 15.0) * 0.2) : float2(glossStrength, 0.0);
 }
 
+// The pixel's distance-resample band as near and far scale indexes for CBL_CascadeScale: the last band whose cascadeT
+// is past 0.001 picks the near scale, and the far scale is the band below it until the fade completes.
+void CBL_CascadeBand(float4 cascadeT, out uint nearIndex, out uint farIndex)
+{
+    nearIndex = 0u;
+    farIndex = 0u;
+    [unroll]
+    for (uint j = 0u; j < 4u; j++)
+    {
+        if (cascadeT[j] > 0.001)
+        {
+            nearIndex = j + 1u;
+            farIndex = (cascadeT[j] >= 1.0) ? j + 1u : j;
+        }
+    }
+}
+
+// The layer's distance-resample tier: the highest band index with a scale of its own. That is the maximum rounded up,
+// from 0 to 4: a maximum in (0, 1] is tier 1, in (1, 2] tier 2, and so on.
+uint CBL_CascadeTier(float distResampleMax)
+{
+    return (uint)min(max(ceil(distResampleMax), 0.0), 4.0);
+}
+
+// The cascade UV scale at a band index for the layer's distance-resample tier. Index 0 is unscaled, and index i is
+// _DistanceResampleUVScales[i - 1], clamped to the tier's last scale. A tier of 0 leaves every index unscaled.
+//
+// The scale is picked with a dot product, so the compiler loads all four scales at once into uniform registers.
+// Selected with conditionals, it loaded the scale with a chain of predicated constant loads at every use.
+float CBL_CascadeScale(float distResampleMax, float4 resampleUVScales, uint index)
+{
+    uint i = min(index, CBL_CascadeTier(distResampleMax));
+    float4 pick = float4(i == 1u, i == 2u, i == 3u, i == 4u);
+    return (i == 0u) ? 1.0 : dot(pick, resampleUVScales);
+}
+
 // Cascade UV scales for the layer's distance-resample tier, and the near / far scale for this pixel.
 // resampleUVScales is the terrain material's _DistanceResampleUVScales.
 void CBL_CascadeScales(float distResampleMax, float4 cascadeT, float4 resampleUVScales, out float nearScale,
                        out float farScale)
 {
-    float4 uvScales;
-    if (3.0 < distResampleMax)
-        uvScales = resampleUVScales;
-    else if (2.0 < distResampleMax)
-        uvScales = resampleUVScales.xyzz;
-    else if (1.0 < distResampleMax)
-        uvScales = resampleUVScales.xyyy;
-    else if (0.0 < distResampleMax)
-        uvScales = resampleUVScales.xxxx;
-    else
-        uvScales = 1.0.xxxx;
-
-    nearScale = 1.0;
-    farScale = 1.0;
-    float4 uvScalesExt = float4(1.0, uvScales.xyz);
-    [unroll]
-    for (int j = 0; j < 4; j++)
-    {
-        if (cascadeT[j] > 0.001)
-        {
-            nearScale = uvScales[j];
-            farScale = (cascadeT[j] >= 1.0) ? uvScales[j] : uvScalesExt[j];
-        }
-    }
+    uint nearIndex, farIndex;
+    CBL_CascadeBand(cascadeT, nearIndex, farIndex);
+    nearScale = CBL_CascadeScale(distResampleMax, resampleUVScales, nearIndex);
+    farScale = CBL_CascadeScale(distResampleMax, resampleUVScales, farIndex);
 }
 
 
@@ -266,6 +289,29 @@ float3 CBL_BlendLayerNormal(float3 prevNorm, CBLNormalLayer r, CBLNormalLayer g,
     float blendWeight = saturate(w.x + w.y + w.z + w.w);
     float3 blendNorm = w.x * r.normal + w.y * g.normal + w.z * b.normal + w.w * a.normal;
     // No change when the layers carry no weight or their sum collapses to zero.
+    float3 result = prevNorm;
+    if (0.001 < blendWeight && dot(blendNorm, blendNorm) >= 0.0001)
+    {
+        float3 rotated = CBL_RotateByHalfArcQuat(geomNormalWS, blendNorm, prevNorm);
+        result = lerp(prevNorm, rotated, (1.0 - normalScaleFade) * blendWeight);
+    }
+    return result;
+}
+
+// One layer's term of a family sum for CBL_BlendSummedNormal: the normal times its weight (biome weight times the
+// layer's distance fade) in xyz, and that weight in w.
+float4 CBL_LayerNormalTerm(CBLNormalLayer l, float biomeWeight, float cameraDist)
+{
+    float w = biomeWeight * CBL_RampFade(cameraDist, l.fade);
+    return float4(l.normal * w, w);
+}
+
+// CBL_BlendLayerNormal on a family already summed with CBL_LayerNormalTerm, so the caller holds four floats per
+// family instead of four layers.
+float3 CBL_BlendSummedNormal(float3 prevNorm, float4 familySum, float3 geomNormalWS, float normalScaleFade)
+{
+    float blendWeight = saturate(familySum.w);
+    float3 blendNorm = familySum.xyz;
     float3 result = prevNorm;
     if (0.001 < blendWeight && dot(blendNorm, blendNorm) >= 0.0001)
     {
