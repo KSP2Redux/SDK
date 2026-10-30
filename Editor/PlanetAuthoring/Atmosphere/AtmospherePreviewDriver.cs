@@ -159,7 +159,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
                     _pqs.transform.position * AtmosphereConstants.LENGTH_UNIT_IN_KILOMETERS,
                     sunDirection,
                     0f,
-                    _pqs.data.heightMapInfo.DitheringScale
+                    _pqs.data.heightMapInfo.DitheringScale,
+                    sun != null ? sun.intensity : 1f
                 );
                 _hook.Material = _material;
                 _hook.Technique = _model.Technique;
