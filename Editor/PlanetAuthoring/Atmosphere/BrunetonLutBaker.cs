@@ -367,8 +367,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Atmosphere
             float max = Mathf.Max(min + 0.001f, model.AbsorptionHeightMinMax.y);
             float middle = (min + max) * 0.5f;
             float halfWidth = Mathf.Max(0.001f, (max - min) * 0.5f);
-            BindDensityLayer(compute, "absorption0", middle, 0f, 0f, model.AbsorptionMaxDensity / halfWidth, -min / halfWidth);
-            BindDensityLayer(compute, "absorption1", 0f, 0f, 0f, -model.AbsorptionMaxDensity / halfWidth, max / halfWidth);
+            BindDensityLayer(compute, "absorption0", middle, 0f, 0f, model.AbsorptionMaxDensity / halfWidth, -model.AbsorptionMaxDensity * min / halfWidth);
+            BindDensityLayer(compute, "absorption1", 0f, 0f, 0f, -model.AbsorptionMaxDensity / halfWidth, model.AbsorptionMaxDensity * max / halfWidth);
         }
 
         private static void BindDensityLayer(
