@@ -147,6 +147,11 @@ float4 CelestialBodyScaled_ForwardFragment(CelestialBodyScaledVaryings input) : 
     {
         float2 normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
         float3 direct = KSP2_DirectLighting(input.positionWS, input.positionCS, normalWS, viewDirWS, surface, normalizedScreenSpaceUV);
+        // Menu instances supply their star through a property block. Match the map's sphere horizon without
+        // darkening galaxy IBL or using a craft key that URP may have selected as its main light.
+        [branch] if (_MenuSunDirection.w > 0.5)
+            direct *= smoothstep(0.0, KSP2_MAP_NIGHT_RAMP, dot(normalize(input.normalWS), _MenuSunDirection.xyz));
+
         // The map's only light is the star's map light, so the map table's eclipse takes all of it. The flag is set
         // for the map camera alone.
         [branch] if (_KSP2EclipseMapActive > 0.5)
