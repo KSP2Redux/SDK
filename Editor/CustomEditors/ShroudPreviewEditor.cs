@@ -124,7 +124,9 @@ namespace Ksp2UnityTools.Editor.CustomEditors
         {
             var hostDiameter = Mathf.Max(0.001f, fairing.BaseRadius * 2f);
             var targetDiameter = PartSizeRegistry.Get(targetSizeKey).Diameter;
-            var resolvedDiameter = targetDiameter >= hostDiameter ? targetDiameter : hostDiameter;
+            var resolvedDiameter = targetDiameter >= hostDiameter || fairing.ShrinkToAttachedPart
+                ? targetDiameter
+                : hostDiameter;
 
             if (fairing.MaxAutoFairingTargetRadius > 0 && resolvedDiameter > hostDiameter)
             {
