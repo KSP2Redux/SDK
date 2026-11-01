@@ -433,7 +433,7 @@ Shader "KSP2/Planets/Local"
     }
     // Property dump of the game's KSP2/Environment/CelestialBody/CelestialBody_Local, for authoring
     // materials against its interface. The terrain itself only draws through PQSRenderer, which moves a
-    // material on this shader onto the game's shader (ShaderRefactorProfile). This pass only lights the
+    // material on this shader onto the game's shader. This pass only lights the
     // scaled-space albedo on a plain mesh, for the material preview.
     SubShader
     {
