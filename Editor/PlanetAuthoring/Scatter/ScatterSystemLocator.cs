@@ -79,7 +79,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
                 // Captured before the component exists, because adding it makes Unity call Reset,
                 // which creates a WindZone in the scene. See DiscardResetWindZone.
                 WindZone[] windZonesBefore = UnityEngine.Object.FindObjectsByType<WindZone>(
-                    FindObjectsInactive.Include, FindObjectsSortMode.None);
+                    FindObjectsInactive.Include);
 
                 system = Undo.AddComponent<VegetationSystemPro>(GetOrCreateScatterChild(pqs, label));
                 DiscardResetWindZone(system, windZonesBefore);

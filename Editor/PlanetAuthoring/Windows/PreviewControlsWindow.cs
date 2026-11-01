@@ -839,7 +839,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Windows
         private static Light FindBrightestDirectionalLight()
         {
             Light brightest = null;
-            foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
+            foreach (var l in FindObjectsByType<Light>())
             {
                 if (l.type != LightType.Directional) continue;
                 if (brightest == null || l.intensity > brightest.intensity)
