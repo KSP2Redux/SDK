@@ -307,8 +307,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
                 return Unavailable;
 
             VegetationSystemPro[] systems = UnityEngine.Object.FindObjectsByType<VegetationSystemPro>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
+                FindObjectsInactive.Include);
 
             VegetationSystemPro claimed = null;
             foreach (VegetationSystemPro system in systems)

@@ -114,7 +114,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Scatter
             var found = new List<VegetationPackagePro>();
 
             foreach (VegetationSystemPro system in UnityEngine.Object.FindObjectsByType<VegetationSystemPro>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                         FindObjectsInactive.Include))
             {
                 if (system == null || system.VegetationPackageProList == null)
                     continue;

@@ -8,6 +8,7 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
     Properties
     {
         _Transition ("Transition", Float) = 0
+        [HideInInspector] _SunIntensity ("Incident Sun Intensity", Float) = 1
     }
     SubShader
     {
@@ -30,6 +31,7 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
 
             CBUFFER_START(UnityPerMaterial)
                 float _Transition;
+                float _SunIntensity;
             CBUFFER_END
 
             float3 planet_center;
@@ -134,7 +136,7 @@ Shader "Hidden/KSP/HillaireAtmospherePost"
                     dot(transmittance, 1.0 / 3.0).xxx,
                     transmittance,
                     saturate(_HillaireTransmittanceTint));
-                return float4(sceneColor.rgb * tintedTransmittance + luminance * exposure, sceneColor.a);
+                return float4(sceneColor.rgb * tintedTransmittance + luminance * exposure * _SunIntensity, sceneColor.a);
             }
             ENDHLSL
         }

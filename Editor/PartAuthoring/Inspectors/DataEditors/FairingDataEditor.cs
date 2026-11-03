@@ -288,6 +288,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             AddDataFieldRow(foldout, "FloatingAttachNodeTag", "Covered Node");
             AddDataFieldRow(foldout, "MaxAutoFairingTargetRadius", "Max Target Size");
             AddDataFieldRow(foldout, "MinAutoFairingTargetRadius", "Min Target Size");
+            AddDataFieldRow(foldout, "ShrinkToAttachedPart", "Shrink To Attached Part");
             return foldout;
         }
 
@@ -308,6 +309,7 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Inspectors.DataEditors
             AddDataFieldRow(foldout, "LengthEditDefault", "Length Default");
             AddDataFieldRow(foldout, "MaxAutoFairingTargetRadius", "Max Target Size");
             AddDataFieldRow(foldout, "MinAutoFairingTargetRadius", "Min Target Size");
+            AddDataFieldRow(foldout, "ShrinkToAttachedPart", "Shrink To Attached Part");
             return foldout;
         }
 

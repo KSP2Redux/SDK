@@ -93,7 +93,7 @@ MonoBehaviour:
   m_AtlasTextures:
   - {fileID: -5663991057851274369}
   m_AtlasTextureIndex: 0
-  m_IsMultiAtlasTexturesEnabled: 0
+  m_IsMultiAtlasTexturesEnabled: 1
   m_ClearDynamicDataOnBuild: 1
   m_AtlasWidth: 1024
   m_AtlasHeight: 1024

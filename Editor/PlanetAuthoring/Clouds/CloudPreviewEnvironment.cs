@@ -74,7 +74,8 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 material,
                 model,
                 _pqs.transform.position * AtmosphereConstants.LENGTH_UNIT_IN_KILOMETERS,
-                sun != null ? -sun.transform.forward : Vector3.up
+                sun != null ? -sun.transform.forward : Vector3.up,
+                sun != null ? sun.intensity : 1f
             );
         }
 

@@ -10,6 +10,7 @@ Shader "KSP2/Environment/Atmosphere/HillaireScaled"
         _Transition ("Transition", Float) = 1
         _DitheringScale ("Dithering Scale", Float) = 1
         _Cull ("Cull", Float) = 2
+        [HideInInspector] _SunIntensity ("Incident Sun Intensity", Float) = 1
     }
     SubShader
     {
@@ -37,6 +38,7 @@ Shader "KSP2/Environment/Atmosphere/HillaireScaled"
                 float  _Transition;
                 float  _DitheringScale;
                 float  _Cull;
+                float  _SunIntensity;
                 float  scale_factor;
                 float4 _HillairePlanetCenterWorld;
                 float4 _HillaireSunDirection;
@@ -100,7 +102,7 @@ Shader "KSP2/Environment/Atmosphere/HillaireScaled"
                 float shell = pow(saturate(limb), 1.55);
                 float alpha = saturate(shell * density * _Transition * _HillaireTransmittanceTint * 0.45);
                 float3 color = (baseColor + sunset) * _HillaireExposure.y * 0.04;
-                return half4(color * alpha, alpha);
+                return half4(color * alpha * _SunIntensity, alpha);
             }
             ENDHLSL
         }
