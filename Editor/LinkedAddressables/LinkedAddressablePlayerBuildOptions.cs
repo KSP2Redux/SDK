@@ -13,6 +13,14 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
 
         public static bool CopySourceToPlayer;
 
+        /// <summary>
+        /// An optional StreamingAssets-relative source directory packaged and validated by the host build.
+        /// </summary>
+        /// <remarks>
+        /// When set, the SDK stages only metadata and resolves source bundles from this directory in the player.
+        /// </remarks>
+        public static string PlayerProvidedSourceRelativePath;
+
         internal static bool UseTranslatedSceneBootstrap;
 
         static LinkedAddressablePlayerBuildOptions()
