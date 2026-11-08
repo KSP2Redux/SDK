@@ -130,7 +130,11 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             );
 
             var stagedMetadata = new List<string>();
-            if (manifest.CopySourceToPlayer)
+            // A host build can package the source once at its own player-local path.
+            bool copySource = manifest.CopySourceToPlayer && string.Equals(
+                manifest.CopiedSourceRelativePath, manifest.StagedExternalMetadataRelativePath,
+                StringComparison.OrdinalIgnoreCase);
+            if (copySource)
             {
                 CopyDirectory(
                     manifest.SourceRoot,
@@ -172,7 +176,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                     SearchOption.AllDirectories
                 )
                 .ToArray();
-            if (!manifest.CopySourceToPlayer && externalPayloads.Length > 0)
+            if (!copySource && externalPayloads.Length > 0)
             {
                 throw new BuildFailedException(
                     "The linked Addressables metadata staging directory unexpectedly "
@@ -180,7 +184,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                         + $"{string.Join(", ", externalPayloads)}"
                 );
             }
-            if (manifest.CopySourceToPlayer && externalPayloads.Length == 0)
+            if (copySource && externalPayloads.Length == 0)
             {
                 throw new BuildFailedException(
                     "Copying the external Addressables source was enabled, but the "
@@ -264,7 +268,7 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
                     + (
                         manifest.CopySourceToPlayer
                             ? $"The player-local source is "
-                                + $"'{externalAddressablesDirectory}'. "
+                                + $"'{Path.Combine(streamingAssetsDirectory, manifest.CopiedSourceRelativePath)}'. "
                             : $"External bundles remain at '{manifest.SourceRoot}'. "
                     )
                     + $"Target Addressables at '{targetAddressablesDirectory}' "

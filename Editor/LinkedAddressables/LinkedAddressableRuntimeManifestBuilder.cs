@@ -146,9 +146,12 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
             manifest.CatalogFileName = firstDescriptor?.CatalogFileName ?? "catalog.json";
             manifest.SettingsFileName = firstDescriptor?.SettingsFileName ?? "settings.json";
             manifest.CopySourceToPlayer =
-                LinkedAddressablePlayerBuildOptions.CopySourceToPlayer;
+                LinkedAddressablePlayerBuildOptions.CopySourceToPlayer ||
+                !string.IsNullOrEmpty(LinkedAddressablePlayerBuildOptions.PlayerProvidedSourceRelativePath);
             manifest.CopiedSourceRelativePath =
-                "ReduxSDK/ExternalAddressables";
+                string.IsNullOrEmpty(LinkedAddressablePlayerBuildOptions.PlayerProvidedSourceRelativePath)
+                    ? "ReduxSDK/ExternalAddressables"
+                    : LinkedAddressablePlayerBuildOptions.PlayerProvidedSourceRelativePath;
             manifest.StagedExternalMetadataRelativePath =
                 "ReduxSDK/ExternalAddressables";
             manifest.ContentDirectoryName = "ReduxSDK/LinkedAddressables";
