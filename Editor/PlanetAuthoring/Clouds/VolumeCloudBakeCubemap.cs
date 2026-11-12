@@ -107,6 +107,11 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
         /// </summary>
         public bool FlatNormals;
 
+        /// <summary>
+        /// Storage precision for linear normal maps. Shipped compact exports may use RGBA32.
+        /// </summary>
+        public TextureFormat NormalFormat = TextureFormat.RGBAHalf;
+
         // Set when the hook has recorded a face the hosted bake reads back once the camera render returns.
         private bool _isEditorReadbackPending;
 
@@ -319,7 +324,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             configuration = config;
             cloudsCubemap = new Cubemap(faceWidth, TextureFormat.RGBAHalf, true);
             cloudsBottomCubemap = new Cubemap(faceWidth / 4, TextureFormat.RGBAHalf, true);
-            cloudsNormalCubemap = new Cubemap(FlatNormals ? 1 : faceWidth, TextureFormat.RGBA32, !FlatNormals);
+            cloudsNormalCubemap = new Cubemap(FlatNormals ? 1 : faceWidth,
+                GraphicsFormatUtility.GetGraphicsFormat(NormalFormat, false),
+                FlatNormals ? TextureCreationFlags.None : TextureCreationFlags.MipChain);
             BakeCubemap(firstCumulusData);
         }
 
@@ -389,7 +396,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 
         private void AsyncMipmapFile()
         {
-            AsyncNormalCallBack(ReadNow(normalRenderTarget, faceWidthOri, faceHeightOri, GraphicsFormat.R8G8B8A8_UNorm));
+            AsyncNormalCallBack(ReadNow(normalRenderTarget, faceWidthOri, faceHeightOri, cloudsNormalCubemap.graphicsFormat));
         }
 
         private void AsyncNormalCallBack(AsyncGPUReadbackRequest request)
@@ -401,7 +408,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 return;
             }
 
-            cloudsNormalCubemap.SetPixelData(request.GetData<Color32>(), 0, currentShadowFace++);
+            cloudsNormalCubemap.SetPixelData(request.GetData<byte>(), 0, currentShadowFace++);
             cloudsNormalCubemap.Apply();
         }
 
