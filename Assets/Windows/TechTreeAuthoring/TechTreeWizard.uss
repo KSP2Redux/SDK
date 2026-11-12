@@ -1,0 +1,28 @@
+/* Tech Tree Wizard: one page of sections, as the Create Celestial Body wizard is. */
+
+.tech-tree-wizard {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.tech-tree-wizard__features {
+    white-space: normal;
+    font-size: 11px;
+    color: rgb(170, 180, 195);
+    margin: 2px 0 4px 3px;
+}
+
+/* The planet wizard's status colours */
+.tech-tree-wizard__status {
+    white-space: normal;
+    margin: 8px 0 8px 3px;
+    color: rgb(102, 204, 102);
+}
+
+.tech-tree-wizard__status--error {
+    color: rgb(217, 115, 77);
+}
+
+.tech-tree-wizard__buttons {
+    justify-content: flex-end;
+}

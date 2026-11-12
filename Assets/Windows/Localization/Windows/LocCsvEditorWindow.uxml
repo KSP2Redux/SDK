@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML xmlns="UnityEngine.UIElements">
+    <VisualElement name="root" class="loc-editor-root">
+        <VisualElement name="toolbar" class="loc-editor-toolbar">
+            <Label name="filePath" class="loc-editor-toolbar-path" text="(no file)" />
+            <Button name="columns" text="Columns" class="loc-editor-toolbar-btn" />
+            <Button name="validate" text="Validate" class="loc-editor-toolbar-btn" />
+            <Button name="save" text="Save" class="loc-editor-toolbar-btn" />
+        </VisualElement>
+        <VisualElement name="banner" class="loc-editor-banner-host" />
+        <VisualElement name="tableHost" class="loc-editor-table-host" />
+        <Label name="status" class="loc-editor-status" text="" />
+    </VisualElement>
+</UXML>

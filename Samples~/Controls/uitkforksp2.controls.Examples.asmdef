@@ -1,0 +1,20 @@
+{
+    "name": "uitkforksp2.controls.Examples",
+    "rootNamespace": "UitkForKsp2",
+    "references": [
+        "UitkForKsp2",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "UitkForKsp2.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

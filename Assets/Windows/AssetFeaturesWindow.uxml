@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="AssetFeaturesWindow.uss" />
+    <ui:VisualElement name="root" class="sdk-root asset-features">
+        <uie:Toolbar class="asset-features__toolbar">
+            <ui:VisualElement name="mod-slot" class="asset-features__mod-slot" />
+            <ui:VisualElement name="kind-slot" class="asset-features__kind-slot" />
+            <ui:VisualElement class="asset-features__spacer" />
+            <uie:ToolbarSearchField name="search" class="asset-features__search" />
+        </uie:Toolbar>
+        <ui:MultiColumnListView name="assets" selection-type="Multiple" fixed-item-height="22" show-alternating-row-backgrounds="ContentOnly" class="asset-features__list">
+            <ui:Columns>
+                <ui:Column name="asset" title="Asset" width="260" />
+                <ui:Column name="kind" title="Kind" width="140" />
+                <ui:Column name="features" title="Features" stretchable="true" />
+                <ui:Column name="excluded" title="Excluded" width="230" />
+            </ui:Columns>
+        </ui:MultiColumnListView>
+        <ui:VisualElement name="selection-bar" class="asset-features__bar">
+            <ui:Label name="selection-count" class="asset-features__count" />
+            <ui:VisualElement name="feature-slot" class="asset-features__feature-slot" />
+            <ui:Button name="require" text="Require" class="asset-features__button" />
+            <ui:Button name="exclude" text="Exclude" class="asset-features__button" />
+            <ui:Button name="remove" text="Remove" class="asset-features__button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,3787 @@
+fileFormatVersion: 2
+guid: a202c583a8bdbed41a39ea11d68dc9f8
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: Input-Keyboard_102
+  - first:
+      213: 21300002
+    second: Input-Keyboard_26
+  - first:
+      213: 21300004
+    second: Input-Keyboard_32
+  - first:
+      213: 21300006
+    second: Input-Keyboard_103
+  - first:
+      213: 21300008
+    second: Input-Keyboard_41
+  - first:
+      213: 21300010
+    second: Input-Keyboard_31
+  - first:
+      213: 21300012
+    second: Input-Keyboard_27
+  - first:
+      213: 21300014
+    second: Input-Keyboard_1
+  - first:
+      213: 21300016
+    second: Input-Keyboard_65
+  - first:
+      213: 21300018
+    second: Input-Keyboard_89
+  - first:
+      213: 21300020
+    second: Input-Keyboard_77
+  - first:
+      213: 21300022
+    second: Input-Keyboard_86
+  - first:
+      213: 21300024
+    second: Input-Keyboard_84
+  - first:
+      213: 21300026
+    second: Input-Keyboard_88
+  - first:
+      213: 21300028
+    second: Input-Keyboard_75
+  - first:
+      213: 21300030
+    second: Input-Keyboard_0
+  - first:
+      213: 21300032
+    second: Input-Keyboard_29
+  - first:
+      213: 21300034
+    second: Input-Keyboard_64
+  - first:
+      213: 21300036
+    second: Input-Keyboard_61
+  - first:
+      213: 21300038
+    second: Input-Keyboard_81
+  - first:
+      213: 21300040
+    second: Input-Keyboard_28
+  - first:
+      213: 21300042
+    second: Input-Keyboard_24
+  - first:
+      213: 21300044
+    second: Input-Keyboard_14
+  - first:
+      213: 21300046
+    second: Input-Keyboard_101
+  - first:
+      213: 21300048
+    second: Input-Keyboard_52
+  - first:
+      213: 21300050
+    second: Input-Keyboard_15
+  - first:
+      213: 21300052
+    second: Input-Keyboard_46
+  - first:
+      213: 21300054
+    second: Input-Keyboard_2
+  - first:
+      213: 21300056
+    second: Input-Keyboard_36
+  - first:
+      213: 21300058
+    second: Input-Keyboard_97
+  - first:
+      213: 21300060
+    second: Input-Keyboard_17
+  - first:
+      213: 21300062
+    second: Input-Keyboard_47
+  - first:
+      213: 21300064
+    second: Input-Keyboard_21
+  - first:
+      213: 21300066
+    second: Input-Keyboard_98
+  - first:
+      213: 21300068
+    second: Input-Keyboard_48
+  - first:
+      213: 21300070
+    second: Input-Keyboard_55
+  - first:
+      213: 21300072
+    second: Input-Keyboard_53
+  - first:
+      213: 21300074
+    second: Input-Keyboard_105
+  - first:
+      213: 21300076
+    second: Input-Keyboard_57
+  - first:
+      213: 21300078
+    second: Input-Keyboard_95
+  - first:
+      213: 21300080
+    second: Input-Keyboard_8
+  - first:
+      213: 21300082
+    second: Input-Keyboard_9
+  - first:
+      213: 21300084
+    second: Input-Keyboard_43
+  - first:
+      213: 21300086
+    second: Input-Keyboard_49
+  - first:
+      213: 21300088
+    second: Input-Keyboard_83
+  - first:
+      213: 21300090
+    second: Input-Keyboard_59
+  - first:
+      213: 21300092
+    second: Input-Keyboard_13
+  - first:
+      213: 21300094
+    second: Input-Keyboard_96
+  - first:
+      213: 21300096
+    second: Input-Keyboard_25
+  - first:
+      213: 21300098
+    second: Input-Keyboard_58
+  - first:
+      213: 21300100
+    second: Input-Keyboard_40
+  - first:
+      213: 21300102
+    second: Input-Keyboard_20
+  - first:
+      213: 21300104
+    second: Input-Keyboard_79
+  - first:
+      213: 21300106
+    second: Input-Keyboard_54
+  - first:
+      213: 21300108
+    second: Input-Keyboard_85
+  - first:
+      213: 21300110
+    second: Input-Keyboard_50
+  - first:
+      213: 21300112
+    second: Input-Keyboard_42
+  - first:
+      213: 21300114
+    second: Input-Keyboard_87
+  - first:
+      213: 21300116
+    second: Input-Keyboard_7
+  - first:
+      213: 21300118
+    second: Input-Keyboard_44
+  - first:
+      213: 21300120
+    second: Input-Keyboard_5
+  - first:
+      213: 21300122
+    second: Input-Keyboard_56
+  - first:
+      213: 21300124
+    second: Input-Keyboard_100
+  - first:
+      213: 21300126
+    second: Input-Keyboard_92
+  - first:
+      213: 21300128
+    second: Input-Keyboard_35
+  - first:
+      213: 21300130
+    second: Input-Keyboard_73
+  - first:
+      213: 21300132
+    second: Input-Keyboard_62
+  - first:
+      213: 21300134
+    second: Input-Keyboard_99
+  - first:
+      213: 21300136
+    second: Input-Keyboard_106
+  - first:
+      213: 21300138
+    second: Input-Keyboard_70
+  - first:
+      213: 21300140
+    second: Input-Keyboard_11
+  - first:
+      213: 21300142
+    second: Input-Keyboard_71
+  - first:
+      213: 21300144
+    second: Input-Keyboard_67
+  - first:
+      213: 21300146
+    second: Input-Keyboard_93
+  - first:
+      213: 21300148
+    second: Input-Keyboard_69
+  - first:
+      213: 21300150
+    second: Input-Keyboard_51
+  - first:
+      213: 21300152
+    second: Input-Keyboard_72
+  - first:
+      213: 21300154
+    second: Input-Keyboard_22
+  - first:
+      213: 21300156
+    second: Input-Keyboard_80
+  - first:
+      213: 21300158
+    second: Input-Keyboard_34
+  - first:
+      213: 21300160
+    second: Input-Keyboard_6
+  - first:
+      213: 21300162
+    second: Input-Keyboard_66
+  - first:
+      213: 21300164
+    second: Input-Keyboard_38
+  - first:
+      213: 21300166
+    second: Input-Keyboard_91
+  - first:
+      213: 21300168
+    second: Input-Keyboard_60
+  - first:
+      213: 21300170
+    second: Input-Keyboard_30
+  - first:
+      213: 21300172
+    second: Input-Keyboard_10
+  - first:
+      213: 21300174
+    second: Input-Keyboard_18
+  - first:
+      213: 21300176
+    second: Input-Keyboard_33
+  - first:
+      213: 21300178
+    second: Input-Keyboard_16
+  - first:
+      213: 21300180
+    second: Input-Keyboard_12
+  - first:
+      213: 21300182
+    second: Input-Keyboard_68
+  - first:
+      213: 21300184
+    second: Input-Keyboard_74
+  - first:
+      213: 21300186
+    second: Input-Keyboard_3
+  - first:
+      213: 21300188
+    second: Input-Keyboard_94
+  - first:
+      213: 21300190
+    second: Input-Keyboard_76
+  - first:
+      213: 21300192
+    second: Input-Keyboard_4
+  - first:
+      213: 21300194
+    second: Input-Keyboard_78
+  - first:
+      213: 21300196
+    second: Input-Keyboard_19
+  - first:
+      213: 21300198
+    second: Input-Keyboard_23
+  - first:
+      213: 21300200
+    second: Input-Keyboard_90
+  - first:
+      213: 21300202
+    second: Input-Keyboard_63
+  - first:
+      213: 21300204
+    second: Input-Keyboard_39
+  - first:
+      213: 21300206
+    second: Input-Keyboard_104
+  - first:
+      213: 21300208
+    second: Input-Keyboard_37
+  - first:
+      213: 21300210
+    second: Input-Keyboard_82
+  - first:
+      213: 21300212
+    second: Input-Keyboard_45
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 12
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 0
+  flipbookColumns: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Input-Keyboard_102
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a89f3974673945d687b96c2fca3a3760
+      internalID: 21300000
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_26
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c74d5d8f0f8b49d997c20e3e7f25f0da
+      internalID: 21300002
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_32
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f2509056af2a410a899d7114c3233006
+      internalID: 21300004
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_103
+      rect:
+        serializedVersion: 2
+        x: 197.02675
+        y: 0
+        width: 53.946495
+        height: 64
+      alignment: 9
+      pivot: {x: 0.50000006, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -20.999996, y: -32}
+        - {x: -26.999998, y: -21}
+        - {x: -26.999998, y: 23}
+        - {x: -20.999996, y: 32}
+        - {x: 26.000004, y: 32}
+        - {x: 27.000006, y: 29}
+        - {x: 27.000006, y: -31}
+        - {x: 25.000004, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2667de3e500946eb8d25949c0bdaf554
+      internalID: 21300006
+      vertices:
+      - {x: 52.973248, y: 64}
+      - {x: 53.97325, y: 1}
+      - {x: 53.97325, y: 61}
+      - {x: 51.973248, y: 0}
+      - {x: 5.9732475, y: 64}
+      - {x: 5.9732475, y: 0}
+      - {x: -0.02675438, y: 55}
+      - {x: -0.02675438, y: 11}
+      indices: 070000000600000005000000040000000500000006000000030000000500000004000000000000000300000004000000010000000300000000000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_41
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e68b7d81f144cb581b4243cf579331f
+      internalID: 21300008
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_31
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4807cbe6616147dab5017463de74c281
+      internalID: 21300010
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_27
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 135bfdab4e5c424cb762ff96389d9141
+      internalID: 21300012
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_1
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3a27be6cb2a04b6b9dccf34ca2e58db3
+      internalID: 21300014
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_65
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85fecc255e304d4c8705ff166bc37b85
+      internalID: 21300016
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_89
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f76f9189c9cb41c692a48170446abb33
+      internalID: 21300018
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_77
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10caa0aa9e80488487cf53bb60ed1ed9
+      internalID: 21300020
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_86
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0fa20222a8674fbaaf0198460e09da21
+      internalID: 21300022
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_84
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e0435d5cf5a41399906ccd4dba35984
+      internalID: 21300024
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_88
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bcab7a28a21d4b9b9809113cb946c8d8
+      internalID: 21300026
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_75
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f155d456966a4a808c966e44aea49ec1
+      internalID: 21300028
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea064d561af14ab097fa70cc19dd69a2
+      internalID: 21300030
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_29
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: feb53b1dae0643b19304bd69ba7ba02a
+      internalID: 21300032
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_64
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c5cacf10021c4cebb4980614fd0b282e
+      internalID: 21300034
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_61
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e21ab8bebf9f42c9aa6892a1c6214b6e
+      internalID: 21300036
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_81
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f6de5f5ed574318b206c783b3cb085e
+      internalID: 21300038
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_28
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 082f0f950c4b4a8c88a3a505ae7d2ead
+      internalID: 21300040
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_24
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 12699e0c91a941209eb6a6ed5290aeda
+      internalID: 21300042
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_14
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cd412ac08c57460897be78da2f0d783e
+      internalID: 21300044
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_101
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 532767a75ccb4f00b19d0ad27a1564e2
+      internalID: 21300046
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_52
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 86cd4540de44406cac7ab5338fe09004
+      internalID: 21300048
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_15
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 524b43c2f7704ec294b305efb4cbf56d
+      internalID: 21300050
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_46
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b6151ada45404b12a1c6efd326152bec
+      internalID: 21300052
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_2
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d0adabe7f44426d8cc86f006bba6b7e
+      internalID: 21300054
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_36
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 74e1f0777d574bcfb51a58516a128216
+      internalID: 21300056
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_97
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ce185a65df0475d8e9c1b23d43e04c0
+      internalID: 21300058
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_17
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1be47e064c34b2e8455ce1fae62028b
+      internalID: 21300060
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_47
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7cffb0c370cc49f2890b8e06ce9fd923
+      internalID: 21300062
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_21
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87bccf6f40104cadb849412efffd62ca
+      internalID: 21300064
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_98
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1a6d304d85a348ba8aff485b963e350e
+      internalID: 21300066
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_48
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b8d0f38971f444acbb7a09ff4303025b
+      internalID: 21300068
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_55
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8712bcd52ab24fecb8e0b458d4ead077
+      internalID: 21300070
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_53
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb9d28c6bc7c486aa94456adf2a178a6
+      internalID: 21300072
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_105
+      rect:
+        serializedVersion: 2
+        x: 325.02676
+        y: 0
+        width: 53.946495
+        height: 64
+      alignment: 9
+      pivot: {x: 0.4999998, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -21.000011, y: -32}
+        - {x: -27.000013, y: -21}
+        - {x: -27.000013, y: 23}
+        - {x: -21.000011, y: 32}
+        - {x: 25.999989, y: 32}
+        - {x: 26.99999, y: 29}
+        - {x: 26.99999, y: -31}
+        - {x: 24.999989, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5faf4ac8b1c448bb1db825b242e3738
+      internalID: 21300074
+      vertices:
+      - {x: 52.973248, y: 64}
+      - {x: 53.97325, y: 1}
+      - {x: 53.97325, y: 61}
+      - {x: 51.973248, y: 0}
+      - {x: 5.9732475, y: 64}
+      - {x: 5.9732475, y: 0}
+      - {x: -0.02675438, y: 55}
+      - {x: -0.02675438, y: 11}
+      indices: 070000000600000005000000040000000500000006000000030000000500000004000000000000000300000004000000010000000300000000000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_57
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34f709b420f64f0ea892e43243f8c440
+      internalID: 21300076
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_95
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1fec1d289ca34428ab15d48ff1110ff2
+      internalID: 21300078
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_8
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f1ea7012a72e48b79fbaab8355f1a731
+      internalID: 21300080
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_9
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1dd134bc185745fb975c0ba43e659bb8
+      internalID: 21300082
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_43
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 257dcf5d5340436088deadcba96458eb
+      internalID: 21300084
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_49
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7d0a62350c7c4af4a0ea1284816aa634
+      internalID: 21300086
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_83
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d76880e2399421ba15be0d235523cc5
+      internalID: 21300088
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_59
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f2d27f365e434a3e95e438d2b19a6af8
+      internalID: 21300090
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_13
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 837974e265e241b59542f2422037604f
+      internalID: 21300092
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_96
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 63c6d24bb66745f5adebc86a4d1fc4b0
+      internalID: 21300094
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_25
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e6aee533f4740f7ae0fab357af6e848
+      internalID: 21300096
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_58
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a26782e7cb3470780e3ec95e59aae5b
+      internalID: 21300098
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_40
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 01150f9e4610411dad7d691ae4d8a947
+      internalID: 21300100
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_20
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09d0f850bc984b86aaffca94f8137e9c
+      internalID: 21300102
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_79
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a489c95230154de7a18315ebda3b19dc
+      internalID: 21300104
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_54
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad5b2779e6c5441caf84d2c7a9fc1bd3
+      internalID: 21300106
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_85
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f51568b19f3d4df796872394e0fc1feb
+      internalID: 21300108
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_50
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dab8cba3ac394c84819cc8d965614d2a
+      internalID: 21300110
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_42
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 795e19a5c8f54a13b0e8ec9651aa5eae
+      internalID: 21300112
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_87
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69a0633c3cb34c719c31b62fab054351
+      internalID: 21300114
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_7
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1e807e172634663a722d517b533196c
+      internalID: 21300116
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_44
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3585b2aab6fa42cb8475096ead6d0f98
+      internalID: 21300118
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_5
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 681273d2df2d4e3d9f04c8ed1799e811
+      internalID: 21300120
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_56
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a31442c761e04a94855a989cf56754ed
+      internalID: 21300122
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_100
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52d2efd00570493b877edbf55ca60428
+      internalID: 21300124
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_92
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23f49aa91fe64fceb6fcb458393fee56
+      internalID: 21300126
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_35
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5fce58ba083c489e81527a7e46072d2a
+      internalID: 21300128
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_73
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 46d3f1fee6914503ab81a22298a7c1f1
+      internalID: 21300130
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_62
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f3ea3cc13f84289b35ddaada1befee0
+      internalID: 21300132
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_99
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4757f34d45034b29afff239c4dffd941
+      internalID: 21300134
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_106
+      rect:
+        serializedVersion: 2
+        x: 389.02676
+        y: 0
+        width: 53.946495
+        height: 64
+      alignment: 9
+      pivot: {x: 0.4999998, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -21.000011, y: -32}
+        - {x: -27.000013, y: -21}
+        - {x: -27.000013, y: 23}
+        - {x: -21.000011, y: 32}
+        - {x: 25.999989, y: 32}
+        - {x: 26.99999, y: 29}
+        - {x: 26.99999, y: -31}
+        - {x: 24.999989, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: adde8c3bc78845ac8476036863174330
+      internalID: 21300136
+      vertices:
+      - {x: 52.973248, y: 64}
+      - {x: 53.97325, y: 1}
+      - {x: 53.97325, y: 61}
+      - {x: 51.973248, y: 0}
+      - {x: 5.9732475, y: 64}
+      - {x: 5.9732475, y: 0}
+      - {x: -0.02675438, y: 55}
+      - {x: -0.02675438, y: 11}
+      indices: 070000000600000005000000040000000500000006000000030000000500000004000000000000000300000004000000010000000300000000000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_70
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 097ee38ff21146ae8a12b6bc1386a224
+      internalID: 21300138
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_11
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdd779382909419f92e975380d3a6911
+      internalID: 21300140
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_71
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7372c8b9a9764822bc9cfa0475adc01a
+      internalID: 21300142
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_67
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 33ba36c43fe2404abbb05563d3834700
+      internalID: 21300144
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_93
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 869c268d7b554f7e8f3896794b475c33
+      internalID: 21300146
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_69
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 318be25d4e93430c88dea31e03001091
+      internalID: 21300148
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_51
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 320
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1cc02a70c12b452cb77badd5706c95c9
+      internalID: 21300150
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_72
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4e825dec59a41238501c625a43e8799
+      internalID: 21300152
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_22
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3d53c1a1328042d482d61d9023637d22
+      internalID: 21300154
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_80
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab8b983c4e4741d480cc75d183976106
+      internalID: 21300156
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_34
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49841b4f2a9e4455b1b85889768be299
+      internalID: 21300158
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_6
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4abe45d935c64af489142698b7bb4ddd
+      internalID: 21300160
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_66
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a9291ee849424085997bbc73557212a0
+      internalID: 21300162
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_38
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7138c9f6a42d4c5bb8761d40b0e7de43
+      internalID: 21300164
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_91
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d2420654d7c64ed8b50006464b2558c2
+      internalID: 21300166
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_60
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fed8d394833e428282aac9ebe7cec04f
+      internalID: 21300168
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_30
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 821dc257dc5645ff9b98d128731f2714
+      internalID: 21300170
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e267f82254344029910d92689c35eff9
+      internalID: 21300172
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_18
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d6b9f774564a4539b0362f1b79ce2c4f
+      internalID: 21300174
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_33
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 087e2a3deb6f457d85dc1d15f0d6d84e
+      internalID: 21300176
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_16
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6348a313656740448ec786fac3829a52
+      internalID: 21300178
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_12
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3bd5dbf2cee5432e872a98e4720bd3ed
+      internalID: 21300180
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_68
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f360380ffdb46f9bd9d8b84f0fe53f3
+      internalID: 21300182
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_74
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d0998cba112f41408351435dbc2e9416
+      internalID: 21300184
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_3
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fb1ac6d7dfa540839b167fc570f726c7
+      internalID: 21300186
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_94
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5d8432d1d1e402cbbba481bc86f0be5
+      internalID: 21300188
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_76
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7e5ffb3501c454ba8a43a45faa4a684
+      internalID: 21300190
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_4
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 640
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e830f58525734fe4b175ec18a3449a4a
+      internalID: 21300192
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_78
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 192
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 592fd25b525d4b2cbb3a98693790a90f
+      internalID: 21300194
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_19
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 576
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a8e25a18acc47d983e2354cc275a7c8
+      internalID: 21300196
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_23
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 512
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d3ca5015f084a57a44c8e3a3a3d6d97
+      internalID: 21300198
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_90
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e0d805a66a54057943c7e3c8bcfff09
+      internalID: 21300200
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_63
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 256
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 98dac5e5db9544f783c8b29391016201
+      internalID: 21300202
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_39
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a5a0ca3b59446649606a7cfcb9edd64
+      internalID: 21300204
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_104
+      rect:
+        serializedVersion: 2
+        x: 261.02676
+        y: 0
+        width: 53.946495
+        height: 64
+      alignment: 9
+      pivot: {x: 0.4999998, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -21.000011, y: -32}
+        - {x: -27.000013, y: -21}
+        - {x: -27.000013, y: 23}
+        - {x: -21.000011, y: 32}
+        - {x: 25.999989, y: 32}
+        - {x: 26.99999, y: 29}
+        - {x: 26.99999, y: -31}
+        - {x: 24.999989, y: -32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f669caec5a76456f8dfade229b0eee0d
+      internalID: 21300206
+      vertices:
+      - {x: 52.973248, y: 64}
+      - {x: 53.97325, y: 1}
+      - {x: 53.97325, y: 61}
+      - {x: 51.973248, y: 0}
+      - {x: 5.9732475, y: 64}
+      - {x: 5.9732475, y: 0}
+      - {x: -0.02675438, y: 55}
+      - {x: -0.02675438, y: 11}
+      indices: 070000000600000005000000040000000500000006000000030000000500000004000000000000000300000004000000010000000300000000000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_37
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 448
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6378575314444fae82e7e5cee3307d98
+      internalID: 21300208
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_82
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b19394640e6d45fd9361d6cff1c6de04
+      internalID: 21300210
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Input-Keyboard_45
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 384
+        width: 64
+        height: 64
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: 32, y: -32}
+        - {x: -32, y: -32}
+        - {x: -32, y: 32}
+        - {x: 32, y: 32}
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8caa29bdcdee4cdd96aa02690bedbcf2
+      internalID: 21300212
+      vertices:
+      - {x: 0, y: 64}
+      - {x: 64, y: 0}
+      - {x: 64, y: 64}
+      - {x: 0, y: 0}
+      indices: 030000000000000001000000020000000100000000000000
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Input-Keyboard_0: 21300030
+      Input-Keyboard_1: 21300014
+      Input-Keyboard_10: 21300172
+      Input-Keyboard_100: 21300124
+      Input-Keyboard_101: 21300046
+      Input-Keyboard_102: 21300000
+      Input-Keyboard_103: 21300006
+      Input-Keyboard_104: 21300206
+      Input-Keyboard_105: 21300074
+      Input-Keyboard_106: 21300136
+      Input-Keyboard_11: 21300140
+      Input-Keyboard_12: 21300180
+      Input-Keyboard_13: 21300092
+      Input-Keyboard_14: 21300044
+      Input-Keyboard_15: 21300050
+      Input-Keyboard_16: 21300178
+      Input-Keyboard_17: 21300060
+      Input-Keyboard_18: 21300174
+      Input-Keyboard_19: 21300196
+      Input-Keyboard_2: 21300054
+      Input-Keyboard_20: 21300102
+      Input-Keyboard_21: 21300064
+      Input-Keyboard_22: 21300154
+      Input-Keyboard_23: 21300198
+      Input-Keyboard_24: 21300042
+      Input-Keyboard_25: 21300096
+      Input-Keyboard_26: 21300002
+      Input-Keyboard_27: 21300012
+      Input-Keyboard_28: 21300040
+      Input-Keyboard_29: 21300032
+      Input-Keyboard_3: 21300186
+      Input-Keyboard_30: 21300170
+      Input-Keyboard_31: 21300010
+      Input-Keyboard_32: 21300004
+      Input-Keyboard_33: 21300176
+      Input-Keyboard_34: 21300158
+      Input-Keyboard_35: 21300128
+      Input-Keyboard_36: 21300056
+      Input-Keyboard_37: 21300208
+      Input-Keyboard_38: 21300164
+      Input-Keyboard_39: 21300204
+      Input-Keyboard_4: 21300192
+      Input-Keyboard_40: 21300100
+      Input-Keyboard_41: 21300008
+      Input-Keyboard_42: 21300112
+      Input-Keyboard_43: 21300084
+      Input-Keyboard_44: 21300118
+      Input-Keyboard_45: 21300212
+      Input-Keyboard_46: 21300052
+      Input-Keyboard_47: 21300062
+      Input-Keyboard_48: 21300068
+      Input-Keyboard_49: 21300086
+      Input-Keyboard_5: 21300120
+      Input-Keyboard_50: 21300110
+      Input-Keyboard_51: 21300150
+      Input-Keyboard_52: 21300048
+      Input-Keyboard_53: 21300072
+      Input-Keyboard_54: 21300106
+      Input-Keyboard_55: 21300070
+      Input-Keyboard_56: 21300122
+      Input-Keyboard_57: 21300076
+      Input-Keyboard_58: 21300098
+      Input-Keyboard_59: 21300090
+      Input-Keyboard_6: 21300160
+      Input-Keyboard_60: 21300168
+      Input-Keyboard_61: 21300036
+      Input-Keyboard_62: 21300132
+      Input-Keyboard_63: 21300202
+      Input-Keyboard_64: 21300034
+      Input-Keyboard_65: 21300016
+      Input-Keyboard_66: 21300162
+      Input-Keyboard_67: 21300144
+      Input-Keyboard_68: 21300182
+      Input-Keyboard_69: 21300148
+      Input-Keyboard_7: 21300116
+      Input-Keyboard_70: 21300138
+      Input-Keyboard_71: 21300142
+      Input-Keyboard_72: 21300152
+      Input-Keyboard_73: 21300130
+      Input-Keyboard_74: 21300184
+      Input-Keyboard_75: 21300028
+      Input-Keyboard_76: 21300190
+      Input-Keyboard_77: 21300020
+      Input-Keyboard_78: 21300194
+      Input-Keyboard_79: 21300104
+      Input-Keyboard_8: 21300080
+      Input-Keyboard_80: 21300156
+      Input-Keyboard_81: 21300038
+      Input-Keyboard_82: 21300210
+      Input-Keyboard_83: 21300088
+      Input-Keyboard_84: 21300024
+      Input-Keyboard_85: 21300108
+      Input-Keyboard_86: 21300022
+      Input-Keyboard_87: 21300114
+      Input-Keyboard_88: 21300026
+      Input-Keyboard_89: 21300018
+      Input-Keyboard_9: 21300082
+      Input-Keyboard_90: 21300200
+      Input-Keyboard_91: 21300166
+      Input-Keyboard_92: 21300126
+      Input-Keyboard_93: 21300146
+      Input-Keyboard_94: 21300188
+      Input-Keyboard_95: 21300078
+      Input-Keyboard_96: 21300094
+      Input-Keyboard_97: 21300058
+      Input-Keyboard_98: 21300066
+      Input-Keyboard_99: 21300134
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

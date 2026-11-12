@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement>
+
+        <engine:VisualElement name="value-fields">
+            <editor:PropertyField binding-path="DecalID" label="Decal ID" />
+            <editor:PropertyField binding-path="HeightScale" label="Height Scale" />
+            <editor:PropertyField binding-path="HeightBlendMode" label="Height Blend Mode" />
+            <editor:PropertyField binding-path="HeightOffset" label="Height Offset" />
+            <editor:PropertyField binding-path="FadeShape" label="Fade Shape" />
+            <editor:PropertyField binding-path="FadeStrength" label="Fade Strength" />
+            <editor:PropertyField binding-path="AlbedoOpacity" label="Albedo Opacity" />
+            <editor:PropertyField binding-path="NormalOpacity" label="Normal Opacity" />
+            <editor:PropertyField binding-path="GradientOpacity" label="Gradient Opacity" />
+            <editor:PropertyField binding-path="Tint" label="Tint" />
+            <editor:PropertyField binding-path="NormalBlend" label="Normal Blend" />
+            <editor:PropertyField binding-path="SortOrder" label="Sort Order" />
+            <editor:PropertyField binding-path="UseAlphaMask" label="Alpha Mask" />
+            <editor:PropertyField binding-path="UseDecalTexturing" label="Decal Textures" />
+            <editor:PropertyField binding-path="UseTextureAlphaMask" label="Mask Texture" />
+            <editor:PropertyField binding-path="UseTextureHeightmapFade" label="Heightmap Fade" />
+            <editor:PropertyField binding-path="MaterialScaleFactor" label="Scale Factor" />
+        </engine:VisualElement>
+
+        <engine:Label text="Per-decal Textures (editor-only)" style="margin-top: 6px; margin-bottom: 2px; -unity-font-style: bold;" />
+
+        <engine:VisualElement name="texture-fields">
+            <editor:PropertyField binding-path="Diffuse" label="Diffuse" />
+            <editor:PropertyField binding-path="Normal" label="Normal" />
+            <editor:PropertyField binding-path="AlphaMaskTexture" label="Alpha Mask" />
+            <editor:PropertyField binding-path="Peak" label="Peak" />
+            <editor:PropertyField binding-path="Slope" label="Slope" />
+        </engine:VisualElement>
+
+    </engine:VisualElement>
+
+</engine:UXML>

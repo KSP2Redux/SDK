@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root tech-tree-wizard">
+
+        <engine:Foldout text="Make" value="true" class="sdk-section">
+            <engine:VisualElement class="sdk-tab-bar">
+                <engine:Button name="tab-patch" text="Tech tree patch" class="sdk-tab" />
+                <engine:Button name="tab-tree" text="Tech tree" class="sdk-tab" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+        <engine:Foldout text="From" value="true" class="sdk-section">
+            <engine:DropdownField name="source-field" label="Source" class="unity-base-field__aligned" />
+            <editor:ObjectField name="asset-field" label="Tree or folder" class="unity-base-field__aligned" />
+            <engine:DropdownField name="set-field" label="Cache set" class="unity-base-field__aligned" />
+            <engine:Label name="set-features" class="tech-tree-wizard__features" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Create" value="true" class="sdk-section">
+            <engine:TextField name="name-field" label="Name" class="unity-base-field__aligned" />
+            <engine:Label name="status-label" class="tech-tree-wizard__status" />
+            <engine:VisualElement class="sdk-button-row tech-tree-wizard__buttons">
+                <engine:Button name="cancel-button" text="Cancel" />
+                <engine:Button name="create-button" text="Create" />
+            </engine:VisualElement>
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>

@@ -1,0 +1,151 @@
+.reference-parts-root {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.reference-parts-bucket-override {
+    margin-top: 6px;
+}
+
+.reference-parts-bucket-override > .autocomplete-field {
+    margin-bottom: 2px;
+}
+
+.reference-parts-buckets-container {
+    margin-top: 8px;
+}
+
+.reference-parts-bucket-block {
+    margin-bottom: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    background-color: rgba(50, 60, 80, 0.18);
+}
+
+.reference-parts-subsection-label {
+    -unity-font-style: bold;
+    color: rgb(170, 180, 200);
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.reference-parts-bucket-label {
+    -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.reference-parts-muted {
+    color: rgb(150, 150, 150);
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.reference-parts-range-row {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+.reference-parts-range-row:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.reference-parts-range-name {
+    min-width: 130px;
+    -unity-font-style: bold;
+}
+
+.reference-parts-range-text {
+    flex-grow: 1;
+    color: rgb(200, 200, 200);
+}
+
+.reference-parts-range-active {
+    color: rgb(110, 200, 110);
+    -unity-font-style: bold;
+    margin-left: 8px;
+}
+
+.reference-parts-range-active--out {
+    color: rgb(220, 165, 80);
+}
+
+.reference-parts-part-foldout {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.reference-parts-module-header {
+    -unity-font-style: bold;
+    color: rgb(150, 170, 200);
+    font-size: 12px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    padding-left: 4px;
+}
+
+.reference-parts-module-group {
+    padding-left: 14px;
+}
+
+.reference-parts-subkey-header {
+    -unity-font-style: bold-and-italic;
+    color: rgb(150, 170, 200);
+    font-size: 12px;
+    margin-top: 3px;
+    margin-bottom: 1px;
+    padding-left: 4px;
+}
+
+.reference-parts-subkey-group {
+    padding-left: 14px;
+}
+
+.reference-parts-field-row {
+    flex-direction: row;
+    align-items: center;
+    padding-left: 4px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.reference-parts-field-name {
+    min-width: 130px;
+    color: rgb(180, 180, 180);
+}
+
+.reference-parts-field-value {
+    flex-grow: 1;
+}
+
+.reference-parts-copy-button {
+    min-width: 50px;
+    margin-left: 4px;
+}
+
+.reference-parts-info-icon {
+    min-width: 24px;
+    -unity-text-align: middle-center;
+    color: rgb(150, 180, 220);
+    margin-left: 4px;
+    cursor: link;
+}
+
+.reference-parts-empty {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    align-items: center;
+}

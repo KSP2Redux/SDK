@@ -1,0 +1,546 @@
+fileFormatVersion: 2
+guid: e249e7b220757fe4093fec1f356ec124
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: Launchpad
+  - first:
+      213: 21300002
+    second: Runway
+  - first:
+      213: 21300004
+    second: KSC
+  - first:
+      213: 21300006
+    second: Colony
+  - first:
+      213: 21300008
+    second: Research-Dev
+  - first:
+      213: 21300010
+    second: VAB
+  - first:
+      213: 21300012
+    second: Mission-Control
+  - first:
+      213: 21300014
+    second: Tracking-Station
+  - first:
+      213: 21300016
+    second: Training-Center
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 12
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 200
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 0
+  flipbookColumns: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 2
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Launchpad
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 4, y: 16}
+        - {x: 2, y: 14}
+        - {x: 2, y: 0}
+        - {x: -2, y: -4}
+        - {x: -2, y: -6}
+        - {x: -2, y: 6}
+        - {x: 0, y: 6}
+        - {x: 2, y: 8}
+        - {x: 2, y: 16}
+        - {x: -16, y: 16}
+        - {x: -16, y: -16}
+        - {x: 16, y: -16}
+        - {x: 16, y: 6}
+        - {x: 11, y: 16}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73c760b6066c45b985769d6f840188ad
+      internalID: 21300000
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Runway
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 64
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -16, y: -16}
+        - {x: 16, y: -16}
+        - {x: 16, y: -12}
+        - {x: -16, y: -12}
+      - - {x: -16, y: 12}
+        - {x: -16, y: -12}
+        - {x: -3, y: -12}
+        - {x: 16, y: -6}
+        - {x: 16, y: 4}
+        - {x: 2, y: 12}
+      tessellationDetail: 0
+      bones: []
+      spriteID: ffc2a9d72a0b4aef8020997b51fa5bff
+      internalID: 21300002
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: KSC
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -13, y: 16}
+        - {x: -16, y: 14}
+        - {x: -16, y: -13}
+        - {x: -12, y: -16}
+        - {x: 14, y: -16}
+        - {x: 16, y: -9}
+        - {x: 16, y: 13}
+        - {x: 8, y: 16}
+      - - {x: -1, y: -6}
+        - {x: 0, y: -7}
+        - {x: 2, y: -4.9999995}
+        - {x: 0, y: -7}
+        - {x: 0, y: -6}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f3f3c3b2b1847a3bbd9b4fdaed61a13
+      internalID: 21300004
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Colony
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 9, y: 16}
+        - {x: -11, y: 16}
+        - {x: -16, y: 8}
+        - {x: -16, y: -13}
+        - {x: -12, y: -16}
+        - {x: 14, y: -16}
+        - {x: 16, y: -13}
+        - {x: 16, y: 12}
+      - - {x: 6, y: 7}
+        - {x: 4, y: 7}
+        - {x: 0, y: 11}
+        - {x: -2, y: 11}
+        - {x: -7, y: 6}
+        - {x: -6, y: 3}
+        - {x: -8, y: 4.9999995}
+        - {x: -9, y: 4}
+        - {x: -7, y: 6}
+        - {x: -7, y: 8}
+        - {x: -6, y: 9}
+        - {x: -4, y: 9}
+        - {x: -2, y: 11}
+        - {x: 2, y: 11}
+        - {x: 4, y: 9}
+        - {x: 6, y: 9}
+        - {x: 7, y: 8}
+        - {x: 7, y: 6}
+        - {x: 9, y: 4}
+        - {x: 9, y: 2}
+        - {x: 12, y: 0}
+        - {x: 12, y: 2}
+      tessellationDetail: 0
+      bones: []
+      spriteID: f12e4701eb014ea5a8fafeddec57093e
+      internalID: 21300006
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Research-Dev
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 13, y: 14.999999}
+        - {x: 9.999999, y: 16}
+        - {x: -6, y: 16}
+        - {x: -9, y: 14.999999}
+        - {x: -13, y: 16}
+        - {x: -16, y: 16}
+        - {x: -16, y: -3}
+        - {x: -8, y: -16}
+        - {x: 6, y: -16}
+        - {x: 11, y: -3}
+        - {x: 16, y: -1}
+        - {x: 16, y: 8}
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab2d2b4013c44af4af6b15c1fc953852
+      internalID: 21300008
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VAB
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: -9.999999, y: 16}
+        - {x: -16, y: 1}
+        - {x: -16, y: -16}
+        - {x: 16, y: -16}
+        - {x: 16, y: -3}
+        - {x: 8, y: 16}
+      tessellationDetail: 0
+      bones: []
+      spriteID: f8cfd660801e44779f20b8ac301b8eb1
+      internalID: 21300010
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Mission-Control
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 96
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 16, y: -9.999999}
+        - {x: 16, y: 16}
+        - {x: -14.999999, y: 16}
+        - {x: -16, y: 14.999999}
+        - {x: -16, y: -16}
+        - {x: 6, y: -16}
+        - {x: 6, y: -9}
+        - {x: 2, y: -6}
+        - {x: 9, y: -11}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 724e2a0e3f0e47bb9def49d84caf1f16
+      internalID: 21300012
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tracking-Station
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 64
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 4, y: 9.999999}
+        - {x: -16, y: 9.999999}
+        - {x: -16, y: -16}
+        - {x: 9, y: -16}
+        - {x: 9.999999, y: -14.999999}
+        - {x: 9.999999, y: -6}
+        - {x: 8, y: 3}
+      - - {x: 4, y: 16}
+        - {x: 2, y: 14}
+        - {x: 2, y: 12}
+        - {x: 6, y: 8}
+        - {x: 8, y: 8}
+        - {x: 12, y: 12}
+        - {x: 12, y: 14}
+        - {x: 9.999999, y: 16}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6cb1dd5192384821b117f1ab605b4bd4
+      internalID: 21300014
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Training-Center
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 64
+        width: 32
+        height: 32
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline:
+      - - {x: -16, y: -16}
+        - {x: -16, y: 16}
+        - {x: 16, y: 16}
+        - {x: 16, y: -16}
+      physicsShape:
+      - - {x: 9.999999, y: 14}
+        - {x: -7, y: 14}
+        - {x: -16, y: 7}
+        - {x: -16, y: -12}
+        - {x: -14.999999, y: -14}
+        - {x: -12, y: -12}
+        - {x: -9.999999, y: -9.999999}
+        - {x: -9.999999, y: -4}
+        - {x: -9.999999, y: -9.999999}
+        - {x: -4, y: -16}
+        - {x: 6, y: -16}
+        - {x: 14.999999, y: -12}
+        - {x: 16, y: -7}
+        - {x: 16, y: 8}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1be48650b5fc4a07b87e2cf9e8292cb6
+      internalID: 21300016
+      vertices:
+      - {x: 0, y: 32}
+      - {x: 32, y: 32}
+      - {x: 0, y: 0}
+      - {x: 32, y: 0}
+      indices: 000000000100000002000000020000000100000003000000
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Colony: 21300006
+      KSC: 21300004
+      Launchpad: 21300000
+      Mission-Control: 21300012
+      Research-Dev: 21300008
+      Runway: 21300002
+      Tracking-Station: 21300014
+      Training-Center: 21300016
+      VAB: 21300010
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

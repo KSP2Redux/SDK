@@ -1,0 +1,41 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement class="sdk-root">
+        <ui:HelpBox text="This component configures the prefab patch compiler. Make visual changes on this prefab variant; saving the variant rebuilds the runtime JSON when Auto Compile On Save is enabled." message-type="Info" />
+
+        <ui:Label text="Patch" class="sdk-section-header" />
+        <uie:ObjectField name="owning-mod" label="Owning Mod" binding-path="OwningMod" allow-scene-objects="false" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="PatchName" class="unity-base-field__aligned" />
+        <ui:HelpBox name="ownership-status" />
+
+        <ui:Label text="Features" class="sdk-section-header" />
+        <ui:VisualElement name="features-slot" />
+
+        <ui:Label text="Composition" class="sdk-section-header" />
+        <uie:PropertyField binding-path="Pass" class="unity-base-field__aligned" />
+        <uie:PropertyField binding-path="Ordering" class="unity-base-field__aligned" />
+
+        <ui:Label text="Output" class="sdk-section-header" />
+        <uie:PropertyField binding-path="AutoCompileOnSave" class="unity-base-field__aligned" />
+
+        <ui:Foldout text="Dependencies and Advanced Ordering" value="false">
+            <uie:PropertyField binding-path="NeedsMods" />
+            <uie:PropertyField binding-path="ConflictsMods" />
+            <uie:PropertyField binding-path="NeedsPatches" />
+            <uie:PropertyField binding-path="ConflictsPatches" />
+            <uie:PropertyField binding-path="BeforePatches" />
+            <uie:PropertyField binding-path="AfterPatches" />
+            <uie:PropertyField binding-path="BeforeMods" />
+            <uie:PropertyField binding-path="AfterMods" />
+            <uie:PropertyField binding-path="ConfigurationInputs" />
+        </ui:Foldout>
+
+        <ui:HelpBox name="source-status" />
+        <ui:HelpBox name="manifest-status" />
+        <ui:HelpBox name="action-status" />
+
+        <ui:Button name="open-variant" text="Open Variant for Editing" class="sdk-action-button" />
+        <ui:Button name="compile" text="Compile JSON Now" class="sdk-action-button" />
+        <ui:Button name="preview" text="Open Effective Prefab Preview" class="sdk-action-button" />
+        <ui:Button name="select-json" text="Select Compiled JSON" class="sdk-action-button" />
+    </ui:VisualElement>
+</ui:UXML>

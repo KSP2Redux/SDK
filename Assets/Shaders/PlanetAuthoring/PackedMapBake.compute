@@ -1,0 +1,93 @@
+#pragma kernel CSPack
+
+// ============================================================================
+// PackedMapBake
+//
+// Packs an artist's separate normal, smoothness and AO maps into the single
+// tile texture the small-layer cascade samples:
+//
+//   _OutPacked  RGBA = (smoothness, normalY, AO, normalX)
+//
+// That is the on-GPU sampled layout, not the source-PNG normal-map convention.
+// _SmallNormalArray and _DecalNormalSAO are bound as plain Default textures, so
+// nothing swizzles them on import and what is written here is exactly what
+// DeferredBiome.cginc reads back: .x gloss, .y and .w the DXT5nm-style normal
+// pair, .z AO. Contrast with AnalyticScaledSpaceBake's _OutNormal, which feeds
+// the NormalMap importer and therefore writes the source-PNG convention.
+//
+// Inputs are sampled rather than loaded, so block-compressed and non-readable
+// source textures work untouched and a source at a different size resamples
+// through the sampler for free.
+//
+// Every optional input carries a _Has flag. When it is 0 the texture binding is
+// a placeholder and the matching _Const value is used for the whole tile.
+// ============================================================================
+
+RWTexture2D<float4> _OutPacked;
+
+Texture2D<float4> _NormalTex;
+Texture2D<float4> _SmoothnessTex;
+Texture2D<float4> _AoTex;
+
+SamplerState sampler_LinearRepeat;
+
+uint2 _OutSize;
+
+uint  _HasNormal;
+// 1 when the source is Unity DXT5nm, which moves normal x into .a so the block
+// compressor gets x and y in separate blocks. 0 for a plain RGB normal source.
+uint  _NormalIsDxt5nm;
+// 1 to invert the green channel, for sources authored in the OpenGL convention.
+uint  _FlipGreen;
+
+uint   _HasSmoothness;
+float4 _SmoothnessMask;
+float  _SmoothnessConst;
+// 1 when the source is a roughness map, which is smoothness inverted.
+uint   _InvertSmoothness;
+
+uint   _HasAo;
+float4 _AoMask;
+float  _AoConst;
+
+[numthreads(8, 8, 1)]
+void CSPack(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _OutSize.x || id.y >= _OutSize.y)
+    {
+        return;
+    }
+
+    float2 uv = (float2(id.xy) + 0.5) / float2(_OutSize);
+
+    // A flat tangent-space normal encodes to 0.5 in both channels.
+    float2 normalXY = float2(0.5, 0.5);
+    if (_HasNormal)
+    {
+        float4 rawNormal = _NormalTex.SampleLevel(sampler_LinearRepeat, uv, 0);
+        normalXY = _NormalIsDxt5nm ? float2(rawNormal.a, rawNormal.g) : float2(rawNormal.r, rawNormal.g);
+        if (_FlipGreen)
+        {
+            normalXY.y = 1.0 - normalXY.y;
+        }
+    }
+
+    float smoothness = _HasSmoothness
+        ? dot(_SmoothnessTex.SampleLevel(sampler_LinearRepeat, uv, 0), _SmoothnessMask)
+        : _SmoothnessConst;
+    if (_InvertSmoothness)
+    {
+        smoothness = 1.0 - smoothness;
+    }
+
+    float ao = _HasAo
+        ? dot(_AoTex.SampleLevel(sampler_LinearRepeat, uv, 0), _AoMask)
+        : _AoConst;
+
+    _OutPacked[id.xy] = float4(
+        saturate(smoothness),
+        saturate(normalXY.y),
+        saturate(ao),
+        saturate(normalXY.x)
+    );
+}

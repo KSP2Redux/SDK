@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!--
+        The planet inspector, shown on both a body's Scaled prefab (CoreCelestialBodyData) and its Local
+        prefab (PQS). Header chrome mirrors the part inspector: identity, readiness chips, Quick Tools and
+        the overlay pills. Each tab's body is its own template, cloned into planet-tab-content when the
+        tab is opened.
+    -->
+
+    <engine:VisualElement class="sdk-root planet-inspector-root">
+
+        <engine:VisualElement name="planet-header" class="sdk-inspector-header">
+
+            <engine:VisualElement class="sdk-inspector-identity-row">
+                <engine:VisualElement name="header-thumbnail" class="sdk-inspector-icon planet-inspector-thumbnail" />
+                <engine:VisualElement class="sdk-inspector-identity-text">
+                    <engine:Label name="header-body-name" class="sdk-inspector-name" />
+                    <engine:VisualElement class="sdk-inspector-chip-row">
+                        <engine:Label name="header-type-chip" class="sdk-inspector-meta-chip" />
+                        <engine:Label name="header-radius-chip" class="sdk-inspector-meta-chip" />
+                    </engine:VisualElement>
+                    <engine:VisualElement class="sdk-inspector-chip-row planet-inspector-editing-row">
+                        <engine:Label text="Editing" class="sdk-inspector-row-label" />
+                        <engine:Button name="editing-scaled" text="Scaled" class="planet-inspector-side" tooltip="Select this body's Scaled prefab. It shows this same inspector." />
+                        <engine:Button name="editing-local" text="Local" class="planet-inspector-side" tooltip="Select this body's Local prefab. It shows this same inspector." />
+                    </engine:VisualElement>
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:Label name="live-banner" class="sdk-hint planet-inspector-live-banner"
+                          text="Live body: edits are lost when play stops, except to assets such as materials." />
+
+            <engine:VisualElement name="readiness-row" class="sdk-inspector-row">
+                <engine:Label text="Readiness" class="sdk-inspector-row-label" />
+                <engine:VisualElement name="readiness-chips" class="sdk-inspector-chip-row" />
+            </engine:VisualElement>
+
+            <engine:VisualElement name="quick-tools-row" class="sdk-inspector-row">
+                <engine:Label text="Quick Tools" class="sdk-inspector-row-label" />
+                <engine:VisualElement class="sdk-inspector-chip-row">
+                    <engine:Button name="quick-preview" text="Enable Preview" class="sdk-tool-chip sdk-tool-chip--primary" tooltip="Start or stop the planet preview for this body. A prefab asset opens its authoring scene first." />
+                    <engine:Button name="quick-preview-controls" text="Preview Controls" class="sdk-tool-chip" tooltip="Open the Preview Controls window: camera, sun, time of day, drawing toggles and overlays." />
+                    <engine:Button name="quick-save-json" text="Save Body JSON" class="sdk-tool-chip" tooltip="Write this body's JSON next to the Scaled prefab and register it as addressable." />
+                    <engine:Button name="quick-bake-body-surface" text="Bake Body Surface" class="sdk-tool-chip" tooltip="Run the body surface bake with the outputs and resolution set in Terrain, Body Surface Bake." />
+                    <engine:Button name="quick-export-localizations" text="Export Localizations" class="sdk-tool-chip" tooltip="Export this body's localization keys, science region keys included, to a CSV." />
+                    <engine:Button name="quick-open-scene" text="Open Authoring Scene" class="sdk-tool-chip" tooltip="Open the authoring scene next to this body's prefabs, alongside the scenes already open." />
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:VisualElement name="preview-readiness" class="planet-inspector-preview-readiness" />
+
+            <engine:VisualElement name="draw-row" class="sdk-inspector-row">
+                <engine:Label text="Draw" class="sdk-inspector-row-label" />
+                <engine:VisualElement class="sdk-inspector-chip-row">
+                    <engine:Button name="draw-game-look" text="Game exposure" class="sdk-pill" />
+                    <engine:Button name="draw-atmosphere" text="Atmosphere" class="sdk-pill" />
+                    <engine:Button name="draw-clouds" text="Clouds" class="sdk-pill" />
+                    <engine:Button name="draw-ocean" text="Ocean" class="sdk-pill" />
+                    <engine:Button name="draw-scatter" text="Scatter" class="sdk-pill" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:VisualElement name="overlay-row" class="sdk-inspector-row">
+                <engine:Label text="Overlays" class="sdk-inspector-row-label" />
+                <engine:VisualElement class="sdk-inspector-chip-row">
+                    <engine:Button name="overlay-biome" text="Biome mask" class="sdk-pill" />
+                    <engine:Button name="overlay-subzone" text="Subzone mask" class="sdk-pill" />
+                    <engine:Button name="overlay-slope" text="Slope" class="sdk-pill" />
+                    <engine:Button name="overlay-altitude" text="Contours" class="sdk-pill" />
+                    <engine:Button name="overlay-sea-level" text="Sea level" class="sdk-pill" />
+                    <engine:Button name="overlay-active-layer" text="Active layer" class="sdk-pill" />
+                    <engine:Button name="overlay-science-region" text="Science regions" class="sdk-pill" />
+                    <engine:Button name="overlay-scatter-biome" text="Scatter biomes" class="sdk-pill" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+
+            <engine:Label name="quick-tools-status" class="sdk-hint planet-inspector-status" />
+
+        </engine:VisualElement>
+
+        <engine:VisualElement name="planet-tab-bar" class="sdk-tab-bar">
+            <engine:Button name="tab-general" text="General" class="sdk-tab" />
+            <engine:Button name="tab-terrain" text="Terrain" class="sdk-tab" />
+            <engine:Button name="tab-surface" text="Surface" class="sdk-tab" />
+            <engine:Button name="tab-environment" text="Environment" class="sdk-tab" />
+            <engine:Button name="tab-features" text="Features" class="sdk-tab" />
+            <engine:Button name="tab-science" text="Science" class="sdk-tab" />
+        </engine:VisualElement>
+
+        <engine:VisualElement name="planet-jump-row" class="planet-inspector-jump-row" />
+
+        <engine:VisualElement name="planet-tab-content" class="planet-inspector-tab-content" />
+
+    </engine:VisualElement>
+
+</engine:UXML>

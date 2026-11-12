@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement name="matrix-root" class="small-layer-matrix">
+        <engine:VisualElement name="header-row" class="small-layer-matrix-row small-layer-matrix-header-row">
+            <engine:Label class="small-layer-matrix-corner" />
+            <engine:Label name="header-1" text="Layer 1" class="small-layer-matrix-col-header" />
+            <engine:Label name="header-2" text="Layer 2" class="small-layer-matrix-col-header" />
+            <engine:Label name="header-3" text="Layer 3" class="small-layer-matrix-col-header" />
+            <engine:Label name="header-4" text="Layer 4" class="small-layer-matrix-col-header" />
+        </engine:VisualElement>
+        <engine:VisualElement name="row-R" class="small-layer-matrix-row" />
+        <engine:VisualElement name="row-G" class="small-layer-matrix-row" />
+        <engine:VisualElement name="row-B" class="small-layer-matrix-row" />
+        <engine:VisualElement name="row-A" class="small-layer-matrix-row" />
+    </engine:VisualElement>
+
+</engine:UXML>

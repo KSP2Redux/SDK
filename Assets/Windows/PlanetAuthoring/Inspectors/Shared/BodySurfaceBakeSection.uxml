@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!-- The Body Surface Baking section's fields, shared by the body and PQS inspectors and wired by BodySurfaceBakeSection. -->
+
+    <engine:VisualElement name="body-surface-bake">
+        <engine:Foldout text="Outputs" value="true" class="sdk-subsection-foldout" tooltip="What the bake writes. Leave an output unticked to keep what was last baked for it.">
+            <engine:Toggle name="body-surface-bake-gradience" label="Gradience" class="unity-base-field__aligned"
+                           tooltip="The per-biome slope textures the terrain shades steep ground with." />
+            <engine:Toggle name="body-surface-bake-textures" label="Scaled Textures" class="unity-base-field__aligned"
+                           tooltip="The scaled-space albedo, normal, packed and emission maps the body is drawn with from orbit. An ocean fades into the same maps with altitude, so they are wired into its material too." />
+            <engine:Toggle name="body-surface-bake-mesh" label="Scaled Mesh" class="unity-base-field__aligned"
+                           tooltip="The low-poly displaced sphere the body is drawn as from orbit, wired into the Scaled prefab." />
+        </engine:Foldout>
+        <engine:DropdownField name="body-surface-bake-resolution" label="Mesh Resolution"
+                              choices="64 x 32,128 x 64,256 x 128,512 x 256" index="1"
+                              tooltip="Lat/lon resolution of the baked low-poly sphere. 128 x 64 produces about 16k triangles, matching stock scaled-space mesh size." />
+        <engine:Button name="body-surface-bake-button" text="Bake Body Surface"
+                       tooltip="Bakes the ticked outputs. A body with Has Ocean on gets its sea baked in, in the ocean's Color From Orbit." />
+        <engine:Label name="body-surface-bake-status" class="body-inspector-error-label" />
+    </engine:VisualElement>
+
+</engine:UXML>

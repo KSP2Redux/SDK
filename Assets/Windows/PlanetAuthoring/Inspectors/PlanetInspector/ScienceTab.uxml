@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <!--
+        The Science tab. science-slot holds the body's Science Region Data inspector, whose own sections sit at the top
+        level of the tab. Resources holds the mine dust colour, which binds to the body, and the Resource Maps editor
+        bound to this body's authoring asset.
+    -->
+
+    <engine:VisualElement class="planet-inspector-tab">
+
+        <engine:VisualElement name="science-slot" />
+        <engine:VisualElement name="science-missing">
+            <engine:Button name="create-science" text="Create Science Region Data" class="sdk-action-button" tooltip="Create this body's science region data beside its prefabs, with Body Name set and every situation enabled." />
+        </engine:VisualElement>
+
+        <engine:Foldout name="section-resources" text="Resources" value="true" class="sdk-section">
+            <engine:VisualElement name="mine-dust-color-slot" />
+            <engine:VisualElement name="resource-maps-missing">
+                <engine:Button name="create-resource-maps" text="Create Resource Maps" class="sdk-action-button" tooltip="Create this body's resource map authoring asset in the Resource Maps authoring folder, named for the body." />
+            </engine:VisualElement>
+            <engine:VisualElement name="resource-maps-slot" />
+        </engine:Foldout>
+
+    </engine:VisualElement>
+
+</engine:UXML>

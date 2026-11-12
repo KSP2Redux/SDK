@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8120336143791234568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 958cb2c85e0543a4990e3fedab45399b, type: 3}
+  m_Name: ValidateSourcePlayerImport
+  m_EditorClassIdentifier:
+  Active: 1
+  PerManifest: 0
+  ListType: 0
+  Manifests: []
+--- !u!114 &-6160294729922553416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03063c7a6ec04cc4c82c75cf9bcc8db8, type: 3}
+  m_Name: Copy
+  m_EditorClassIdentifier:
+  Active: 1
+  PerManifest: 0
+  ListType: 0
+  Manifests: []
+  ReplaceDirectory: 1
+  Recursive: 1
+  SourceRequired: 1
+  EstablishDestination: 1
+  Source: <GamePath>/KSP2_x64_Data/StreamingAssets/Audio/GeneratedSoundBanks/Windows
+  Destination: Assets/StreamingAssets/Audio/GeneratedSoundBanks/Windows
+--- !u!114 &-1734159886244972023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87d65cc226c348d45aa1c6dddf3600a6, type: 3}
+  m_Name: Delete
+  m_EditorClassIdentifier:
+  Active: 1
+  PerManifest: 0
+  ListType: 0
+  Manifests: []
+  Recursive: 1
+  IsFatal: 0
+  Path: Assets/StreamingAssets/aa
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3695521163bdd74fa2845bbd3438240, type: 3}
+  m_Name: ImportKsp2ToEditor
+  m_EditorClassIdentifier:
+  Data:
+  - {fileID: -8120336143791234568}
+  - {fileID: -6160294729922553416}
+  - {fileID: -1734159886244972023}
+  QuickAccess: 0
+  manifest: {fileID: 0}

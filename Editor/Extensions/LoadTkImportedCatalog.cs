@@ -1,0 +1,529 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
+using ThunderKit.Core.Data;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.Initialization;
+using UnityEngine.AddressableAssets.ResourceLocators;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+
+namespace Ksp2UnityTools.Editor.Extensions
+{
+    /// <summary>
+    /// Registers the selected game's catalogs for editor sessions.
+    /// </summary>
+#if TK_ADDRESSABLE
+    [InitializeOnLoad]
+#endif
+    public class LoadTkImportedCatalog : AssetPostprocessor
+    {
+        // This must be the same as the output of the ImportKsp2ToEditor pipeline.
+        private const string LOAD_TK_IMPORTED_CATALOG_PATH = "DoNotDistribute/aa/catalog.json";
+
+        // Path must be relative to Assets directory.
+        private const string REDUX_CATALOG_PATH = "../Redux/Addressables/StandaloneWindows64/catalog.json";
+
+        private const string PLAY_SESSION_INITIALIZED_KEY =
+            "Ksp2UnityTools.LoadTkImportedCatalog.PlaySessionInitialized";
+
+        private const string BASE_GAME_CATALOG_PROBE_KEY = "kspFlow.unity";
+
+#if !REDUX && TK_ADDRESSABLE
+        private const string SOURCE_CATALOG_PROBE_KEY = "redux_source_catalog";
+        private const string SOURCE_LOAD_PATH_PROPERTY = "Redux.ReduxAssets.RuntimeLoadPath";
+        private static Func<IResourceLocation, string> _sourcePlayerBundleRedirect;
+        private static string _sourcePlayerBundleRoot;
+        private static byte[] _sourcePlayerCatalogHash;
+#endif
+
+        private static bool _catalogLoadScheduled;
+        private static bool _catalogLoadInProgress;
+        private static bool _catalogLoadWaitInProgress;
+        private static AsyncOperationHandle<IResourceLocator> _catalogLoadOperation;
+
+#if TK_ADDRESSABLE
+        static LoadTkImportedCatalog()
+        {
+#if REDUX
+            if (Redux.ReduxAssets.IsSourceOnly)
+                return;
+#else
+            if (Redux.ReduxAssets.IsSourceOnly)
+                Redux.ReduxAssets.ConfigureSourceEditorCatalog = EnsureImportedCatalogsLoaded;
+#endif
+            // The imported catalog locators are normally registered after a domain reload (see
+            // OnPostprocessAllAssets). Entering Play Mode re-runs Addressables'
+            // FastModeInitializationOperation, which rebuilds the resource locators from the project's
+            // AddressableAssetSettings and drops the imported catalog. With Domain Reload enabled the
+            // play-mode reload re-fires the postprocessor and re-registers it. With Reload Domain
+            // disabled that never happens, so on the second Play Mode enter base-game content registered
+            // only in the imported catalog (e.g. the kspFlow.unity scene) becomes unresolvable
+            // ("No Location found for Key=kspFlow.unity"). Re-register on entering Play Mode to restore
+            // the domain-reload behavior. Unsubscribe first so a domain reload can't double-subscribe.
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+        }
+
+        private static void OnBeforeAssemblyReload()
+        {
+            EditorApplication.delayCall -= BeginImportedCatalogLoad;
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+        }
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            switch (state)
+            {
+                case PlayModeStateChange.ExitingEditMode:
+                    // SessionState survives domain reloads. Clear it before every new play
+                    // transition so a previous interrupted/hot-reloaded session cannot suppress
+                    // catalog registration for the next benchmark process.
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
+                    return;
+                case PlayModeStateChange.ExitingPlayMode:
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
+                    return;
+                case PlayModeStateChange.EnteredEditMode:
+                    // playModeStateChanged is one multicast delegate, so an exception here would keep
+                    // every later subscriber from hearing that the editor is back in edit mode (the
+                    // runtime CLI integration then reports ExitingPlayMode forever). The sweep is a
+                    // cleanup, so a failure is logged and the transition carries on.
+                    try
+                    {
+                        UnloadLeakedAssetBundles();
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogException(exception);
+                    }
+
+                    // Deferred so it runs after Addressables' own EnteredEditMode handler, whose flag
+                    // it clears.
+                    EditorApplication.delayCall -= ResetAddressablesForEditMode;
+                    EditorApplication.delayCall += ResetAddressablesForEditMode;
+                    return;
+                // ExitingEditMode prepares Fast Mode and the imported catalogs before runtime startup.
+                // Recheck them here so manual and automated transitions share the same idempotent path.
+                // SessionState protects against stale duplicate callbacks left behind by a script hot
+                // reload.
+                case PlayModeStateChange.EnteredPlayMode when SessionState.GetBool(PLAY_SESSION_INITIALIZED_KEY, false):
+                    return;
+                case PlayModeStateChange.EnteredPlayMode:
+                    EnsureImportedCatalogsLoaded();
+                    // Mark initialized only after registration succeeds. If catalog loading throws,
+                    // a duplicate callback can retry instead of preserving a false-success state.
+                    SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, true);
+                    break;
+            }
+        }
+
+        // This callback runs after the editor has prepared its Play Mode state but before runtime
+        // initialization and scene Start methods. EnteredPlayMode is too late for BootstrapSceneLoader,
+        // while ExitingEditMode can be followed by Addressables' own delayed reinitialization.
+        [InitializeOnEnterPlayMode]
+        private static void PrepareAddressablesForPlayMode()
+        {
+#if REDUX
+            if (Redux.ReduxAssets.IsSourceOnly)
+                return;
+#endif
+            SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, false);
+            ResetAddressablesForPlayMode();
+            EnsureImportedCatalogsLoaded();
+            SessionState.SetBool(PLAY_SESSION_INITIALIZED_KEY, true);
+        }
+
+        // With Reload Domain disabled the Addressables implementation is rebuilt on the next Play
+        // Mode enter, but native AssetBundles held by the old
+        // implementation are never unloaded. After a dirty play exit (crash or aborted load flow)
+        // their refcounts never hit zero, the bundle files stay resident, and the next session's
+        // fresh implementation fails to load them again with "another AssetBundle with the same
+        // files is already loaded", which cascades into unresolvable base-game content. Sweep them
+        // once the editor is fully back in edit mode, after the game's own teardown has released
+        // whatever it released cleanly. The "ksp2" BundleKit catalog bundle is excluded because the
+        // edit-mode ReduxResourceAdapter keeps using it between play sessions.
+        private static void UnloadLeakedAssetBundles()
+        {
+            foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles().ToArray())
+            {
+                if (bundle == null || bundle.name == "ksp2")
+                    continue;
+
+                // A bundle the play session already unloaded can still be listed here, and Unity then
+                // refuses to unload it again. It is gone either way, so it is skipped.
+                try
+                {
+                    bundle.Unload(true);
+                }
+                catch (InvalidOperationException)
+                {
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads an addressable catalog into a resource locator after domain reload.
+        /// This makes the path identifiers in the catalog accessible in the editor,
+        /// even if the catalog isn't generated by this project's addressable build system.
+        /// </summary>
+        private static void OnPostprocessAllAssets(
+            string[] importedAssets,
+            string[] deletedAssets,
+            string[] movedAssets,
+            string[] movedFromAssetPaths,
+            bool didDomainReload
+        )
+        {
+            if (!didDomainReload)
+                return;
+
+            ScheduleImportedCatalogLoad();
+        }
+
+        // Catalog loads use Addressables' editor update loop. Waiting for that loop from an asset
+        // import callback can block the main thread indefinitely, so domain reloads start the work
+        // after the asset database has returned control to the editor.
+        private static void ScheduleImportedCatalogLoad()
+        {
+#if REDUX
+            if (Redux.ReduxAssets.IsSourceOnly)
+                return;
+#endif
+            if (_catalogLoadScheduled || _catalogLoadInProgress)
+                return;
+
+            _catalogLoadScheduled = true;
+            EditorApplication.delayCall += BeginImportedCatalogLoad;
+        }
+
+        private static void BeginImportedCatalogLoad()
+        {
+            EditorApplication.delayCall -= BeginImportedCatalogLoad;
+            _catalogLoadScheduled = false;
+
+            if (EditorApplication.isCompiling || EditorApplication.isUpdating)
+            {
+                ScheduleImportedCatalogLoad();
+                return;
+            }
+
+            string catalogPath = GetNextMissingCatalogPath();
+            if (catalogPath == null)
+                return;
+
+            EnsureThunderKitInternalIdRedirect();
+            _catalogLoadInProgress = true;
+            _catalogLoadOperation = Addressables.LoadContentCatalogAsync(catalogPath, false);
+            _catalogLoadOperation.Completed += OnImportedCatalogLoaded;
+        }
+
+        private static void OnImportedCatalogLoaded(AsyncOperationHandle<IResourceLocator> operation)
+        {
+            _catalogLoadInProgress = false;
+            bool succeeded = operation.Status == AsyncOperationStatus.Succeeded;
+            Exception operationException = operation.OperationException;
+            if (!_catalogLoadWaitInProgress)
+            {
+                Addressables.Release(operation);
+            }
+
+            if (!succeeded)
+            {
+                Debug.LogError(
+                    $"Failed to load a ThunderKit imported Addressables catalog: {operationException}"
+                );
+                return;
+            }
+
+            BeginImportedCatalogLoad();
+        }
+
+        /// <summary>
+        /// Registers the ThunderKit-imported content catalogs with Addressables now, if they are missing.
+        /// </summary>
+        /// <remarks>
+        /// For edit-mode code that needs a base-game key before the deferred post-reload load has
+        /// finished. Blocks until the catalogs are loaded. Idempotent.
+        /// </remarks>
+        public static void EnsureRegistered() => EnsureImportedCatalogsLoaded();
+
+        // Registers the ThunderKit-imported content catalog(s) with Addressables if they are not already
+        // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
+        private static void EnsureImportedCatalogsLoaded()
+        {
+#if REDUX
+            if (Redux.ReduxAssets.IsSourceOnly)
+                return;
+#endif
+            EditorApplication.delayCall -= BeginImportedCatalogLoad;
+            _catalogLoadScheduled = false;
+
+            while (_catalogLoadInProgress)
+            {
+                AsyncOperationHandle<IResourceLocator> operation = _catalogLoadOperation;
+                if (!operation.IsValid())
+                    break;
+
+                IResourceLocator locator;
+                try
+                {
+                    _catalogLoadWaitInProgress = true;
+                    locator = operation.WaitForCompletion();
+                }
+                finally
+                {
+                    _catalogLoadWaitInProgress = false;
+                }
+
+                Exception operationException = operation.OperationException;
+                Addressables.Release(operation);
+                if (locator == null)
+                {
+                    Debug.LogError(
+                        $"Failed while waiting for a ThunderKit imported Addressables catalog: {operationException}"
+                    );
+                    return;
+                }
+            }
+
+            string catalogPath = GetNextMissingCatalogPath();
+            if (catalogPath == null)
+                return;
+
+            EnsureThunderKitInternalIdRedirect();
+            while (catalogPath != null)
+            {
+                AsyncOperationHandle<IResourceLocator> operation =
+                    Addressables.LoadContentCatalogAsync(catalogPath, false);
+                IResourceLocator locator = operation.WaitForCompletion();
+                Exception operationException = operation.OperationException;
+                Addressables.Release(operation);
+                if (locator == null)
+                {
+                    Debug.LogError(
+                        $"Failed to load the ThunderKit imported Addressables catalog at {catalogPath}: {operationException}"
+                    );
+                    return;
+                }
+
+                catalogPath = GetNextMissingCatalogPath();
+            }
+        }
+
+        private static string GetNextMissingCatalogPath()
+        {
+#if !REDUX
+            if (Redux.ReduxAssets.IsSourceOnly)
+                return GetMissingSourcePlayerCatalogPath();
+#endif
+            string ksp2CatalogFullPath = Path.Join(Application.dataPath, LOAD_TK_IMPORTED_CATALOG_PATH);
+            if (!File.Exists(ksp2CatalogFullPath))
+                return null;
+
+            // BundleKit and other editor integrations can register the stock
+            // catalog under its catalog ID instead of this imported file path.
+            // Loading it again duplicates every stock location and can leave
+            // systems such as cloud rendering with mismatched result lists.
+            if (
+                !CatalogKeyIsRegistered(BASE_GAME_CATALOG_PROBE_KEY)
+                && !IsCatalogLoaded(ksp2CatalogFullPath)
+            )
+            {
+                return ksp2CatalogFullPath;
+            }
+
+            // Load the Redux asset catalog too, but only in a mod project, and only if no locator is registered yet.
+            // The Redux project serves its own assets from the asset database. Loading its built catalog on top of
+            // that resolves every Redux label twice, so patch scripts under redux_patches would run twice.
+#if !REDUX
+            string reduxCatalogFullPath = Path.Join(Application.dataPath, REDUX_CATALOG_PATH);
+            if (File.Exists(reduxCatalogFullPath) && !IsCatalogLoaded(reduxCatalogFullPath))
+                return reduxCatalogFullPath;
+#endif
+
+            return null;
+        }
+
+#if !REDUX
+        private static string GetMissingSourcePlayerCatalogPath()
+        {
+            var settings = ThunderKitSetting.GetOrCreateSettings<ThunderKitSettings>();
+            if (string.IsNullOrWhiteSpace(settings.GamePath))
+                return null;
+
+            string relativeRoot = Redux.ReduxAssets.RuntimeLoadPath.Replace('\\', '/');
+            string sourceRoot = Path.GetFullPath(Path.Combine(settings.GamePath, relativeRoot)).Replace('\\', '/');
+            string platformFolder = Redux.ReduxAssets.Platform;
+            string catalogPath = Path.Combine(sourceRoot, platformFolder, "catalog.json");
+            byte[] catalogHash = null;
+            if (File.Exists(catalogPath))
+            {
+                using var catalog = File.OpenRead(catalogPath);
+                using var hash = SHA256.Create();
+                catalogHash = hash.ComputeHash(catalog);
+            }
+            RequireSourcePlayerCatalog(sourceRoot, catalogHash);
+            if (catalogHash == null)
+                return null;
+
+            AddressablesRuntimeProperties.SetPropertyValue(SOURCE_LOAD_PATH_PROPERTY, sourceRoot);
+            EnsureSourcePlayerBundleRedirect(relativeRoot, sourceRoot, platformFolder);
+            _sourcePlayerCatalogHash = catalogHash;
+            return CatalogKeyIsRegistered(SOURCE_CATALOG_PROBE_KEY) || IsCatalogLoaded(catalogPath)
+                ? null
+                : catalogPath;
+        }
+
+        internal static void RequireSourcePlayerCatalog(string sourceRoot, byte[] catalogHash)
+        {
+            if (_sourcePlayerBundleRoot == null)
+                return;
+            if (string.Equals(_sourcePlayerBundleRoot, sourceRoot, StringComparison.OrdinalIgnoreCase) &&
+                catalogHash != null && _sourcePlayerCatalogHash != null && _sourcePlayerCatalogHash.SequenceEqual(catalogHash))
+                return;
+            if (_catalogLoadInProgress || CatalogKeyIsRegistered(SOURCE_CATALOG_PROBE_KEY) ||
+                IsCatalogLoaded(Path.Combine(_sourcePlayerBundleRoot, Redux.ReduxAssets.Platform, "catalog.json")))
+                throw new InvalidOperationException("The selected source player's catalog changed. Restart the editor before importing or loading game content.");
+        }
+
+        private static void EnsureSourcePlayerBundleRedirect(string relativeRoot, string sourceRoot, string platformFolder)
+        {
+            if (Addressables.InternalIdTransformFunc == _sourcePlayerBundleRedirect &&
+                string.Equals(_sourcePlayerBundleRoot, sourceRoot, StringComparison.OrdinalIgnoreCase))
+                return;
+
+            EnsureThunderKitInternalIdRedirect();
+            var previousTransform = Addressables.InternalIdTransformFunc;
+            string relativePrefix = $"{relativeRoot}/{platformFolder}/";
+            string projectPrefix = Path.GetFullPath(Path.Combine(Application.dataPath, "..", relativePrefix)).Replace('\\', '/');
+            string propertyPrefix = $"{{{SOURCE_LOAD_PATH_PROPERTY}}}/{platformFolder}/";
+
+            // ThunderKit can initialize before the SDK hook and leave already evaluated bundle paths.
+            // Redirect only bundle IDs from the unified game's layout so mod paths keep their own resolver.
+            _sourcePlayerBundleRedirect = location =>
+            {
+                if (location.ResourceType == typeof(IAssetBundleResource))
+                {
+                    string path = location.InternalId.Replace('\\', '/');
+                    if (path.EndsWith(".bundle", StringComparison.OrdinalIgnoreCase) &&
+                        (path.StartsWith(relativePrefix, StringComparison.OrdinalIgnoreCase) ||
+                         path.StartsWith(projectPrefix, StringComparison.OrdinalIgnoreCase) ||
+                         path.StartsWith(propertyPrefix, StringComparison.Ordinal)))
+                    {
+                        return Path.Combine(sourceRoot, platformFolder, Path.GetFileName(path)).Replace('\\', '/');
+                    }
+                }
+
+                return previousTransform(location);
+            };
+            _sourcePlayerBundleRoot = sourceRoot;
+            Addressables.InternalIdTransformFunc = _sourcePlayerBundleRedirect;
+        }
+#endif
+
+        private static bool IsCatalogLoaded(string catalogPath)
+        {
+            return Addressables.ResourceLocators.Any(locator => locator.LocatorId == catalogPath);
+        }
+
+        private static bool CatalogKeyIsRegistered(string key)
+        {
+            return Addressables.ResourceLocators.Any(
+                locator =>
+                    locator != null
+                    && locator.Keys.OfType<string>().Any(
+                        candidate =>
+                            string.Equals(candidate, key, StringComparison.Ordinal)
+                    )
+            );
+        }
+
+        // Addressables stores this transform on its internal implementation. With Reload Domain
+        // disabled, Addressables replaces that implementation after Play Mode exit, so ThunderKit's
+        // redirect (normally installed only on domain load) must be restored before the next session
+        // uses an imported catalog location.
+        private static void EnsureThunderKitInternalIdRedirect()
+        {
+            if (Addressables.InternalIdTransformFunc != null)
+                return;
+
+            MethodInfo redirectMethod = typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings)
+                .GetMethod(
+                    "RedirectInternalIdsToGameDirectory",
+                    BindingFlags.Static | BindingFlags.NonPublic
+                );
+            if (redirectMethod == null)
+            {
+                throw new MissingMethodException(
+                    typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings).FullName,
+                    "RedirectInternalIdsToGameDirectory"
+                );
+            }
+
+            Addressables.InternalIdTransformFunc =
+                (Func<IResourceLocation, string>)redirectMethod.CreateDelegate(
+                    typeof(Func<IResourceLocation, string>)
+                );
+        }
+
+        // Addressables normally schedules this reset through EditorApplication.delayCall after
+        // leaving Play Mode. An automated Play Mode restart can begin its next transition before that
+        // callback runs, leaving a stale ResourceManager and its unloaded bundle resources in place.
+        private static void ResetAddressablesForPlayMode()
+        {
+            // Addressables queues this callback when Play Mode exits. An automated restart can
+            // reach ExitingEditMode before the callback runs. If it runs after the fresh instance
+            // and imported catalogs are prepared below, the first runtime Addressables access
+            // replaces that instance again and loses both the catalog and path redirect.
+            MethodInfo delayedReinitializeMethod = typeof(Addressables).GetMethod(
+                "EnableReinitializeAddressablesFlag",
+                BindingFlags.Static | BindingFlags.NonPublic
+            );
+            if (delayedReinitializeMethod != null)
+            {
+                var delayedReinitialize = (EditorApplication.CallbackFunction)
+                    delayedReinitializeMethod.CreateDelegate(typeof(EditorApplication.CallbackFunction));
+                EditorApplication.delayCall -= delayedReinitialize;
+            }
+
+            SetAddressablesFlag("reinitializeAddressables", true);
+        }
+
+        // UnloadLeakedAssetBundles destroys everything the play session's Addressables instance has
+        // cached, but Addressables keeps using that instance for the whole edit-mode stretch. It sets
+        // isExitingPlaymode on returning to edit mode and clears it only when play starts again, and
+        // the flag blocks the swap to a fresh instance. Loads in between hand back destroyed assets,
+        // which is how the planet preview lost PQSGlobalSettings after a play session. Clearing it
+        // gives edit mode the same fresh instance and imported catalogs a play session starts with.
+        private static void ResetAddressablesForEditMode()
+        {
+            EditorApplication.delayCall -= ResetAddressablesForEditMode;
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+                return;
+
+            SetAddressablesFlag("isExitingPlaymode", false);
+            SetAddressablesFlag("reinitializeAddressables", true);
+            EnsureImportedCatalogsLoaded();
+        }
+
+        private static void SetAddressablesFlag(string fieldName, bool value)
+        {
+            FieldInfo field = typeof(Addressables).GetField(fieldName, BindingFlags.Static | BindingFlags.NonPublic);
+            if (field == null)
+                throw new MissingFieldException(typeof(Addressables).FullName, fieldName);
+
+            field.SetValue(null, value);
+        }
+
+#endif
+    }
+}

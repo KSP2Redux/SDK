@@ -1,0 +1,152 @@
+.loctable {
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.loctable__header {
+    flex-direction: row;
+    align-items: stretch;
+    background-color: rgba(70, 100, 140, 0.25);
+    padding: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0.55);
+    flex-shrink: 0;
+}
+
+.loctable__frozen-header {
+    flex-direction: row;
+    flex-shrink: 0;
+}
+
+.loctable__body-header-viewport {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.loctable__body-header-content {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+
+.loctable__header-cell {
+    flex-direction: row;
+    align-items: center;
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+    font-size: 11px;
+    -unity-text-align: middle-left;
+    margin: 0;
+    padding: 4px 6px;
+    border-right-width: 1px;
+    border-right-color: rgba(0, 0, 0, 0.55);
+    flex-shrink: 0;
+}
+
+.loctable__header-cell-label {
+    flex-grow: 1;
+    overflow: hidden;
+    -unity-text-align: middle-left;
+    color: rgb(220, 230, 245);
+}
+
+.loctable__header-cell-label--editable {
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+}
+
+.loctable__header-cell-label--editable > .unity-text-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    margin: 0;
+    padding: 0;
+    -unity-font-style: bold;
+    color: rgb(220, 230, 245);
+    -unity-text-align: middle-left;
+    font-size: 11px;
+}
+
+.loctable__header-cell-label--editable > .unity-text-field__input:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.loctable__resize-handle {
+    flex-shrink: 0;
+    align-self: stretch;
+    background-color: rgba(0, 0, 0, 0.3);
+    cursor: resize-horizontal;
+}
+
+.loctable__resize-handle:hover {
+    background-color: rgba(120, 160, 220, 0.8);
+}
+
+.loctable__body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
+
+.loctable__row {
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0;
+    min-height: 22px;
+}
+
+.loctable__row--alt {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.loctable__row:hover {
+    background-color: rgba(120, 160, 220, 0.18);
+}
+
+.loctable__frozen-body {
+    flex-direction: row;
+    flex-shrink: 0;
+}
+
+.loctable__body-viewport {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
+.loctable__body-content {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+
+.loctable__cell {
+    margin: 0;
+    padding: 2px 6px;
+    border-right-width: 1px;
+    border-right-color: rgba(0, 0, 0, 0.55);
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.loctable__cell > .unity-text-field__input {
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    -unity-text-align: middle-left;
+}
+
+.loctable__cell > .unity-text-field__input:focus {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.loctable__horizontal-scroller {
+    flex-shrink: 0;
+    min-height: 14px;
+}

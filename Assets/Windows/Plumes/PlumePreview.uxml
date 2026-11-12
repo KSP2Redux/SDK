@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:Foldout text="Engine plume preview" value="true">
+        <ui:HelpBox name="preview-status" />
+        <ui:Button name="preview-window" text="Open dockable preview" />
+        <ui:Toggle name="preview-enabled" label="Enable preview" class="unity-base-field__aligned" />
+        <ui:VisualElement name="preview-controls">
+            <ui:DropdownField name="preview-quality" label="Plume quality" class="unity-base-field__aligned" />
+            <ui:HelpBox name="quality-description" message-type="Info" />
+            <ui:SliderInt name="engine-mode" label="Engine operating mode" low-value="0" high-value="0" show-input-field="true" class="unity-base-field__aligned" />
+            <ui:EnumField name="preview-event" label="Engine event" class="unity-base-field__aligned" />
+            <ui:Slider name="preview-throttle" label="Thrust fraction" low-value="0" high-value="1" value="1" show-input-field="true" class="unity-base-field__aligned" />
+            <ui:Slider name="preview-pressure" label="Pressure (log scale)" low-value="-4" high-value="2" value="0" class="unity-base-field__aligned" />
+            <ui:FloatField name="pressure-value" label="Pressure (atm)" is-delayed="true" class="unity-base-field__aligned" />
+            <ui:Toggle name="preview-particles" label="Animate particle effects" class="unity-base-field__aligned" />
+            <ui:Toggle name="compare-preset" label="Compare engine preset" tooltip="Temporarily uses the engine preset. Custom appearance and operating-mode profiles are preserved." class="unity-base-field__aligned" />
+            <ui:Toggle name="neutral-view" label="Neutral scene view" tooltip="Temporarily uses editor lighting without skybox, fog or grid. Restored when preview ends." class="unity-base-field__aligned" />
+            <ui:VisualElement style="flex-direction: row; flex-wrap: wrap;">
+                <ui:Button name="preview-frame" text="Frame plume" />
+                <ui:Button name="preview-side" text="Side" />
+                <ui:Button name="preview-nose" text="Nose" />
+                <ui:Button name="preview-tail" text="Tail" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: row; flex-wrap: wrap;">
+                <ui:Button name="preview-running" text="Running" />
+                <ui:Button name="preview-ignition" text="Ignition" />
+                <ui:Button name="preview-shutdown" text="Shutdown" />
+                <ui:Button name="preview-flameout" text="Flameout" />
+                <ui:Button name="preview-refresh" text="Refresh" />
+                <ui:Button name="preview-stop" text="End preview" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:Foldout>
+</ui:UXML>

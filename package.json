@@ -1,0 +1,34 @@
+{
+  "name": "ksp2redux.sdk",
+  "version": "1.0.0",
+  "displayName": "Redux SDK",
+  "description": "Editor tooling for developing KSP2 Redux mods, and the UI Toolkit controls, theme and templates that KSP2 Redux and its mods share.",
+  "unity": "6000.6",
+  "unityRelease": "0f1",
+  "documentationUrl": "https://modding.ksp2redux.org",
+  "licensesUrl": "https://raw.githubusercontent.com/KSP2Redux/SDK/main/LICENSE.md",
+  "keywords": [
+    "parts",
+    "ksp2",
+    "mods",
+    "ui"
+  ],
+  "author": {
+    "name": "KSP2 Redux"
+  },
+  "hideInEditor": false,
+  "dependencies": {
+    "com.unity.addressables": "2.11.2",
+    "com.unity.modules.amd": "1.0.0",
+    "com.unity.modules.nvidia": "1.0.0",
+    "com.unity.render-pipelines.universal": "17.6.0",
+    "com.unity.scriptablebuildpipeline": "1.19.3"
+  },
+  "samples": [
+    {
+      "displayName": "UI Toolkit controls examples",
+      "description": "Example documents and a binding test for the shared UI Toolkit controls.",
+      "path": "Samples~/Controls"
+    }
+  ]
+}

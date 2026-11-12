@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:VisualElement class="sdk-root new-part-wizard-root">
+
+        <engine:VisualElement class="new-part-wizard-header">
+            <engine:Label name="step-counter" class="new-part-wizard-step-counter" text="Step 1 of 6" />
+            <engine:Label name="step-title" class="new-part-wizard-step-title" text="Pick an archetype" />
+        </engine:VisualElement>
+
+        <engine:ScrollView class="new-part-wizard-content">
+            <engine:VisualElement name="step-slot" class="new-part-wizard-step-slot" />
+        </engine:ScrollView>
+
+        <engine:VisualElement class="new-part-wizard-footer">
+            <engine:Button name="back-button" text="Back" class="new-part-wizard-button" />
+            <engine:VisualElement class="new-part-wizard-footer-spacer" />
+            <engine:Button name="cancel-button" text="Cancel" class="new-part-wizard-button" />
+            <engine:Button name="next-button" text="Next" class="new-part-wizard-button" />
+            <engine:Button name="create-button" text="Create Part" class="new-part-wizard-button new-part-wizard-button-primary" />
+        </engine:VisualElement>
+
+    </engine:VisualElement>
+
+</engine:UXML>

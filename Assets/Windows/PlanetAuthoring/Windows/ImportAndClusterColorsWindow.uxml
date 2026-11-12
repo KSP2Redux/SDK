@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<engine:UXML
+    xmlns:engine="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements">
+
+    <engine:ScrollView class="sdk-root">
+
+        <engine:Label name="source-label" class="sdk-hint" />
+        <engine:Label name="pixel-stats-label" class="sdk-hint" />
+
+        <engine:Foldout text="Clustering" value="true" class="sdk-section">
+            <engine:SliderInt name="cluster-count-slider" label="Number of clusters (k)" tooltip="How many color clusters to extract. Each cluster becomes a region row when you apply." low-value="2" high-value="16" show-input-field="true" class="sdk-field unity-base-field__aligned" />
+            <engine:Toggle name="snap-edges-toggle" label="Snap anti-aliased edges" tooltip="Pre-pass: 3x3 mode filter that collapses anti-aliased boundary pixels onto the dominant neighborhood color. Kills spurious 'transition' clusters at region edges." class="sdk-field unity-base-field__aligned" />
+            <engine:Toggle name="posterize-toggle" label="Posterize source first" tooltip="Pre-pass: quantize source colors to N bits per channel before clustering. Useful when the source has subtle gradients inside what should be a single region." class="sdk-field unity-base-field__aligned" />
+            <engine:SliderInt name="posterize-bits-slider" label="Posterize bits / channel" tooltip="Bit depth per RGB channel during the posterize pre-pass. Lower values collapse more colors together." low-value="1" high-value="8" show-input-field="true" class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="cluster-button" text="Cluster" tooltip="Run k-means on the source texture and discover the cluster centroids. Re-run after changing settings." class="sdk-action-button" />
+        </engine:Foldout>
+
+        <engine:Foldout name="results-foldout" text="Discovered clusters" value="true" class="sdk-section">
+            <engine:Label name="results-status-label" class="sdk-hint" />
+            <engine:VisualElement name="clusters-list" />
+        </engine:Foldout>
+
+        <engine:Foldout text="Apply" value="true" class="sdk-section">
+            <engine:DropdownField name="apply-mode-dropdown" label="Apply mode" tooltip="Replace: clear existing regions, create one row per cluster. Merge: keep existing regions whose color matches a cluster within tolerance, only add new rows for clusters with no existing match." class="sdk-field unity-base-field__aligned" />
+            <engine:FloatField name="merge-tolerance-field" label="Merge tolerance (0-1)" tooltip="In Merge mode, two colors within this RGB distance (normalized) are considered the same region. 0 = exact match, 1 = anything matches." class="sdk-field unity-base-field__aligned" />
+            <engine:Button name="apply-button" text="Apply" tooltip="Write the discovered clusters back into the Science Region asset's region definitions. Use this after naming the clusters." class="sdk-action-button" />
+        </engine:Foldout>
+
+    </engine:ScrollView>
+
+</engine:UXML>
