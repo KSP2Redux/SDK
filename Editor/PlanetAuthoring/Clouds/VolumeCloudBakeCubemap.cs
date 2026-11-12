@@ -695,7 +695,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             return request;
         }
 
-        // Keep density filtering finer than the integration step. Transition distance must not choose noise mips.
+        // Integrate densely, but preserve the authored noise filtering used by the volumetric draw at the handoff.
         public static Vector4 BakeSampling(VolumeCloudConfiguration config,
             VolumeCloudConfiguration.CumulusData layer, int faceSize)
         {
@@ -709,8 +709,18 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             float footprint = 2f * Mathf.Max(config.planetRadius + layer.cloudHeightRange.y, 1f) / Mathf.Max(faceSize, 1);
             int samples = Mathf.Clamp(Mathf.CeilToInt(footprint / Mathf.Max(featureSize, step)), 2, 4);
             // Each noise volume has its own resolution and tiling. Do not use a shared texture LOD.
-            float baseLod = Mathf.Max(0f, Mathf.Log(step * 0.5f / baseVoxel, 2f));
-            float detailLod = Mathf.Max(0f, Mathf.Log(step * 0.5f / detailVoxel, 2f));
+            float distance = Mathf.Max(step, config.planetRadius * (2f / 3f) - layer.cloudHeightRange.y);
+            float noiseScale = 2f * distance / (cloudSize * 1.732f);
+            float NoiseMip(float tiling, float voxel)
+            {
+                if (float.IsPositiveInfinity(voxel))
+                    return 0f;
+                return config.autoMipmap
+                    ? Mathf.Max(0f, Mathf.Log(footprint / voxel, 2f))
+                    : Mathf.Max(0f, Mathf.Log(noiseScale * Mathf.Abs(tiling), 2f) * config.mipmapScale - 1f);
+            }
+            float baseLod = NoiseMip(layer.baseTexureTile, baseVoxel);
+            float detailLod = float.IsPositiveInfinity(detailVoxel) ? 0f : NoiseMip(layer.detailTextureTile, detailVoxel);
             return new Vector4(baseLod, detailLod, step, samples);
         }
 
