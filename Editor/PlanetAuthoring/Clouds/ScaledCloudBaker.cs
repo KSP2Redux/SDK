@@ -77,6 +77,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
 
             AsyncOperationHandle<GameObject> flightCameraHandle = Addressables.LoadAssetAsync<GameObject>(FLIGHT_CAMERA_PREFAB_KEY);
             GameObject host = null;
+            VolumeCloudBakeCubemap baker = null;
             RenderTexture target = null;
             try
             {
@@ -91,7 +92,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 }
 
                 target = new RenderTexture(FACE_SIZE, FACE_SIZE, 24, RenderTextureFormat.ARGBHalf) { hideFlags = HideFlags.HideAndDontSave };
-                host = CreateHost(stockRenderer, target, out VolumeCloudBakeCubemap baker);
+                host = CreateHost(stockRenderer, target, out baker);
                 EditorUtility.DisplayProgressBar("Bake Scaled Clouds", $"Baking {layer.layerName}", 0.5f);
                 if (!baker.BakeForEditor(configuration, layer, out Cubemap color, out Cubemap bottom, out Cubemap normals))
                 {
@@ -114,6 +115,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             finally
             {
                 EditorUtility.ClearProgressBar();
+                Object.DestroyImmediate(baker);
                 if (host != null)
                 {
                     Object.DestroyImmediate(host);
@@ -217,7 +219,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             camera.depthTextureMode = DepthTextureMode.Depth;
             camera.targetTexture = target;
 
-            baker = host.AddComponent<VolumeCloudBakeCubemap>();
+            baker = ScriptableObject.CreateInstance<VolumeCloudBakeCubemap>();
             var from = new SerializedObject(stockRenderer);
             var to = new SerializedObject(baker);
             foreach ((string rendererField, string bakerField) in SHADER_FIELDS)
@@ -226,7 +228,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             }
 
             to.ApplyModifiedPropertiesWithoutUndo();
-            baker.InitializeForEditor();
+            baker.InitializeForEditor(camera);
             host.SetActive(true);
             return host;
         }
