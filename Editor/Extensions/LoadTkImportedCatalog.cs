@@ -8,6 +8,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace Ksp2UnityTools.Editor.Extensions
 {
@@ -31,6 +32,7 @@ namespace Ksp2UnityTools.Editor.Extensions
         private static bool _catalogLoadInProgress;
         private static bool _catalogLoadWaitInProgress;
         private static AsyncOperationHandle<IResourceLocator> _catalogLoadOperation;
+        private static Func<IResourceLocation, string> _nativeInternalIdTransform;
 
 #if TK_ADDRESSABLE
         static LoadTkImportedCatalog()
@@ -336,28 +338,55 @@ namespace Ksp2UnityTools.Editor.Extensions
         // disabled, Addressables replaces that implementation after Play Mode exit, so ThunderKit's
         // redirect (normally installed only on domain load) must be restored before the next session
         // uses an imported catalog location.
-        private static void EnsureThunderKitInternalIdRedirect()
+        /// <summary>
+        /// Restores the imported catalog redirect and normalizes local bundle paths on Unix.
+        /// </summary>
+        internal static void EnsureThunderKitInternalIdRedirect()
         {
-            if (Addressables.InternalIdTransformFunc != null)
-                return;
-
-            MethodInfo redirectMethod = typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings)
-                .GetMethod(
-                    "RedirectInternalIdsToGameDirectory",
-                    BindingFlags.Static | BindingFlags.NonPublic
-                );
-            if (redirectMethod == null)
+            Func<IResourceLocation, string> redirect = Addressables.InternalIdTransformFunc;
+            if (redirect == null)
             {
-                throw new MissingMethodException(
-                    typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings).FullName,
-                    "RedirectInternalIdsToGameDirectory"
+                MethodInfo redirectMethod = typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings)
+                    .GetMethod(
+                        "RedirectInternalIdsToGameDirectory",
+                        BindingFlags.Static | BindingFlags.NonPublic
+                    );
+                if (redirectMethod == null)
+                {
+                    throw new MissingMethodException(
+                        typeof(ThunderKit.Addressable.Tools.AddressableGraphicsSettings).FullName,
+                        "RedirectInternalIdsToGameDirectory"
+                    );
+                }
+
+                redirect = (Func<IResourceLocation, string>)redirectMethod.CreateDelegate(
+                    typeof(Func<IResourceLocation, string>)
                 );
             }
 
-            Addressables.InternalIdTransformFunc =
-                (Func<IResourceLocation, string>)redirectMethod.CreateDelegate(
-                    typeof(Func<IResourceLocation, string>)
-                );
+            if (Path.DirectorySeparatorChar == '\\' || redirect == _nativeInternalIdTransform)
+            {
+                Addressables.InternalIdTransformFunc = redirect;
+                return;
+            }
+
+            // Other catalog integrations can chain this callback. Capture the prior delegate immutably.
+            _nativeInternalIdTransform = location =>
+            {
+                string id = redirect(location);
+                if (location.ResourceType != typeof(IAssetBundleResource) || string.IsNullOrEmpty(id))
+                    return id;
+
+                // Drive prefixes are local paths. Other schemes include file:/ and opaque provider identifiers.
+                int schemeEnd = id.IndexOf(':');
+                bool rootedDrive = schemeEnd == 1 && id.Length > 2 && id[2] is '/' or '\\';
+                if (schemeEnd > 0 && !rootedDrive && Uri.CheckSchemeName(id.Substring(0, schemeEnd)))
+                    return id;
+
+                // Windows catalog paths are data, not native paths on Unix. Normalize before filesystem lookup.
+                return id.Replace('\\', Path.DirectorySeparatorChar);
+            };
+            Addressables.InternalIdTransformFunc = _nativeInternalIdTransform;
         }
 
         // Addressables normally schedules this reset through EditorApplication.delayCall after
