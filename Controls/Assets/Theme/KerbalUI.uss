@@ -1493,3 +1493,558 @@
 }
 
 /* endregion */
+
+/******************************************************
+ ************** Dense layer (kui-*, opt-in) ***********
+ ******************************************************/
+
+/* The dense style of the planned Redux UI overhaul, taken from the stock dev-build UGUI prefabs under
+   Exports/KSP2-Dev-Export (PartsManager_*, ActionGroupElement, Trip Planner Item, UI-Editor_HUD, ELE-*).
+   Stock TMP size times 0.88 is the Redux pixel size. Nothing here changes a control unless it sits inside
+   a kui-dense window or carries a kui-* class. The density comes from structure: fixed row heights, small
+   paddings, dividers instead of gaps and no second text line per row.
+
+   Only the sizes come from the mockup. Frames, corners and colours come from the Redux UITK windows: the AppShell
+   chrome (.oab-window-root), InvertedCornerBox panels (border-thickness 1, notch-size 5, border #747680, fill
+   #1B1E24, class oab-window-body) and the theme's own radii on OabButton and fields. This layer invents no
+   radius: the only border-radius it sets is 0, on the flat group and category parts that the theme Foldout would
+   otherwise round. Inside a panel the look is flat, with 1px dividers as in the Vessel Info window. */
+
+/* region ============ Dense tokens ============ */
+
+/*noinspection CssInvalidPseudoSelector*/
+:root {
+    --kui-font-body: 14px;
+    --kui-font-value: 16px;
+    --kui-font-small: 12px;
+    --kui-font-caps: 11px;
+    --kui-row: 30px;
+    --kui-row-tall: 36px;
+    --kui-row-stat: 24px;
+    --kui-row-group: 28px;
+    --kui-row-category: 32px;
+    --kui-control: 24px;
+    --kui-gap: 8px;
+    --kui-pad: 5px;
+    /* PartsManager_BoolPropertyToggle name, rgb(192,199,213) */
+    --kui-text: rgb(192, 199, 213);
+    /* Engineers-Report TXT-desc, rgb(213,223,255) */
+    --kui-text-strong: rgb(214, 224, 255);
+    /* Engineers-Report TXT-data, rgb(219,181,127) */
+    --kui-value: rgb(219, 181, 127);
+    /* Engineers-Report stat icon, rgb(105,109,255) */
+    --kui-accent: rgb(105, 109, 255);
+    /* InvertedCornerBox default fill and border, as in Color Manager and Vessel Info */
+    --kui-fill-panel: rgb(27, 30, 36);
+    --kui-border-panel: rgb(116, 118, 128);
+    /* Divider inside a panel, the stat row line of the Vessel Info window */
+    --kui-divider: rgb(48, 53, 64);
+    /* Header band of a collapsible group, a step lighter than the panel */
+    --kui-fill-group: rgb(33, 37, 45);
+    /* Stat band, a step darker than the panel */
+    --kui-fill-stat: rgb(23, 26, 32);
+    /* Hover tint of a row, the Resource Scanner list hover */
+    --kui-hover: rgba(123, 124, 240, 0.08);
+}
+
+/* endregion */
+
+/* region ============ kui-dense (window) ============ */
+
+/* The window frame is the AppShell's own (.oab-window-root: fill, violet border, radius 5), so this class sets no
+   fill, border or radius. Put it on the AppShell or on any element that holds dense content. */
+.kui-dense {
+    color: var(--kui-text);
+    font-size: var(--kui-font-body);
+}
+
+/* TGL-Slider: 56x24, puck 28x20. The puck sits 2px from the edge, so the checked position is 56 - 28 - 2. */
+.kui-dense .unity-toggle.switch > .unity-base-field__input {
+    flex-basis: 56px;
+    flex-shrink: 0;
+    width: 56px;
+    height: var(--kui-control);
+}
+
+.kui-dense .unity-toggle.switch > .unity-base-field__input > .unity-toggle__checkmark {
+    width: 28px;
+    height: 20px;
+}
+
+.kui-dense .unity-toggle.switch:checked > .unity-base-field__input > .unity-toggle__checkmark {
+    left: 26px;
+}
+
+.kui-dense .unity-toggle.switch > .unity-base-field__label.unity-text-element {
+    padding-top: 0;
+    margin-left: 0;
+    -unity-text-align: middle-left;
+}
+
+/* BTN-Simple-A: 24px tall, 12px label. The corner radii stay the theme's (8px plate, 7px inner). */
+.kui-dense .oab-button.unity-text-element {
+    height: var(--kui-control);
+    min-height: var(--kui-control);
+}
+
+.kui-dense .oab-button.unity-text-element > .oab-button__inner > .oab-button__label {
+    -unity-text-auto-size: none;
+    font-size: var(--kui-font-small);
+    padding: 0;
+    -unity-text-align: middle-center;
+}
+
+/* Text field and dropdown: 24px. */
+.kui-dense .unity-base-text-field,
+.kui-field.unity-base-text-field {
+    height: var(--kui-control);
+    padding: 0;
+}
+
+.kui-dense .unity-base-text-field > .unity-base-field__input.unity-base-text-field__input,
+.kui-dense .oab-text-field > .unity-base-field__input.unity-base-text-field__input,
+.kui-field.unity-base-text-field > .unity-base-field__input.unity-base-text-field__input {
+    height: var(--kui-control);
+    margin: 0;
+    padding: 0 8px;
+    font-size: var(--kui-font-body);
+    -unity-text-align: middle-left;
+}
+
+.kui-dense .unity-popup-field,
+.kui-dense .unity-enum-field,
+.kui-field.unity-popup-field,
+.kui-field.unity-enum-field {
+    height: var(--kui-control);
+    margin: 0;
+}
+
+.kui-dense .unity-popup-field > .unity-popup-field__input,
+.kui-dense .unity-enum-field > .unity-enum-field__input,
+.kui-field.unity-popup-field > .unity-popup-field__input,
+.kui-field.unity-enum-field > .unity-enum-field__input {
+    padding: 0 8px;
+}
+
+.kui-dense .unity-popup-field .unity-text-element,
+.kui-dense .unity-enum-field .unity-text-element,
+.kui-field.unity-popup-field .unity-text-element,
+.kui-field.unity-enum-field .unity-text-element {
+    -unity-text-auto-size: none;
+    font-size: var(--kui-font-body);
+    -unity-text-align: middle-left;
+}
+
+.kui-dense .unity-base-popup-field__arrow,
+.kui-dense .unity-enum-field__arrow,
+.kui-field .unity-base-popup-field__arrow,
+.kui-field .unity-enum-field__arrow {
+    margin-top: 0;
+}
+
+/* endregion */
+
+/* region ============ kui-panel ============ */
+
+/* The inner panel is an InvertedCornerBox, as in Color Manager and Vessel Info:
+   <UitkForKsp2.Controls.InvertedCornerBox border-thickness="1" notch-size="5" border-color="#747680FF"
+   background-color="#1B1E24FF" class="oab-window-body kui-panel">. The box paints its own notched frame, so on it
+   this class only sets the padding (5, the size of the notch) and 2px spacing between children. The last child gives
+   the bottom padding back, so the panel pads 3 plus the 2 of margin. */
+.kui-panel {
+    padding: var(--kui-pad) var(--kui-pad) 3px var(--kui-pad);
+    flex-shrink: 0;
+}
+
+.kui-panel > * {
+    margin-bottom: 2px;
+}
+
+/* Where a panel has to be a plain element, kui-panel--flat paints the same border and fill with square corners. */
+.kui-panel--flat {
+    background-color: var(--kui-fill-panel);
+    border-width: 1px;
+    border-color: var(--kui-border-panel);
+}
+
+/* endregion */
+
+/* region ============ kui-category ============ */
+
+/* PartsManager_Category: header 32 (pad 4, arrow 16, caps at charSp 20, rgb(214,224,255)). Flat: no fill and square
+   corners, a 1px divider under the header like the stat rows of Vessel Info. The theme sprite arrow is used, the text
+   is written in capitals by the UXML. */
+.kui-category,
+.kui-category:hover,
+.kui-category:focus,
+.kui-category:checked,
+.kui-category:checked:hover {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.kui-category {
+    margin: 0 0 2px 0;
+    padding: 0;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+
+.kui-category > .unity-foldout__toggle {
+    height: var(--kui-row-category);
+    margin: 0;
+    padding: 0 8px 0 4px;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--kui-divider);
+    align-items: center;
+}
+
+.kui-category > .unity-foldout__toggle:hover {
+    background-color: var(--kui-hover);
+}
+
+.kui-category > .unity-foldout__toggle Label,
+.kui-category > .unity-foldout__toggle:active Label,
+.kui-category > .unity-foldout__toggle:focus .unity-foldout__text.unity-text-element {
+    margin: 0 0 0 2px;
+    padding: 0;
+    font-size: var(--kui-font-body);
+    letter-spacing: 4px;
+    color: var(--kui-text-strong);
+    -unity-text-align: middle-left;
+}
+
+.kui-category > .unity-foldout__toggle > .unity-toggle__input.unity-base-field__input > .unity-toggle__checkmark {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    flex-shrink: 0;
+    background-size: 16px;
+    background-position: center;
+    -unity-background-image-tint-color: var(--kui-text-strong);
+}
+
+.kui-category > .unity-foldout__content {
+    margin: 2px 0 0 0;
+    padding: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* endregion */
+
+/* region ============ kui-group ============ */
+
+/* PartsManager_Part: header 28 (arrow slot 24, name 16 rgb(205,214,250)). Content: pad L8 R8 T4 B4, spacing 6. Flat:
+   the header is a band a step lighter than the panel with a 1px divider under it, and the content has no fill. There
+   are no rounded corners and no box border, the group sits inside a panel that has the frame.
+   USS has no :first-child, so the spacing is the bottom margin of every child and the content pads 0 at the bottom:
+   the last child's margin gives 6 instead of 4.
+   Selectors see the Foldout as the parent of its content, so the children are matched as "> *" of the group.
+   The header and content rules above set their own margins and win over it by weight. */
+.kui-group,
+.kui-group:hover,
+.kui-group:focus,
+.kui-group:checked,
+.kui-group:checked:hover {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.kui-group {
+    margin: 0 0 4px 0;
+    padding: 0;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+
+.kui-group > .unity-foldout__toggle {
+    height: var(--kui-row-group);
+    margin: 0;
+    padding: 0 8px 0 2px;
+    border-radius: 0;
+    background-color: var(--kui-fill-group);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--kui-divider);
+    align-items: center;
+}
+
+.kui-group > .unity-foldout__toggle:hover {
+    background-color: rgb(40, 45, 56);
+}
+
+.kui-group > .unity-foldout__toggle Label,
+.kui-group > .unity-foldout__toggle:active Label,
+.kui-group > .unity-foldout__toggle:focus .unity-foldout__text.unity-text-element {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    color: rgb(205, 214, 250);
+    -unity-text-align: middle-left;
+}
+
+.kui-group > .unity-foldout__toggle > .unity-toggle__input.unity-base-field__input > .unity-toggle__checkmark {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    flex-shrink: 0;
+    background-size: 16px;
+    background-position: center;
+    -unity-background-image-tint-color: rgb(205, 214, 250);
+}
+
+.kui-group > .unity-foldout__content {
+    margin: 0;
+    padding: 4px 8px 0 8px;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.kui-group > * {
+    margin-bottom: 6px;
+}
+
+/* endregion */
+
+/* region ============ kui-row ============ */
+
+/* ActionGroupElement minH 30, PartsManager_BoolPropertyToggle minH 36, gap 8. The label takes the free width, so the
+   control sits at the right edge. */
+.kui-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: var(--kui-row);
+    flex-shrink: 0;
+}
+
+.kui-row--tall {
+    min-height: var(--kui-row-tall);
+}
+
+.kui-row > .kui-row__label,
+.kui-row > .unity-base-field__label.unity-text-element {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0 var(--kui-gap) 0 0;
+    padding: 0;
+    font-size: var(--kui-font-body);
+    color: var(--kui-text);
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.kui-row__label {
+    font-size: var(--kui-font-body);
+    color: var(--kui-text);
+    -unity-text-align: middle-left;
+}
+
+.kui-row > .unity-toggle.switch {
+    flex-grow: 0;
+    margin: 0;
+}
+
+/* endregion */
+
+/* region ============ kui-stat ============ */
+
+/* Engineers-Report stat row: height 24, spacing 2, fill rgb(23,26,34), pad L16 R16, gap 8, 2px separator
+   rgba(0,0,0,0.6). The icon is 8x8 in rgb(105,109,255), name 14 rgb(213,223,255), value 16 rgb(219,181,127) on the
+   right, unit small after it. Set a background image on the icon to replace the square. */
+.kui-stat {
+    flex-direction: row;
+    align-items: center;
+    height: var(--kui-row-stat);
+    min-height: var(--kui-row-stat);
+    flex-shrink: 0;
+    padding: 0 16px;
+    margin-bottom: 2px;
+    background-color: var(--kui-fill-stat);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0.6);
+}
+
+.kui-stat__icon {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    margin: 0 var(--kui-gap) 0 0;
+    background-color: var(--kui-accent);
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--kui-accent);
+}
+
+.kui-stat__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0;
+    padding: 0;
+    font-size: var(--kui-font-body);
+    color: var(--kui-text-strong);
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.kui-stat__value {
+    flex-shrink: 0;
+    margin: 0 0 0 var(--kui-gap);
+    padding: 0;
+    font-size: var(--kui-font-value);
+    color: var(--kui-value);
+    -unity-text-align: middle-right;
+}
+
+.kui-stat__unit {
+    flex-shrink: 0;
+    margin: 0 0 0 4px;
+    padding: 0;
+    min-width: 12px;
+    font-size: var(--kui-font-small);
+    color: var(--kui-value);
+    -unity-text-align: middle-left;
+}
+
+/* endregion */
+
+/* region ============ kui-section ============ */
+
+/* PartsManagerPropertyHeader: min height 28, pad T10, the "//" mark and the title in rgb(115,121,221), 11px
+   RosesAreFF0000 at charSp 20. */
+.kui-section {
+    flex-direction: row;
+    align-items: flex-start;
+    min-height: var(--kui-row-group);
+    padding: 10px 4px 0 4px;
+    flex-shrink: 0;
+}
+
+.kui-section__slashes,
+.kui-section__title {
+    margin: 0;
+    padding: 0;
+    font-size: var(--kui-font-caps);
+    color: rgb(115, 121, 221);
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/RosesAreFF0000/RosesareFF0000%20SDF.asset?fileID=11400000&guid=f2516f1635a41814ca97b23fac4691fd&type=2#RosesareFF0000 SDF');
+    -unity-font-style: normal;
+    -unity-text-align: upper-left;
+}
+
+.kui-section__slashes {
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.kui-section__title {
+    flex-shrink: 1;
+    letter-spacing: 4px;
+}
+
+/* endregion */
+
+/* region ============ kui-divider ============ */
+
+/* fieldDivider: 6px, Tile-Dash-002 (dash.png), rgba(242,235,213,0.14). The dash line sits in the middle of the 11px
+   sprite, so the 6px strip is centred on it. */
+.kui-divider {
+    height: 6px;
+    flex-shrink: 0;
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dash.png?fileID=21300000&guid=8bcad968150482849aed7025ed71c162&type=3#dash');
+    background-repeat: repeat-x;
+    background-size: 24px 11px;
+    background-position: 0 50%;
+    -unity-background-image-tint-color: rgba(242, 235, 213, 0.14);
+}
+
+/* ELE-Dashed-Line: 8px, Divider-DashSlash (dash-slash.png), rgb(99,111,134). */
+.kui-divider--slash {
+    height: 8px;
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dash-slash.png?fileID=21300000&guid=f761548ecea002143a7640af5a409481&type=3#dash-slash');
+    background-size: 25px 8px;
+    background-position: 0 0;
+    -unity-background-image-tint-color: rgb(99, 111, 134);
+}
+
+/* DIV-Period: 2px, DIV-Period-002-1x (dots.png, 16x8 at 200 pixels per unit, so 8x4 on screen), rgb(133,139,255).
+   The 2px strip shows the bottom of the tile, where the dots are. */
+.kui-divider--dots {
+    height: 2px;
+    background-image: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Sprites/dots.png?fileID=21300000&guid=52245bf5b02948959ad981bb21febca2&type=3#dots');
+    background-size: 8px 4px;
+    background-position: 0 100%;
+    -unity-background-image-tint-color: rgb(133, 139, 255);
+}
+
+/* endregion */
+
+/* region ============ kui-button, kui-field, kui-value ============ */
+
+/* BTN-Simple-A: 56x24, 12px label, the light plate of OabButton. On an OabButton it only sets the size, a plain
+   Button gets the plate itself. Block stretches to the parent width. */
+.kui-button {
+    min-width: 56px;
+    height: var(--kui-control);
+    min-height: var(--kui-control);
+    flex-shrink: 0;
+}
+
+.kui-button--block {
+    align-self: stretch;
+    min-width: 0;
+}
+
+/* A plain Button gets the plate itself. The theme sets the Button background with !important, so this does too. */
+.kui-button.unity-button.unity-text-element {
+    height: var(--kui-control);
+    margin: 0;
+    padding: 0 8px;
+    border-width: 1px;
+    border-color: rgb(87, 95, 111);
+    color: rgb(34, 38, 46);
+    font-size: var(--kui-font-small);
+    -unity-font-style: bold;
+    -unity-font-definition: url('project://database/Packages/ksp2redux.sdk/Controls/Assets/Theme/Fonts/SFPixelate/SFPixelate%20SDF.asset?fileID=11400000&guid=b74cecddccdf00b47a63d040e8e3821a&type=2#SFPixelate SDF');
+    background-color: rgb(189, 196, 209) !important;
+}
+
+.kui-button.unity-button.unity-text-element:hover {
+    background-color: rgb(214, 224, 255) !important;
+}
+
+.kui-button.unity-button.unity-text-element:active {
+    background-color: rgb(191, 202, 235) !important;
+}
+
+/* The OabButton keeps its own two-layer plate, so it gets back the theme's Button background. */
+.kui-button.oab-button.unity-text-element,
+.kui-button.oab-button.unity-text-element:hover,
+.kui-button.oab-button.unity-text-element:active {
+    padding: 1px;
+    background-color: #0f1318 !important;
+}
+
+.kui-button.oab-button.unity-text-element {
+    height: var(--kui-control);
+}
+
+.kui-button.oab-button.unity-text-element > .oab-button__inner > .oab-button__label {
+    -unity-text-auto-size: none;
+    font-size: var(--kui-font-small);
+    padding: 0;
+    -unity-text-align: middle-center;
+}
+
+/* kui-field: a text field, dropdown or enum field at 24px outside a kui-dense window. Its rules sit with the dense
+   field rules above. */
+
+/* PartsManagerPropertyReadOnlyFormatted: 14 in rgb(241,211,123), 12px here. */
+.kui-value {
+    margin: 0;
+    padding: 0;
+    font-size: var(--kui-font-small);
+    color: rgb(241, 211, 123);
+    -unity-text-align: middle-right;
+}
+
+/* endregion */
