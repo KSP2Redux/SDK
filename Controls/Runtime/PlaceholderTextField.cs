@@ -50,13 +50,33 @@ namespace UitkForKsp2.Controls
                     position = Position.Absolute,
                     left = 5,
                     top = 2,
+                    marginLeft = 0,
+                    marginTop = 0,
+                    paddingLeft = 0,
+                    paddingTop = 0,
                     color = new Color(0.5f, 0.5f, 0.5f, 0.5f),
-                    unityTextAlign = TextAnchor.UpperLeft,
+                    unityTextAlign = multiline ? TextAnchor.UpperLeft : TextAnchor.MiddleLeft,
                     whiteSpace = WhiteSpace.Normal
                 }
             };
 
             inputContainer.Add(_placeholderLabel);
+            inputContainer.RegisterCallback<GeometryChangedEvent>(_ => AlignPlaceholder(inputContainer));
+        }
+
+        /// <summary>
+        /// Puts the placeholder where the typed text starts. The input's padding differs between themes and dense
+        /// windows, and an absolute child ignores it, so the offsets are read from the resolved padding. A single line
+        /// field centres the placeholder on its height, a multiline one keeps it at the top.
+        /// </summary>
+        private void AlignPlaceholder(VisualElement inputContainer)
+        {
+            IResolvedStyle padding = inputContainer.resolvedStyle;
+            _placeholderLabel.style.left = padding.paddingLeft;
+            _placeholderLabel.style.right = padding.paddingRight;
+            _placeholderLabel.style.top = multiline ? padding.paddingTop : 0;
+            _placeholderLabel.style.bottom = multiline ? StyleKeyword.Auto : 0;
+            _placeholderLabel.style.unityTextAlign = multiline ? TextAnchor.UpperLeft : TextAnchor.MiddleLeft;
         }
 
         private void OnValueChanged(ChangeEvent<string> evt)

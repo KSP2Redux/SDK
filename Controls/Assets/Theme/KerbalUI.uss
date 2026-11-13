@@ -1671,9 +1671,10 @@
 
 /* region ============ kui-category ============ */
 
-/* PartsManager_Category: header 32 (pad 4, arrow 16, caps at charSp 20, rgb(214,224,255)). Flat: no fill and square
-   corners, a 1px divider under the header like the stat rows of Vessel Info. The theme sprite arrow is used, the text
-   is written in capitals by the UXML. */
+/* PartsManager_Category: header 32 (pad 4, arrow 16, caps at charSp 20, rgb(214,224,255)). The header has no fill,
+   open or collapsed, and rgb(55,62,75) on hover, as in the Action Group Manager. A collapsed category's caps are dimmed.
+   The theme sprite arrow is used, the text is written in capitals by the UXML or the code. Its children are
+   kui-group boxes, or plain rows with no frame. */
 .kui-category,
 .kui-category:hover,
 .kui-category:focus,
@@ -1695,24 +1696,28 @@
     padding: 0 8px 0 4px;
     border-radius: 0;
     background-color: rgba(0, 0, 0, 0);
-    border-bottom-width: 1px;
-    border-bottom-color: var(--kui-divider);
     align-items: center;
 }
 
 .kui-category > .unity-foldout__toggle:hover {
-    background-color: var(--kui-hover);
+    background-color: rgb(55, 62, 75);
 }
 
 .kui-category > .unity-foldout__toggle Label,
 .kui-category > .unity-foldout__toggle:active Label,
 .kui-category > .unity-foldout__toggle:focus .unity-foldout__text.unity-text-element {
-    margin: 0 0 0 2px;
+    margin: 0 0 0 4px;
     padding: 0;
     font-size: var(--kui-font-body);
-    letter-spacing: 4px;
-    color: var(--kui-text-strong);
+    /* The stock charSp 20 is 20px here, as for the window title. */
+    letter-spacing: 20px;
+    color: rgba(214, 224, 255, 0.5);
     -unity-text-align: middle-left;
+}
+
+.kui-category > .unity-foldout__toggle:checked Label,
+.kui-category > .unity-foldout__toggle:hover Label {
+    color: var(--kui-text-strong);
 }
 
 .kui-category > .unity-foldout__toggle > .unity-toggle__input.unity-base-field__input > .unity-toggle__checkmark {
@@ -1726,7 +1731,7 @@
 }
 
 .kui-category > .unity-foldout__content {
-    margin: 2px 0 0 0;
+    margin: 4px 0 4px 0;
     padding: 0;
     border-radius: 0;
     background-color: rgba(0, 0, 0, 0);
@@ -1736,24 +1741,26 @@
 
 /* region ============ kui-group ============ */
 
-/* PartsManager_Part: header 28 (arrow slot 24, name 16 rgb(205,214,250)). Content: pad L8 R8 T4 B4, spacing 6. Flat:
-   the header is a band a step lighter than the panel with a 1px divider under it, and the content has no fill. There
-   are no rounded corners and no box border, the group sits inside a panel that has the frame.
-   USS has no :first-child, so the spacing is the bottom margin of every child and the content pads 0 at the bottom:
-   the last child's margin gives 6 instead of 4.
-   Target the real Foldout content hierarchy so only its content children receive spacing. */
+/* PartsManager_Part: a box with 6px corners (Frame-pixel-fill and Frame-6px-rad-border sprites). The header is 28
+   (arrow slot 24, name 16 rgb(205,214,250)) on rgb(46,53,64), rgb(56,64,78) on hover. The open content is the
+   BG-Part-Inner fill rgb(31,35,44), pad L8 R8 T4, spacing 6. A collapsed box is a step darker with dimmed text.
+   Rows (kui-row) inside the box sit flush, split by a dark 1px line as in the Action Group Manager.
+   USS has no :first-child, so the spacing is the bottom margin of every child and the content pads 0 at the bottom. */
 .kui-group,
 .kui-group:hover,
 .kui-group:focus,
 .kui-group:checked,
 .kui-group:checked:hover {
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgb(46, 53, 64);
 }
 
 .kui-group {
     margin: 0 0 4px 0;
     padding: 0;
-    border-radius: 0;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: rgb(46, 53, 64);
+    overflow: hidden;
     flex-shrink: 0;
 }
 
@@ -1762,14 +1769,16 @@
     margin: 0;
     padding: 0 8px 0 2px;
     border-radius: 0;
-    background-color: var(--kui-fill-group);
-    border-bottom-width: 1px;
-    border-bottom-color: var(--kui-divider);
+    background-color: rgb(36, 41, 50);
     align-items: center;
 }
 
+.kui-group > .unity-foldout__toggle:checked {
+    background-color: rgb(46, 53, 64);
+}
+
 .kui-group > .unity-foldout__toggle:hover {
-    background-color: rgb(40, 45, 56);
+    background-color: rgb(56, 64, 78);
 }
 
 .kui-group > .unity-foldout__toggle Label,
@@ -1778,8 +1787,13 @@
     margin: 0;
     padding: 0;
     font-size: 16px;
-    color: rgb(205, 214, 250);
+    color: rgba(205, 214, 250, 0.6);
     -unity-text-align: middle-left;
+}
+
+.kui-group > .unity-foldout__toggle:checked Label,
+.kui-group > .unity-foldout__toggle:hover Label {
+    color: rgb(205, 214, 250);
 }
 
 .kui-group > .unity-foldout__toggle > .unity-toggle__input.unity-base-field__input > .unity-toggle__checkmark {
@@ -1792,15 +1806,26 @@
     -unity-background-image-tint-color: rgb(205, 214, 250);
 }
 
+/* BG-Part-Inner: the dark content panel sits 2px inside the box, with 4px corners. */
 .kui-group > .unity-foldout__content {
-    margin: 0;
+    margin: 0 2px 2px 2px;
     padding: 4px 8px 0 8px;
-    border-radius: 0;
-    background-color: rgba(0, 0, 0, 0);
+    border-radius: 4px;
+    background-color: rgb(31, 35, 44);
 }
 
 .kui-group > .unity-foldout__content > * {
     margin-bottom: 6px;
+}
+
+/* A row spans the whole inner panel, and rows are split by a 2px line in the box colour, so they read as separate
+   cells as in the Action Group Manager. The negative margin undoes the panel's 8px side padding. */
+.kui-group > .unity-foldout__content > .kui-row {
+    margin: 0 -8px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(46, 53, 64);
 }
 
 /* endregion */
