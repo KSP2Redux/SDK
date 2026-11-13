@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KSP;
+using Ksp2UnityTools.Editor.LinkedAddressables;
 using Ksp2UnityTools.Editor.Validation;
 using UnityEditor;
 using UnityEngine;
@@ -71,7 +72,8 @@ namespace Ksp2UnityTools.Editor.PartAuthoring.Validation.Validators.Core
                     continue;
                 }
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-                if (prefab == null)
+                // A linked stock prefab or a patch of one keeps the stock part data but is not loaded as a part.
+                if (prefab == null || LinkedAddressableEditorIdentity.IsLinkedOrVariantOfLinked(prefab))
                 {
                     continue;
                 }

@@ -175,6 +175,32 @@ namespace Ksp2UnityTools.Editor.LinkedAddressables
         }
 
         /// <summary>
+        /// Returns whether a prefab is stock content: a <c>.bkaddressable</c> linked asset, or a prefab variant whose
+        /// original source is one.
+        /// </summary>
+        /// <param name="prefab">A prefab asset.</param>
+        /// <returns>True when the prefab only references or patches a linked stock prefab.</returns>
+        /// <remarks>
+        /// Such a prefab keeps the stock part's own components, so it carries a part's data without being an authored
+        /// part. Part catalogs and duplicate-name checks skip it.
+        /// </remarks>
+        public static bool IsLinkedOrVariantOfLinked(GameObject prefab)
+        {
+            if (prefab == null)
+                return false;
+
+            if (IsLinkedPath(AssetDatabase.GetAssetPath(prefab)))
+                return true;
+
+            GameObject source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(prefab);
+            return source != null && source != prefab && IsLinkedPath(AssetDatabase.GetAssetPath(source));
+        }
+
+        private static bool IsLinkedPath(string path) =>
+            !string.IsNullOrEmpty(path)
+            && path.EndsWith("." + LinkedAddressableAssetImporter.Extension, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Returns every mapped object identity in one linked descriptor.
         /// </summary>
         public static IReadOnlyList<LinkedAddressableEditorObjectIdentity> GetAll(
