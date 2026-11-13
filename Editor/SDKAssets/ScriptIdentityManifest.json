@@ -60,6 +60,12 @@
             "SourceFileId": 11500000,
             "AssemblyName": "Ksp2Redux",
             "TypeName": "PQSDecal"
+        },
+        {
+            "SourceGuid": "e195c93ed51543a89be11e924c8f153c",
+            "SourceFileId": 11500000,
+            "AssemblyName": "Ksp2Redux",
+            "TypeName": "Redux.VFX.Plume.Volumetric.VolumetricPlumeSource"
         }
     ]
 }
