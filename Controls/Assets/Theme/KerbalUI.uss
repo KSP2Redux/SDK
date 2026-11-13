@@ -1741,8 +1741,7 @@
    are no rounded corners and no box border, the group sits inside a panel that has the frame.
    USS has no :first-child, so the spacing is the bottom margin of every child and the content pads 0 at the bottom:
    the last child's margin gives 6 instead of 4.
-   Selectors see the Foldout as the parent of its content, so the children are matched as "> *" of the group.
-   The header and content rules above set their own margins and win over it by weight. */
+   Target the real Foldout content hierarchy so only its content children receive spacing. */
 .kui-group,
 .kui-group:hover,
 .kui-group:focus,
@@ -1800,7 +1799,7 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
-.kui-group > * {
+.kui-group > .unity-foldout__content > * {
     margin-bottom: 6px;
 }
 
