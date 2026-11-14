@@ -26,6 +26,7 @@ namespace Ksp2UnityTools.Editor.Modding.Thunderkit
         /// <inheritdoc />
         public override Task Execute(Pipeline pipeline)
         {
+            ModValidation.Validate(pipeline.Manifest);
             string[] folders = pipeline.Manifest.Data.OfType<TextAssets>()
                 .Where(datum => datum.possibleFolders != null)
                 .SelectMany(datum => datum.possibleFolders)
