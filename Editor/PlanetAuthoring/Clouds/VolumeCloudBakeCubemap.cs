@@ -584,7 +584,9 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
             // The prefab's stock shader has no kernels under D3D12.
             cloudsComputeShader = Redux.ReduxAssets.WithStockComputePort(cloudsComputeShader);
             int kernelIndex = cloudsComputeShader.FindKernel("ClearBuffer");
-            cmd.SetComputeTextureParam(cloudsComputeShader, kernelIndex, "_LD_TexArray_Target", raymarchedDistance[0]);
+            // Stock bound this as _LD_TexArray_Target, a name the shader does not declare, so the clear had no
+            // target and Unity logged an error on every face. Nothing else writes this texture.
+            cmd.SetComputeTextureParam(cloudsComputeShader, kernelIndex, CloudPropertyHash.TEX_ARRAY_TARGET_ID, raymarchedDistance[0]);
             cmd.DispatchCompute(
                 cloudsComputeShader,
                 kernelIndex,
