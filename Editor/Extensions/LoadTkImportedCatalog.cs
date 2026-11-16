@@ -35,6 +35,10 @@ namespace Ksp2UnityTools.Editor.Extensions
 #if TK_ADDRESSABLE
         static LoadTkImportedCatalog()
         {
+#if !REDUX
+            EditorApplication.update -= ActivateShaderBundlesOnce;
+            EditorApplication.update += ActivateShaderBundlesOnce;
+#endif
             // The imported catalog locators are normally registered after a domain reload (see
             // OnPostprocessAllAssets). Entering Play Mode re-runs Addressables'
             // FastModeInitializationOperation, which rebuilds the resource locators from the project's
@@ -52,10 +56,23 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static void OnBeforeAssemblyReload()
         {
+#if !REDUX
+            EditorApplication.update -= ActivateShaderBundlesOnce;
+            Redux.Assets.ShaderBundleRuntime.Release();
+#endif
             EditorApplication.delayCall -= BeginImportedCatalogLoad;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
         }
+
+#if !REDUX
+        private static void ActivateShaderBundlesOnce()
+        {
+            EditorApplication.update -= ActivateShaderBundlesOnce;
+            // Stock prefab shader references need the imported game's URP replacements in edit mode too.
+            Redux.Assets.ShaderBundleRuntime.Activate();
+        }
+#endif
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
