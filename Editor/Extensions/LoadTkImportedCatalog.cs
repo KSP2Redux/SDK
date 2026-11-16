@@ -247,6 +247,10 @@ namespace Ksp2UnityTools.Editor.Extensions
         // registered. Idempotent, so it is safe to call on every domain reload and every Play Mode enter.
         private static void EnsureImportedCatalogsLoaded()
         {
+#if !REDUX
+            // The game import can finish after startup's shader activation failed.
+            Redux.Assets.ShaderBundleRuntime.Activate();
+#endif
             EditorApplication.delayCall -= BeginImportedCatalogLoad;
             _catalogLoadScheduled = false;
 
