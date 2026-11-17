@@ -92,6 +92,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring.Clouds
                 return false;
             }
 
+            if (!EditorPqsBootstrap.EnsureStockCatalog())
+            {
+                Status = "The base-game catalog is not registered. Run 'ThunderKit > Import Ksp2 To Editor'.";
+                ReleaseHandles();
+                return false;
+            }
+
             _flightCameraHandle = Addressables.LoadAssetAsync<GameObject>(FLIGHT_CAMERA_PREFAB_KEY);
             GameObject flightCamera = _flightCameraHandle.WaitForCompletion();
             _stockRenderer = flightCamera != null ? flightCamera.GetComponentInChildren<VolumeCloudRenderer>(true) : null;
