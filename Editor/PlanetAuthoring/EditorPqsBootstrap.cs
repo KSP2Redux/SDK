@@ -42,14 +42,7 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
                 // asset. Keeping it would hand the same destroyed result back to the next load.
                 ReleaseGraphicsManager();
 
-#if TK_ADDRESSABLE
-                if (!IsCatalogRegistered())
-                {
-                    LoadTkImportedCatalog.EnsureRegistered();
-                }
-#endif
-
-                if (!IsCatalogRegistered())
+                if (!EnsureStockCatalog())
                 {
                     WarnMissingCatalogOnce();
                     return null;
@@ -130,15 +123,13 @@ namespace Ksp2UnityTools.Editor.PlanetAuthoring
         /// <remarks>
         /// Call before loading any stock asset by key. Addressables can reinitialise between editor operations and
         /// come back without the imported catalog, after which stock keys fail with InvalidKeyException.
+        /// The SDK also retries imported shader activation here when the catalog is already registered.
         /// </remarks>
         /// <returns>True if the catalog is registered, false otherwise.</returns>
         public static bool EnsureStockCatalog()
         {
 #if TK_ADDRESSABLE
-            if (!IsCatalogRegistered())
-            {
-                LoadTkImportedCatalog.EnsureRegistered();
-            }
+            LoadTkImportedCatalog.EnsureRegistered();
 #endif
 
             return IsCatalogRegistered();

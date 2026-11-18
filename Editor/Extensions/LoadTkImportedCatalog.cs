@@ -56,6 +56,8 @@ namespace Ksp2UnityTools.Editor.Extensions
 #else
             if (Redux.ReduxAssets.IsSourceOnly)
                 Redux.ReduxAssets.ConfigureSourceEditorCatalog = EnsureImportedCatalogsLoaded;
+            EditorApplication.update -= ActivateShaderBundlesOnce;
+            EditorApplication.update += ActivateShaderBundlesOnce;
 #endif
             // The imported catalog locators are normally registered after a domain reload (see
             // OnPostprocessAllAssets). Entering Play Mode re-runs Addressables'
@@ -74,10 +76,23 @@ namespace Ksp2UnityTools.Editor.Extensions
 
         private static void OnBeforeAssemblyReload()
         {
+#if !REDUX
+            EditorApplication.update -= ActivateShaderBundlesOnce;
+            Redux.Assets.ShaderBundleRuntime.Release();
+#endif
             EditorApplication.delayCall -= BeginImportedCatalogLoad;
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
         }
+
+#if !REDUX
+        private static void ActivateShaderBundlesOnce()
+        {
+            EditorApplication.update -= ActivateShaderBundlesOnce;
+            // Stock prefab shader references need the imported game's URP replacements in edit mode too.
+            Redux.Assets.ShaderBundleRuntime.Activate();
+        }
+#endif
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
@@ -263,6 +278,9 @@ namespace Ksp2UnityTools.Editor.Extensions
 #if REDUX
             if (Redux.ReduxAssets.IsSourceOnly)
                 return;
+#else
+            // The game import can finish after startup's shader activation failed.
+            Redux.Assets.ShaderBundleRuntime.Activate();
 #endif
             EditorApplication.delayCall -= BeginImportedCatalogLoad;
             _catalogLoadScheduled = false;
