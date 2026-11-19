@@ -67,11 +67,49 @@ float4 _KSP2EclipseLocalRingNormal;
 float4 _KSP2EclipseLocalRingRadii;
 TEXTURE2D(_KSP2EclipseRingTexture);
 
-// What a ring lets through toward the star: 1 minus its opacity where the ray from the point toward the star crosses
-// the ring plane, 1 when it misses the ring or there is none. A point in the ring plane, the ring's own surface above
-// all, is not shadowed by it. That is decided by its height above the plane, which is float noise there. The distance
-// to the crossing is that height over the sine of the star's elevation, so with the star near the plane a test on the
-// distance let the ring shadow itself in random patches that changed with every jitter and frame (#2150).
+// Integral of exp(-t) over a path, divided by its optical depth. The series retains thin-ring precision.
+float KSP2_RingAttenuationIntegral(float opticalDepth)
+{
+    return opticalDepth < 1e-3 ? 1.0 - opticalDepth * (0.5 - opticalDepth / 6.0)
+        : (1.0 - exp(-opticalDepth)) / opticalDepth;
+}
+
+// Texture alpha remains the authored face-on opacity, converted to normal optical depth without losing small alpha.
+float KSP2_RingOpticalDepth(float normalOpacity)
+{
+    float opacity = saturate(normalOpacity);
+    return opacity < 1e-3 ? opacity * (1.0 + opacity * (0.5 + opacity / 3.0))
+        : -log(max(1.0 - opacity, 1e-7));
+}
+
+float KSP2_RingOpacity(float normalOpacity, float directionCosine)
+{
+    float path = KSP2_RingOpticalDepth(normalOpacity) / max(abs(directionCosine), 1e-3);
+    return normalOpacity >= 1.0 ? 1.0 : saturate(path * KSP2_RingAttenuationIntegral(path));
+}
+
+// Plane-parallel single scattering, French et al. (2012), Appendix A. Reflection and transmission have stable
+// equal-angle limits. Normalize to the authored face-on reflected appearance and remove the straight-alpha weight,
+// since the ring pass applies that weight while blending. The existing phase curve remains the particle response.
+float KSP2_RingScatteringFactor(float normalOpacity, float viewOpacity, float viewCosine, float sunCosine)
+{
+    if (normalOpacity <= 0.0 || viewOpacity <= 0.0)
+        return 0.0;
+
+    float opticalDepth = KSP2_RingOpticalDepth(normalOpacity);
+    float mu = max(abs(viewCosine), 1e-3);
+    float mu0 = max(abs(sunCosine), 1e-3);
+    float viewPath = opticalDepth / mu;
+    float sunPath = opticalDepth / mu0;
+    bool reflected = viewCosine * sunCosine >= 0.0;
+    float integral = reflected ? KSP2_RingAttenuationIntegral(viewPath + sunPath)
+        : exp(-min(viewPath, sunPath)) * KSP2_RingAttenuationIntegral(abs(viewPath - sunPath));
+    float relativeRadiance = integral / (mu * KSP2_RingAttenuationIntegral(2.0 * opticalDepth));
+    return (normalOpacity / viewOpacity) * relativeRadiance;
+}
+
+// Slant opacity through the ring uses the ray elevation. A point in the ring plane never shadows itself.
+// Reject by height, not intersection distance: grazing rays otherwise flicker on the ring surface (#2150).
 float KSP2_EclipseRingTransmittance(float3 positionWS, float3 toStarDirection, float4 center, float3 normal, float2 radii)
 {
     float transmittance = 1.0;
@@ -84,7 +122,8 @@ float KSP2_EclipseRingTransmittance(float3 positionWS, float3 toStarDirection, f
         float radius = length(positionWS + toStarDirection * t - center.xyz);
         float u = (radius - radii.x) / width;
         if (t > 0.0 && u > 0.0 && u < 1.0)
-            transmittance = 1.0 - SAMPLE_TEXTURE2D_LOD(_KSP2EclipseRingTexture, sampler_LinearClamp, float2(u, 0.5), 0).a;
+            transmittance = 1.0 - KSP2_RingOpacity(
+                SAMPLE_TEXTURE2D_LOD(_KSP2EclipseRingTexture, sampler_LinearClamp, float2(u, 0.5), 0).a, facing);
     }
 
     return transmittance;

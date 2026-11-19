@@ -1,29 +1,15 @@
 // KSP2CelestialBodyScaledCommon.hlsl
 //
-// Code shared by every pass of KSP2/Environment/CelestialBody/CelestialBody_Scaled: the scaled-space
-// sun globals, the scaled/local LOD transition dither and the DepthOnly / DepthNormals functions.
+// Code shared by every pass of KSP2/Environment/CelestialBody/CelestialBody_Scaled: the scaled/local LOD
+// transition dither and the DepthOnly / DepthNormals functions.
 // Also included by the SDK stand-in KSP2/Planets/Scaled
 // (Packages/ksp2redux.sdk/Assets/Shaders/KSP2/Planets/Scaled.shader) and by
 // Redux/Dummy/CelestialBody_Scaled, so scaled materials authored on them look like the port.
 //
-// Included from the SubShader HLSLINCLUDE after the UnityPerMaterial block, which holds the body's eclipse
-// occluders as _KSP2EclipseOccluderIndices0 and 1 (set by Redux.Rendering.Eclipses.EclipseOccluderTable).
+// Included from the SubShader HLSLINCLUDE after the UnityPerMaterial block.
 
 #ifndef KSP2_CELESTIALBODY_SCALED_COMMON_INCLUDED
 #define KSP2_CELESTIALBODY_SCALED_COMMON_INCLUDED
-
-#include "../Include/KSP2Eclipse.hlsl"
-
-// Scaled-space sun, set globally by LightingSystem.UpdateLightingSystem (pass 0 only).
-float4 _ScaledSpaceLightPos;
-float4 _ScaledSpaceLightColor;
-
-// Set by Redux.Rendering.ScaledSpaceViewPass while it draws scaled space inside the flight camera, where the
-// scaled sun is not one of the camera's URP lights. Zero everywhere else (map view, main menu, KSC far LOD),
-// where ForwardLit keeps the URP main light. The colour is linear, with the Built-in intensity formula.
-float _KSP2ScaledViewActive;
-float4 _KSP2ScaledSunDirection;
-float4 _KSP2ScaledSunColor;
 
 // 4x4 Bayer matrix of the stock LOD dither, indexed [x & 3][y & 3].
 static const float CelestialBodyScaled_Dither[16] =
