@@ -1,7 +1,7 @@
 // KSP2LegacyLights.hlsl
 //
-// Built-in pipeline falloff for URP's additional point and spot lights. Every KSP2 light (stock,
-// Redux and mod) was authored for the Built-in attenuation, which stays finite at the light. URP's
+// Built-in pipeline falloff for legacy point and spot lights. Engine and reentry lights can opt
+// into native URP attenuation. Built-in attenuation stays finite at the light. URP's
 // physical 1/d^2 is hundreds of times brighter a few centimetres from a short-range light (the
 // kerbal face fill lights sit 8 to 12 cm from the face with a 0.2 m range) and much darker beyond
 // about a fifth of the range.
@@ -21,6 +21,15 @@
 
 #ifndef KSP2_LEGACY_LIGHTS_INCLUDED
 #define KSP2_LEGACY_LIGHTS_INCLUDED
+
+// CameraRenderHooksFeature packs four flags per vector in URP additional-light buffer order.
+float4 _KSP2NativeAdditionalLights[(MAX_VISIBLE_LIGHT_COUNT_DESKTOP + 3) / 4];
+
+bool KSP2_UsesNativeLightTransport(int lightIndex)
+{
+    return lightIndex >= 0 && lightIndex < MAX_VISIBLE_LIGHTS &&
+        _KSP2NativeAdditionalLights[lightIndex / 4][lightIndex % 4] > 0.5;
+}
 
 // Reuse each vessel's plasma capture for windward-contact falloff. Zero means an ordinary light.
 float _ReentryContactEnabled;
@@ -148,32 +157,37 @@ int KSP2_AdditionalLightBufferIndex(uint i)
 #endif
 }
 
-// GetAdditionalLight with the Built-in falloff in place of URP's distance and angle attenuation.
-// Colour, direction, shadows, cookie and layer mask are URP's.
+float KSP2_AdditionalLightAttenuation(int lightIndex, float3 positionWS, float nativeAttenuation)
+{
+    float attenuation = nativeAttenuation;
+    UNITY_BRANCH
+    if (!KSP2_UsesNativeLightTransport(lightIndex))
+        attenuation = KSP2_LegacyAdditionalLightAttenuation(lightIndex, positionWS);
+    return KSP2_ReentryContactAttenuation(lightIndex, positionWS, attenuation);
+}
+
+// Keep URP color, direction, shadows, cookie and layer mask for both attenuation modes.
 Light KSP2_GetAdditionalLight(uint i, InputData inputData, half4 shadowMask, AmbientOcclusionFactor aoFactor)
 {
     Light light = GetAdditionalLight(i, inputData, shadowMask, aoFactor);
-    int index = KSP2_AdditionalLightBufferIndex(i);
-    light.distanceAttenuation = KSP2_ReentryContactAttenuation(index, inputData.positionWS,
-        KSP2_LegacyAdditionalLightAttenuation(index, inputData.positionWS));
+    light.distanceAttenuation = KSP2_AdditionalLightAttenuation(KSP2_AdditionalLightBufferIndex(i),
+        inputData.positionWS, light.distanceAttenuation);
     return light;
 }
 
 Light KSP2_GetAdditionalLight(uint i, float3 positionWS, half4 shadowMask)
 {
     Light light = GetAdditionalLight(i, positionWS, shadowMask);
-    int index = KSP2_AdditionalLightBufferIndex(i);
-    light.distanceAttenuation = KSP2_ReentryContactAttenuation(index, positionWS,
-        KSP2_LegacyAdditionalLightAttenuation(index, positionWS));
+    light.distanceAttenuation = KSP2_AdditionalLightAttenuation(KSP2_AdditionalLightBufferIndex(i),
+        positionWS, light.distanceAttenuation);
     return light;
 }
 
 Light KSP2_GetAdditionalLight(uint i, float3 positionWS)
 {
     Light light = GetAdditionalLight(i, positionWS);
-    int index = KSP2_AdditionalLightBufferIndex(i);
-    light.distanceAttenuation = KSP2_ReentryContactAttenuation(index, positionWS,
-        KSP2_LegacyAdditionalLightAttenuation(index, positionWS));
+    light.distanceAttenuation = KSP2_AdditionalLightAttenuation(KSP2_AdditionalLightBufferIndex(i),
+        positionWS, light.distanceAttenuation);
     return light;
 }
 
